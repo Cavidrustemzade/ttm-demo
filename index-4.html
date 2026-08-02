@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TTM Tədris Mərkəzi</title>
+<style>
+:root {
+  --color-primary: #0B3C5D;
+  --color-primary-light: #14507d;
+  --color-primary-dark: #072a42;
+  --color-white: #ffffff;
+  --color-light-gray: #f4f6f8;
+  --color-gray: #e2e6ea;
+  --color-text: #1c2530;
+  --color-text-muted: #6b7686;
+  --color-danger: #d94c4c;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --shadow-sm: 0 2px 8px rgba(11,60,93,0.06);
+  --shadow-lg: 0 16px 40px rgba(11,60,93,0.16);
+  --transition: 0.25s cubic-bezier(0.4,0,0.2,1);
+  --font-main: "Segoe UI","Inter",-apple-system,BlinkMacSystemFont,Roboto,Arial,sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { font-family: var(--font-main); background: var(--color-light-gray); color: var(--color-text); -webkit-font-smoothing: antialiased; }
+button { font-family: inherit; cursor: pointer; border: none; outline: none; }
+
+.splash-screen { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(160deg, var(--color-primary) 0%, var(--color-primary-dark) 100%); color: var(--color-white); gap: 18px; }
+.splash-logo { width: 72px; height: 72px; border-radius: var(--radius-md); background: rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 700; animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.06); opacity: 0.85; } }
+
+.login-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; background: linear-gradient(160deg, var(--color-primary) 0%, var(--color-primary-dark) 100%); position: relative; overflow: hidden; }
+.login-card { position: relative; width: 100%; max-width: 400px; background: var(--color-white); border-radius: var(--radius-lg); padding: 40px 32px; box-shadow: var(--shadow-lg); animation: fadeUp 0.5s ease; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+.login-header { text-align: center; margin-bottom: 28px; }
+.login-logo { width: 56px; height: 56px; border-radius: var(--radius-sm); background: var(--color-primary); color: var(--color-white); font-weight: 700; font-size: 22px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+.login-header h1 { font-size: 20px; font-weight: 700; color: var(--color-primary); }
+.login-header p { font-size: 13.5px; color: var(--color-text-muted); margin-top: 4px; }
+.form-group { margin-bottom: 18px; }
+.form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.form-group input { width: 100%; padding: 12px 14px; border: 1.5px solid var(--color-gray); border-radius: var(--radius-sm); font-size: 14.5px; background: var(--color-light-gray); transition: border-color var(--transition), box-shadow var(--transition); }
+.form-group input:focus { border-color: var(--color-primary); background: var(--color-white); box-shadow: 0 0 0 3px rgba(11,60,93,0.10); }
+.error-box { display: none; background: rgba(217,76,76,0.08); color: var(--color-danger); border: 1px solid rgba(217,76,76,0.25); padding: 10px 12px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 16px; }
+.error-box.show { display: block; animation: fadeUp 0.25s ease; }
+.btn-primary { width: 100%; background: var(--color-primary); color: var(--color-white); padding: 13px; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background var(--transition), transform var(--transition); }
+.btn-primary:hover { background: var(--color-primary-light); }
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.75; cursor: not-allowed; }
+.spinner { display: none; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.4); border-top-color: var(--color-white); border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.login-footer { text-align: center; margin-top: 20px; font-size: 12px; color: var(--color-text-muted); }
+
+.panel-topbar { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: var(--color-white); box-shadow: var(--shadow-sm); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 20; }
+.panel-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--color-primary); font-size: 15px; }
+.panel-brand .brand-icon { width: 34px; height: 34px; background: var(--color-primary); color: var(--color-white); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 15px; }
+.panel-user { display: flex; align-items: center; gap: 12px; font-size: 13.5px; color: var(--color-text-muted); }
+.logout-btn { background: var(--color-light-gray); color: var(--color-primary); padding: 8px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; transition: background var(--transition); }
+.logout-btn:hover { background: var(--color-gray); }
+.panel-main { margin-top: 60px; padding: 28px 20px; width: 100%; }
+.panel-placeholder { max-width: 640px; margin: 40px auto; text-align: center; background: var(--color-white); border-radius: var(--radius-lg); padding: 40px 24px; box-shadow: var(--shadow-sm); }
+.panel-placeholder h2 { color: var(--color-primary); font-size: 19px; margin-bottom: 10px; }
+.panel-placeholder p { color: var(--color-text-muted); font-size: 14px; line-height: 1.6; }
+
+@media (max-width: 480px) {
+  .login-card { padding: 32px 22px; }
+  .panel-main { padding: 20px 14px; }
+}
+</style>
+</head>
+<body>
+
+<div id="view-loading" class="splash-screen">
+  <div class="splash-logo">TTM</div>
+  <div>Yüklənir...</div>
+</div>
+
+<div id="view-login" class="login-page" style="display:none">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="login-logo">TTM</div>
+      <h1>TTM Tədris Mərkəzi</h1>
+      <p>Şagird və Valideyn Portalı — TEST rejimi</p>
+    </div>
+    <div class="error-box" id="error-box"></div>
+    <form id="login-form" autocomplete="off">
+      <div class="form-group">
+        <label for="username">İstifadəçi adı</label>
+        <input type="text" id="username" placeholder="İstifadəçi adınızı daxil edin" required />
+      </div>
+      <div class="form-group">
+        <label for="password">Şifrə</label>
+        <input type="password" id="password" placeholder="Şifrənizi daxil edin" required />
+      </div>
+      <button type="submit" class="btn-primary" id="login-btn">
+        <span id="btn-text">Daxil ol</span>
+        <span class="spinner" id="btn-spinner"></span>
+      </button>
+    </form>
+    <div class="login-footer">© 2026 TTM Tədris Mərkəzi — Demo test səhifəsi</div>
+  </div>
+</div>
+
+<div id="view-admin" style="display:none">
+  <header class="panel-topbar">
+    <div class="panel-brand"><div class="brand-icon">TTM</div><span>Admin Paneli</span></div>
+    <div class="panel-user"><span id="admin-name"></span><button class="logout-btn" id="logout-btn-admin">Çıxış</button></div>
+  </header>
+  <main class="panel-main">
+    <div class="panel-placeholder">
+      <h2>Giriş uğurludur! 🎉</h2>
+      <p>Siz <strong>admin</strong> kimi daxil oldunuz. Firebase bağlantısı və login sistemi tam işləyir. Admin panelinin funksiyaları (şagird əlavə etmə və s.) 2-ci mərhələdə hazırlanacaq.</p>
+    </div>
+  </main>
+</div>
+
+<div id="view-student" style="display:none">
+  <header class="panel-topbar">
+    <div class="panel-brand"><div class="brand-icon">TTM</div><span>Şagird Paneli</span></div>
+    <div class="panel-user"><span id="student-name"></span><button class="logout-btn" id="logout-btn-student">Çıxış</button></div>
+  </header>
+  <main class="panel-main">
+    <div class="panel-placeholder">
+      <h2>Giriş uğurludur! 🎉</h2>
+      <p>Siz <strong>şagird/valideyn</strong> kimi daxil oldunuz. Şagird panelinin funksiyaları 3-cü mərhələdə hazırlanacaq.</p>
+    </div>
+  </main>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDk9JWyY8V3T_GRIP32WOF59qKgztHPE9M",
+  authDomain: "ttmsayt.firebaseapp.com",
+  projectId: "ttmsayt",
+  storageBucket: "ttmsayt.firebasestorage.app",
+  messagingSenderId: "202196664531",
+  appId: "1:202196664531:web:4a45b96c5fb655b47bd426"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const USERNAME_DOMAIN = "@ttm.internal";
+
+function showView(id) {
+  ["view-loading","view-login","view-admin","view-student"].forEach(v => {
+    document.getElementById(v).style.display = (v === id) ? "" : "none";
+  });
+}
+
+auth.onAuthStateChanged(async (user) => {
+  if (!user) { showView("view-login"); return; }
+  try {
+    const snap = await db.collection("users").doc(user.uid).get();
+    if (!snap.exists) {
+      showView("view-login");
+      showError("Profil tapılmadı (UID: " + user.uid + "). Firestore-da 'users' kolleksiyasında bu UID ilə sənəd yoxdur.");
+      await auth.signOut();
+      return;
+    }
+    const data = snap.data();
+  if (data.role === "admin") {
+    document.getElementById("admin-name").textContent = data.fullName || "Admin";
+    showView("view-admin");
+  } else if (data.role === "student") {
+    document.getElementById("student-name").textContent = data.fullName || "Şagird";
+    showView("view-student");
+  } else {
+    showView("view-login");
+    showError("İstifadəçi tapıldı, amma rol düzgün deyil: '" + data.role + "'");
+  }
+  } catch (err) {
+    console.error(err);
+    showView("view-login");
+    showError("Firestore xətası: " + (err.code || "") + " " + (err.message || err));
+  }
+});
+
+const form = document.getElementById("login-form");
+const errorBox = document.getElementById("error-box");
+const loginBtn = document.getElementById("login-btn");
+const btnText = document.getElementById("btn-text");
+const btnSpinner = document.getElementById("btn-spinner");
+
+function showError(msg) { errorBox.textContent = msg; errorBox.classList.add("show"); }
+function hideError() { errorBox.classList.remove("show"); errorBox.textContent = ""; }
+function setLoading(v) { loginBtn.disabled = v; btnText.style.display = v ? "none" : "inline"; btnSpinner.style.display = v ? "inline-block" : "none"; }
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  hideError();
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value;
+  if (!username || !password) { showError("Zəhmət olmasa istifadəçi adı və şifrəni daxil edin."); return; }
+  setLoading(true);
+  try {
+    const email = username.toLowerCase() + USERNAME_DOMAIN;
+    await auth.signInWithEmailAndPassword(email, password);
+    // onAuthStateChanged will handle the redirect
+  } catch (err) {
+    console.error(err);
+    if (["auth/invalid-credential","auth/wrong-password","auth/user-not-found"].includes(err.code)) {
+      showError("İstifadəçi adı və ya şifrə yanlışdır.");
+    } else {
+      showError(err.message || "Daxil olarkən xəta baş verdi.");
+    }
+    setLoading(false);
+  }
+});
+
+document.getElementById("logout-btn-admin").addEventListener("click", () => auth.signOut());
+document.getElementById("logout-btn-student").addEventListener("click", () => auth.signOut());
+</script>
+</body>
+</html>
