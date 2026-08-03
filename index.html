@@ -64,6 +64,40 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .panel-placeholder h2 { color: var(--color-primary); font-size: 19px; margin-bottom: 10px; }
 .panel-placeholder p { color: var(--color-text-muted); font-size: 14px; line-height: 1.6; }
 
+.tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 18px; -webkit-overflow-scrolling: touch; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab-btn { flex-shrink: 0; padding: 9px 16px; border-radius: 999px; font-size: 13px; font-weight: 600; background: var(--color-white); color: var(--color-text-muted); box-shadow: var(--shadow-sm); transition: var(--transition); }
+.tab-btn.active { background: var(--color-primary); color: var(--color-white); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; animation: fadeUp 0.3s ease; }
+
+.card { background: var(--color-white); border-radius: var(--radius-md); padding: 18px; box-shadow: var(--shadow-sm); margin-bottom: 16px; }
+.card h3 { color: var(--color-primary); font-size: 15px; margin-bottom: 14px; }
+.field-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.field { flex: 1; min-width: 140px; }
+.field label { display: block; font-size: 12.5px; font-weight: 600; color: var(--color-text-muted); margin-bottom: 5px; }
+.field input, .field select, .field textarea { width: 100%; padding: 10px 12px; border: 1.5px solid var(--color-gray); border-radius: var(--radius-sm); font-size: 14px; background: var(--color-light-gray); font-family: inherit; }
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--color-primary); background: var(--color-white); outline: none; }
+.field textarea { resize: vertical; min-height: 70px; }
+.checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 13.5px; margin-bottom: 12px; }
+.checkbox-row input { width: 17px; height: 17px; }
+
+.btn-small { background: var(--color-primary); color: var(--color-white); padding: 9px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; transition: var(--transition); }
+.btn-small:hover { background: var(--color-primary-light); }
+.btn-outline { background: var(--color-white); color: var(--color-primary); border: 1.5px solid var(--color-primary); padding: 8px 14px; border-radius: var(--radius-sm); font-size: 12.5px; font-weight: 600; }
+.btn-danger { background: rgba(217,76,76,0.1); color: var(--color-danger); padding: 8px 14px; border-radius: var(--radius-sm); font-size: 12.5px; font-weight: 600; }
+
+.list-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; background: var(--color-light-gray); border-radius: var(--radius-sm); margin-bottom: 8px; }
+.list-item-info { flex: 1; min-width: 0; }
+.list-item-title { font-size: 14px; font-weight: 600; color: var(--color-text); }
+.list-item-sub { font-size: 12px; color: var(--color-text-muted); margin-top: 2px; }
+.list-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; background: rgba(11,60,93,0.08); color: var(--color-primary); }
+.muted-note { font-size: 12px; color: var(--color-text-muted); margin-top: 6px; line-height: 1.5; }
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--color-primary-dark); color: var(--color-white); padding: 12px 20px; border-radius: var(--radius-sm); font-size: 13.5px; box-shadow: var(--shadow-lg); z-index: 100; display: none; }
+.toast.show { display: block; animation: fadeUp 0.3s ease; }
+.empty-state { text-align: center; padding: 24px; color: var(--color-text-muted); font-size: 13.5px; }
+
 @media (max-width: 480px) {
   .login-card { padding: 32px 22px; }
   .panel-main { padding: 20px 14px; }
@@ -109,12 +143,163 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
     <div class="panel-user"><span id="admin-name"></span><button class="logout-btn" id="logout-btn-admin">Çıxış</button></div>
   </header>
   <main class="panel-main">
-    <div class="panel-placeholder">
-      <h2>Giriş uğurludur! 🎉</h2>
-      <p>Siz <strong>admin</strong> kimi daxil oldunuz. Firebase bağlantısı və login sistemi tam işləyir. Admin panelinin funksiyaları (şagird əlavə etmə və s.) 2-ci mərhələdə hazırlanacaq.</p>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="tab-students">Şagirdlər</button>
+      <button class="tab-btn" data-tab="tab-groups">Qruplar</button>
+      <button class="tab-btn" data-tab="tab-daily">Gündəlik hesabat</button>
+      <button class="tab-btn" data-tab="tab-scores">Nəticələr</button>
+      <button class="tab-btn" data-tab="tab-materials">PDF / Video</button>
+      <button class="tab-btn" data-tab="tab-schedule">Cədvəl</button>
+      <button class="tab-btn" data-tab="tab-topics">Mövzular</button>
+    </div>
+
+    <!-- ŞAGİRDLƏR -->
+    <div class="tab-panel active" id="tab-students">
+      <div class="card">
+        <h3 id="student-form-title">Yeni şagird əlavə et</h3>
+        <input type="hidden" id="student-edit-id" value="" />
+        <div class="field-row">
+          <div class="field"><label>Ad Soyad</label><input type="text" id="student-fullname" placeholder="Məs: Əli Vəliyev" /></div>
+          <div class="field"><label>Qrup</label><select id="student-group"></select></div>
+        </div>
+        <div class="field-row" id="student-credentials-row">
+          <div class="field"><label>İstifadəçi adı</label><input type="text" id="student-username" placeholder="Məs: alivaliyev" /></div>
+          <div class="field"><label>Şifrə</label><input type="text" id="student-password" placeholder="Sadə şifrə seçin" /></div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn-small" id="student-save-btn">Əlavə et</button>
+          <button class="btn-outline" id="student-cancel-edit-btn" style="display:none">Ləğv et</button>
+        </div>
+        <div class="muted-note">Qeyd: Redaktədə istifadəçi adı/şifrə dəyişdirilə bilməz (Firebase məhdudiyyəti). Yalnız ad və qrup yenilənir.</div>
+      </div>
+      <div class="card">
+        <h3>Şagird siyahısı</h3>
+        <div id="students-list"><div class="empty-state">Yüklənir...</div></div>
+      </div>
+    </div>
+
+    <!-- QRUPLAR -->
+    <div class="tab-panel" id="tab-groups">
+      <div class="card">
+        <h3>Yeni qrup yarat</h3>
+        <div class="field-row">
+          <div class="field"><label>Qrup adı</label><input type="text" id="group-name" placeholder="Məs: Riyaziyyat - 9A" /></div>
+        </div>
+        <button class="btn-small" id="group-save-btn">Yarat</button>
+      </div>
+      <div class="card">
+        <h3>Qrup siyahısı</h3>
+        <div id="groups-list"><div class="empty-state">Yüklənir...</div></div>
+      </div>
+    </div>
+
+    <!-- GÜNDƏLİK HESABAT -->
+    <div class="tab-panel" id="tab-daily">
+      <div class="card">
+        <h3>Gündəlik hesabat yaz</h3>
+        <div class="field-row">
+          <div class="field"><label>Şagird</label><select id="daily-student"></select></div>
+          <div class="field"><label>Tarix</label><input type="date" id="daily-date" /></div>
+        </div>
+        <div class="checkbox-row"><input type="checkbox" id="daily-attended" /><label for="daily-attended">Dərsdə iştirak etdi</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="daily-homework" /><label for="daily-homework">Ev tapşırığını etdi</label></div>
+        <div class="field-row">
+          <div class="field"><label>Hazırlıq faizi (%)</label><input type="number" id="daily-prep" min="0" max="100" placeholder="0-100" /></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Müəllim qeydi</label><textarea id="daily-note" placeholder="Qeyd yazın..."></textarea></div>
+        </div>
+        <button class="btn-small" id="daily-save-btn">Yadda saxla</button>
+      </div>
+      <div class="card">
+        <h3>Son hesabatlar</h3>
+        <div id="daily-list"><div class="empty-state">Yüklənir...</div></div>
+      </div>
+    </div>
+
+    <!-- NƏTİCƏLƏR -->
+    <div class="tab-panel" id="tab-scores">
+      <div class="card">
+        <h3>Quiz / Sınaq nəticəsi əlavə et</h3>
+        <div class="field-row">
+          <div class="field"><label>Şagird</label><select id="score-student"></select></div>
+          <div class="field"><label>Növ</label>
+            <select id="score-type"><option value="quiz">Quiz</option><option value="exam">Sınaq</option></select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Fənn</label><input type="text" id="score-subject" placeholder="Məs: Riyaziyyat" /></div>
+          <div class="field"><label>Nəticə (%)</label><input type="number" id="score-value" min="0" max="100" placeholder="0-100" /></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Tarix</label><input type="date" id="score-date" /></div>
+        </div>
+        <button class="btn-small" id="score-save-btn">Əlavə et</button>
+      </div>
+      <div class="card">
+        <h3>Son nəticələr</h3>
+        <div id="scores-list"><div class="empty-state">Yüklənir...</div></div>
+      </div>
+    </div>
+
+    <!-- PDF / VIDEO -->
+    <div class="tab-panel" id="tab-materials">
+      <div class="card">
+        <h3>PDF / Video əlavə et</h3>
+        <div class="field-row">
+          <div class="field"><label>Qrup</label><select id="material-group"></select></div>
+          <div class="field"><label>Növ</label>
+            <select id="material-type"><option value="pdf">PDF</option><option value="video">Video</option></select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Başlıq</label><input type="text" id="material-title" placeholder="Məs: 5-ci mövzu izahı" /></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Link (URL)</label><input type="text" id="material-url" placeholder="https://..." /></div>
+        </div>
+        <button class="btn-small" id="material-save-btn">Əlavə et</button>
+        <div class="muted-note">PDF üçün Google Drive/Dropbox linki, video üçün YouTube linki paylaşa bilərsiniz.</div>
+      </div>
+      <div class="card">
+        <h3>Fayl siyahısı</h3>
+        <div id="materials-list"><div class="empty-state">Yüklənir...</div></div>
+      </div>
+    </div>
+
+    <!-- DƏRS CƏDVƏLİ -->
+    <div class="tab-panel" id="tab-schedule">
+      <div class="card">
+        <h3>Dərs cədvəlini yenilə</h3>
+        <div class="field-row">
+          <div class="field"><label>Qrup</label><select id="schedule-group"></select></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Cədvəl (mətn şəklində)</label><textarea id="schedule-text" placeholder="Məs: B.e - 16:00, Ç.a - 16:00, C.a - 16:00" style="min-height:100px"></textarea></div>
+        </div>
+        <button class="btn-small" id="schedule-save-btn">Yadda saxla</button>
+      </div>
+    </div>
+
+    <!-- MÖVZULAR -->
+    <div class="tab-panel" id="tab-topics">
+      <div class="card">
+        <h3>Mövzu əlavə et</h3>
+        <div class="field-row">
+          <div class="field"><label>Qrup</label><select id="topic-group"></select></div>
+          <div class="field"><label>Mövzu adı</label><input type="text" id="topic-name" placeholder="Məs: Kvadrat tənliklər" /></div>
+        </div>
+        <button class="btn-small" id="topic-save-btn">Əlavə et</button>
+      </div>
+      <div class="card">
+        <h3>Mövzu siyahısı</h3>
+        <div id="topics-list"><div class="empty-state">Yüklənir...</div></div>
+      </div>
     </div>
   </main>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <div id="view-student" style="display:none">
   <header class="panel-topbar">
@@ -167,6 +352,7 @@ auth.onAuthStateChanged(async (user) => {
   if (data.role === "admin") {
     document.getElementById("admin-name").textContent = data.fullName || "Admin";
     showView("view-admin");
+    if (!window._adminInited) { window._adminInited = true; initAdminPanel(); }
   } else if (data.role === "student") {
     document.getElementById("student-name").textContent = data.fullName || "Şagird";
     showView("view-student");
@@ -215,6 +401,381 @@ form.addEventListener("submit", async (e) => {
 
 document.getElementById("logout-btn-admin").addEventListener("click", () => auth.signOut());
 document.getElementById("logout-btn-student").addEventListener("click", () => auth.signOut());
+
+// =========================================================================
+// ADMIN PANELİ MƏNTİQİ
+// =========================================================================
+
+// İkinci Firebase App - şagird hesabı yaradanda admin sessiyasını pozmasın deyə
+const secondaryApp = firebase.initializeApp(firebaseConfig, "Secondary");
+const secondaryAuth = secondaryApp.auth();
+
+let groupsCache = [];
+let studentsCache = [];
+
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2500);
+}
+
+// ---- TAB NAVİGASİYASI ----
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.tab).classList.add("active");
+  });
+});
+
+function initAdminPanel() {
+  loadGroups();
+  loadStudents();
+  loadDailyReports();
+  loadScores();
+  loadMaterials();
+  loadTopics();
+  document.getElementById("daily-date").value = new Date().toISOString().slice(0, 10);
+  document.getElementById("score-date").value = new Date().toISOString().slice(0, 10);
+}
+
+// ---- QRUPLAR ----
+function fillGroupSelects() {
+  const selects = ["student-group", "daily-student", "material-group", "schedule-group", "topic-group"];
+  // student-group və material-group/schedule-group/topic-group qrup siyahısı ilə doldurulur
+  ["student-group", "material-group", "schedule-group", "topic-group"].forEach(id => {
+    const sel = document.getElementById(id);
+    const current = sel.value;
+    sel.innerHTML = groupsCache.map(g => `<option value="${g.id}">${g.name}</option>`).join("") || `<option value="">Əvvəlcə qrup yaradın</option>`;
+    if (current) sel.value = current;
+  });
+  fillStudentSelects();
+}
+
+function fillStudentSelects() {
+  ["daily-student", "score-student"].forEach(id => {
+    const sel = document.getElementById(id);
+    const current = sel.value;
+    sel.innerHTML = studentsCache.filter(s => s.active !== false).map(s => `<option value="${s.id}">${s.fullName}</option>`).join("") || `<option value="">Əvvəlcə şagird əlavə edin</option>`;
+    if (current) sel.value = current;
+  });
+}
+
+async function loadGroups() {
+  db.collection("groups").orderBy("name").onSnapshot(snap => {
+    groupsCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    fillGroupSelects();
+    renderGroupsList();
+  });
+}
+
+function renderGroupsList() {
+  const el = document.getElementById("groups-list");
+  if (groupsCache.length === 0) { el.innerHTML = `<div class="empty-state">Hələ qrup yaradılmayıb</div>`; return; }
+  el.innerHTML = groupsCache.map(g => `
+    <div class="list-item">
+      <div class="list-item-info"><div class="list-item-title">${g.name}</div></div>
+      <div class="list-item-actions"><button class="btn-danger" onclick="deleteGroup('${g.id}')">Sil</button></div>
+    </div>
+  `).join("");
+}
+
+document.getElementById("group-save-btn").addEventListener("click", async () => {
+  const name = document.getElementById("group-name").value.trim();
+  if (!name) { toast("Qrup adını yazın"); return; }
+  await db.collection("groups").add({ name, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  document.getElementById("group-name").value = "";
+  toast("Qrup yaradıldı");
+});
+
+window.deleteGroup = async (id) => {
+  if (!confirm("Bu qrupu silmək istədiyinizə əminsiniz?")) return;
+  await db.collection("groups").doc(id).delete();
+  toast("Qrup silindi");
+};
+
+// ---- ŞAGİRDLƏR ----
+async function loadStudents() {
+  db.collection("students").orderBy("fullName").onSnapshot(snap => {
+    studentsCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    fillStudentSelects();
+    renderStudentsList();
+  });
+}
+
+function groupName(groupId) {
+  const g = groupsCache.find(g => g.id === groupId);
+  return g ? g.name : "—";
+}
+
+function renderStudentsList() {
+  const el = document.getElementById("students-list");
+  const active = studentsCache.filter(s => s.active !== false);
+  if (active.length === 0) { el.innerHTML = `<div class="empty-state">Hələ şagird əlavə edilməyib</div>`; return; }
+  el.innerHTML = active.map(s => `
+    <div class="list-item">
+      <div class="list-item-info">
+        <div class="list-item-title">${s.fullName}</div>
+        <div class="list-item-sub">@${s.username} · <span class="badge">${groupName(s.groupId)}</span></div>
+      </div>
+      <div class="list-item-actions">
+        <button class="btn-outline" onclick="editStudent('${s.id}')">Redaktə</button>
+        <button class="btn-danger" onclick="deleteStudent('${s.id}')">Sil</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+window.editStudent = (id) => {
+  const s = studentsCache.find(s => s.id === id);
+  if (!s) return;
+  document.getElementById("student-edit-id").value = id;
+  document.getElementById("student-fullname").value = s.fullName;
+  document.getElementById("student-group").value = s.groupId || "";
+  document.getElementById("student-form-title").textContent = "Şagirdi redaktə et: " + s.fullName;
+  document.getElementById("student-credentials-row").style.display = "none";
+  document.getElementById("student-save-btn").textContent = "Yadda saxla";
+  document.getElementById("student-cancel-edit-btn").style.display = "inline-block";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+};
+
+document.getElementById("student-cancel-edit-btn").addEventListener("click", resetStudentForm);
+
+function resetStudentForm() {
+  document.getElementById("student-edit-id").value = "";
+  document.getElementById("student-fullname").value = "";
+  document.getElementById("student-username").value = "";
+  document.getElementById("student-password").value = "";
+  document.getElementById("student-form-title").textContent = "Yeni şagird əlavə et";
+  document.getElementById("student-credentials-row").style.display = "flex";
+  document.getElementById("student-save-btn").textContent = "Əlavə et";
+  document.getElementById("student-cancel-edit-btn").style.display = "none";
+}
+
+document.getElementById("student-save-btn").addEventListener("click", async () => {
+  const editId = document.getElementById("student-edit-id").value;
+  const fullName = document.getElementById("student-fullname").value.trim();
+  const groupId = document.getElementById("student-group").value;
+
+  if (!fullName) { toast("Ad Soyad yazın"); return; }
+
+  if (editId) {
+    // Redaktə: yalnız ad və qrup yenilənir
+    await db.collection("students").doc(editId).update({ fullName, groupId });
+    await db.collection("users").doc(editId).update({ fullName });
+    toast("Yeniləndi");
+    resetStudentForm();
+    return;
+  }
+
+  // Yeni şagird
+  const username = document.getElementById("student-username").value.trim().toLowerCase();
+  const password = document.getElementById("student-password").value;
+  if (!username || !password) { toast("İstifadəçi adı və şifrə yazın"); return; }
+  if (password.length < 6) { toast("Şifrə ən azı 6 simvol olmalıdır"); return; }
+
+  document.getElementById("student-save-btn").disabled = true;
+  try {
+    const email = username + USERNAME_DOMAIN;
+    const cred = await secondaryAuth.createUserWithEmailAndPassword(email, password);
+    const uid = cred.user.uid;
+    await secondaryAuth.signOut();
+
+    await db.collection("users").doc(uid).set({ role: "student", fullName, username });
+    await db.collection("students").doc(uid).set({
+      fullName, username, groupId, active: true,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    toast("Şagird əlavə edildi");
+    resetStudentForm();
+  } catch (err) {
+    console.error(err);
+    if (err.code === "auth/email-already-in-use") {
+      toast("Bu istifadəçi adı artıq istifadə olunub, başqasını seçin");
+    } else {
+      toast("Xəta: " + err.message);
+    }
+  } finally {
+    document.getElementById("student-save-btn").disabled = false;
+  }
+});
+
+window.deleteStudent = async (id) => {
+  if (!confirm("Bu şagirdi silmək istədiyinizə əminsiniz? (Giriş imkanı dərhal bağlanacaq)")) return;
+  await db.collection("students").doc(id).update({ active: false });
+  await db.collection("users").doc(id).delete();
+  toast("Şagird silindi");
+};
+
+// ---- GÜNDƏLİK HESABAT ----
+document.getElementById("daily-save-btn").addEventListener("click", async () => {
+  const studentId = document.getElementById("daily-student").value;
+  const date = document.getElementById("daily-date").value;
+  if (!studentId || !date) { toast("Şagird və tarix seçin"); return; }
+  await db.collection("dailyReports").add({
+    studentId, date,
+    attended: document.getElementById("daily-attended").checked,
+    homeworkDone: document.getElementById("daily-homework").checked,
+    prepPercentage: Number(document.getElementById("daily-prep").value) || 0,
+    note: document.getElementById("daily-note").value.trim(),
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  document.getElementById("daily-note").value = "";
+  document.getElementById("daily-prep").value = "";
+  document.getElementById("daily-attended").checked = false;
+  document.getElementById("daily-homework").checked = false;
+  toast("Hesabat yadda saxlandı");
+});
+
+function loadDailyReports() {
+  db.collection("dailyReports").orderBy("createdAt", "desc").limit(15).onSnapshot(snap => {
+    const el = document.getElementById("daily-list");
+    if (snap.empty) { el.innerHTML = `<div class="empty-state">Hələ hesabat yoxdur</div>`; return; }
+    el.innerHTML = snap.docs.map(d => {
+      const r = d.data();
+      const s = studentsCache.find(s => s.id === r.studentId);
+      return `<div class="list-item">
+        <div class="list-item-info">
+          <div class="list-item-title">${s ? s.fullName : "Naməlum"} — ${r.date}</div>
+          <div class="list-item-sub">${r.attended ? "✓ İştirak" : "✗ Yoxdur"} · ${r.homeworkDone ? "✓ Tapşırıq" : "✗ Tapşırıq yox"} · Hazırlıq: ${r.prepPercentage}%</div>
+        </div>
+        <div class="list-item-actions"><button class="btn-danger" onclick="deleteDoc('dailyReports','${d.id}')">Sil</button></div>
+      </div>`;
+    }).join("");
+  });
+}
+
+// ---- QUIZ / SINAQ NƏTİCƏLƏRİ ----
+document.getElementById("score-save-btn").addEventListener("click", async () => {
+  const studentId = document.getElementById("score-student").value;
+  const type = document.getElementById("score-type").value;
+  const subject = document.getElementById("score-subject").value.trim();
+  const value = Number(document.getElementById("score-value").value);
+  const date = document.getElementById("score-date").value;
+  if (!studentId || !subject || !date) { toast("Bütün sahələri doldurun"); return; }
+  const coll = type === "quiz" ? "quizResults" : "examResults";
+  await db.collection(coll).add({ studentId, subject, score: value, date, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  document.getElementById("score-subject").value = "";
+  document.getElementById("score-value").value = "";
+  toast("Nəticə əlavə edildi");
+});
+
+function loadScores() {
+  const merge = (arr1, arr2) => arr1.concat(arr2).sort((a, b) => (b._ts || 0) - (a._ts || 0)).slice(0, 15);
+  let quizData = [], examData = [];
+  const render = () => {
+    const all = merge(quizData, examData);
+    const el = document.getElementById("scores-list");
+    if (all.length === 0) { el.innerHTML = `<div class="empty-state">Hələ nəticə yoxdur</div>`; return; }
+    el.innerHTML = all.map(r => {
+      const s = studentsCache.find(s => s.id === r.studentId);
+      return `<div class="list-item">
+        <div class="list-item-info">
+          <div class="list-item-title">${s ? s.fullName : "Naməlum"} — ${r.subject}</div>
+          <div class="list-item-sub"><span class="badge">${r._type === "quiz" ? "Quiz" : "Sınaq"}</span> ${r.score}% · ${r.date}</div>
+        </div>
+        <div class="list-item-actions"><button class="btn-danger" onclick="deleteDoc('${r._coll}','${r.id}')">Sil</button></div>
+      </div>`;
+    }).join("");
+  };
+  db.collection("quizResults").orderBy("createdAt", "desc").limit(15).onSnapshot(snap => {
+    quizData = snap.docs.map(d => ({ id: d.id, ...d.data(), _type: "quiz", _coll: "quizResults", _ts: d.data().createdAt ? d.data().createdAt.toMillis() : 0 }));
+    render();
+  });
+  db.collection("examResults").orderBy("createdAt", "desc").limit(15).onSnapshot(snap => {
+    examData = snap.docs.map(d => ({ id: d.id, ...d.data(), _type: "exam", _coll: "examResults", _ts: d.data().createdAt ? d.data().createdAt.toMillis() : 0 }));
+    render();
+  });
+}
+
+// ---- PDF / VIDEO ----
+document.getElementById("material-save-btn").addEventListener("click", async () => {
+  const groupId = document.getElementById("material-group").value;
+  const type = document.getElementById("material-type").value;
+  const title = document.getElementById("material-title").value.trim();
+  const url = document.getElementById("material-url").value.trim();
+  if (!groupId || !title || !url) { toast("Bütün sahələri doldurun"); return; }
+  await db.collection("materials").add({ groupId, type, title, url, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  document.getElementById("material-title").value = "";
+  document.getElementById("material-url").value = "";
+  toast("Fayl əlavə edildi");
+});
+
+function loadMaterials() {
+  db.collection("materials").orderBy("createdAt", "desc").limit(20).onSnapshot(snap => {
+    const el = document.getElementById("materials-list");
+    if (snap.empty) { el.innerHTML = `<div class="empty-state">Hələ fayl əlavə edilməyib</div>`; return; }
+    el.innerHTML = snap.docs.map(d => {
+      const m = d.data();
+      return `<div class="list-item">
+        <div class="list-item-info">
+          <div class="list-item-title">${m.title}</div>
+          <div class="list-item-sub"><span class="badge">${m.type === "pdf" ? "PDF" : "Video"}</span> ${groupName(m.groupId)}</div>
+        </div>
+        <div class="list-item-actions"><button class="btn-danger" onclick="deleteDoc('materials','${d.id}')">Sil</button></div>
+      </div>`;
+    }).join("");
+  });
+}
+
+// ---- DƏRS CƏDVƏLİ ----
+document.getElementById("schedule-group").addEventListener("change", async (e) => {
+  const groupId = e.target.value;
+  if (!groupId) return;
+  const doc = await db.collection("schedule").doc(groupId).get();
+  document.getElementById("schedule-text").value = doc.exists ? doc.data().text : "";
+});
+
+document.getElementById("schedule-save-btn").addEventListener("click", async () => {
+  const groupId = document.getElementById("schedule-group").value;
+  const text = document.getElementById("schedule-text").value.trim();
+  if (!groupId) { toast("Qrup seçin"); return; }
+  await db.collection("schedule").doc(groupId).set({ text, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+  toast("Cədvəl yadda saxlandı");
+});
+
+// ---- MÖVZULAR ----
+document.getElementById("topic-save-btn").addEventListener("click", async () => {
+  const groupId = document.getElementById("topic-group").value;
+  const name = document.getElementById("topic-name").value.trim();
+  if (!groupId || !name) { toast("Qrup və mövzu adını daxil edin"); return; }
+  await db.collection("topics").add({ groupId, name, completed: false, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  document.getElementById("topic-name").value = "";
+  toast("Mövzu əlavə edildi");
+});
+
+function loadTopics() {
+  db.collection("topics").orderBy("createdAt", "desc").limit(30).onSnapshot(snap => {
+    const el = document.getElementById("topics-list");
+    if (snap.empty) { el.innerHTML = `<div class="empty-state">Hələ mövzu yoxdur</div>`; return; }
+    el.innerHTML = snap.docs.map(d => {
+      const t = d.data();
+      return `<div class="list-item">
+        <div class="list-item-info">
+          <div class="list-item-title">${t.completed ? "✅" : "⏳"} ${t.name}</div>
+          <div class="list-item-sub"><span class="badge">${groupName(t.groupId)}</span></div>
+        </div>
+        <div class="list-item-actions">
+          <button class="btn-outline" onclick="toggleTopic('${d.id}', ${!t.completed})">${t.completed ? "Geri al" : "Bitir"}</button>
+          <button class="btn-danger" onclick="deleteDoc('topics','${d.id}')">Sil</button>
+        </div>
+      </div>`;
+    }).join("");
+  });
+}
+
+window.toggleTopic = async (id, newVal) => {
+  await db.collection("topics").doc(id).update({ completed: newVal });
+};
+
+window.deleteDoc = async (coll, id) => {
+  if (!confirm("Silmək istədiyinizə əminsiniz?")) return;
+  await db.collection(coll).doc(id).delete();
+  toast("Silindi");
+};
 </script>
 </body>
 </html>
