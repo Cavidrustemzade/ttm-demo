@@ -343,6 +343,14 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
           </div>
         </div>
       </div>
+      <div class="card">
+        <h3>Həftəlik davamiyyət trendi</h3>
+        <div id="s-attendance-trend" style="display:flex; align-items:flex-end; gap:8px; height:110px; padding-top:10px; overflow-x:auto;"></div>
+      </div>
+      <div class="card">
+        <h3>Fənn üzrə göstəricilər</h3>
+        <div id="s-subject-breakdown"><div class="empty-state">Yüklənir...</div></div>
+      </div>
     </div>
 
     <!-- GÜNDƏLİK HESABAT -->
@@ -894,11 +902,13 @@ async function initStudentPanel(uid) {
     quizData = snap.docs.map(d => d.data());
     renderScores();
     updateAverages(quizData, examData);
+    renderSubjectBreakdown(quizData, examData);
   });
   db.collection("examResults").where("studentId", "==", uid).orderBy("date", "desc").limit(20).onSnapshot(snap => {
     examData = snap.docs.map(d => d.data());
     renderScores();
     updateAverages(quizData, examData);
+    renderSubjectBreakdown(quizData, examData);
   });
 
   // Fayllar (qrupa görə)
@@ -989,12 +999,76 @@ function updateStudentStats(reports) {
   if (reports.length === 0) {
     document.getElementById("stat-attendance").textContent = "—";
     document.getElementById("stat-prep").textContent = "—";
+    renderAttendanceTrend([]);
     return;
   }
   const attendedCount = reports.filter(r => r.attended).length;
   const attendancePct = Math.round((attendedCount / reports.length) * 100);
   document.getElementById("stat-attendance").textContent = attendancePct + "%";
   document.getElementById("stat-prep").textContent = (reports[0].prepPercentage || 0) + "%";
+  renderAttendanceTrend(reports);
+}
+
+function isoWeek(dateStr) {
+  const d = new Date(dateStr);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+  const yearStart = new Date(d.getFullYear(), 0, 1);
+  const week = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return d.getFullYear() + "-H" + week;
+}
+
+function renderAttendanceTrend(reports) {
+  const el = document.getElementById("s-attendance-trend");
+  if (!reports || reports.length === 0) { el.innerHTML = `<div class="empty-state">Məlumat yoxdur</div>`; return; }
+  const byWeek = {};
+  reports.forEach(r => {
+    if (!r.date) return;
+    const wk = isoWeek(r.date);
+    if (!byWeek[wk]) byWeek[wk] = { total: 0, attended: 0 };
+    byWeek[wk].total++;
+    if (r.attended) byWeek[wk].attended++;
+  });
+  const weeks = Object.keys(byWeek).sort().slice(-8);
+  if (weeks.length === 0) { el.innerHTML = `<div class="empty-state">Məlumat yoxdur</div>`; return; }
+  el.innerHTML = weeks.map(wk => {
+    const pct = Math.round((byWeek[wk].attended / byWeek[wk].total) * 100);
+    const color = pct >= 80 ? "var(--color-success, #2e9e6b)" : pct >= 50 ? "var(--color-warning, #d99a2b)" : "var(--color-danger)";
+    return `<div style="display:flex; flex-direction:column; align-items:center; gap:4px; min-width:36px;">
+      <div style="font-size:10px; color:var(--color-text-muted);">${pct}%</div>
+      <div style="width:24px; height:${Math.max(4, pct)}px; background:${color}; border-radius:4px;"></div>
+      <div style="font-size:9px; color:var(--color-text-muted);">${wk.split("-H")[1]}h</div>
+    </div>`;
+  }).join("");
+}
+
+function renderSubjectBreakdown(quizData, examData) {
+  const el = document.getElementById("s-subject-breakdown");
+  const all = quizData.concat(examData);
+  if (all.length === 0) { el.innerHTML = `<div class="empty-state">Hələ nəticə yoxdur</div>`; return; }
+  const bySubject = {};
+  all.forEach(r => {
+    const subj = r.subject || "Digər";
+    if (!bySubject[subj]) bySubject[subj] = [];
+    bySubject[subj].push(r.score || 0);
+  });
+  const rows = Object.keys(bySubject).map(subj => {
+    const scores = bySubject[subj];
+    const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+    return { subj, avg, count: scores.length };
+  }).sort((a, b) => a.avg - b.avg);
+
+  el.innerHTML = rows.map(r => {
+    const isWeak = r.avg < 60;
+    const color = isWeak ? "var(--color-danger)" : r.avg < 75 ? "var(--color-warning, #d99a2b)" : "var(--color-success, #2e9e6b)";
+    return `<div class="list-item">
+      <div class="list-item-info">
+        <div class="list-item-title">${r.subj} ${isWeak ? "⚠️" : ""}</div>
+        <div class="list-item-sub">${r.count} nəticə</div>
+      </div>
+      <div style="font-weight:700; font-size:16px; color:${color};">${r.avg}%</div>
+    </div>`;
+  }).join("") + (rows.some(r => r.avg < 60) ? `<div class="muted-note">⚠️ 60%-dən aşağı fənnlərə əlavə diqqət tövsiyə olunur.</div>` : "");
 }
 </script>
 </body>
