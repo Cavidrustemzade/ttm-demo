@@ -307,9 +307,86 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
     <div class="panel-user"><span id="student-name"></span><button class="logout-btn" id="logout-btn-student">Çıxış</button></div>
   </header>
   <main class="panel-main">
-    <div class="panel-placeholder">
-      <h2>Giriş uğurludur! 🎉</h2>
-      <p>Siz <strong>şagird/valideyn</strong> kimi daxil oldunuz. Şagird panelinin funksiyaları 3-cü mərhələdə hazırlanacaq.</p>
+    <div class="tabs">
+      <button class="tab-btn active" data-stab="stab-home">Ana səhifə</button>
+      <button class="tab-btn" data-stab="stab-daily">Gündəlik</button>
+      <button class="tab-btn" data-stab="stab-scores">Nəticələr</button>
+      <button class="tab-btn" data-stab="stab-materials">Fayllar</button>
+      <button class="tab-btn" data-stab="stab-schedule">Cədvəl</button>
+      <button class="tab-btn" data-stab="stab-topics">Mövzular</button>
+    </div>
+
+    <!-- ANA SƏHİFƏ -->
+    <div class="tab-panel active" id="stab-home">
+      <div class="card">
+        <h3 id="s-welcome-name">Xoş gəldin!</h3>
+        <div id="s-group-badge" class="muted-note"></div>
+      </div>
+      <div class="card">
+        <h3>Statistika</h3>
+        <div id="stat-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="list-item" style="flex-direction:column; align-items:flex-start;">
+            <div class="list-item-sub">Quiz ortalaması</div>
+            <div class="list-item-title" id="stat-quiz-avg" style="font-size:20px;">—</div>
+          </div>
+          <div class="list-item" style="flex-direction:column; align-items:flex-start;">
+            <div class="list-item-sub">Sınaq ortalaması</div>
+            <div class="list-item-title" id="stat-exam-avg" style="font-size:20px;">—</div>
+          </div>
+          <div class="list-item" style="flex-direction:column; align-items:flex-start;">
+            <div class="list-item-sub">Davamiyyət faizi</div>
+            <div class="list-item-title" id="stat-attendance" style="font-size:20px;">—</div>
+          </div>
+          <div class="list-item" style="flex-direction:column; align-items:flex-start;">
+            <div class="list-item-sub">Hazırlıq faizi (son)</div>
+            <div class="list-item-title" id="stat-prep" style="font-size:20px;">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GÜNDƏLİK HESABAT -->
+    <div class="tab-panel" id="stab-daily">
+      <div class="card">
+        <h3>Gündəlik hesabatlar</h3>
+        <div id="s-daily-list"><div class="empty-state">Yüklənir...</div></div>
+      </div>
+    </div>
+
+    <!-- NƏTİCƏLƏR -->
+    <div class="tab-panel" id="stab-scores">
+      <div class="card">
+        <h3>Bal qrafiki</h3>
+        <div id="s-chart" style="display:flex; align-items:flex-end; gap:6px; height:140px; padding-top:10px; overflow-x:auto;"></div>
+      </div>
+      <div class="card">
+        <h3>Quiz və Sınaq nəticələri</h3>
+        <div id="s-scores-list"><div class="empty-state">Yüklənir...</div></div>
+      </div>
+    </div>
+
+    <!-- FAYLLAR -->
+    <div class="tab-panel" id="stab-materials">
+      <div class="card">
+        <h3>PDF və Video dərslər</h3>
+        <div id="s-materials-list"><div class="empty-state">Yüklənir...</div></div>
+      </div>
+    </div>
+
+    <!-- CƏDVƏL -->
+    <div class="tab-panel" id="stab-schedule">
+      <div class="card">
+        <h3>Dərs cədvəli</h3>
+        <div id="s-schedule-text" class="muted-note" style="white-space:pre-line; font-size:14px; color:var(--color-text);">Yüklənir...</div>
+      </div>
+    </div>
+
+    <!-- MÖVZULAR -->
+    <div class="tab-panel" id="stab-topics">
+      <div class="card">
+        <h3>Bitirilən mövzular</h3>
+        <div id="s-topics-list"><div class="empty-state">Yüklənir...</div></div>
+      </div>
     </div>
   </main>
 </div>
@@ -356,6 +433,7 @@ auth.onAuthStateChanged(async (user) => {
   } else if (data.role === "student") {
     document.getElementById("student-name").textContent = data.fullName || "Şagird";
     showView("view-student");
+    if (!window._studentInited) { window._studentInited = true; initStudentPanel(user.uid); }
   } else {
     showView("view-login");
     showError("İstifadəçi tapıldı, amma rol düzgün deyil: '" + data.role + "'");
@@ -421,12 +499,20 @@ function toast(msg) {
 }
 
 // ---- TAB NAVİGASİYASI ----
-document.querySelectorAll(".tab-btn").forEach(btn => {
+document.querySelectorAll(".tab-btn[data-tab]").forEach(btn => {
   btn.addEventListener("click", () => {
-    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-    document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+    document.querySelectorAll(".tab-btn[data-tab]").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll("#view-admin .tab-panel").forEach(p => p.classList.remove("active"));
     btn.classList.add("active");
     document.getElementById(btn.dataset.tab).classList.add("active");
+  });
+});
+document.querySelectorAll(".tab-btn[data-stab]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn[data-stab]").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll("#view-student .tab-panel").forEach(p => p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.stab).classList.add("active");
   });
 });
 
@@ -776,6 +862,140 @@ window.deleteDoc = async (coll, id) => {
   await db.collection(coll).doc(id).delete();
   toast("Silindi");
 };
+
+// =========================================================================
+// ŞAGİRD PANELİ MƏNTİQİ
+// =========================================================================
+
+async function initStudentPanel(uid) {
+  const sDoc = await db.collection("students").doc(uid).get();
+  if (!sDoc.exists) return;
+  const s = sDoc.data();
+  document.getElementById("s-welcome-name").textContent = "Xoş gəldin, " + s.fullName + "! 👋";
+
+  let groupNameText = "—";
+  if (s.groupId) {
+    const gDoc = await db.collection("groups").doc(s.groupId).get();
+    if (gDoc.exists) groupNameText = gDoc.data().name;
+  }
+  document.getElementById("s-group-badge").innerHTML = `<span class="badge">${groupNameText}</span>`;
+
+  // Gündəlik hesabatlar
+  db.collection("dailyReports").where("studentId", "==", uid).orderBy("date", "desc").limit(30).onSnapshot(snap => {
+    const reports = snap.docs.map(d => d.data());
+    renderStudentDaily(reports);
+    updateStudentStats(reports);
+  });
+
+  // Quiz nəticələri
+  let quizData = [], examData = [];
+  const renderScores = () => renderStudentScores(quizData, examData);
+  db.collection("quizResults").where("studentId", "==", uid).orderBy("date", "desc").limit(20).onSnapshot(snap => {
+    quizData = snap.docs.map(d => d.data());
+    renderScores();
+    updateAverages(quizData, examData);
+  });
+  db.collection("examResults").where("studentId", "==", uid).orderBy("date", "desc").limit(20).onSnapshot(snap => {
+    examData = snap.docs.map(d => d.data());
+    renderScores();
+    updateAverages(quizData, examData);
+  });
+
+  // Fayllar (qrupa görə)
+  if (s.groupId) {
+    db.collection("materials").where("groupId", "==", s.groupId).orderBy("createdAt", "desc").onSnapshot(snap => {
+      const el = document.getElementById("s-materials-list");
+      if (snap.empty) { el.innerHTML = `<div class="empty-state">Hələ fayl əlavə edilməyib</div>`; return; }
+      el.innerHTML = snap.docs.map(d => {
+        const m = d.data();
+        return `<div class="list-item">
+          <div class="list-item-info">
+            <div class="list-item-title">${m.title}</div>
+            <div class="list-item-sub"><span class="badge">${m.type === "pdf" ? "PDF" : "Video"}</span></div>
+          </div>
+          <div class="list-item-actions"><a href="${m.url}" target="_blank" class="btn-small" style="text-decoration:none;">Aç</a></div>
+        </div>`;
+      }).join("");
+    });
+
+    // Cədvəl
+    db.collection("schedule").doc(s.groupId).onSnapshot(doc => {
+      document.getElementById("s-schedule-text").textContent = doc.exists && doc.data().text ? doc.data().text : "Hələ cədvəl əlavə edilməyib";
+    });
+
+    // Mövzular
+    db.collection("topics").where("groupId", "==", s.groupId).orderBy("createdAt", "desc").onSnapshot(snap => {
+      const el = document.getElementById("s-topics-list");
+      if (snap.empty) { el.innerHTML = `<div class="empty-state">Hələ mövzu yoxdur</div>`; return; }
+      el.innerHTML = snap.docs.map(d => {
+        const t = d.data();
+        return `<div class="list-item">
+          <div class="list-item-info"><div class="list-item-title">${t.completed ? "✅" : "⏳"} ${t.name}</div></div>
+        </div>`;
+      }).join("");
+    });
+  }
+}
+
+function renderStudentDaily(reports) {
+  const el = document.getElementById("s-daily-list");
+  if (reports.length === 0) { el.innerHTML = `<div class="empty-state">Hələ hesabat yoxdur</div>`; return; }
+  el.innerHTML = reports.map(r => `
+    <div class="list-item">
+      <div class="list-item-info">
+        <div class="list-item-title">${r.date}</div>
+        <div class="list-item-sub">${r.attended ? "✓ İştirak etdi" : "✗ İştirak etmədi"} · ${r.homeworkDone ? "✓ Tapşırıq edildi" : "✗ Tapşırıq edilmədi"} · Hazırlıq: ${r.prepPercentage}%</div>
+        ${r.note ? `<div class="list-item-sub" style="margin-top:4px;">📝 ${r.note}</div>` : ""}
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderStudentScores(quizData, examData) {
+  const all = quizData.map(r => ({...r, _type: "Quiz"})).concat(examData.map(r => ({...r, _type: "Sınaq"})))
+    .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+  const el = document.getElementById("s-scores-list");
+  if (all.length === 0) { el.innerHTML = `<div class="empty-state">Hələ nəticə yoxdur</div>`; return; }
+  el.innerHTML = all.map(r => `
+    <div class="list-item">
+      <div class="list-item-info">
+        <div class="list-item-title">${r.subject}</div>
+        <div class="list-item-sub"><span class="badge">${r._type}</span> ${r.score}% · ${r.date}</div>
+      </div>
+    </div>
+  `).join("");
+
+  // Qrafik
+  const chart = document.getElementById("s-chart");
+  const sorted = all.slice().sort((a, b) => (a.date || "").localeCompare(b.date || "")).slice(-12);
+  if (sorted.length === 0) { chart.innerHTML = `<div class="empty-state">Qrafik üçün məlumat yoxdur</div>`; return; }
+  chart.innerHTML = sorted.map(r => `
+    <div style="display:flex; flex-direction:column; align-items:center; gap:4px; min-width:32px;">
+      <div style="font-size:10px; color:var(--color-text-muted);">${r.score}%</div>
+      <div style="width:22px; height:${Math.max(4, r.score)}px; background:${r._type === "Quiz" ? "var(--color-primary)" : "var(--color-primary-light)"}; border-radius:4px;"></div>
+      <div style="font-size:9px; color:var(--color-text-muted); writing-mode:vertical-rl; transform:rotate(180deg);">${r.date ? r.date.slice(5) : ""}</div>
+    </div>
+  `).join("");
+}
+
+function updateAverages(quizData, examData) {
+  const avg = arr => arr.length ? Math.round(arr.reduce((s, r) => s + (r.score || 0), 0) / arr.length) : null;
+  const qAvg = avg(quizData), eAvg = avg(examData);
+  document.getElementById("stat-quiz-avg").textContent = qAvg !== null ? qAvg + "%" : "—";
+  document.getElementById("stat-exam-avg").textContent = eAvg !== null ? eAvg + "%" : "—";
+}
+
+function updateStudentStats(reports) {
+  if (reports.length === 0) {
+    document.getElementById("stat-attendance").textContent = "—";
+    document.getElementById("stat-prep").textContent = "—";
+    return;
+  }
+  const attendedCount = reports.filter(r => r.attended).length;
+  const attendancePct = Math.round((attendedCount / reports.length) * 100);
+  document.getElementById("stat-attendance").textContent = attendancePct + "%";
+  document.getElementById("stat-prep").textContent = (reports[0].prepPercentage || 0) + "%";
+}
 </script>
 </body>
 </html>
