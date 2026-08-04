@@ -102,6 +102,21 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
   .login-card { padding: 32px 22px; }
   .panel-main { padding: 20px 14px; }
 }
+.stat-icon-card { display:flex; flex-direction:column; gap:10px; padding:16px 14px; border-radius:16px; position:relative; overflow:hidden; }
+.stat-icon-card::before { content:""; position:absolute; inset:0; opacity:.1; }
+.stat-icon-badge { width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:18px; box-shadow:0 6px 14px rgba(0,0,0,.12); }
+.stat-icon-badge.grad-blue { background:linear-gradient(135deg,#3b82f6,#0B3C5D); }
+.stat-icon-badge.grad-purple { background:linear-gradient(135deg,#8b5cf6,#5b21b6); }
+.stat-icon-badge.grad-green { background:linear-gradient(135deg,#34d399,#059669); }
+.stat-icon-badge.grad-orange { background:linear-gradient(135deg,#fbbf24,#d97706); }
+.stat-value-row { display:flex; align-items:baseline; gap:6px; }
+.stat-trend { font-size:11px; font-weight:700; padding:2px 7px; border-radius:999px; }
+.stat-trend.up { background:rgba(46,158,107,.12); color:#2e9e6b; }
+.stat-trend.down { background:rgba(217,76,76,.12); color:#d94c4c; }
+.ring-wrap { display:flex; align-items:center; gap:12px; }
+.progress-ring { width:44px; height:44px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; color:#fff; position:relative; }
+.progress-ring::after { content:""; position:absolute; inset:5px; background:var(--color-white); border-radius:50%; z-index:0; }
+.progress-ring span { position:relative; z-index:1; color:var(--color-text); }
 </style>
 </head>
 <body>
@@ -325,19 +340,23 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
       <div class="card">
         <h3>Statistika</h3>
         <div id="stat-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-          <div class="list-item" style="flex-direction:column; align-items:flex-start;">
+          <div class="stat-icon-card" style="background:linear-gradient(135deg,#eff6ff,#ffffff);">
+            <div class="stat-icon-badge grad-blue">📝</div>
             <div class="list-item-sub">Quiz ortalaması</div>
-            <div class="list-item-title" id="stat-quiz-avg" style="font-size:20px;">—</div>
+            <div class="stat-value-row"><div class="list-item-title" id="stat-quiz-avg" style="font-size:20px;">—</div><span class="stat-trend" id="stat-quiz-trend" style="display:none;"></span></div>
           </div>
-          <div class="list-item" style="flex-direction:column; align-items:flex-start;">
+          <div class="stat-icon-card" style="background:linear-gradient(135deg,#f5f3ff,#ffffff);">
+            <div class="stat-icon-badge grad-purple">📊</div>
             <div class="list-item-sub">Sınaq ortalaması</div>
-            <div class="list-item-title" id="stat-exam-avg" style="font-size:20px;">—</div>
+            <div class="stat-value-row"><div class="list-item-title" id="stat-exam-avg" style="font-size:20px;">—</div><span class="stat-trend" id="stat-exam-trend" style="display:none;"></span></div>
           </div>
-          <div class="list-item" style="flex-direction:column; align-items:flex-start;">
+          <div class="stat-icon-card" style="background:linear-gradient(135deg,#ecfdf5,#ffffff);">
+            <div class="stat-icon-badge grad-green">✅</div>
             <div class="list-item-sub">Davamiyyət faizi</div>
-            <div class="list-item-title" id="stat-attendance" style="font-size:20px;">—</div>
+            <div class="stat-value-row"><div class="list-item-title" id="stat-attendance" style="font-size:20px;">—</div></div>
           </div>
-          <div class="list-item" style="flex-direction:column; align-items:flex-start;">
+          <div class="stat-icon-card" style="background:linear-gradient(135deg,#fffbeb,#ffffff);">
+            <div class="stat-icon-badge grad-orange">🎯</div>
             <div class="list-item-sub">Hazırlıq faizi (son)</div>
             <div class="list-item-title" id="stat-prep" style="font-size:20px;">—</div>
           </div>
@@ -936,10 +955,12 @@ async function initStudentPanel(uid) {
       });
       el.innerHTML = docs.map(d => {
         const m = d.data();
+        const isPdf = m.type === "pdf";
         return `<div class="list-item">
+          <div class="stat-icon-badge ${isPdf ? "grad-orange" : "grad-purple"}" style="flex-shrink:0;">${isPdf ? "📄" : "🎬"}</div>
           <div class="list-item-info">
             <div class="list-item-title">${esc(m.title)}</div>
-            <div class="list-item-sub"><span class="badge">${m.type === "pdf" ? "PDF" : "Video"}</span></div>
+            <div class="list-item-sub"><span class="badge">${isPdf ? "PDF" : "Video"}</span></div>
           </div>
           <div class="list-item-actions"><a href="${esc(m.url)}" target="_blank" rel="noopener noreferrer" class="btn-small" style="text-decoration:none;">Aç</a></div>
         </div>`;
@@ -1005,7 +1026,8 @@ function renderStudentScores(quizData, examData) {
   chart.innerHTML = sorted.map(r => `
     <div style="display:flex; flex-direction:column; align-items:center; gap:4px; min-width:32px;">
       <div style="font-size:10px; color:var(--color-text-muted);">${r.score}%</div>
-      <div style="width:22px; height:${Math.max(4, r.score)}px; background:${r._type === "Quiz" ? "var(--color-primary)" : "var(--color-primary-light)"}; border-radius:4px;"></div>
+      <div style="width:22px; height:${Math.max(4, r.score)}px; background:${r._type === "Quiz" ? "linear-gradient(180deg,#3b82f6,#0B3C5D)" : "linear-gradient(180deg,#a78bfa,#5b21b6)"}; border-radius:6px; box-shadow:0 3px 8px rgba(11,60,93,.15);"></div>
+      <div style="font-size:9px;">${r._type === "Quiz" ? "📝" : "📊"}</div>
       <div style="font-size:9px; color:var(--color-text-muted); writing-mode:vertical-rl; transform:rotate(180deg);">${r.date ? r.date.slice(5) : ""}</div>
     </div>
   `).join("");
@@ -1016,6 +1038,23 @@ function updateAverages(quizData, examData) {
   const qAvg = avg(quizData), eAvg = avg(examData);
   document.getElementById("stat-quiz-avg").textContent = qAvg !== null ? qAvg + "%" : "—";
   document.getElementById("stat-exam-avg").textContent = eAvg !== null ? eAvg + "%" : "—";
+  renderTrend("stat-quiz-trend", quizData);
+  renderTrend("stat-exam-trend", examData);
+}
+
+function renderTrend(elId, data) {
+  const el = document.getElementById(elId);
+  if (data.length < 2) { el.style.display = "none"; return; }
+  const sorted = data.slice().sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+  const half = Math.max(1, Math.floor(sorted.length / 2));
+  const older = sorted.slice(0, half);
+  const newer = sorted.slice(half);
+  const avg = arr => arr.reduce((s, r) => s + (r.score || 0), 0) / arr.length;
+  const diff = Math.round(avg(newer) - avg(older));
+  if (diff === 0) { el.style.display = "none"; return; }
+  el.style.display = "inline-block";
+  el.className = "stat-trend " + (diff > 0 ? "up" : "down");
+  el.textContent = (diff > 0 ? "▲ " : "▼ ") + Math.abs(diff) + "%";
 }
 
 function updateStudentStats(reports) {
@@ -1083,13 +1122,16 @@ function renderSubjectBreakdown(quizData, examData) {
 
   el.innerHTML = rows.map(r => {
     const isWeak = r.avg < 60;
-    const color = isWeak ? "var(--color-danger)" : r.avg < 75 ? "var(--color-warning, #d99a2b)" : "var(--color-success, #2e9e6b)";
+    const ringColor = isWeak ? "#d94c4c" : r.avg < 75 ? "#d99a2b" : "#2e9e6b";
+    const ringBg = `conic-gradient(${ringColor} ${r.avg * 3.6}deg, var(--color-gray) 0deg)`;
     return `<div class="list-item">
-      <div class="list-item-info">
-        <div class="list-item-title">${esc(r.subj)} ${isWeak ? "⚠️" : ""}</div>
-        <div class="list-item-sub">${r.count} nəticə</div>
+      <div class="ring-wrap">
+        <div class="progress-ring" style="background:${ringBg};"><span>${r.avg}%</span></div>
+        <div class="list-item-info">
+          <div class="list-item-title">${esc(r.subj)} ${isWeak ? "⚠️" : ""}</div>
+          <div class="list-item-sub">${r.count} nəticə</div>
+        </div>
       </div>
-      <div style="font-weight:700; font-size:16px; color:${color};">${r.avg}%</div>
     </div>`;
   }).join("") + (rows.some(r => r.avg < 60) ? `<div class="muted-note">⚠️ 60%-dən aşağı fənnlərə əlavə diqqət tövsiyə olunur.</div>` : "");
 }
