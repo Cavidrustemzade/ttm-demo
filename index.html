@@ -889,34 +889,39 @@ async function initStudentPanel(uid) {
   document.getElementById("s-group-badge").innerHTML = `<span class="badge">${groupNameText}</span>`;
 
   // Gündəlik hesabatlar
-  db.collection("dailyReports").where("studentId", "==", uid).orderBy("date", "desc").limit(30).onSnapshot(snap => {
-    const reports = snap.docs.map(d => d.data());
+  db.collection("dailyReports").where("studentId", "==", uid).onSnapshot(snap => {
+    const reports = snap.docs.map(d => d.data()).sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 30);
     renderStudentDaily(reports);
     updateStudentStats(reports);
-  });
+  }, err => console.error("dailyReports xətası:", err));
 
   // Quiz nəticələri
   let quizData = [], examData = [];
   const renderScores = () => renderStudentScores(quizData, examData);
-  db.collection("quizResults").where("studentId", "==", uid).orderBy("date", "desc").limit(20).onSnapshot(snap => {
-    quizData = snap.docs.map(d => d.data());
+  db.collection("quizResults").where("studentId", "==", uid).onSnapshot(snap => {
+    quizData = snap.docs.map(d => d.data()).sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 20);
     renderScores();
     updateAverages(quizData, examData);
     renderSubjectBreakdown(quizData, examData);
-  });
-  db.collection("examResults").where("studentId", "==", uid).orderBy("date", "desc").limit(20).onSnapshot(snap => {
-    examData = snap.docs.map(d => d.data());
+  }, err => console.error("quizResults xətası:", err));
+  db.collection("examResults").where("studentId", "==", uid).onSnapshot(snap => {
+    examData = snap.docs.map(d => d.data()).sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 20);
     renderScores();
     updateAverages(quizData, examData);
     renderSubjectBreakdown(quizData, examData);
-  });
+  }, err => console.error("examResults xətası:", err));
 
   // Fayllar (qrupa görə)
   if (s.groupId) {
-    db.collection("materials").where("groupId", "==", s.groupId).orderBy("createdAt", "desc").onSnapshot(snap => {
+    db.collection("materials").where("groupId", "==", s.groupId).onSnapshot(snap => {
       const el = document.getElementById("s-materials-list");
       if (snap.empty) { el.innerHTML = `<div class="empty-state">Hələ fayl əlavə edilməyib</div>`; return; }
-      el.innerHTML = snap.docs.map(d => {
+      const docs = snap.docs.slice().sort((a, b) => {
+        const ta = a.data().createdAt ? a.data().createdAt.toMillis() : 0;
+        const tb = b.data().createdAt ? b.data().createdAt.toMillis() : 0;
+        return tb - ta;
+      });
+      el.innerHTML = docs.map(d => {
         const m = d.data();
         return `<div class="list-item">
           <div class="list-item-info">
@@ -926,24 +931,29 @@ async function initStudentPanel(uid) {
           <div class="list-item-actions"><a href="${m.url}" target="_blank" class="btn-small" style="text-decoration:none;">Aç</a></div>
         </div>`;
       }).join("");
-    });
+    }, err => console.error("materials xətası:", err));
 
     // Cədvəl
     db.collection("schedule").doc(s.groupId).onSnapshot(doc => {
       document.getElementById("s-schedule-text").textContent = doc.exists && doc.data().text ? doc.data().text : "Hələ cədvəl əlavə edilməyib";
-    });
+    }, err => console.error("schedule xətası:", err));
 
     // Mövzular
-    db.collection("topics").where("groupId", "==", s.groupId).orderBy("createdAt", "desc").onSnapshot(snap => {
+    db.collection("topics").where("groupId", "==", s.groupId).onSnapshot(snap => {
       const el = document.getElementById("s-topics-list");
       if (snap.empty) { el.innerHTML = `<div class="empty-state">Hələ mövzu yoxdur</div>`; return; }
-      el.innerHTML = snap.docs.map(d => {
+      const docs = snap.docs.slice().sort((a, b) => {
+        const ta = a.data().createdAt ? a.data().createdAt.toMillis() : 0;
+        const tb = b.data().createdAt ? b.data().createdAt.toMillis() : 0;
+        return tb - ta;
+      });
+      el.innerHTML = docs.map(d => {
         const t = d.data();
         return `<div class="list-item">
           <div class="list-item-info"><div class="list-item-title">${t.completed ? "✅" : "⏳"} ${t.name}</div></div>
         </div>`;
       }).join("");
-    });
+    }, err => console.error("topics xətası:", err));
   }
 }
 
