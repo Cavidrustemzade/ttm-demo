@@ -506,6 +506,18 @@ function toast(msg) {
   setTimeout(() => t.classList.remove("show"), 2500);
 }
 
+// Təhlükəsizlik: istifadəçi mətnlərini ekrana çıxarmazdan əvvəl "təmizləyir"
+// ki, kimsə ad/qeyd sahəsinə zərərli kod yazıb sistemi poza bilməsin.
+function esc(str) {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 // ---- TAB NAVİGASİYASI ----
 document.querySelectorAll(".tab-btn[data-tab]").forEach(btn => {
   btn.addEventListener("click", () => {
@@ -542,7 +554,7 @@ function fillGroupSelects() {
   ["student-group", "material-group", "schedule-group", "topic-group"].forEach(id => {
     const sel = document.getElementById(id);
     const current = sel.value;
-    sel.innerHTML = groupsCache.map(g => `<option value="${g.id}">${g.name}</option>`).join("") || `<option value="">Əvvəlcə qrup yaradın</option>`;
+    sel.innerHTML = groupsCache.map(g => `<option value="${g.id}">${esc(g.name)}</option>`).join("") || `<option value="">Əvvəlcə qrup yaradın</option>`;
     if (current) sel.value = current;
   });
   fillStudentSelects();
@@ -552,7 +564,7 @@ function fillStudentSelects() {
   ["daily-student", "score-student"].forEach(id => {
     const sel = document.getElementById(id);
     const current = sel.value;
-    sel.innerHTML = studentsCache.filter(s => s.active !== false).map(s => `<option value="${s.id}">${s.fullName}</option>`).join("") || `<option value="">Əvvəlcə şagird əlavə edin</option>`;
+    sel.innerHTML = studentsCache.filter(s => s.active !== false).map(s => `<option value="${s.id}">${esc(s.fullName)}</option>`).join("") || `<option value="">Əvvəlcə şagird əlavə edin</option>`;
     if (current) sel.value = current;
   });
 }
@@ -570,7 +582,7 @@ function renderGroupsList() {
   if (groupsCache.length === 0) { el.innerHTML = `<div class="empty-state">Hələ qrup yaradılmayıb</div>`; return; }
   el.innerHTML = groupsCache.map(g => `
     <div class="list-item">
-      <div class="list-item-info"><div class="list-item-title">${g.name}</div></div>
+      <div class="list-item-info"><div class="list-item-title">${esc(g.name)}</div></div>
       <div class="list-item-actions"><button class="btn-danger" onclick="deleteGroup('${g.id}')">Sil</button></div>
     </div>
   `).join("");
@@ -601,7 +613,7 @@ async function loadStudents() {
 
 function groupName(groupId) {
   const g = groupsCache.find(g => g.id === groupId);
-  return g ? g.name : "—";
+  return esc(g ? g.name : "—");
 }
 
 function renderStudentsList() {
@@ -611,8 +623,8 @@ function renderStudentsList() {
   el.innerHTML = active.map(s => `
     <div class="list-item">
       <div class="list-item-info">
-        <div class="list-item-title">${s.fullName}</div>
-        <div class="list-item-sub">@${s.username} · <span class="badge">${groupName(s.groupId)}</span></div>
+        <div class="list-item-title">${esc(s.fullName)}</div>
+        <div class="list-item-sub">@${esc(s.username)} · <span class="badge">${groupName(s.groupId)}</span></div>
       </div>
       <div class="list-item-actions">
         <button class="btn-outline" onclick="editStudent('${s.id}')">Redaktə</button>
@@ -768,7 +780,7 @@ function loadScores() {
       const s = studentsCache.find(s => s.id === r.studentId);
       return `<div class="list-item">
         <div class="list-item-info">
-          <div class="list-item-title">${s ? s.fullName : "Naməlum"} — ${r.subject}</div>
+          <div class="list-item-title">${s ? s.fullName : "Naməlum"} — ${esc(r.subject)}</div>
           <div class="list-item-sub"><span class="badge">${r._type === "quiz" ? "Quiz" : "Sınaq"}</span> ${r.score}% · ${r.date}</div>
         </div>
         <div class="list-item-actions"><button class="btn-danger" onclick="deleteDoc('${r._coll}','${r.id}')">Sil</button></div>
@@ -792,6 +804,7 @@ document.getElementById("material-save-btn").addEventListener("click", async () 
   const title = document.getElementById("material-title").value.trim();
   const url = document.getElementById("material-url").value.trim();
   if (!groupId || !title || !url) { toast("Bütün sahələri doldurun"); return; }
+  if (!/^https?:\/\//i.test(url)) { toast("Link http:// və ya https:// ilə başlamalıdır"); return; }
   await db.collection("materials").add({ groupId, type, title, url, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
   document.getElementById("material-title").value = "";
   document.getElementById("material-url").value = "";
@@ -806,7 +819,7 @@ function loadMaterials() {
       const m = d.data();
       return `<div class="list-item">
         <div class="list-item-info">
-          <div class="list-item-title">${m.title}</div>
+          <div class="list-item-title">${esc(m.title)}</div>
           <div class="list-item-sub"><span class="badge">${m.type === "pdf" ? "PDF" : "Video"}</span> ${groupName(m.groupId)}</div>
         </div>
         <div class="list-item-actions"><button class="btn-danger" onclick="deleteDoc('materials','${d.id}')">Sil</button></div>
@@ -849,7 +862,7 @@ function loadTopics() {
       const t = d.data();
       return `<div class="list-item">
         <div class="list-item-info">
-          <div class="list-item-title">${t.completed ? "✅" : "⏳"} ${t.name}</div>
+          <div class="list-item-title">${t.completed ? "✅" : "⏳"} ${esc(t.name)}</div>
           <div class="list-item-sub"><span class="badge">${groupName(t.groupId)}</span></div>
         </div>
         <div class="list-item-actions">
@@ -886,7 +899,7 @@ async function initStudentPanel(uid) {
     const gDoc = await db.collection("groups").doc(s.groupId).get();
     if (gDoc.exists) groupNameText = gDoc.data().name;
   }
-  document.getElementById("s-group-badge").innerHTML = `<span class="badge">${groupNameText}</span>`;
+  document.getElementById("s-group-badge").innerHTML = `<span class="badge">${esc(groupNameText)}</span>`;
 
   // Gündəlik hesabatlar
   db.collection("dailyReports").where("studentId", "==", uid).onSnapshot(snap => {
@@ -925,10 +938,10 @@ async function initStudentPanel(uid) {
         const m = d.data();
         return `<div class="list-item">
           <div class="list-item-info">
-            <div class="list-item-title">${m.title}</div>
+            <div class="list-item-title">${esc(m.title)}</div>
             <div class="list-item-sub"><span class="badge">${m.type === "pdf" ? "PDF" : "Video"}</span></div>
           </div>
-          <div class="list-item-actions"><a href="${m.url}" target="_blank" class="btn-small" style="text-decoration:none;">Aç</a></div>
+          <div class="list-item-actions"><a href="${esc(m.url)}" target="_blank" rel="noopener noreferrer" class="btn-small" style="text-decoration:none;">Aç</a></div>
         </div>`;
       }).join("");
     }, err => console.error("materials xətası:", err));
@@ -950,7 +963,7 @@ async function initStudentPanel(uid) {
       el.innerHTML = docs.map(d => {
         const t = d.data();
         return `<div class="list-item">
-          <div class="list-item-info"><div class="list-item-title">${t.completed ? "✅" : "⏳"} ${t.name}</div></div>
+          <div class="list-item-info"><div class="list-item-title">${t.completed ? "✅" : "⏳"} ${esc(t.name)}</div></div>
         </div>`;
       }).join("");
     }, err => console.error("topics xətası:", err));
@@ -965,7 +978,7 @@ function renderStudentDaily(reports) {
       <div class="list-item-info">
         <div class="list-item-title">${r.date}</div>
         <div class="list-item-sub">${r.attended ? "✓ İştirak etdi" : "✗ İştirak etmədi"} · ${r.homeworkDone ? "✓ Tapşırıq edildi" : "✗ Tapşırıq edilmədi"} · Hazırlıq: ${r.prepPercentage}%</div>
-        ${r.note ? `<div class="list-item-sub" style="margin-top:4px;">📝 ${r.note}</div>` : ""}
+        ${r.note ? `<div class="list-item-sub" style="margin-top:4px;">📝 ${esc(r.note)}</div>` : ""}
       </div>
     </div>
   `).join("");
@@ -979,7 +992,7 @@ function renderStudentScores(quizData, examData) {
   el.innerHTML = all.map(r => `
     <div class="list-item">
       <div class="list-item-info">
-        <div class="list-item-title">${r.subject}</div>
+        <div class="list-item-title">${esc(r.subject)}</div>
         <div class="list-item-sub"><span class="badge">${r._type}</span> ${r.score}% · ${r.date}</div>
       </div>
     </div>
@@ -1073,7 +1086,7 @@ function renderSubjectBreakdown(quizData, examData) {
     const color = isWeak ? "var(--color-danger)" : r.avg < 75 ? "var(--color-warning, #d99a2b)" : "var(--color-success, #2e9e6b)";
     return `<div class="list-item">
       <div class="list-item-info">
-        <div class="list-item-title">${r.subj} ${isWeak ? "⚠️" : ""}</div>
+        <div class="list-item-title">${esc(r.subj)} ${isWeak ? "⚠️" : ""}</div>
         <div class="list-item-sub">${r.count} nəticə</div>
       </div>
       <div style="font-weight:700; font-size:16px; color:${color};">${r.avg}%</div>
