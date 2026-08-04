@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TTM Tədris Mərkəzi</title>
+<style>
+:root {
+  --primary: #0B3C5D;
+  --primary-light: #14507d;
+  --primary-dark: #072a42;
+  --white: #ffffff;
+  --light-gray: #f4f6f8;
+  --gray: #e2e6ea;
+  --text: #1c2530;
+  --text-muted: #6b7686;
+  --success: #2e9e6b;
+  --radius: 18px;
+  --font: "Segoe UI", "Inter", -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body { font-family: var(--font); background: var(--light-gray); color: var(--text); overflow-x: hidden; }
+a { text-decoration:none; color:inherit; }
+
+/* ---------- NAVBAR ---------- */
+.navbar { position: fixed; top:0; left:0; right:0; z-index:50; display:flex; align-items:center; justify-content:space-between; padding:16px 22px; backdrop-filter: blur(10px); background: rgba(244,246,248,0.75); transition: box-shadow .3s; }
+.navbar.scrolled { box-shadow: 0 2px 16px rgba(11,60,93,0.08); }
+.nav-brand { display:flex; align-items:center; gap:10px; font-weight:800; color:var(--primary); font-size:16px; }
+.nav-logo { width:38px; height:38px; border-radius:10px; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:15px; }
+.nav-cta { background:var(--primary); color:#fff; padding:10px 20px; border-radius:999px; font-weight:700; font-size:13.5px; box-shadow:0 6px 18px rgba(11,60,93,0.25); transition: transform .2s; }
+.nav-cta:active { transform: scale(.96); }
+
+/* ---------- HERO ---------- */
+.hero { position:relative; min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:100px 24px 40px; background:
+  radial-gradient(circle at 20% 20%, rgba(11,60,93,0.06), transparent 45%),
+  radial-gradient(circle at 80% 0%, rgba(20,80,125,0.08), transparent 40%),
+  var(--light-gray);
+  overflow:hidden;
+}
+.blob { position:absolute; border-radius:50%; filter: blur(0px); opacity:.5; pointer-events:none; }
+.blob1 { width:340px; height:340px; background:radial-gradient(circle, rgba(11,60,93,.15), transparent 70%); top:-80px; right:-100px; }
+.blob2 { width:260px; height:260px; background:radial-gradient(circle, rgba(20,80,125,.15), transparent 70%); bottom:-60px; left:-80px; }
+
+.hero-eyebrow { display:inline-block; background:rgba(11,60,93,0.08); color:var(--primary); font-size:12.5px; font-weight:700; padding:7px 16px; border-radius:999px; margin-bottom:20px; letter-spacing:.02em; }
+.hero h1 { font-size:clamp(32px,7vw,54px); font-weight:800; color:var(--primary); line-height:1.15; margin-bottom:16px; }
+.hero h1 span { color:var(--primary-light); }
+.hero p { font-size:16px; color:var(--text-muted); max-width:480px; margin:0 auto 28px; line-height:1.6; }
+.hero-actions { display:flex; gap:12px; }
+.btn-hero-primary { background:var(--primary); color:#fff; padding:14px 26px; border-radius:999px; font-weight:700; font-size:14.5px; box-shadow:0 10px 30px rgba(11,60,93,.3); }
+.btn-hero-secondary { background:#fff; color:var(--primary); padding:14px 26px; border-radius:999px; font-weight:700; font-size:14.5px; border:1.5px solid var(--gray); }
+.scroll-cue { margin-top:56px; display:flex; flex-direction:column; align-items:center; gap:6px; color:var(--text-muted); font-size:11.5px; animation:bounce 2s infinite; }
+@keyframes bounce { 0%,100%{transform:translateY(0);} 50%{transform:translateY(8px);} }
+
+/* ---------- LAPTOP SCROLL SECTION ---------- */
+.laptop-section { position:relative; height:220vh; }
+.laptop-sticky { position:sticky; top:0; height:100vh; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.laptop-wrap { perspective:1600px; }
+.laptop { position:relative; width:min(78vw,560px); }
+.laptop-base { width:100%; height:16px; background:linear-gradient(180deg,#cfd6dc,#aab3ba); border-radius:0 0 10px 10px; box-shadow:0 14px 30px rgba(0,0,0,.25); }
+.laptop-lid { position:relative; width:100%; aspect-ratio:16/10.2; background:#1a2733; border-radius:14px 14px 4px 4px; transform-origin: bottom center; transform: rotateX(90deg); box-shadow:0 20px 60px rgba(0,0,0,.3); padding:10px; }
+.laptop-screen { width:100%; height:100%; background:#fff; border-radius:6px; overflow:hidden; position:relative; }
+.mock-topbar { height:11%; background:#fff; display:flex; align-items:center; justify-content:space-between; padding:0 4%; box-shadow:0 1px 4px rgba(11,60,93,.06); }
+.mock-brand { display:flex; align-items:center; gap:5px; font-weight:800; color:var(--primary); font-size:clamp(8px,1.4vw,13px); }
+.mock-logo { width:16px; height:16px; background:var(--primary); border-radius:4px; }
+.mock-body { padding:4%; height:89%; overflow:hidden; }
+.mock-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:2%; margin-bottom:4%; }
+.mock-stat-card { background:var(--light-gray); border-radius:8px; padding:6% 4%; }
+.mock-stat-label { font-size:clamp(6px,1vw,9px); color:var(--text-muted); margin-bottom:4px; }
+.mock-stat-value { font-size:clamp(10px,2vw,18px); font-weight:800; color:var(--primary); }
+.mock-chart-row { display:grid; grid-template-columns:1.3fr 1fr; gap:2%; }
+.mock-panel { background:var(--light-gray); border-radius:8px; padding:5%; }
+.mock-panel-title { font-size:clamp(7px,1.1vw,10px); font-weight:700; color:var(--primary); margin-bottom:6%; }
+.mock-line { height:clamp(40px,9vw,80px); position:relative; }
+.mock-donut { width:clamp(50px,9vw,90px); height:clamp(50px,9vw,90px); border-radius:50%; margin:0 auto; background: conic-gradient(var(--primary) 0% 65%, var(--primary-light) 65% 85%, var(--gray) 85% 100%); position:relative; }
+.mock-donut::after { content:""; position:absolute; inset:22%; background:#fff; border-radius:50%; }
+
+/* ---------- FEATURES ---------- */
+.section { max-width:1000px; margin:0 auto; padding:80px 22px; }
+.section-title { text-align:center; font-size:clamp(24px,4vw,34px); font-weight:800; color:var(--primary); margin-bottom:10px; }
+.section-sub { text-align:center; color:var(--text-muted); font-size:14.5px; margin-bottom:44px; }
+.feature-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:18px; }
+.feature-card { background:#fff; border-radius:var(--radius); padding:28px 22px; box-shadow:0 6px 24px rgba(11,60,93,.06); opacity:0; transform:translateY(24px); transition:opacity .6s ease, transform .6s ease; }
+.feature-card.in { opacity:1; transform:translateY(0); }
+.feature-icon { width:48px; height:48px; border-radius:12px; background:rgba(11,60,93,.08); display:flex; align-items:center; justify-content:center; font-size:22px; margin-bottom:14px; }
+.feature-card h3 { color:var(--primary); font-size:16px; margin-bottom:6px; }
+.feature-card p { color:var(--text-muted); font-size:13.5px; line-height:1.55; }
+
+/* ---------- STATS ---------- */
+.stats-band { background:linear-gradient(160deg,var(--primary),var(--primary-dark)); padding:70px 22px; }
+.stats-grid { max-width:900px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:20px; text-align:center; }
+.stat-num { font-size:clamp(26px,5vw,42px); font-weight:800; color:#fff; }
+.stat-label { color:rgba(255,255,255,.75); font-size:12.5px; margin-top:4px; }
+
+footer { text-align:center; padding:36px 22px; color:var(--text-muted); font-size:12.5px; }
+</style>
+</head>
+<body>
+
+<nav class="navbar" id="navbar">
+  <div class="nav-brand"><div class="nav-logo">TTM</div> TTM Tədris Mərkəzi</div>
+  <a href="index.html" class="nav-cta">Daxil ol</a>
+</nav>
+
+<section class="hero">
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+  <div class="hero-eyebrow">Şagird · Valideyn · Müəllim üçün vahid sistem</div>
+  <h1>Təhsildə <span>yeni yanaşma</span></h1>
+  <p>Gündəlik hazırlıq, davamiyyət və nəticələri bir yerdə izləyin — admin panelindən idarə edin, şagird və valideyn öz hesabından görsün.</p>
+  <div class="hero-actions">
+    <a href="index.html" class="btn-hero-primary">İndi daxil ol</a>
+    <a href="#features" class="btn-hero-secondary">Ətraflı bax</a>
+  </div>
+  <div class="scroll-cue">↓ AŞAĞI SÜRÜŞDÜRÜN</div>
+</section>
+
+<div class="laptop-section" id="laptopSection">
+  <div class="laptop-sticky">
+    <div class="laptop-wrap">
+      <div class="laptop">
+        <div class="laptop-lid" id="laptopLid">
+          <div class="laptop-screen">
+            <div class="mock-topbar">
+              <div class="mock-brand"><div class="mock-logo"></div> TTM Admin Paneli</div>
+            </div>
+            <div class="mock-body">
+              <div class="mock-stats">
+                <div class="mock-stat-card"><div class="mock-stat-label">Şagirdlər</div><div class="mock-stat-value">128</div></div>
+                <div class="mock-stat-card"><div class="mock-stat-label">Qruplar</div><div class="mock-stat-value">12</div></div>
+                <div class="mock-stat-card"><div class="mock-stat-label">Testlər</div><div class="mock-stat-value">23</div></div>
+                <div class="mock-stat-card"><div class="mock-stat-label">Ortalama</div><div class="mock-stat-value">84%</div></div>
+              </div>
+              <div class="mock-chart-row">
+                <div class="mock-panel">
+                  <div class="mock-panel-title">Nəticələrin dinamikası</div>
+                  <svg class="mock-line" viewBox="0 0 200 60" preserveAspectRatio="none" width="100%" height="100%">
+                    <polyline points="0,50 30,38 60,42 90,26 120,30 150,14 200,6" fill="none" stroke="#0B3C5D" stroke-width="3"/>
+                  </svg>
+                </div>
+                <div class="mock-panel">
+                  <div class="mock-panel-title">Fənlər üzrə</div>
+                  <div class="mock-donut"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="laptop-base"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="section" id="features">
+  <div class="section-title">Hər kəs üçün öz görünüşü</div>
+  <div class="section-sub">Sadə, sürətli və mobil dostu interfeys</div>
+  <div class="feature-grid">
+    <div class="feature-card"><div class="feature-icon">🎓</div><h3>Şagirdlər üçün</h3><p>Gündəlik hesabat, quiz/sınaq nəticələri, hazırlıq faizi və dərs materialları bir ekranda.</p></div>
+    <div class="feature-card"><div class="feature-icon">👨‍👩‍👧</div><h3>Valideynlər üçün</h3><p>Övladının inkişafını real vaxtda izləyin — davamiyyət, qiymətlər, müəllim qeydləri.</p></div>
+    <div class="feature-card"><div class="feature-icon">🧑‍🏫</div><h3>Admin üçün</h3><p>Şagird idarəetməsi, qruplar, dərs cədvəli, mövzu izləmə — hər şey bir paneldə.</p></div>
+    <div class="feature-card"><div class="feature-icon">📊</div><h3>Statistika</h3><p>Fənn üzrə ortalamalar, həftəlik davamiyyət trendi, zəif sahələrin avtomatik aşkarlanması.</p></div>
+    <div class="feature-card"><div class="feature-icon">📁</div><h3>Materiallar</h3><p>PDF sənədlər və video dərslər qrup üzrə paylaşılır, hər zaman əlçatandır.</p></div>
+    <div class="feature-card"><div class="feature-icon">🔒</div><h3>Təhlükəsiz</h3><p>Hər istifadəçi yalnız öz məlumatını görür, admin bütün sistemi idarə edir.</p></div>
+  </div>
+</section>
+
+<section class="stats-band">
+  <div class="stats-grid">
+    <div><div class="stat-num" data-target="128">0</div><div class="stat-label">Şagird</div></div>
+    <div><div class="stat-num" data-target="12">0</div><div class="stat-label">Qrup</div></div>
+    <div><div class="stat-num" data-target="56">0</div><div class="stat-label">Tapşırıq</div></div>
+    <div><div class="stat-num" data-target="84">0</div><div class="stat-label">Orta nəticə %</div></div>
+  </div>
+</section>
+
+<footer>© 2026 TTM Tədris Mərkəzi. Bütün hüquqlar qorunur.</footer>
+
+<script>
+// Navbar kölgəsi
+window.addEventListener("scroll", () => {
+  document.getElementById("navbar").classList.toggle("scrolled", window.scrollY > 20);
+});
+
+// Noutbuk qapağının sürüşdürdükcə açılması
+const laptopSection = document.getElementById("laptopSection");
+const lid = document.getElementById("laptopLid");
+function updateLaptop() {
+  const rect = laptopSection.getBoundingClientRect();
+  const total = laptopSection.offsetHeight - window.innerHeight;
+  const scrolled = Math.min(Math.max(-rect.top, 0), total);
+  const progress = total > 0 ? scrolled / total : 0;
+  // 90deg (bağlı) -> 0deg (açıq), ilk 55% scroll-da açılsın, sonra sabit qalsın
+  const openProgress = Math.min(progress / 0.55, 1);
+  const angle = 90 - (openProgress * 92);
+  lid.style.transform = `rotateX(${angle}deg)`;
+}
+window.addEventListener("scroll", () => requestAnimationFrame(updateLaptop));
+updateLaptop();
+
+// Feature kartlarının görünəndə animasiyası
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add("in"); });
+}, { threshold: 0.15 });
+document.querySelectorAll(".feature-card").forEach(el => obs.observe(el));
+
+// Rəqəmlərin sayılaraq görünməsi
+const statObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    const el = e.target;
+    const target = parseInt(el.dataset.target, 10);
+    let cur = 0;
+    const step = Math.max(1, Math.round(target / 40));
+    const timer = setInterval(() => {
+      cur += step;
+      if (cur >= target) { cur = target; clearInterval(timer); }
+      el.textContent = cur;
+    }, 30);
+    statObs.unobserve(el);
+  });
+}, { threshold: 0.4 });
+document.querySelectorAll(".stat-num").forEach(el => statObs.observe(el));
+</script>
+</body>
+</html>
