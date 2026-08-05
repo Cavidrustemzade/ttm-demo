@@ -135,6 +135,19 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .exam-result-badge { width:100px; height:100px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-direction:column; margin:0 auto 18px; position:relative; }
 .exam-result-badge::after { content:""; position:absolute; inset:8px; background:#fff; border-radius:50%; }
 .exam-result-badge span { position:relative; z-index:1; font-weight:800; font-size:24px; color:var(--color-primary); }
+.race-stage { position:relative; height:280px; background:linear-gradient(180deg,#e0f2fe 0%,#e0f2fe 60%,#38bdf8 60%,#0284c7 100%); border-radius:var(--radius-md); overflow:hidden; margin-bottom:16px; }
+.race-rope { position:absolute; left:50%; top:0; width:3px; height:60%; background:repeating-linear-gradient(180deg,#a16207 0,#a16207 6px,#78350f 6px,#78350f 10px); transform:translateX(-50%); }
+.race-char { position:absolute; left:50%; font-size:34px; transform:translate(-50%,-50%); transition:bottom .5s cubic-bezier(.34,1.56,.64,1); filter:drop-shadow(0 4px 6px rgba(0,0,0,.2)); }
+.race-fish { position:absolute; font-size:20px; animation:swim 6s linear infinite; opacity:.85; }
+@keyframes swim { from{transform:translateX(-30px);} to{transform:translateX(320px);} }
+.race-wave { position:absolute; bottom:38%; left:0; right:0; height:6px; background:rgba(255,255,255,.5); animation:waveMove 2.5s ease-in-out infinite; }
+@keyframes waveMove { 0%,100%{transform:translateY(0);} 50%{transform:translateY(4px);} }
+.race-timerbar-wrap { height:10px; background:var(--color-gray); border-radius:999px; overflow:hidden; margin-bottom:14px; }
+.race-timerbar { height:100%; background:linear-gradient(90deg,#2e9e6b,#d99a2b,var(--color-danger)); transition:width .1s linear; border-radius:999px; }
+.race-score-badge { display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg,#fbbf24,#d97706); color:#fff; padding:6px 14px; border-radius:999px; font-weight:800; font-size:13px; box-shadow:0 6px 14px rgba(217,119,6,.3); }
+.race-opt-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-top:14px; }
+.race-opt-btn { aspect-ratio:1; border-radius:12px; font-weight:800; font-size:17px; border:2px solid var(--color-gray); background:var(--color-white); transition:.15s; }
+.race-opt-btn:active { transform:scale(.92); }
 </style>
 </head>
 <body>
@@ -403,6 +416,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
       <button class="tab-btn" data-stab="stab-schedule">Cədvəl</button>
       <button class="tab-btn" data-stab="stab-topics">Mövzular</button>
       <button class="tab-btn" data-stab="stab-exams">Sınaqlar</button>
+      <button class="tab-btn" data-stab="stab-race">🏆 Yarış</button>
     </div>
 
     <!-- ANA SƏHİFƏ -->
@@ -538,6 +552,49 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
           <div id="exam-result-video"></div>
         </div>
         <button class="btn-small" id="exam-back-to-list-btn">Sınaqlara qayıt</button>
+      </div>
+    </div>
+
+    <!-- YARIŞ -->
+    <div class="tab-panel" id="stab-race">
+      <div id="race-view-setup">
+        <div class="card">
+          <h3>🏆 Sürətli Təkrar Yarışı</h3>
+          <p class="muted-note" style="margin-bottom:14px;">Mövzu seçin, vaxta qarşı sual cavablandırın — düz cavab verdikcə balaca dostumuz ipdən yuxarı dırmaşır! 🐵</p>
+          <div class="field-row">
+            <div class="field"><label>Mövzu seçin</label><select id="race-topic-select"><option value="">— Seçin —</option></select></div>
+          </div>
+          <button class="btn-small" id="race-start-btn" style="width:100%;">Yarışa başla</button>
+        </div>
+      </div>
+
+      <div id="race-view-game" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <span class="race-score-badge">⭐ <span id="race-score">0</span> xal</span>
+          <span class="muted-note" id="race-progress">Sual 1/10</span>
+        </div>
+        <div class="race-stage" id="race-stage">
+          <div class="race-rope"></div>
+          <div class="race-wave"></div>
+          <div class="race-char" id="race-char" style="bottom:50%;">🐵</div>
+          <div class="race-fish" style="bottom:8%;">🐟</div>
+          <div class="race-fish" style="bottom:16%; animation-delay:2s;">🐠</div>
+          <div class="race-fish" style="bottom:4%; animation-delay:4s;">🐡</div>
+        </div>
+        <div class="race-timerbar-wrap"><div class="race-timerbar" id="race-timerbar" style="width:100%;"></div></div>
+        <div class="card">
+          <div id="race-question-box"></div>
+        </div>
+      </div>
+
+      <div id="race-view-end" style="display:none;">
+        <div class="card" style="text-align:center;">
+          <div style="font-size:60px; margin-bottom:10px;" id="race-end-emoji">🎉</div>
+          <h3 id="race-end-title">Əla!</h3>
+          <p class="muted-note" id="race-end-summary"></p>
+          <div class="race-score-badge" style="margin-top:14px;">⭐ <span id="race-final-score">0</span> xal</div>
+        </div>
+        <button class="btn-small" id="race-again-btn" style="width:100%;">Yenidən yarış</button>
       </div>
     </div>
   </main>
@@ -1545,6 +1602,7 @@ function renderStudentExamList() {
 
   renderExamResultsInScoresTab();
   renderExamWeakTopics();
+  updateRaceTopicSelect();
 }
 
 function motivationalTag(score) {
@@ -1826,6 +1884,162 @@ function renderExamResult(ex, attempt) {
 document.getElementById("exam-back-to-list-btn").addEventListener("click", () => {
   document.getElementById("exam-view-result").style.display = "none";
   document.getElementById("exam-view-list").style.display = "block";
+});
+
+// =========================================================================
+// YARIŞ OYUNU (ŞAGİRD)
+// =========================================================================
+let raceQuestions = [];
+let raceIndex = 0;
+let raceScore = 0;
+let racePosition = 50; // 0 = suya düşdü, 100 = tam yuxarı
+let raceTimerInterval = null;
+let raceTimeLeft = 0;
+const RACE_QUESTION_TIME = 12; // saniyə
+
+function playTone(freq, duration, type) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type || "sine";
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(); osc.stop(ctx.currentTime + duration);
+  } catch (e) { /* səs dəstəklənmirsə səssiz davam et */ }
+}
+function playCorrectSound() { playTone(523, 0.12, "sine"); setTimeout(() => playTone(784, 0.15, "sine"), 100); }
+function playWrongSound() { playTone(180, 0.35, "sawtooth"); }
+function playWinSound() { [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => playTone(f, 0.2, "sine"), i * 120)); }
+
+function updateRaceTopicSelect() {
+  const sel = document.getElementById("race-topic-select");
+  if (!sel) return;
+  const topics = [...new Set(studentExamsCache.map(e => e.topic).filter(Boolean))];
+  const current = sel.value;
+  sel.innerHTML = `<option value="">— Seçin —</option>` + topics.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join("");
+  if (current) sel.value = current;
+}
+
+document.getElementById("race-start-btn").addEventListener("click", async () => {
+  const topic = document.getElementById("race-topic-select").value;
+  if (!topic) { toast("Mövzu seçin"); return; }
+  toast("Suallar hazırlanır...");
+
+  const matchingExams = studentExamsCache.filter(e => e.topic === topic);
+  let allQuestions = [];
+  for (const ex of matchingExams) {
+    const qSnap = await db.collection("exams").doc(ex.id).collection("questions").get();
+    allQuestions = allQuestions.concat(qSnap.docs.map(d => d.data()));
+  }
+  if (allQuestions.length === 0) { toast("Bu mövzuda hələ sual yoxdur"); return; }
+
+  // Qarışdır (Fisher-Yates)
+  for (let i = allQuestions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [allQuestions[i], allQuestions[j]] = [allQuestions[j], allQuestions[i]];
+  }
+  raceQuestions = allQuestions.slice(0, 10);
+  raceIndex = 0; raceScore = 0; racePosition = 50;
+
+  document.getElementById("race-view-setup").style.display = "none";
+  document.getElementById("race-view-end").style.display = "none";
+  document.getElementById("race-view-game").style.display = "block";
+  document.getElementById("race-score").textContent = "0";
+  updateRaceCharPosition();
+  renderRaceQuestion();
+});
+
+function updateRaceCharPosition() {
+  document.getElementById("race-char").style.bottom = racePosition + "%";
+}
+
+function renderRaceQuestion() {
+  const q = raceQuestions[raceIndex];
+  document.getElementById("race-progress").textContent = `Sual ${raceIndex + 1}/${raceQuestions.length}`;
+  const box = document.getElementById("race-question-box");
+  const imgHtml = q.imageBase64 ? `<img src="${q.imageBase64}" style="max-width:100%; border-radius:10px; margin-bottom:10px;" />` : "";
+  const textHtml = q.text ? `<div style="font-weight:700; margin-bottom:10px;">${esc(q.text)}</div>` : "";
+
+  if (q.type === "open") {
+    box.innerHTML = `${textHtml}${imgHtml}
+      <div class="field"><input type="text" id="race-open-input" placeholder="Cavabı yazın" autofocus /></div>
+      <button class="btn-small" id="race-submit-open-btn" style="width:100%; margin-top:8px;">Cavabla</button>`;
+    document.getElementById("race-submit-open-btn").addEventListener("click", () => {
+      const val = document.getElementById("race-open-input").value.trim();
+      submitRaceAnswer(checkOpenAnswer(val, q.correctAnswer));
+    });
+  } else {
+    box.innerHTML = `${textHtml}${imgHtml}
+      <div class="race-opt-grid">
+        ${OPTION_LETTERS.map((letter, oi) => `<button class="race-opt-btn" onclick="answerRaceOption(${oi})">${letter}</button>`).join("")}
+      </div>`;
+  }
+  startRaceTimer();
+}
+
+window.answerRaceOption = (oi) => {
+  const q = raceQuestions[raceIndex];
+  submitRaceAnswer(oi === q.correctIndex);
+};
+
+function startRaceTimer() {
+  clearInterval(raceTimerInterval);
+  raceTimeLeft = RACE_QUESTION_TIME;
+  const bar = document.getElementById("race-timerbar");
+  bar.style.width = "100%";
+  raceTimerInterval = setInterval(() => {
+    raceTimeLeft -= 0.1;
+    const pct = Math.max(0, (raceTimeLeft / RACE_QUESTION_TIME) * 100);
+    bar.style.width = pct + "%";
+    if (raceTimeLeft <= 0) { clearInterval(raceTimerInterval); submitRaceAnswer(false); }
+  }, 100);
+}
+
+function submitRaceAnswer(isCorrect) {
+  clearInterval(raceTimerInterval);
+  if (isCorrect) {
+    const speedBonus = Math.max(10, Math.round((raceTimeLeft / RACE_QUESTION_TIME) * 50));
+    raceScore += 50 + speedBonus;
+    racePosition = Math.min(100, racePosition + (50 / raceQuestions.length));
+    playCorrectSound();
+  } else {
+    racePosition = Math.max(0, racePosition - 12);
+    playWrongSound();
+  }
+  document.getElementById("race-score").textContent = raceScore;
+  updateRaceCharPosition();
+
+  setTimeout(() => {
+    if (racePosition <= 0) { endRace(false); return; }
+    raceIndex++;
+    if (raceIndex >= raceQuestions.length) { endRace(true); return; }
+    renderRaceQuestion();
+  }, 700);
+}
+
+function endRace(reachedEnd) {
+  clearInterval(raceTimerInterval);
+  document.getElementById("race-view-game").style.display = "none";
+  document.getElementById("race-view-end").style.display = "block";
+  document.getElementById("race-final-score").textContent = raceScore;
+  if (racePosition <= 0) {
+    document.getElementById("race-end-emoji").textContent = "💦";
+    document.getElementById("race-end-title").textContent = "Bir az yaxın idi!";
+    document.getElementById("race-end-summary").textContent = "Balaca dostumuz gölməçəyə düşdü, amma heç nə olmayıb — yenidən cəhd et!";
+  } else {
+    playWinSound();
+    document.getElementById("race-end-emoji").textContent = "🏆";
+    document.getElementById("race-end-title").textContent = "Təbriklər, qazandın!";
+    document.getElementById("race-end-summary").textContent = "Dostumuz ipin başına çatdı! Əla iş gördün.";
+  }
+}
+
+document.getElementById("race-again-btn").addEventListener("click", () => {
+  document.getElementById("race-view-end").style.display = "none";
+  document.getElementById("race-view-setup").style.display = "block";
 });
 
 function renderStudentDaily(reports) {
