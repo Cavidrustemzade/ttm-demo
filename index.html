@@ -1002,8 +1002,33 @@ window.deleteDoc = async (coll, id) => {
 };
 
 // ---- SINAQLAR (ADMIN) ----
-let examQuestions = []; // { text, options:[4], correctIndex }
+// Sual formatı: { type:"mcq"|"open", text, imageBase64, options:["A","B","C","D","E"], correctIndex, correctAnswer }
+let examQuestions = [];
 let examsCache = [];
+const OPTION_LETTERS = ["A", "B", "C", "D", "E"];
+
+// Şəkli sıxışdırıb base64-ə çevirir (Firestore limitini aşmamaq üçün)
+function compressImageToBase64(file, maxWidth) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.6));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
 function renderQuestionBuilder() {
   const el = document.getElementById("exam-questions-builder");
@@ -1011,15 +1036,37 @@ function renderQuestionBuilder() {
   el.innerHTML = examQuestions.map((q, qi) => `
     <div class="q-builder-item">
       <button class="btn-danger" onclick="removeQuestion(${qi})">Sil</button>
-      <div class="field" style="margin-bottom:8px;"><label>Sual ${qi + 1}</label>
-        <input type="text" value="${esc(q.text)}" oninput="updateQuestionText(${qi}, this.value)" placeholder="Sual mətnini yazın" />
+      <div class="field" style="margin-bottom:8px;">
+        <label>Sual ${qi + 1} növü</label>
+        <select onchange="setQuestionType(${qi}, this.value)">
+          <option value="mcq" ${q.type === "mcq" ? "selected" : ""}>Variantlı (A-E)</option>
+          <option value="open" ${q.type === "open" ? "selected" : ""}>Açıq (şagird özü yazır)</option>
+        </select>
       </div>
-      ${q.options.map((opt, oi) => `
-        <div class="q-opt-row">
-          <input type="radio" name="correct-${qi}" ${q.correctIndex === oi ? "checked" : ""} onchange="setCorrectOption(${qi}, ${oi})" />
-          <input type="text" value="${esc(opt)}" oninput="updateOption(${qi}, ${oi}, this.value)" placeholder="Cavab variantı ${oi + 1}" />
+      <div class="field" style="margin-bottom:8px;">
+        <label>Sual mətni (istəyə görə, şəkil qoyanda boş buraxıla bilər)</label>
+        <input type="text" value="${esc(q.text)}" oninput="updateQuestionText(${qi}, this.value)" placeholder="Sual mətni və ya boş buraxın" />
+      </div>
+      <div class="field" style="margin-bottom:10px;">
+        <label>Sualın şəkli (istəyə görə)</label>
+        <input type="file" accept="image/*" onchange="uploadQuestionImage(${qi}, this)" />
+        ${q.imageBase64 ? `<img src="${q.imageBase64}" style="max-width:100%; margin-top:8px; border-radius:8px; border:1px solid var(--color-gray);" />
+          <button class="btn-outline" style="margin-top:6px;" onclick="removeQuestionImage(${qi})">Şəkli sil</button>` : ""}
+      </div>
+      ${q.type === "mcq" ? `
+        ${q.options.map((opt, oi) => `
+          <div class="q-opt-row">
+            <input type="radio" name="correct-${qi}" ${q.correctIndex === oi ? "checked" : ""} onchange="setCorrectOption(${qi}, ${oi})" />
+            <span style="font-weight:700; width:16px;">${OPTION_LETTERS[oi]})</span>
+            <input type="text" value="${esc(opt)}" oninput="updateOption(${qi}, ${oi}, this.value)" placeholder="${OPTION_LETTERS[oi]} variantı" />
+          </div>
+        `).join("")}
+      ` : `
+        <div class="field">
+          <label>Düzgün cavab (şagird nə yazmalıdır, məs: 15)</label>
+          <input type="text" value="${esc(q.correctAnswer || "")}" oninput="updateCorrectAnswer(${qi}, this.value)" placeholder="Düzgün cavabı yazın" />
         </div>
-      `).join("")}
+      `}
     </div>
   `).join("");
 }
@@ -1028,9 +1075,27 @@ window.removeQuestion = (qi) => { examQuestions.splice(qi, 1); renderQuestionBui
 window.updateQuestionText = (qi, val) => { examQuestions[qi].text = val; };
 window.updateOption = (qi, oi, val) => { examQuestions[qi].options[oi] = val; };
 window.setCorrectOption = (qi, oi) => { examQuestions[qi].correctIndex = oi; };
+window.updateCorrectAnswer = (qi, val) => { examQuestions[qi].correctAnswer = val; };
+window.setQuestionType = (qi, val) => { examQuestions[qi].type = val; renderQuestionBuilder(); };
+window.removeQuestionImage = (qi) => { examQuestions[qi].imageBase64 = ""; renderQuestionBuilder(); };
+
+window.uploadQuestionImage = async (qi, inputEl) => {
+  const file = inputEl.files[0];
+  if (!file) return;
+  toast("Şəkil yüklənir...");
+  try {
+    const base64 = await compressImageToBase64(file, 900);
+    examQuestions[qi].imageBase64 = base64;
+    renderQuestionBuilder();
+    toast("Şəkil əlavə edildi");
+  } catch (e) {
+    console.error(e);
+    toast("Şəkil yüklənərkən xəta baş verdi");
+  }
+};
 
 document.getElementById("exam-add-question-btn").addEventListener("click", () => {
-  examQuestions.push({ text: "", options: ["", "", "", ""], correctIndex: 0 });
+  examQuestions.push({ type: "mcq", text: "", imageBase64: "", options: ["", "", "", "", ""], correctIndex: 0, correctAnswer: "" });
   renderQuestionBuilder();
 });
 
@@ -1060,25 +1125,47 @@ document.getElementById("exam-save-btn").addEventListener("click", async () => {
   if (!title || !groupId || !topic || !activationInput) { toast("Bütün əsas sahələri doldurun"); return; }
   if (examQuestions.length === 0) { toast("Ən azı 1 sual əlavə edin"); return; }
   for (const q of examQuestions) {
-    if (!q.text.trim() || q.options.some(o => !o.trim())) { toast("Bütün sual və cavab variantlarını doldurun"); return; }
+    if (!q.text.trim() && !q.imageBase64) { toast("Hər sualda mətn və ya şəkil olmalıdır"); return; }
+    if (q.type === "mcq" && q.options.some(o => !o.trim())) { toast("Bütün A-E variantlarını doldurun"); return; }
+    if (q.type === "open" && !String(q.correctAnswer || "").trim()) { toast("Açıq suallarda düzgün cavab yazılmalıdır"); return; }
   }
   if (videoUrl && !/^https?:\/\//i.test(videoUrl)) { toast("Video linki http:// və ya https:// ilə başlamalıdır"); return; }
 
   const activationAt = new Date(activationInput).toISOString();
-  const payload = { title, groupId, topic, timeLimitMinutes, activationAt, videoUrl, questions: examQuestions };
+  const meta = { title, groupId, topic, timeLimitMinutes, activationAt, videoUrl, questionCount: examQuestions.length };
 
-  if (editId) {
-    await db.collection("exams").doc(editId).update(payload);
-    toast("Sınaq yeniləndi");
-  } else {
-    payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-    await db.collection("exams").add(payload);
-    toast("Sınaq yaradıldı");
+  document.getElementById("exam-save-btn").disabled = true;
+  try {
+    let examId = editId;
+    if (editId) {
+      await db.collection("exams").doc(editId).update(meta);
+      // Köhnə sualları silib yenidən yazırıq (sadə və etibarlı yol)
+      const oldQs = await db.collection("exams").doc(editId).collection("questions").get();
+      const batch = db.batch();
+      oldQs.forEach(d => batch.delete(d.ref));
+      await batch.commit();
+    } else {
+      meta.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      const ref = await db.collection("exams").add(meta);
+      examId = ref.id;
+    }
+    const writeBatch = db.batch();
+    examQuestions.forEach((q, i) => {
+      const qRef = db.collection("exams").doc(examId).collection("questions").doc(String(i));
+      writeBatch.set(qRef, { ...q, order: i });
+    });
+    await writeBatch.commit();
+    toast(editId ? "Sınaq yeniləndi" : "Sınaq yaradıldı");
+    resetExamForm();
+  } catch (err) {
+    console.error(err);
+    toast("Xəta: " + err.message);
+  } finally {
+    document.getElementById("exam-save-btn").disabled = false;
   }
-  resetExamForm();
 });
 
-window.editExam = (id) => {
+window.editExam = async (id) => {
   const ex = examsCache.find(e => e.id === id);
   if (!ex) return;
   document.getElementById("exam-edit-id").value = id;
@@ -1090,14 +1177,20 @@ window.editExam = (id) => {
   document.getElementById("exam-video").value = ex.videoUrl || "";
   document.getElementById("exam-form-title").textContent = "Sınaqı redaktə et: " + ex.title;
   document.getElementById("exam-cancel-btn").style.display = "inline-block";
-  examQuestions = JSON.parse(JSON.stringify(ex.questions));
+  toast("Suallar yüklənir...");
+  const qSnap = await db.collection("exams").doc(id).collection("questions").orderBy("order").get();
+  examQuestions = qSnap.docs.map(d => d.data());
   renderQuestionBuilder();
   window.scrollTo({ top: 0, behavior: "smooth" });
 };
 
 window.deleteExam = async (id) => {
   if (!confirm("Bu sınaqı silmək istədiyinizə əminsiniz?")) return;
-  await db.collection("exams").doc(id).delete();
+  const qSnap = await db.collection("exams").doc(id).collection("questions").get();
+  const batch = db.batch();
+  qSnap.forEach(d => batch.delete(d.ref));
+  batch.delete(db.collection("exams").doc(id));
+  await batch.commit();
   toast("Sınaq silindi");
 };
 
@@ -1111,7 +1204,7 @@ function loadExams() {
       return `<div class="list-item">
         <div class="list-item-info">
           <div class="list-item-title">${esc(ex.title)}</div>
-          <div class="list-item-sub"><span class="badge">${groupName(ex.groupId)}</span> ${ex.questions.length} sual · ${ex.timeLimitMinutes} dəq · ${activeNow ? "🟢 Aktiv" : "⏳ " + new Date(ex.activationAt).toLocaleString("az-AZ")}</div>
+          <div class="list-item-sub"><span class="badge">${groupName(ex.groupId)}</span> ${ex.questionCount || 0} sual · ${ex.timeLimitMinutes} dəq · ${activeNow ? "🟢 Aktiv" : "⏳ " + new Date(ex.activationAt).toLocaleString("az-AZ")}</div>
         </div>
         <div class="list-item-actions">
           <button class="btn-outline" onclick="editExam('${ex.id}')">Redaktə</button>
@@ -1257,7 +1350,7 @@ function renderStudentExamList() {
       html += `<div class="list-item">
         <div class="list-item-info">
           <div class="list-item-title">🟢 ${esc(ex.title)}</div>
-          <div class="list-item-sub">${ex.questions.length} sual · ${ex.timeLimitMinutes} dəqiqə · ${esc(ex.topic)}</div>
+          <div class="list-item-sub">${ex.questionCount || 0} sual · ${ex.timeLimitMinutes} dəqiqə · ${esc(ex.topic)}</div>
         </div>
         <div class="list-item-actions"><button class="btn-small" onclick="startExam('${ex.id}')">Başla</button></div>
       </div>`;
@@ -1288,13 +1381,18 @@ function renderStudentExamList() {
   }).join("");
 }
 
-window.startExam = (examId) => {
+window.startExam = async (examId) => {
   const ex = studentExamsCache.find(e => e.id === examId);
   if (!ex) return;
   if (!confirm(`"${ex.title}" sınağına başlayırsınız. ${ex.timeLimitMinutes} dəqiqəniz var. Davam edilsin?`)) return;
 
-  currentExam = ex;
-  currentExamAnswers = new Array(ex.questions.length).fill(null);
+  toast("Suallar yüklənir...");
+  const qSnap = await db.collection("exams").doc(examId).collection("questions").orderBy("order").get();
+  const questions = qSnap.docs.map(d => d.data());
+  if (questions.length === 0) { toast("Bu sınaqda hələ sual yoxdur"); return; }
+
+  currentExam = { ...ex, questions };
+  currentExamAnswers = new Array(questions.length).fill(null);
   currentExamIndex = 0;
   examEndTime = Date.now() + ex.timeLimitMinutes * 60000;
 
@@ -1323,21 +1421,44 @@ function startExamTimer() {
 function renderExamNavGrid() {
   const grid = document.getElementById("exam-nav-grid");
   grid.innerHTML = currentExam.questions.map((_, i) => `
-    <button class="exam-nav-btn ${currentExamAnswers[i] !== null ? "answered" : ""} ${i === currentExamIndex ? "current" : ""}" onclick="goToExamQuestion(${i})">${i + 1}</button>
+    <button class="exam-nav-btn ${currentExamAnswers[i] !== null && currentExamAnswers[i] !== "" ? "answered" : ""} ${i === currentExamIndex ? "current" : ""}" onclick="goToExamQuestion(${i})">${i + 1}</button>
   `).join("");
 }
 
-window.goToExamQuestion = (i) => { currentExamIndex = i; renderExamNavGrid(); renderExamQuestion(); };
+window.goToExamQuestion = (i) => {
+  saveOpenAnswerFromInput();
+  currentExamIndex = i; renderExamNavGrid(); renderExamQuestion();
+};
+
+function saveOpenAnswerFromInput() {
+  const q = currentExam.questions[currentExamIndex];
+  if (q.type === "open") {
+    const inp = document.getElementById("exam-open-input");
+    if (inp) currentExamAnswers[currentExamIndex] = inp.value.trim();
+  }
+}
 
 function renderExamQuestion() {
   const q = currentExam.questions[currentExamIndex];
   const box = document.getElementById("exam-question-box");
-  box.innerHTML = `
-    <div style="font-weight:700; margin-bottom:14px; font-size:15px;">Sual ${currentExamIndex + 1}/${currentExam.questions.length}: ${esc(q.text)}</div>
-    ${q.options.map((opt, oi) => `
-      <button class="option-btn ${currentExamAnswers[currentExamIndex] === oi ? "selected" : ""}" onclick="selectExamOption(${oi})">${esc(opt)}</button>
-    `).join("")}
-  `;
+  const imgHtml = q.imageBase64 ? `<img src="${q.imageBase64}" style="max-width:100%; border-radius:10px; margin-bottom:14px; border:1px solid var(--color-gray);" />` : "";
+  const textHtml = q.text ? `<div style="font-weight:700; margin-bottom:14px; font-size:15px;">Sual ${currentExamIndex + 1}/${currentExam.questions.length}: ${esc(q.text)}</div>` : `<div style="font-weight:700; margin-bottom:14px; font-size:15px;">Sual ${currentExamIndex + 1}/${currentExam.questions.length}</div>`;
+
+  if (q.type === "open") {
+    box.innerHTML = `${textHtml}${imgHtml}
+      <div class="field"><label>Cavabınızı yazın</label>
+        <input type="text" id="exam-open-input" value="${esc(currentExamAnswers[currentExamIndex] || "")}" placeholder="Cavabı yazın" />
+      </div>`;
+    document.getElementById("exam-open-input").addEventListener("input", (e) => {
+      currentExamAnswers[currentExamIndex] = e.target.value.trim();
+      renderExamNavGrid();
+    });
+  } else {
+    box.innerHTML = `${textHtml}${imgHtml}
+      ${q.options.map((opt, oi) => `
+        <button class="option-btn ${currentExamAnswers[currentExamIndex] === oi ? "selected" : ""}" onclick="selectExamOption(${oi})">${OPTION_LETTERS[oi]}) ${esc(opt)}</button>
+      `).join("")}`;
+  }
 }
 
 window.selectExamOption = (oi) => {
@@ -1347,25 +1468,40 @@ window.selectExamOption = (oi) => {
 };
 
 document.getElementById("exam-prev-btn").addEventListener("click", () => {
+  saveOpenAnswerFromInput();
   if (currentExamIndex > 0) { currentExamIndex--; renderExamNavGrid(); renderExamQuestion(); }
 });
 document.getElementById("exam-next-btn").addEventListener("click", () => {
+  saveOpenAnswerFromInput();
   if (currentExamIndex < currentExam.questions.length - 1) { currentExamIndex++; renderExamNavGrid(); renderExamQuestion(); }
 });
 document.getElementById("exam-finish-btn").addEventListener("click", () => {
-  const unanswered = currentExamAnswers.filter(a => a === null).length;
+  saveOpenAnswerFromInput();
+  const unanswered = currentExamAnswers.filter(a => a === null || a === "").length;
   const msg = unanswered > 0 ? `${unanswered} sual cavabsızdır. Yenə də bitirmək istəyirsiniz?` : "Sınağı bitirmək istədiyinizə əminsiniz?";
   if (confirm(msg)) finishExam(false);
 });
 
+function checkOpenAnswer(given, correct) {
+  const g = String(given || "").trim().toLowerCase();
+  const c = String(correct || "").trim().toLowerCase();
+  if (g === c) return true;
+  const gNum = parseFloat(g.replace(",", "."));
+  const cNum = parseFloat(c.replace(",", "."));
+  return !isNaN(gNum) && !isNaN(cNum) && gNum === cNum;
+}
+
 async function finishExam(autoSubmit) {
   clearInterval(examTimerInterval);
+  saveOpenAnswerFromInput();
   const ex = currentExam;
   let correctCount = 0;
   const perQuestion = ex.questions.map((q, i) => {
-    const isCorrect = currentExamAnswers[i] === q.correctIndex;
+    let isCorrect;
+    if (q.type === "open") isCorrect = checkOpenAnswer(currentExamAnswers[i], q.correctAnswer);
+    else isCorrect = currentExamAnswers[i] === q.correctIndex;
     if (isCorrect) correctCount++;
-    return { selected: currentExamAnswers[i], correct: q.correctIndex, isCorrect };
+    return { selected: currentExamAnswers[i], correct: q.type === "open" ? q.correctAnswer : q.correctIndex, isCorrect, type: q.type };
   });
   const totalCount = ex.questions.length;
   const scorePct = Math.round((correctCount / totalCount) * 100);
@@ -1381,10 +1517,13 @@ async function finishExam(autoSubmit) {
   renderExamResult(ex, { ...attemptData, id: ref.id });
 }
 
-window.viewPastResult = (attemptId) => {
+window.viewPastResult = async (attemptId) => {
   const a = studentAttemptsCache.find(x => x.id === attemptId);
-  const ex = studentExamsCache.find(e => e.id === a.examId);
-  if (!a || !ex) { toast("Sınaq məlumatı tapılmadı"); return; }
+  const exMeta = studentExamsCache.find(e => e.id === a.examId);
+  if (!a || !exMeta) { toast("Sınaq məlumatı tapılmadı"); return; }
+  toast("Yüklənir...");
+  const qSnap = await db.collection("exams").doc(a.examId).collection("questions").orderBy("order").get();
+  const ex = { ...exMeta, questions: qSnap.docs.map(d => d.data()) };
   document.getElementById("exam-view-list").style.display = "none";
   renderExamResult(ex, a);
 };
@@ -1399,13 +1538,23 @@ function renderExamResult(ex, attempt) {
 
   document.getElementById("exam-result-detail").innerHTML = ex.questions.map((q, i) => {
     const pq = attempt.perQuestion[i];
+    const imgHtml = q.imageBase64 ? `<img src="${q.imageBase64}" style="max-width:100%; border-radius:8px; margin:6px 0;" />` : "";
+    if (q.type === "open") {
+      return `<div class="list-item" style="flex-direction:column; align-items:flex-start; gap:6px;">
+        <div class="list-item-title">${i + 1}. ${esc(q.text)} ${pq.isCorrect ? "✅" : "❌"}</div>
+        ${imgHtml}
+        <div class="option-btn ${pq.isCorrect ? "correct" : "wrong"}" style="pointer-events:none; font-size:13px;">Sizin cavabınız: ${esc(pq.selected || "(boş)")}</div>
+        ${!pq.isCorrect ? `<div class="option-btn correct" style="pointer-events:none; font-size:13px;">Düzgün cavab: ${esc(q.correctAnswer)}</div>` : ""}
+      </div>`;
+    }
     return `<div class="list-item" style="flex-direction:column; align-items:flex-start; gap:6px;">
       <div class="list-item-title">${i + 1}. ${esc(q.text)} ${pq.isCorrect ? "✅" : "❌"}</div>
+      ${imgHtml}
       ${q.options.map((opt, oi) => {
         let cls = "";
         if (oi === q.correctIndex) cls = "correct";
         else if (oi === pq.selected && !pq.isCorrect) cls = "wrong";
-        return `<div class="option-btn ${cls}" style="pointer-events:none; margin-bottom:4px; padding:8px 12px; font-size:13px;">${esc(opt)}</div>`;
+        return `<div class="option-btn ${cls}" style="pointer-events:none; margin-bottom:4px; padding:8px 12px; font-size:13px;">${OPTION_LETTERS[oi]}) ${esc(opt)}</div>`;
       }).join("")}
     </div>`;
   }).join("");
