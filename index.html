@@ -117,6 +117,24 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .progress-ring { width:44px; height:44px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; color:#fff; position:relative; }
 .progress-ring::after { content:""; position:absolute; inset:5px; background:var(--color-white); border-radius:50%; z-index:0; }
 .progress-ring span { position:relative; z-index:1; color:var(--color-text); }
+.q-builder-item { background:var(--color-light-gray); border-radius:var(--radius-sm); padding:14px; margin-bottom:10px; position:relative; }
+.q-builder-item .btn-danger { position:absolute; top:10px; right:10px; }
+.q-opt-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.q-opt-row input[type="radio"] { width:18px; height:18px; flex-shrink:0; }
+.q-opt-row input[type="text"] { flex:1; padding:8px 10px; border:1.5px solid var(--color-gray); border-radius:6px; font-size:13px; background:var(--color-white); }
+.exam-nav-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:16px; }
+.exam-nav-btn { aspect-ratio:1; border-radius:8px; background:var(--color-light-gray); color:var(--color-text); font-weight:700; font-size:13px; border:2px solid transparent; }
+.exam-nav-btn.answered { background:rgba(46,158,107,.15); color:#2e9e6b; }
+.exam-nav-btn.current { border-color:var(--color-primary); }
+.exam-timer { position:sticky; top:66px; z-index:15; background:var(--color-primary); color:#fff; text-align:center; padding:10px; border-radius:var(--radius-sm); font-weight:800; font-size:16px; margin-bottom:14px; }
+.exam-timer.warning { background:var(--color-danger); }
+.option-btn { display:block; width:100%; text-align:left; padding:14px 16px; border-radius:var(--radius-sm); border:2px solid var(--color-gray); background:var(--color-white); margin-bottom:10px; font-size:14.5px; transition:var(--transition); }
+.option-btn.selected { border-color:var(--color-primary); background:rgba(11,60,93,.06); font-weight:600; }
+.option-btn.correct { border-color:#2e9e6b; background:rgba(46,158,107,.1); }
+.option-btn.wrong { border-color:var(--color-danger); background:rgba(217,76,76,.1); }
+.exam-result-badge { width:100px; height:100px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-direction:column; margin:0 auto 18px; position:relative; }
+.exam-result-badge::after { content:""; position:absolute; inset:8px; background:#fff; border-radius:50%; }
+.exam-result-badge span { position:relative; z-index:1; font-weight:800; font-size:24px; color:var(--color-primary); }
 </style>
 </head>
 <body>
@@ -166,6 +184,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
       <button class="tab-btn" data-tab="tab-materials">PDF / Video</button>
       <button class="tab-btn" data-tab="tab-schedule">Cədvəl</button>
       <button class="tab-btn" data-tab="tab-topics">Mövzular</button>
+      <button class="tab-btn" data-tab="tab-exams">Sınaqlar</button>
     </div>
 
     <!-- ŞAGİRDLƏR -->
@@ -311,6 +330,40 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
         <div id="topics-list"><div class="empty-state">Yüklənir...</div></div>
       </div>
     </div>
+
+    <!-- SINAQLAR -->
+    <div class="tab-panel" id="tab-exams">
+      <div class="card">
+        <h3 id="exam-form-title">Yeni sınaq yarat</h3>
+        <input type="hidden" id="exam-edit-id" value="" />
+        <div class="field-row">
+          <div class="field"><label>Sınaq adı</label><input type="text" id="exam-title" placeholder="Məs: Riyaziyyat 1-ci sınaq" /></div>
+          <div class="field"><label>Qrup</label><select id="exam-group"></select></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Mövzu / Fənn</label><input type="text" id="exam-topic" placeholder="Məs: Kvadrat tənliklər" /></div>
+          <div class="field"><label>Vaxt limiti (dəqiqə)</label><input type="number" id="exam-timelimit" min="1" value="30" /></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Aktivləşmə tarixi/saatı</label><input type="datetime-local" id="exam-activation" /></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>İzahat videosu (YouTube linki, sınaqdan sonra göstərilir)</label><input type="text" id="exam-video" placeholder="https://youtube.com/..." /></div>
+        </div>
+
+        <h3 style="margin-top:20px;">Suallar</h3>
+        <div id="exam-questions-builder"></div>
+        <button class="btn-outline" id="exam-add-question-btn" style="margin-bottom:14px;">+ Sual əlavə et</button>
+        <div style="display:flex; gap:8px;">
+          <button class="btn-small" id="exam-save-btn">Sınaqı yadda saxla</button>
+          <button class="btn-outline" id="exam-cancel-btn" style="display:none;">Ləğv et</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Sınaq siyahısı</h3>
+        <div id="exams-list"><div class="empty-state">Yüklənir...</div></div>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -329,6 +382,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
       <button class="tab-btn" data-stab="stab-materials">Fayllar</button>
       <button class="tab-btn" data-stab="stab-schedule">Cədvəl</button>
       <button class="tab-btn" data-stab="stab-topics">Mövzular</button>
+      <button class="tab-btn" data-stab="stab-exams">Sınaqlar</button>
     </div>
 
     <!-- ANA SƏHİFƏ -->
@@ -413,6 +467,49 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
       <div class="card">
         <h3>Bitirilən mövzular</h3>
         <div id="s-topics-list"><div class="empty-state">Yüklənir...</div></div>
+      </div>
+    </div>
+
+    <!-- SINAQLAR -->
+    <div class="tab-panel" id="stab-exams">
+      <div id="exam-view-list">
+        <div class="card">
+          <h3>Aktiv sınaqlar</h3>
+          <div id="s-exams-list"><div class="empty-state">Yüklənir...</div></div>
+        </div>
+        <div class="card">
+          <h3>Keçmiş nəticələr</h3>
+          <div id="s-exam-history"><div class="empty-state">Hələ sınaq işləməmisiniz</div></div>
+        </div>
+      </div>
+
+      <div id="exam-view-taking" style="display:none;">
+        <div class="exam-timer" id="exam-timer-box">00:00</div>
+        <div class="card">
+          <div class="exam-nav-grid" id="exam-nav-grid"></div>
+          <div id="exam-question-box"></div>
+          <div style="display:flex; gap:8px; margin-top:14px;">
+            <button class="btn-outline" id="exam-prev-btn">← Əvvəlki</button>
+            <button class="btn-outline" id="exam-next-btn">Növbəti →</button>
+          </div>
+          <button class="btn-small" id="exam-finish-btn" style="width:100%; margin-top:14px; background:var(--color-danger);">Sınağı bitir</button>
+        </div>
+      </div>
+
+      <div id="exam-view-result" style="display:none;">
+        <div class="card">
+          <div class="exam-result-badge" id="exam-result-badge"><span id="exam-result-pct">0%</span></div>
+          <div style="text-align:center;" class="muted-note" id="exam-result-summary"></div>
+        </div>
+        <div class="card">
+          <h3>Sual-cavab təhlili</h3>
+          <div id="exam-result-detail"></div>
+        </div>
+        <div class="card" id="exam-result-video-card" style="display:none;">
+          <h3>İzahat videosu</h3>
+          <div id="exam-result-video"></div>
+        </div>
+        <button class="btn-small" id="exam-back-to-list-btn">Sınaqlara qayıt</button>
       </div>
     </div>
   </main>
@@ -562,6 +659,7 @@ function initAdminPanel() {
   loadScores();
   loadMaterials();
   loadTopics();
+  loadExams();
   document.getElementById("daily-date").value = new Date().toISOString().slice(0, 10);
   document.getElementById("score-date").value = new Date().toISOString().slice(0, 10);
 }
@@ -570,7 +668,7 @@ function initAdminPanel() {
 function fillGroupSelects() {
   const selects = ["student-group", "daily-student", "material-group", "schedule-group", "topic-group"];
   // student-group və material-group/schedule-group/topic-group qrup siyahısı ilə doldurulur
-  ["student-group", "material-group", "schedule-group", "topic-group"].forEach(id => {
+  ["student-group", "material-group", "schedule-group", "topic-group", "exam-group"].forEach(id => {
     const sel = document.getElementById(id);
     const current = sel.value;
     sel.innerHTML = groupsCache.map(g => `<option value="${g.id}">${esc(g.name)}</option>`).join("") || `<option value="">Əvvəlcə qrup yaradın</option>`;
@@ -903,6 +1001,128 @@ window.deleteDoc = async (coll, id) => {
   toast("Silindi");
 };
 
+// ---- SINAQLAR (ADMIN) ----
+let examQuestions = []; // { text, options:[4], correctIndex }
+let examsCache = [];
+
+function renderQuestionBuilder() {
+  const el = document.getElementById("exam-questions-builder");
+  if (examQuestions.length === 0) { el.innerHTML = `<div class="empty-state">Hələ sual əlavə edilməyib</div>`; return; }
+  el.innerHTML = examQuestions.map((q, qi) => `
+    <div class="q-builder-item">
+      <button class="btn-danger" onclick="removeQuestion(${qi})">Sil</button>
+      <div class="field" style="margin-bottom:8px;"><label>Sual ${qi + 1}</label>
+        <input type="text" value="${esc(q.text)}" oninput="updateQuestionText(${qi}, this.value)" placeholder="Sual mətnini yazın" />
+      </div>
+      ${q.options.map((opt, oi) => `
+        <div class="q-opt-row">
+          <input type="radio" name="correct-${qi}" ${q.correctIndex === oi ? "checked" : ""} onchange="setCorrectOption(${qi}, ${oi})" />
+          <input type="text" value="${esc(opt)}" oninput="updateOption(${qi}, ${oi}, this.value)" placeholder="Cavab variantı ${oi + 1}" />
+        </div>
+      `).join("")}
+    </div>
+  `).join("");
+}
+
+window.removeQuestion = (qi) => { examQuestions.splice(qi, 1); renderQuestionBuilder(); };
+window.updateQuestionText = (qi, val) => { examQuestions[qi].text = val; };
+window.updateOption = (qi, oi, val) => { examQuestions[qi].options[oi] = val; };
+window.setCorrectOption = (qi, oi) => { examQuestions[qi].correctIndex = oi; };
+
+document.getElementById("exam-add-question-btn").addEventListener("click", () => {
+  examQuestions.push({ text: "", options: ["", "", "", ""], correctIndex: 0 });
+  renderQuestionBuilder();
+});
+
+function resetExamForm() {
+  document.getElementById("exam-edit-id").value = "";
+  document.getElementById("exam-title").value = "";
+  document.getElementById("exam-topic").value = "";
+  document.getElementById("exam-timelimit").value = "30";
+  document.getElementById("exam-activation").value = "";
+  document.getElementById("exam-video").value = "";
+  document.getElementById("exam-form-title").textContent = "Yeni sınaq yarat";
+  document.getElementById("exam-cancel-btn").style.display = "none";
+  examQuestions = [];
+  renderQuestionBuilder();
+}
+document.getElementById("exam-cancel-btn").addEventListener("click", resetExamForm);
+
+document.getElementById("exam-save-btn").addEventListener("click", async () => {
+  const title = document.getElementById("exam-title").value.trim();
+  const groupId = document.getElementById("exam-group").value;
+  const topic = document.getElementById("exam-topic").value.trim();
+  const timeLimitMinutes = Number(document.getElementById("exam-timelimit").value) || 30;
+  const activationInput = document.getElementById("exam-activation").value;
+  const videoUrl = document.getElementById("exam-video").value.trim();
+  const editId = document.getElementById("exam-edit-id").value;
+
+  if (!title || !groupId || !topic || !activationInput) { toast("Bütün əsas sahələri doldurun"); return; }
+  if (examQuestions.length === 0) { toast("Ən azı 1 sual əlavə edin"); return; }
+  for (const q of examQuestions) {
+    if (!q.text.trim() || q.options.some(o => !o.trim())) { toast("Bütün sual və cavab variantlarını doldurun"); return; }
+  }
+  if (videoUrl && !/^https?:\/\//i.test(videoUrl)) { toast("Video linki http:// və ya https:// ilə başlamalıdır"); return; }
+
+  const activationAt = new Date(activationInput).toISOString();
+  const payload = { title, groupId, topic, timeLimitMinutes, activationAt, videoUrl, questions: examQuestions };
+
+  if (editId) {
+    await db.collection("exams").doc(editId).update(payload);
+    toast("Sınaq yeniləndi");
+  } else {
+    payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+    await db.collection("exams").add(payload);
+    toast("Sınaq yaradıldı");
+  }
+  resetExamForm();
+});
+
+window.editExam = (id) => {
+  const ex = examsCache.find(e => e.id === id);
+  if (!ex) return;
+  document.getElementById("exam-edit-id").value = id;
+  document.getElementById("exam-title").value = ex.title;
+  document.getElementById("exam-group").value = ex.groupId || "";
+  document.getElementById("exam-topic").value = ex.topic;
+  document.getElementById("exam-timelimit").value = ex.timeLimitMinutes;
+  document.getElementById("exam-activation").value = ex.activationAt ? ex.activationAt.slice(0, 16) : "";
+  document.getElementById("exam-video").value = ex.videoUrl || "";
+  document.getElementById("exam-form-title").textContent = "Sınaqı redaktə et: " + ex.title;
+  document.getElementById("exam-cancel-btn").style.display = "inline-block";
+  examQuestions = JSON.parse(JSON.stringify(ex.questions));
+  renderQuestionBuilder();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+};
+
+window.deleteExam = async (id) => {
+  if (!confirm("Bu sınaqı silmək istədiyinizə əminsiniz?")) return;
+  await db.collection("exams").doc(id).delete();
+  toast("Sınaq silindi");
+};
+
+function loadExams() {
+  db.collection("exams").orderBy("createdAt", "desc").onSnapshot(snap => {
+    examsCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const el = document.getElementById("exams-list");
+    if (examsCache.length === 0) { el.innerHTML = `<div class="empty-state">Hələ sınaq yaradılmayıb</div>`; return; }
+    el.innerHTML = examsCache.map(ex => {
+      const activeNow = new Date(ex.activationAt) <= new Date();
+      return `<div class="list-item">
+        <div class="list-item-info">
+          <div class="list-item-title">${esc(ex.title)}</div>
+          <div class="list-item-sub"><span class="badge">${groupName(ex.groupId)}</span> ${ex.questions.length} sual · ${ex.timeLimitMinutes} dəq · ${activeNow ? "🟢 Aktiv" : "⏳ " + new Date(ex.activationAt).toLocaleString("az-AZ")}</div>
+        </div>
+        <div class="list-item-actions">
+          <button class="btn-outline" onclick="editExam('${ex.id}')">Redaktə</button>
+          <button class="btn-danger" onclick="deleteExam('${ex.id}')">Sil</button>
+        </div>
+      </div>`;
+    }).join("");
+  });
+}
+renderQuestionBuilder();
+
 // =========================================================================
 // ŞAGİRD PANELİ MƏNTİQİ
 // =========================================================================
@@ -988,8 +1208,226 @@ async function initStudentPanel(uid) {
         </div>`;
       }).join("");
     }, err => console.error("topics xətası:", err));
+
+    // Sınaqlar
+    currentStudentUid = uid;
+    currentStudentGroupId = s.groupId;
+    loadStudentExams(uid, s.groupId);
   }
 }
+
+// =========================================================================
+// SINAQ SİSTEMİ (ŞAGİRD)
+// =========================================================================
+let currentStudentUid = null;
+let currentStudentGroupId = null;
+let studentExamsCache = [];
+let studentAttemptsCache = [];
+let currentExam = null;
+let currentExamAnswers = [];
+let currentExamIndex = 0;
+let examTimerInterval = null;
+let examEndTime = null;
+
+function loadStudentExams(uid, groupId) {
+  if (!groupId) return;
+  db.collection("exams").where("groupId", "==", groupId).onSnapshot(snap => {
+    studentExamsCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderStudentExamList();
+  }, err => console.error("exams xətası:", err));
+
+  db.collection("examAttempts").where("studentId", "==", uid).onSnapshot(snap => {
+    studentAttemptsCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderStudentExamList();
+  }, err => console.error("examAttempts xətası:", err));
+}
+
+function renderStudentExamList() {
+  const now = new Date();
+  const attemptedIds = new Set(studentAttemptsCache.map(a => a.examId));
+  const available = studentExamsCache.filter(ex => new Date(ex.activationAt) <= now && !attemptedIds.has(ex.id));
+  const upcoming = studentExamsCache.filter(ex => new Date(ex.activationAt) > now);
+
+  const listEl = document.getElementById("s-exams-list");
+  let html = "";
+  if (available.length === 0 && upcoming.length === 0) {
+    html = `<div class="empty-state">Hələ sınaq təyin edilməyib</div>`;
+  } else {
+    available.forEach(ex => {
+      html += `<div class="list-item">
+        <div class="list-item-info">
+          <div class="list-item-title">🟢 ${esc(ex.title)}</div>
+          <div class="list-item-sub">${ex.questions.length} sual · ${ex.timeLimitMinutes} dəqiqə · ${esc(ex.topic)}</div>
+        </div>
+        <div class="list-item-actions"><button class="btn-small" onclick="startExam('${ex.id}')">Başla</button></div>
+      </div>`;
+    });
+    upcoming.forEach(ex => {
+      html += `<div class="list-item" style="opacity:.6;">
+        <div class="list-item-info">
+          <div class="list-item-title">⏳ ${esc(ex.title)}</div>
+          <div class="list-item-sub">Aktivləşmə: ${new Date(ex.activationAt).toLocaleString("az-AZ")}</div>
+        </div>
+      </div>`;
+    });
+  }
+  listEl.innerHTML = html;
+
+  const histEl = document.getElementById("s-exam-history");
+  if (studentAttemptsCache.length === 0) { histEl.innerHTML = `<div class="empty-state">Hələ sınaq işləməmisiniz</div>`; return; }
+  const sorted = studentAttemptsCache.slice().sort((a, b) => (b.submittedAt ? b.submittedAt.toMillis() : 0) - (a.submittedAt ? a.submittedAt.toMillis() : 0));
+  histEl.innerHTML = sorted.map(a => {
+    const ex = studentExamsCache.find(e => e.id === a.examId);
+    return `<div class="list-item">
+      <div class="list-item-info">
+        <div class="list-item-title">${ex ? esc(ex.title) : "Sınaq"}</div>
+        <div class="list-item-sub">${a.correctCount}/${a.totalCount} düzgün</div>
+      </div>
+      <div class="list-item-actions"><button class="btn-outline" onclick="viewPastResult('${a.id}')">Bax</button></div>
+    </div>`;
+  }).join("");
+}
+
+window.startExam = (examId) => {
+  const ex = studentExamsCache.find(e => e.id === examId);
+  if (!ex) return;
+  if (!confirm(`"${ex.title}" sınağına başlayırsınız. ${ex.timeLimitMinutes} dəqiqəniz var. Davam edilsin?`)) return;
+
+  currentExam = ex;
+  currentExamAnswers = new Array(ex.questions.length).fill(null);
+  currentExamIndex = 0;
+  examEndTime = Date.now() + ex.timeLimitMinutes * 60000;
+
+  document.getElementById("exam-view-list").style.display = "none";
+  document.getElementById("exam-view-result").style.display = "none";
+  document.getElementById("exam-view-taking").style.display = "block";
+
+  renderExamNavGrid();
+  renderExamQuestion();
+  startExamTimer();
+};
+
+function startExamTimer() {
+  clearInterval(examTimerInterval);
+  const box = document.getElementById("exam-timer-box");
+  examTimerInterval = setInterval(() => {
+    const remaining = Math.max(0, examEndTime - Date.now());
+    const min = Math.floor(remaining / 60000);
+    const sec = Math.floor((remaining % 60000) / 1000);
+    box.textContent = String(min).padStart(2, "0") + ":" + String(sec).padStart(2, "0");
+    box.classList.toggle("warning", remaining < 60000);
+    if (remaining <= 0) { clearInterval(examTimerInterval); finishExam(true); }
+  }, 500);
+}
+
+function renderExamNavGrid() {
+  const grid = document.getElementById("exam-nav-grid");
+  grid.innerHTML = currentExam.questions.map((_, i) => `
+    <button class="exam-nav-btn ${currentExamAnswers[i] !== null ? "answered" : ""} ${i === currentExamIndex ? "current" : ""}" onclick="goToExamQuestion(${i})">${i + 1}</button>
+  `).join("");
+}
+
+window.goToExamQuestion = (i) => { currentExamIndex = i; renderExamNavGrid(); renderExamQuestion(); };
+
+function renderExamQuestion() {
+  const q = currentExam.questions[currentExamIndex];
+  const box = document.getElementById("exam-question-box");
+  box.innerHTML = `
+    <div style="font-weight:700; margin-bottom:14px; font-size:15px;">Sual ${currentExamIndex + 1}/${currentExam.questions.length}: ${esc(q.text)}</div>
+    ${q.options.map((opt, oi) => `
+      <button class="option-btn ${currentExamAnswers[currentExamIndex] === oi ? "selected" : ""}" onclick="selectExamOption(${oi})">${esc(opt)}</button>
+    `).join("")}
+  `;
+}
+
+window.selectExamOption = (oi) => {
+  currentExamAnswers[currentExamIndex] = oi;
+  renderExamNavGrid();
+  renderExamQuestion();
+};
+
+document.getElementById("exam-prev-btn").addEventListener("click", () => {
+  if (currentExamIndex > 0) { currentExamIndex--; renderExamNavGrid(); renderExamQuestion(); }
+});
+document.getElementById("exam-next-btn").addEventListener("click", () => {
+  if (currentExamIndex < currentExam.questions.length - 1) { currentExamIndex++; renderExamNavGrid(); renderExamQuestion(); }
+});
+document.getElementById("exam-finish-btn").addEventListener("click", () => {
+  const unanswered = currentExamAnswers.filter(a => a === null).length;
+  const msg = unanswered > 0 ? `${unanswered} sual cavabsızdır. Yenə də bitirmək istəyirsiniz?` : "Sınağı bitirmək istədiyinizə əminsiniz?";
+  if (confirm(msg)) finishExam(false);
+});
+
+async function finishExam(autoSubmit) {
+  clearInterval(examTimerInterval);
+  const ex = currentExam;
+  let correctCount = 0;
+  const perQuestion = ex.questions.map((q, i) => {
+    const isCorrect = currentExamAnswers[i] === q.correctIndex;
+    if (isCorrect) correctCount++;
+    return { selected: currentExamAnswers[i], correct: q.correctIndex, isCorrect };
+  });
+  const totalCount = ex.questions.length;
+  const scorePct = Math.round((correctCount / totalCount) * 100);
+
+  const attemptData = {
+    examId: ex.id, studentId: currentStudentUid, groupId: ex.groupId, topic: ex.topic,
+    answers: currentExamAnswers, perQuestion, correctCount, totalCount, score: scorePct,
+    autoSubmitted: !!autoSubmit, submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  const ref = await db.collection("examAttempts").add(attemptData);
+
+  document.getElementById("exam-view-taking").style.display = "none";
+  renderExamResult(ex, { ...attemptData, id: ref.id });
+}
+
+window.viewPastResult = (attemptId) => {
+  const a = studentAttemptsCache.find(x => x.id === attemptId);
+  const ex = studentExamsCache.find(e => e.id === a.examId);
+  if (!a || !ex) { toast("Sınaq məlumatı tapılmadı"); return; }
+  document.getElementById("exam-view-list").style.display = "none";
+  renderExamResult(ex, a);
+};
+
+function renderExamResult(ex, attempt) {
+  document.getElementById("exam-view-result").style.display = "block";
+  document.getElementById("exam-result-pct").textContent = attempt.score + "%";
+  const badge = document.getElementById("exam-result-badge");
+  const color = attempt.score >= 75 ? "#2e9e6b" : attempt.score >= 50 ? "#d99a2b" : "#d94c4c";
+  badge.style.background = `conic-gradient(${color} ${attempt.score * 3.6}deg, var(--color-gray) 0deg)`;
+  document.getElementById("exam-result-summary").textContent = `${ex.title} — ${attempt.correctCount}/${attempt.totalCount} sual düzgün`;
+
+  document.getElementById("exam-result-detail").innerHTML = ex.questions.map((q, i) => {
+    const pq = attempt.perQuestion[i];
+    return `<div class="list-item" style="flex-direction:column; align-items:flex-start; gap:6px;">
+      <div class="list-item-title">${i + 1}. ${esc(q.text)} ${pq.isCorrect ? "✅" : "❌"}</div>
+      ${q.options.map((opt, oi) => {
+        let cls = "";
+        if (oi === q.correctIndex) cls = "correct";
+        else if (oi === pq.selected && !pq.isCorrect) cls = "wrong";
+        return `<div class="option-btn ${cls}" style="pointer-events:none; margin-bottom:4px; padding:8px 12px; font-size:13px;">${esc(opt)}</div>`;
+      }).join("")}
+    </div>`;
+  }).join("");
+
+  const videoCard = document.getElementById("exam-result-video-card");
+  if (ex.videoUrl) {
+    videoCard.style.display = "block";
+    const ytMatch = ex.videoUrl.match(/(?:youtu\.be\/|youtube\.com.*(?:\?v=|\/embed\/))([\w-]+)/);
+    if (ytMatch) {
+      document.getElementById("exam-result-video").innerHTML = `<iframe width="100%" height="200" src="https://www.youtube.com/embed/${ytMatch[1]}" frameborder="0" allowfullscreen style="border-radius:10px;"></iframe>`;
+    } else {
+      document.getElementById("exam-result-video").innerHTML = `<a href="${esc(ex.videoUrl)}" target="_blank" rel="noopener noreferrer" class="btn-small" style="text-decoration:none; display:inline-block;">Video izahı aç</a>`;
+    }
+  } else {
+    videoCard.style.display = "none";
+  }
+}
+
+document.getElementById("exam-back-to-list-btn").addEventListener("click", () => {
+  document.getElementById("exam-view-result").style.display = "none";
+  document.getElementById("exam-view-list").style.display = "block";
+});
 
 function renderStudentDaily(reports) {
   const el = document.getElementById("s-daily-list");
