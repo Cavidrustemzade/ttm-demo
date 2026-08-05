@@ -274,6 +274,22 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
         <h3>Son nəticələr</h3>
         <div id="scores-list"><div class="empty-state">Yüklənir...</div></div>
       </div>
+
+      <div class="card">
+        <h3>📊 Sınaq analitikası (bütün qrup üzrə)</h3>
+        <div class="field-row">
+          <div class="field"><label>Sınaq seçin</label><select id="analytics-exam-select"><option value="">— Seçin —</option></select></div>
+        </div>
+        <div id="analytics-exam-result"><div class="empty-state">Sınaq seçin ki, təhlil görünsün</div></div>
+      </div>
+
+      <div class="card">
+        <h3>👤 Şagird üzrə təhlil</h3>
+        <div class="field-row">
+          <div class="field"><label>Şagird seçin</label><select id="analytics-student-select"><option value="">— Seçin —</option></select></div>
+        </div>
+        <div id="analytics-student-result"><div class="empty-state">Şagird seçin ki, təhlil görünsün</div></div>
+      </div>
     </div>
 
     <!-- PDF / VIDEO -->
@@ -443,6 +459,14 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
       <div class="card">
         <h3>Quiz və Sınaq nəticələri</h3>
         <div id="s-scores-list"><div class="empty-state">Yüklənir...</div></div>
+      </div>
+      <div class="card">
+        <h3>📝 Sınaq nəticələrim</h3>
+        <div id="s-exam-results-list"><div class="empty-state">Hələ sınaq işləməmisiniz</div></div>
+      </div>
+      <div class="card">
+        <h3>🎯 Mövzu üzrə zəif nöqtələr (Sınaqlara görə)</h3>
+        <div id="s-exam-weak-topics"><div class="empty-state">Ən azı 1 sınaq işlədikdən sonra görünəcək</div></div>
       </div>
     </div>
 
@@ -684,6 +708,12 @@ function fillStudentSelects() {
     sel.innerHTML = studentsCache.filter(s => s.active !== false).map(s => `<option value="${s.id}">${esc(s.fullName)}</option>`).join("") || `<option value="">Əvvəlcə şagird əlavə edin</option>`;
     if (current) sel.value = current;
   });
+  const asSel = document.getElementById("analytics-student-select");
+  if (asSel) {
+    const current = asSel.value;
+    asSel.innerHTML = `<option value="">— Seçin —</option>` + studentsCache.filter(s => s.active !== false).map(s => `<option value="${s.id}">${esc(s.fullName)}</option>`).join("");
+    if (current) asSel.value = current;
+  }
 }
 
 async function loadGroups() {
@@ -1197,6 +1227,14 @@ window.deleteExam = async (id) => {
 function loadExams() {
   db.collection("exams").orderBy("createdAt", "desc").onSnapshot(snap => {
     examsCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    const analyticsSel = document.getElementById("analytics-exam-select");
+    if (analyticsSel) {
+      const current = analyticsSel.value;
+      analyticsSel.innerHTML = `<option value="">— Seçin —</option>` + examsCache.map(ex => `<option value="${ex.id}">${esc(ex.title)}</option>`).join("");
+      if (current) analyticsSel.value = current;
+    }
+
     const el = document.getElementById("exams-list");
     if (examsCache.length === 0) { el.innerHTML = `<div class="empty-state">Hələ sınaq yaradılmayıb</div>`; return; }
     el.innerHTML = examsCache.map(ex => {
@@ -1215,6 +1253,106 @@ function loadExams() {
   });
 }
 renderQuestionBuilder();
+
+// ---- SINAQ ANALİTİKASI (ADMIN) ----
+document.getElementById("analytics-exam-select").addEventListener("change", async (e) => {
+  const examId = e.target.value;
+  const el = document.getElementById("analytics-exam-result");
+  if (!examId) { el.innerHTML = `<div class="empty-state">Sınaq seçin ki, təhlil görünsün</div>`; return; }
+  el.innerHTML = `<div class="empty-state">Yüklənir...</div>`;
+
+  const ex = examsCache.find(x => x.id === examId);
+  const [attemptsSnap, questionsSnap] = await Promise.all([
+    db.collection("examAttempts").where("examId", "==", examId).get(),
+    db.collection("exams").doc(examId).collection("questions").orderBy("order").get()
+  ]);
+  const attempts = attemptsSnap.docs.map(d => d.data());
+  const questions = questionsSnap.docs.map(d => d.data());
+
+  if (attempts.length === 0) { el.innerHTML = `<div class="empty-state">Bu sınağı hələ heç kim işləməyib</div>`; return; }
+
+  const avgScore = Math.round(attempts.reduce((s, a) => s + a.score, 0) / attempts.length);
+
+  // Sual üzrə səhv faizi
+  const wrongCounts = new Array(questions.length).fill(0);
+  attempts.forEach(a => {
+    (a.perQuestion || []).forEach((pq, i) => { if (!pq.isCorrect) wrongCounts[i]++; });
+  });
+  const questionRows = questions.map((q, i) => ({
+    idx: i, text: q.text || `Sual ${i + 1}`,
+    wrongPct: Math.round((wrongCounts[i] / attempts.length) * 100)
+  })).sort((a, b) => b.wrongPct - a.wrongPct);
+
+  const studentRows = attempts.slice().sort((a, b) => b.score - a.score).map(a => {
+    const s = studentsCache.find(s => s.id === a.studentId);
+    return `<div class="list-item"><div class="list-item-info"><div class="list-item-title">${s ? esc(s.fullName) : "Naməlum"}</div></div><div style="font-weight:800; color:var(--color-primary);">${a.score}%</div></div>`;
+  }).join("");
+
+  el.innerHTML = `
+    <div class="stat-icon-card" style="background:linear-gradient(135deg,#eff6ff,#ffffff); margin-bottom:14px;">
+      <div class="stat-icon-badge grad-blue">📊</div>
+      <div class="list-item-sub">Qrup ortalaması (${attempts.length} nəfər işləyib)</div>
+      <div class="list-item-title" style="font-size:22px;">${avgScore}%</div>
+    </div>
+    <h3 style="font-size:14px; margin-bottom:10px;">Sual üzrə səhv faizi</h3>
+    ${questionRows.map(q => `
+      <div class="list-item">
+        <div class="list-item-info">
+          <div class="list-item-title">${q.idx + 1}. ${esc(q.text).slice(0, 60)}</div>
+        </div>
+        <div style="font-weight:700; color:${q.wrongPct > 50 ? "var(--color-danger)" : q.wrongPct > 25 ? "#d99a2b" : "#2e9e6b"};">${q.wrongPct}% səhv</div>
+      </div>
+    `).join("")}
+    <h3 style="font-size:14px; margin:14px 0 10px;">Şagird nəticələri</h3>
+    ${studentRows}
+  `;
+});
+
+document.getElementById("analytics-student-select").addEventListener("change", async (e) => {
+  const studentId = e.target.value;
+  const el = document.getElementById("analytics-student-result");
+  if (!studentId) { el.innerHTML = `<div class="empty-state">Şagird seçin ki, təhlil görünsün</div>`; return; }
+  el.innerHTML = `<div class="empty-state">Yüklənir...</div>`;
+
+  const snap = await db.collection("examAttempts").where("studentId", "==", studentId).get();
+  const attempts = snap.docs.map(d => d.data()).sort((a, b) => (a.submittedAt ? a.submittedAt.toMillis() : 0) - (b.submittedAt ? b.submittedAt.toMillis() : 0));
+
+  if (attempts.length === 0) { el.innerHTML = `<div class="empty-state">Bu şagird hələ sınaq işləməyib</div>`; return; }
+
+  const byTopic = {};
+  attempts.forEach(a => {
+    const t = a.topic || "Digər";
+    if (!byTopic[t]) byTopic[t] = { correct: 0, total: 0 };
+    byTopic[t].correct += a.correctCount;
+    byTopic[t].total += a.totalCount;
+  });
+  const topicRows = Object.keys(byTopic).map(t => ({ topic: t, pct: Math.round((byTopic[t].correct / byTopic[t].total) * 100) })).sort((a, b) => a.pct - b.pct);
+
+  el.innerHTML = `
+    <h3 style="font-size:14px; margin-bottom:10px;">Xronoloji irəliləyiş</h3>
+    <div style="display:flex; align-items:flex-end; gap:6px; height:100px; padding-top:10px; overflow-x:auto; margin-bottom:16px;">
+      ${attempts.map(a => {
+        const ex = examsCache.find(x => x.id === a.examId);
+        return `<div style="display:flex; flex-direction:column; align-items:center; gap:4px; min-width:34px;">
+          <div style="font-size:9px; color:var(--color-text-muted);">${a.score}%</div>
+          <div style="width:20px; height:${Math.max(4, a.score)}px; background:linear-gradient(180deg,#3b82f6,#0B3C5D); border-radius:5px;"></div>
+          <div style="font-size:8px; color:var(--color-text-muted); text-align:center;">${ex ? esc(ex.title).slice(0, 8) : "?"}</div>
+        </div>`;
+      }).join("")}
+    </div>
+    <h3 style="font-size:14px; margin-bottom:10px;">Mövzu üzrə göstəricilər</h3>
+    ${topicRows.map(r => {
+      const isWeak = r.pct < 60;
+      const ringColor = isWeak ? "#d94c4c" : r.pct < 75 ? "#d99a2b" : "#2e9e6b";
+      return `<div class="list-item">
+        <div class="ring-wrap">
+          <div class="progress-ring" style="background:conic-gradient(${ringColor} ${r.pct * 3.6}deg, var(--color-gray) 0deg);"><span>${r.pct}%</span></div>
+          <div class="list-item-info"><div class="list-item-title">${esc(r.topic)} ${isWeak ? "⚠️" : ""}</div></div>
+        </div>
+      </div>`;
+    }).join("")}
+  `;
+});
 
 // =========================================================================
 // ŞAGİRD PANELİ MƏNTİQİ
@@ -1367,18 +1505,100 @@ function renderStudentExamList() {
   listEl.innerHTML = html;
 
   const histEl = document.getElementById("s-exam-history");
-  if (studentAttemptsCache.length === 0) { histEl.innerHTML = `<div class="empty-state">Hələ sınaq işləməmisiniz</div>`; return; }
-  const sorted = studentAttemptsCache.slice().sort((a, b) => (b.submittedAt ? b.submittedAt.toMillis() : 0) - (a.submittedAt ? a.submittedAt.toMillis() : 0));
-  histEl.innerHTML = sorted.map(a => {
+  if (studentAttemptsCache.length === 0) {
+    histEl.innerHTML = `<div class="empty-state">Hələ sınaq işləməmisiniz</div>`;
+  } else {
+    const sorted = studentAttemptsCache.slice().sort((a, b) => (b.submittedAt ? b.submittedAt.toMillis() : 0) - (a.submittedAt ? a.submittedAt.toMillis() : 0));
+    histEl.innerHTML = sorted.map(a => {
+      const ex = studentExamsCache.find(e => e.id === a.examId);
+      return `<div class="list-item">
+        <div class="list-item-info">
+          <div class="list-item-title">${ex ? esc(ex.title) : "Sınaq"}</div>
+          <div class="list-item-sub">${a.correctCount}/${a.totalCount} düzgün</div>
+        </div>
+        <div class="list-item-actions"><button class="btn-outline" onclick="viewPastResult('${a.id}')">Bax</button></div>
+      </div>`;
+    }).join("");
+  }
+
+  renderExamResultsInScoresTab();
+  renderExamWeakTopics();
+}
+
+function motivationalTag(score) {
+  if (score >= 85) return { text: "🌟 Əla!", color: "#2e9e6b" };
+  if (score >= 60) return { text: "👍 Pis deyil, davam et", color: "#d99a2b" };
+  return { text: "💪 Daha çox çalışmalısan", color: "#d94c4c" };
+}
+
+function renderExamResultsInScoresTab() {
+  const el = document.getElementById("s-exam-results-list");
+  if (!el) return;
+  if (studentAttemptsCache.length === 0) { el.innerHTML = `<div class="empty-state">Hələ sınaq işləməmisiniz</div>`; return; }
+  const sorted = studentAttemptsCache.slice().sort((a, b) => (a.submittedAt ? a.submittedAt.toMillis() : 0) - (b.submittedAt ? b.submittedAt.toMillis() : 0));
+
+  // Xronoloji sırada gedərək hər cəhdin trend fərqini əvvəlcədən hesablayırıq
+  const seenTopics = {};
+  const trendById = {};
+  sorted.forEach(a => {
+    const topic = a.topic || "";
+    if (seenTopics[topic] !== undefined) {
+      trendById[a.id] = a.score - seenTopics[topic];
+    }
+    seenTopics[topic] = a.score;
+  });
+
+  el.innerHTML = sorted.slice().reverse().map(a => {
     const ex = studentExamsCache.find(e => e.id === a.examId);
+    const topic = a.topic || (ex ? ex.topic : "");
+    const tag = motivationalTag(a.score);
+    let trendHtml = "";
+    const diff = trendById[a.id];
+    if (diff !== undefined && diff !== 0) {
+      trendHtml = `<span class="stat-trend ${diff > 0 ? "up" : "down"}" style="margin-left:6px;">${diff > 0 ? "▲" : "▼"} ${Math.abs(diff)}%</span>`;
+    }
     return `<div class="list-item">
       <div class="list-item-info">
-        <div class="list-item-title">${ex ? esc(ex.title) : "Sınaq"}</div>
-        <div class="list-item-sub">${a.correctCount}/${a.totalCount} düzgün</div>
+        <div class="list-item-title">${ex ? esc(ex.title) : "Sınaq"} ${trendHtml}</div>
+        <div class="list-item-sub"><span class="badge">${esc(topic)}</span> ${a.correctCount}/${a.totalCount} düzgün · <span style="color:${tag.color}; font-weight:700;">${tag.text}</span></div>
       </div>
-      <div class="list-item-actions"><button class="btn-outline" onclick="viewPastResult('${a.id}')">Bax</button></div>
+      <div style="font-weight:800; font-size:16px; color:var(--color-primary);">${a.score}%</div>
     </div>`;
   }).join("");
+}
+
+function renderExamWeakTopics() {
+  const el = document.getElementById("s-exam-weak-topics");
+  if (!el) return;
+  if (studentAttemptsCache.length === 0) { el.innerHTML = `<div class="empty-state">Ən azı 1 sınaq işlədikdən sonra görünəcək</div>`; return; }
+
+  const byTopic = {};
+  studentAttemptsCache.forEach(a => {
+    const topic = a.topic || "Digər";
+    if (!byTopic[topic]) byTopic[topic] = { correct: 0, total: 0 };
+    byTopic[topic].correct += a.correctCount;
+    byTopic[topic].total += a.totalCount;
+  });
+
+  const rows = Object.keys(byTopic).map(topic => {
+    const t = byTopic[topic];
+    const pct = Math.round((t.correct / t.total) * 100);
+    return { topic, pct };
+  }).sort((a, b) => a.pct - b.pct);
+
+  el.innerHTML = rows.map(r => {
+    const isWeak = r.pct < 60;
+    const ringColor = isWeak ? "#d94c4c" : r.pct < 75 ? "#d99a2b" : "#2e9e6b";
+    const ringBg = `conic-gradient(${ringColor} ${r.pct * 3.6}deg, var(--color-gray) 0deg)`;
+    return `<div class="list-item">
+      <div class="ring-wrap">
+        <div class="progress-ring" style="background:${ringBg};"><span>${r.pct}%</span></div>
+        <div class="list-item-info">
+          <div class="list-item-title">${esc(r.topic)} ${isWeak ? "⚠️" : ""}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join("") + (rows.some(r => r.pct < 60) ? `<div class="muted-note">💪 Zəif mövzulara əlavə vaxt ayırmaq tövsiyə olunur.</div>` : "");
 }
 
 window.startExam = async (examId) => {
