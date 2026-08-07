@@ -28,6 +28,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
 body { font-family: var(--font-main); background: var(--color-light-gray); color: var(--color-text); -webkit-font-smoothing: antialiased; }
+body.pdf-modal-lock { position: fixed; width: 100%; overflow: hidden; }
 button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 
 .splash-screen { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(160deg, var(--color-primary) 0%, var(--color-primary-dark) 100%); color: var(--color-white); gap: 18px; }
@@ -178,9 +179,9 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .q-image-actions .q-mini-btn.primary { background:var(--color-primary); color:#fff; border-color:var(--color-primary); }
 .q-upload-hidden { display:none; }
 
-.pdf-modal-overlay { position:fixed; inset:0; background:rgba(7,16,28,.48); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); z-index:200; display:none; align-items:center; justify-content:center; padding:12px; }
+.pdf-modal-overlay { position:fixed; inset:0; background:rgba(7,16,28,.42); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); z-index:200; display:none; align-items:center; justify-content:center; padding:12px; overscroll-behavior:contain; }
 .pdf-modal-overlay.show { display:flex; }
-.pdf-modal { width:min(650px,calc(100vw - 32px)); max-height:min(64vh,610px); background:var(--color-white); border-radius:22px; box-shadow:0 18px 56px rgba(0,0,0,.22); overflow:hidden; display:grid; grid-template-columns: .9fr 1.1fr; }
+.pdf-modal { width:min(560px,calc(100vw - 24px)); max-height:min(58vh,520px); background:var(--color-white); border-radius:22px; box-shadow:0 18px 56px rgba(0,0,0,.22); overflow:hidden; display:grid; grid-template-columns: .95fr 1.05fr; }
 .pdf-modal-left { padding:14px; border-right:1px solid var(--color-gray); overflow:auto; }
 .pdf-modal-right { padding:14px; overflow:auto; background:linear-gradient(180deg,#fbfdff 0%,#ffffff 100%); }
 .pdf-modal-header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px; }
@@ -202,6 +203,11 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .pdf-preview-list { display:flex; flex-direction:column; gap:8px; }
 .pdf-preview-item { padding:10px 12px; border-radius:14px; background:#fff; border:1px solid rgba(226,230,234,.95); font-size:12.5px; line-height:1.45; box-shadow:0 6px 14px rgba(11,60,93,.04); }
 .pdf-preview-foot { margin-top:10px; color:var(--color-text-muted); font-size:12px; line-height:1.5; }
+@media (max-width: 720px) {
+  .pdf-modal { width: min(92vw, 430px); max-height: min(68vh, 520px); grid-template-columns: 1fr; }
+  .pdf-modal-left { border-right: none; border-bottom: 1px solid var(--color-gray); }
+  .pdf-modal-right { display: none; }
+}
 
 .crop-modal-overlay { position:fixed; inset:0; z-index:240; background:rgba(7,16,28,.60); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); display:none; align-items:center; justify-content:center; padding:18px; }
 .crop-modal-overlay.show { display:flex; }
@@ -533,7 +539,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
             <div class="upload-card-left">
               <div>
                 <div class="upload-title">PDF və ya şəkil seç</div>
-                <div class="upload-sub">Sualı birbaşa əlavə et. Lazım olsa Kırp alətindən istifadə et.</div>
+                <div class="upload-sub">PDF və ya şəkil əlavə et, sonra kəs.</div>
               </div>
             </div>
             <div class="upload-actions">
@@ -544,7 +550,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
           </div>
           <div class="upload-tool-card">
             <div class="tool-title">Kırp</div>
-            <div class="tool-sub">Sualın yalnız lazım olan hissəsini seç.</div>
+            <div class="tool-sub">Lazım olan hissəni kəs.</div>
           </div>
         </div>
         <div id="exam-questions-builder"></div>
@@ -574,8 +580,8 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
       <div class="pdf-modal-header">
         <div>
           <h3 id="pdf-modal-title">PDF Sihirbazı</h3>
-          <p>Başlıq, məsafə və cavab açarını seçin.</p>
-                  </div>
+          <p>Başlıq, məsafə və açarı seçin.</p>
+        </div>
         <div class="pdf-header-actions">
           <button class="btn-small pdf-generate-btn" id="pdf-generate-modal-btn" type="button">📄 PDF Hazırla</button>
           <button class="pdf-modal-close" id="pdf-modal-close" type="button">✕</button>
@@ -586,7 +592,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
         <h4>Tez ayarlar</h4>
         <div class="pdf-quick-grid">
           <div class="field">
-            <label>Sınaq başlığı</label>
+            <label>Başlıq</label>
             <input type="text" id="pdfm-title" placeholder="Məs: Bölmə qaydası" />
           </div>
           <div class="field">
@@ -594,8 +600,8 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
             <input type="text" id="pdfm-class" placeholder="Məs: 11" />
           </div>
           <div class="field">
-            <label>Sınaq nömrəsi</label>
-            <input type="text" id="pdfm-number" placeholder="Məs: BS1" />
+            <label>Kod</label>
+            <input type="text" id="pdfm-number" placeholder="Məs: 11" />
           </div>
           <div class="field">
             <label>Səhifə düzülüşü</label>
@@ -636,7 +642,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 
       <div class="pdf-section">
         <h4>Qısa kömək</h4>
-        <div class="muted-note">Ayarları seçin, sonra PDF Hazırla düyməsinə basın.</div>
+        <div class="muted-note">Ayarları seçin və Hazırla düyməsinə basın.</div>
       </div>
     </div>
 
@@ -660,7 +666,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
     <div class="crop-modal-header">
       <div>
         <h3 id="crop-modal-title">Kırp aləti</h3>
-        <div class="crop-upload-note">Şəkli seç, lazımsız hissələri kəs və eyni fayl üzərində yenidən istifadə et.</div>
+        <div class="crop-upload-note">Şəkli seç, kəs və yenidən istifadə et.</div>
       </div>
       <button class="pdf-modal-close" id="crop-modal-close" type="button">✕</button>
     </div>
@@ -1521,10 +1527,10 @@ function renderPdfPreview() {
 
   const chips = [];
   if (classVal) chips.push(`Sinif: ${classVal}`);
-  if (numberVal) chips.push(`Nömrə: ${numberVal}`);
+  if (numberVal) chips.push(`Kod: ${numberVal}`);
   chips.push(`${cols} sütun`);
-  chips.push(`${spacing} mm boşluq`);
-  chips.push(answerKey === "end" ? "Cavab açarı: sonda" : answerKey === "bottom" ? "Cavab açarı: altda" : "Cavab açarı: yoxdur");
+  chips.push(`${spacing} mm məsafə`);
+  chips.push(answerKey === "end" ? "Açar: sonda" : answerKey === "bottom" ? "Açar: altda" : "Açar: yoxdur");
   if (sub) sub.innerHTML = chips.map(c => `<span class="pdf-chip">${esc(c)}</span>`).join("");
   if (meta) meta.innerHTML = `
     <span class="pdf-chip">Sual sayı: ${examQuestions.length || 0}</span>
@@ -1537,12 +1543,26 @@ function renderPdfPreview() {
   if (list) list.innerHTML = previewItems + (examQuestions.length > 8 ? `<div class="pdf-preview-item" style="color:var(--color-text-muted);">... və daha ${examQuestions.length - 8} sual</div>` : "");
 }
 
+let pdfModalScrollY = 0;
+function lockPdfModalScroll() {
+  pdfModalScrollY = window.scrollY || window.pageYOffset || 0;
+  document.body.classList.add("pdf-modal-lock");
+  document.body.style.top = `-${pdfModalScrollY}px`;
+}
+
+function unlockPdfModalScroll() {
+  document.body.classList.remove("pdf-modal-lock");
+  document.body.style.top = "";
+  window.scrollTo(0, pdfModalScrollY || 0);
+}
+
 function openPdfModal() {
   syncModalFromCard();
   const overlay = document.getElementById("pdf-modal-overlay");
   if (!overlay) return;
   overlay.classList.add("show");
   overlay.setAttribute("aria-hidden", "false");
+  lockPdfModalScroll();
   renderPdfPreview();
 }
 
@@ -1551,6 +1571,7 @@ function closePdfModal() {
   if (!overlay) return;
   overlay.classList.remove("show");
   overlay.setAttribute("aria-hidden", "true");
+  unlockPdfModalScroll();
 }
 
 // Şəkli sıxışdırıb base64-ə çevirir (Firestore limitini aşmamaq üçün)
@@ -1916,36 +1937,84 @@ if (window.pdfjsLib) {
   window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 }
 
+
 async function generatePdfFromCurrentSettings() {
   if (examQuestions.length === 0) { toast("Əvvəlcə sual əlavə edin"); return; }
   toast("PDF hazırlanır, gözləyin...");
-  const triggerBtn = document.getElementById("pdf-generate-btn") || document.getElementById("open-pdf-modal-btn");
+  const triggerBtn = document.activeElement && (document.activeElement.id === "pdf-generate-btn" || document.activeElement.id === "pdf-generate-modal-btn") ? document.activeElement : null;
   if (triggerBtn) triggerBtn.disabled = true;
-
   try {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ unit: "mm", format: "a4" });
-    const pageW = 210, pageH = 297, marginX = 12, headerBottom = 34, footerLimit = 20;
+    const doc = new window.jspdf.jsPDF({ unit: "mm", format: "a4" });
+    registerPdfFont(doc);
     const settings = getPdfSettings();
     const spacing = settings.spacing;
     const [cr, cg, cb] = hexToRgb(settings.colorHex);
     const answerKeyMode = settings.answerKeyMode;
     const numCols = settings.numCols;
-    const title = settings.title;
-    const classVal = settings.classVal;
-    const numberVal = settings.numberVal;
+    const title = (settings.title || "Sınaq").trim();
+    const classVal = (settings.classVal || "").trim();
+    const numberVal = (settings.numberVal || "").trim();
 
+    const pageW = 210;
+    const pageH = 297;
+    const marginX = 12;
+    const headerY = 10;
+    const headerH = 20;
+    const headerBottom = headerY + headerH;
+    const footerLimit = 20;
+    const rowGap = Math.max(2, spacing / 3);
     const gutter = 8;
     const colWidth = numCols === 2 ? (pageW - marginX * 2 - gutter) / 2 : (pageW - marginX * 2);
     const colX = numCols === 2 ? [marginX, marginX + colWidth + gutter] : [marginX];
-    const pageBottomLimit = () => pageH - (answerKeyMode === "bottom" ? footerLimit : 15);
+    const topStart = headerBottom + 4;
+    const bottomLimit = () => pageH - (answerKeyMode === "bottom" ? footerLimit : 15);
+
+    const pageQuestionMap = {};
+    const answerKeyRowsAll = [];
+    const pageAnswerCache = {};
+
+    function trackAnswer(pageNum, qNum, label) {
+      if (!pageQuestionMap[pageNum]) pageQuestionMap[pageNum] = [];
+      pageQuestionMap[pageNum].push(`${qNum}-${label}`);
+    }
+
+    function getAnswerLabel(q) {
+      if (q.type === "mcq") {
+        return OPTION_LETTERS[q.correctIndex] || "-";
+      }
+      return String(q.correctAnswer || "-").trim() || "-";
+    }
+
+    function measureQuestionHeight(q) {
+      let h = 6;
+      if (q.text) {
+        const lines = doc.splitTextToSize(q.text, colWidth - 8);
+        h += lines.length * 4.8;
+      } else {
+        h += 5;
+      }
+      if (q.imageBase64) {
+        try {
+          const imgProps = doc.getImageProperties(q.imageBase64);
+          const maxW = colWidth - 7;
+          let imgW = maxW;
+          let imgH = (imgProps.height / imgProps.width) * imgW;
+          const maxImgH = 55;
+          if (imgH > maxImgH) {
+            imgH = maxImgH;
+            imgW = (imgProps.width / imgProps.height) * imgH;
+          }
+          h += imgH + 3;
+        } catch (e) {
+          h += 40;
+        }
+      }
+      h += q.type === "open" ? 11 : 6;
+      return h + rowGap;
+    }
 
     function drawHeader() {
-      registerPdfFont(doc);
-      const headerY = 10;
-      const headerH = 18;
       const headerW = pageW - marginX * 2;
-
       doc.setFillColor(249, 252, 255);
       doc.setDrawColor(226, 232, 240);
       doc.setLineWidth(0.35);
@@ -1953,9 +2022,9 @@ async function generatePdfFromCurrentSettings() {
 
       doc.setDrawColor(cr, cg, cb);
       doc.setLineWidth(0.55);
-      doc.line(marginX + 2.5, headerY + headerH - 1.5, pageW - marginX - 2.5, headerY + headerH - 1.5);
+      doc.line(marginX + 2.5, headerBottom - 1.4, pageW - marginX - 2.5, headerBottom - 1.4);
 
-      const leftTitle = (title || "Sınaq").trim();
+      const leftTitle = title || "Sınaq";
       doc.setTextColor(cr, cg, cb);
       doc.setFont(PDF_FONT_NAME, "bold");
       doc.setFontSize(13.5);
@@ -1968,13 +2037,11 @@ async function generatePdfFromCurrentSettings() {
         doc.text(`Sinif: ${classVal}`, marginX + 6, headerY + 14.5);
       }
 
-      const rightTop = [];
-      if (numberVal) rightTop.push(numberVal);
       doc.setTextColor(85, 93, 104);
       doc.setFont(PDF_FONT_NAME, "bold");
       doc.setFontSize(9.4);
-      if (rightTop.length) {
-        doc.text(rightTop.join("   •   "), pageW - marginX - 6, headerY + 8, { align: "right" });
+      if (numberVal) {
+        doc.text(numberVal, pageW - marginX - 6, headerY + 8, { align: "right" });
       }
 
       doc.setFont(PDF_FONT_NAME, "normal");
@@ -1991,46 +2058,13 @@ async function generatePdfFromCurrentSettings() {
       doc.line(pageW / 2, pageTop, pageW / 2, dividerBottom);
     }
 
-    const pageQuestionMap = {};
-    function trackAnswer(pageNum, qNum, label) {
-      if (!pageQuestionMap[pageNum]) pageQuestionMap[pageNum] = [];
-      pageQuestionMap[pageNum].push(`${qNum}-${label}`);
-    }
-
-    drawHeader();
-    let curPage = 1;
-    let colIdx = 0;
-    let y = headerBottom + 3;
-    const answerKeyRowsAll = [];
-
-    function estimateHeight(q) {
-      let h = 6;
-      if (q.imageBase64) h += 55;
-      h += q.type === "mcq" ? 10 : 9;
-      return h + spacing / 3;
-    }
-
-    for (let qi = 0; qi < examQuestions.length; qi++) {
-      const q = examQuestions[qi];
-      const estHeight = estimateHeight(q);
-
-      if (y + estHeight > pageBottomLimit()) {
-        if (numCols === 2 && colIdx === 0) {
-          colIdx = 1;
-          y = headerBottom + 3;
-        } else {
-          doc.addPage();
-          curPage++;
-          colIdx = 0;
-          y = 15;
-        }
-      }
-      const x = colX[colIdx];
-
+    function renderQuestionBlock(q, qNum, x, startY) {
+      let y = startY;
       doc.setTextColor(cr, cg, cb);
       doc.setFontSize(10.5);
       doc.setFont(PDF_FONT_NAME, "bold");
-      doc.text(`${qi + 1}.`, x, y);
+      doc.text(`${qNum}.`, x, y);
+
       doc.setFont(PDF_FONT_NAME, "normal");
       doc.setTextColor(30, 30, 30);
       doc.setFontSize(9.5);
@@ -2046,39 +2080,121 @@ async function generatePdfFromCurrentSettings() {
         try {
           const imgProps = doc.getImageProperties(q.imageBase64);
           const maxW = colWidth - 7;
-          let imgW = maxW, imgH = (imgProps.height / imgProps.width) * imgW;
+          let imgW = maxW;
+          let imgH = (imgProps.height / imgProps.width) * imgW;
           const maxImgH = 55;
-          if (imgH > maxImgH) { imgH = maxImgH; imgW = (imgProps.width / imgProps.height) * imgH; }
+          if (imgH > maxImgH) {
+            imgH = maxImgH;
+            imgW = (imgProps.width / imgProps.height) * imgH;
+          }
           doc.addImage(q.imageBase64, "JPEG", x + 7, y, imgW, imgH);
           y += imgH + 3;
-        } catch (e) { console.error("Şəkil PDF-ə əlavə edilə bilmədi:", e); }
+        } catch (e) {
+          console.error("Şəkil PDF-ə əlavə edilə bilmədi:", e);
+        }
       }
 
       let answerLabel;
       if (q.type === "mcq") {
         y += 6;
-        answerLabel = OPTION_LETTERS[q.correctIndex];
+        answerLabel = getAnswerLabel(q);
       } else {
         doc.setFontSize(8.5);
         doc.setTextColor(90, 90, 90);
         doc.text("Cavab: _______________", x + 7, y + 3);
         y += 7;
-        answerLabel = q.correctAnswer || "-";
+        answerLabel = getAnswerLabel(q);
       }
-      doc.setTextColor(30, 30, 30);
+      return answerLabel;
+    }
 
-      answerKeyRowsAll.push(`${qi + 1}-${answerLabel}`);
-      if (answerKeyMode === "bottom") trackAnswer(curPage, qi + 1, answerLabel);
+    function fitTwoColumnCount(startIdx) {
+      const remaining = examQuestions.length - startIdx;
+      if (remaining <= 1) return remaining;
+      const maxEven = remaining - (remaining % 2);
+      for (let count = maxEven; count >= 2; count -= 2) {
+        const half = count / 2;
+        let y = topStart;
+        let fits = true;
+        for (let r = 0; r < half; r++) {
+          const leftQ = examQuestions[startIdx + r];
+          const rightQ = examQuestions[startIdx + half + r];
+          const rowH = Math.max(measureQuestionHeight(leftQ), measureQuestionHeight(rightQ));
+          if (y + rowH > bottomLimit()) { fits = false; break; }
+          y += rowH;
+        }
+        if (fits) return count;
+      }
+      return 2;
+    }
 
-      y += spacing / 3;
+    function fitOneColumnCount(startIdx) {
+      let y = topStart;
+      let count = 0;
+      while (startIdx + count < examQuestions.length) {
+        const q = examQuestions[startIdx + count];
+        const qH = measureQuestionHeight(q);
+        if (count > 0 && y + qH > bottomLimit()) break;
+        y += qH;
+        count += 1;
+      }
+      return Math.max(count, 1);
+    }
+
+    let cursor = 0;
+    let firstPage = true;
+    while (cursor < examQuestions.length) {
+      if (!firstPage) doc.addPage();
+      firstPage = false;
+      const curPage = doc.internal.getNumberOfPages();
+      drawHeader();
+      drawColumnDivider(headerBottom);
+
+      if (numCols === 2) {
+        const count = fitTwoColumnCount(cursor);
+        const half = Math.ceil(count / 2);
+        let y = topStart;
+        for (let r = 0; r < half; r++) {
+          const leftQ = examQuestions[cursor + r];
+          const rightQ = (cursor + half + r) < (cursor + count) ? examQuestions[cursor + half + r] : null;
+          const leftH = measureQuestionHeight(leftQ);
+          const rightH = rightQ ? measureQuestionHeight(rightQ) : 0;
+          const rowH = Math.max(leftH, rightH);
+          const leftAnswer = renderQuestionBlock(leftQ, cursor + r + 1, colX[0], y);
+          answerKeyRowsAll.push(`${cursor + r + 1}-${leftAnswer}`);
+          pageAnswerCache[cursor + r + 1] = leftAnswer;
+          if (answerKeyMode === "bottom") trackAnswer(curPage, cursor + r + 1, leftAnswer);
+
+          if (rightQ) {
+            const rightAnswer = renderQuestionBlock(rightQ, cursor + half + r + 1, colX[1], y);
+            answerKeyRowsAll.push(`${cursor + half + r + 1}-${rightAnswer}`);
+            pageAnswerCache[cursor + half + r + 1] = rightAnswer;
+            if (answerKeyMode === "bottom") trackAnswer(curPage, cursor + half + r + 1, rightAnswer);
+          }
+          y += rowH;
+        }
+        cursor += count;
+      } else {
+        const count = fitOneColumnCount(cursor);
+        let y = topStart;
+        for (let i = 0; i < count; i++) {
+          const q = examQuestions[cursor + i];
+          const qH = measureQuestionHeight(q);
+          const answerLabel = renderQuestionBlock(q, cursor + i + 1, colX[0], y);
+          answerKeyRowsAll.push(`${cursor + i + 1}-${answerLabel}`);
+          pageAnswerCache[cursor + i + 1] = answerLabel;
+          if (answerKeyMode === "bottom") trackAnswer(curPage, cursor + i + 1, answerLabel);
+          y += qH;
+        }
+        cursor += count;
+      }
     }
 
     const totalPages = doc.internal.getNumberOfPages();
     if (numCols === 2) {
       for (let p = 1; p <= totalPages; p++) {
         doc.setPage(p);
-        const topY = p === 1 ? headerBottom : 12;
-        drawColumnDivider(topY);
+        drawColumnDivider(p === 1 ? headerBottom : headerBottom);
       }
     }
 
@@ -2116,7 +2232,8 @@ async function generatePdfFromCurrentSettings() {
       });
     }
 
-    doc.save(`${title.replace(/[^\wƏəıİĞğÜüŞşÖöÇç -]/g, "")}.pdf`);
+    const safeName = (title || "Sınaq").replace(/[^\wƏəıİĞğÜüŞşÖöÇç -]/g, "").trim() || "Sınaq";
+    doc.save(`${safeName}.pdf`);
     toast("PDF hazırdır ✅");
   } catch (err) {
     console.error(err);
