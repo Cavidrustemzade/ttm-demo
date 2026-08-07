@@ -411,7 +411,18 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
           <div class="field"><label>Suallar arası boşluq (mm)</label><input type="number" id="pdf-spacing-field" value="15" min="5" max="50" /></div>
           <div class="field"><label>Başlıq xəttinin rəngi</label><input type="color" id="pdf-color-field" value="#0B3C5D" style="height:42px; padding:4px;" /></div>
         </div>
-        <div class="checkbox-row"><input type="checkbox" id="pdf-answerkey-check" checked /><label for="pdf-answerkey-check">Sonda cavab açarı əlavə edilsin</label></div>
+        <div class="field-row">
+          <div class="field"><label>Səhifə düzülüşü</label>
+            <select id="pdf-columns-field"><option value="2">2 sütun (yığcam)</option><option value="1">1 sütun (geniş)</option></select>
+          </div>
+          <div class="field"><label>Cavab açarının yeri</label>
+            <select id="pdf-answerkey-location">
+              <option value="end">Sənədin sonunda (ayrıca səhifə)</option>
+              <option value="bottom">Hər səhifənin altında (yığcam)</option>
+              <option value="none">Əlavə edilməsin</option>
+            </select>
+          </div>
+        </div>
         <button class="btn-small" id="pdf-generate-btn" style="width:100%;">📄 PDF hazırla</button>
       </div>
 
@@ -1260,126 +1271,187 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
   try {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: "mm", format: "a4" });
-    const pageW = 210, pageH = 297, marginX = 15, marginBottom = 18;
+    const pageW = 210, pageH = 297, marginX = 12, headerBottom = 38, footerLimit = 20;
     const spacing = Number(document.getElementById("pdf-spacing-field").value) || 15;
     const colorHex = document.getElementById("pdf-color-field").value;
     const [cr, cg, cb] = hexToRgb(colorHex);
-    const includeAnswerKey = document.getElementById("pdf-answerkey-check").checked;
+    const answerKeyMode = document.getElementById("pdf-answerkey-location").value; // end | bottom | none
+    const numCols = Number(document.getElementById("pdf-columns-field").value) || 2;
     const title = (document.getElementById("exam-title").value || "Sınaq").trim();
     const classVal = document.getElementById("pdf-class-field").value.trim();
     const numberVal = document.getElementById("pdf-number-field").value.trim();
+
+    const gutter = 8;
+    const colWidth = numCols === 2 ? (pageW - marginX * 2 - gutter) / 2 : (pageW - marginX * 2);
+    const colX = numCols === 2 ? [marginX, marginX + colWidth + gutter] : [marginX];
+    const pageBottomLimit = () => pageH - (answerKeyMode === "bottom" ? footerLimit : 15);
 
     function drawHeader() {
       doc.setDrawColor(cr, cg, cb);
       doc.setLineWidth(0.6);
       doc.line(marginX, 26, pageW - marginX, 26);
-
-      // Sol: Sinif
       doc.setFontSize(9);
       doc.setTextColor(cr, cg, cb);
       doc.text("Sinif:", marginX, 20);
       if (classVal) { doc.setTextColor(30, 30, 30); doc.text(classVal, marginX + 12, 20); }
       else { doc.setDrawColor(160, 160, 160); doc.line(marginX + 11, 20.5, marginX + 30, 20.5); }
-
-      // Sağ: Sınaq nömrəsi
       doc.setTextColor(cr, cg, cb);
       doc.text("Sınaq №:", pageW - marginX - 30, 20);
       if (numberVal) { doc.setTextColor(30, 30, 30); doc.text(numberVal, pageW - marginX - 12, 20); }
       else { doc.setDrawColor(160, 160, 160); doc.line(pageW - marginX - 12, 20.5, pageW - marginX, 20.5); }
-
-      // Mərkəzdə: loqo (TTM) + başlıq, xəttin üzərində
       doc.setFillColor(cr, cg, cb);
       doc.roundedRect(pageW / 2 - 10, 12, 20, 10, 2, 2, "F");
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(9);
       doc.setFont(undefined, "bold");
       doc.text("TTM", pageW / 2, 18.5, { align: "center" });
-
       doc.setTextColor(30, 30, 30);
       doc.setFontSize(13);
       doc.text(title, pageW / 2, 33, { align: "center" });
       doc.setFont(undefined, "normal");
     }
 
+    function drawColumnDivider(pageTop, pageBottom) {
+      if (numCols !== 2) return;
+      doc.setDrawColor(210, 210, 210);
+      doc.setLineWidth(0.3);
+      doc.line(pageW / 2, pageTop, pageW / 2, pageBottom);
+    }
+
+    // Hər səhifə üçün: hansı sualların o səhifədə olduğunu izləyirik (altda cavab açarı üçün)
+    const pageQuestionMap = {}; // pageNumber -> [ {num, answerLabel} ]
+    function trackAnswer(pageNum, qNum, label) {
+      if (!pageQuestionMap[pageNum]) pageQuestionMap[pageNum] = [];
+      pageQuestionMap[pageNum].push(`${qNum}-${label}`);
+    }
+
     drawHeader();
-    let y = 40;
-    const answerKeyRows = [];
+    let curPage = 1;
+    let colIdx = 0;
+    let y = headerBottom + 3;
+    const answerKeyRowsAll = [];
+
+    function estimateHeight(q) {
+      let h = 6;
+      if (q.imageBase64) h += 55;
+      h += q.type === "mcq" ? 10 : 9;
+      return h + spacing / 3;
+    }
 
     for (let qi = 0; qi < examQuestions.length; qi++) {
       const q = examQuestions[qi];
+      const estHeight = estimateHeight(q);
 
-      // Sualın tutacağı təxmini hündürlüyü hesabla (səhifə sonunda kəsilməsin deyə)
-      let estHeight = 10;
-      if (q.imageBase64) estHeight += 60;
-      if (q.type === "mcq") estHeight += 12; else estHeight += 8;
-
-      if (y + estHeight > pageH - marginBottom) {
-        doc.addPage();
-        y = marginX + 5;
+      if (y + estHeight > pageBottomLimit()) {
+        if (numCols === 2 && colIdx === 0) {
+          colIdx = 1;
+          y = headerBottom + 3;
+        } else {
+          doc.addPage();
+          curPage++;
+          colIdx = 0;
+          y = 15;
+        }
       }
+      const x = colX[colIdx];
 
       doc.setTextColor(cr, cg, cb);
-      doc.setFontSize(11);
+      doc.setFontSize(10.5);
       doc.setFont(undefined, "bold");
-      doc.text(`${qi + 1}.`, marginX, y);
+      doc.text(`${qi + 1}.`, x, y);
       doc.setFont(undefined, "normal");
       doc.setTextColor(30, 30, 30);
+      doc.setFontSize(9.5);
       if (q.text) {
-        const lines = doc.splitTextToSize(q.text, pageW - marginX * 2 - 10);
-        doc.text(lines, marginX + 8, y);
-        y += lines.length * 5.5;
+        const lines = doc.splitTextToSize(q.text, colWidth - 8);
+        doc.text(lines, x + 7, y);
+        y += lines.length * 4.8;
       } else {
-        y += 6;
+        y += 5;
       }
 
       if (q.imageBase64) {
         try {
           const imgProps = doc.getImageProperties(q.imageBase64);
-          const maxW = pageW - marginX * 2 - 8;
+          const maxW = colWidth - 7;
           let imgW = maxW, imgH = (imgProps.height / imgProps.width) * imgW;
-          const maxImgH = 75;
+          const maxImgH = 55;
           if (imgH > maxImgH) { imgH = maxImgH; imgW = (imgProps.width / imgProps.height) * imgH; }
-          doc.addImage(q.imageBase64, "JPEG", marginX + 8, y, imgW, imgH);
-          y += imgH + 4;
+          doc.addImage(q.imageBase64, "JPEG", x + 7, y, imgW, imgH);
+          y += imgH + 3;
         } catch (e) { console.error("Şəkil PDF-ə əlavə edilə bilmədi:", e); }
       }
 
+      let answerLabel;
       if (q.type === "mcq") {
-        let x = marginX + 8;
-        doc.setFontSize(10);
+        let ox = x + 7;
+        doc.setFontSize(8.5);
         OPTION_LETTERS.forEach((letter) => {
           doc.setDrawColor(150, 150, 150);
-          doc.circle(x + 3, y + 2, 3.2, "S");
-          doc.text(letter, x + 3, y + 3.2, { align: "center" });
-          x += 12;
+          doc.circle(ox + 2.4, y + 1.6, 2.4, "S");
+          doc.text(letter, ox + 2.4, y + 2.6, { align: "center" });
+          ox += 8.5;
         });
-        y += 10;
-        answerKeyRows.push(`${qi + 1}. ${OPTION_LETTERS[q.correctIndex]}`);
+        y += 8;
+        answerLabel = OPTION_LETTERS[q.correctIndex];
       } else {
-        doc.setFontSize(10);
+        doc.setFontSize(8.5);
         doc.setTextColor(90, 90, 90);
-        doc.text("Cavab: ______________________", marginX + 8, y + 4);
-        y += 9;
-        answerKeyRows.push(`${qi + 1}. ${q.correctAnswer || "-"}`);
+        doc.text("Cavab: _______________", x + 7, y + 3);
+        y += 7;
+        answerLabel = q.correctAnswer || "-";
       }
+      doc.setTextColor(30, 30, 30);
 
-      y += spacing / 3; // istifadəçinin seçdiyi boşluğun bir hissəsi (tam mm çox yer tuta bilər)
+      answerKeyRowsAll.push(`${qi + 1}-${answerLabel}`);
+      if (answerKeyMode === "bottom") trackAnswer(curPage, qi + 1, answerLabel);
+
+      y += spacing / 3;
     }
 
-    if (includeAnswerKey) {
+    // Sütun ayırıcı xəttini bütün istifadə olunan səhifələrə çəkirik
+    const totalPages = doc.internal.getNumberOfPages();
+    if (numCols === 2) {
+      for (let p = 1; p <= totalPages; p++) {
+        doc.setPage(p);
+        const topY = p === 1 ? headerBottom : 12;
+        drawColumnDivider(topY, pageH - 15);
+      }
+    }
+
+    // Hər səhifənin altında yığcam cavab açarı
+    if (answerKeyMode === "bottom") {
+      Object.keys(pageQuestionMap).forEach(pStr => {
+        const p = Number(pStr);
+        doc.setPage(p);
+        doc.setDrawColor(cr, cg, cb);
+        doc.setLineWidth(0.4);
+        doc.line(marginX, pageH - footerLimit + 4, pageW - marginX, pageH - footerLimit + 4);
+        doc.setFontSize(8.5);
+        doc.setTextColor(cr, cg, cb);
+        doc.setFont(undefined, "bold");
+        doc.text("Cavablar: ", marginX, pageH - footerLimit + 9);
+        doc.setFont(undefined, "normal");
+        doc.setTextColor(90, 90, 90);
+        doc.text(pageQuestionMap[p].join("   "), marginX + 18, pageH - footerLimit + 9);
+      });
+    }
+
+    // Sənədin sonunda ayrıca cavab açarı səhifəsi
+    if (answerKeyMode === "end") {
       doc.addPage();
       doc.setTextColor(cr, cg, cb);
       doc.setFontSize(14);
       doc.setFont(undefined, "bold");
       doc.text("Cavab açarı", pageW / 2, 20, { align: "center" });
       doc.setFont(undefined, "normal");
-      doc.setFontSize(11);
+      doc.setFontSize(10.5);
       doc.setTextColor(30, 30, 30);
-      let ky = 32, kx = marginX;
-      answerKeyRows.forEach((row, i) => {
-        doc.text(row, kx, ky);
+      let ky = 34, kx = marginX;
+      answerKeyRowsAll.forEach((row) => {
+        doc.text(row.replace("-", ". "), kx, ky);
         ky += 8;
-        if (ky > pageH - marginBottom) { ky = 32; kx += 45; }
+        if (ky > pageH - 20) { ky = 34; kx += 40; }
       });
     }
 
