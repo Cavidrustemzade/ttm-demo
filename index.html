@@ -117,17 +117,107 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .floating-pdf-btn:hover { filter:brightness(1.04); }
 .floating-pdf-btn:active { transform:scale(.98); }
 .autosave-badge { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; background:rgba(46,158,107,.12); color:#2e9e6b; font-size:12px; font-weight:700; }
-.pdf-modal-overlay { position:fixed; inset:0; background:rgba(7,16,28,.52); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); z-index:200; display:none; align-items:flex-end; justify-content:flex-end; padding:18px; }
+.panel-main { position:relative; }
+.tab-panel { position:relative; isolation:isolate; overflow:hidden; }
+.tab-panel::before { content:""; position:absolute; inset:0; z-index:0; pointer-events:none; opacity:.52; background-repeat:no-repeat; background-position:right top, left bottom, center top; background-size:340px, 260px, 100% 100%; }
+.tab-panel > * { position:relative; z-index:1; }
+
+#tab-exams::before, #stab-exams::before { background-image:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='320' viewBox='0 0 420 320'%3E%3Cg fill='none' stroke='%230b3c5d' stroke-opacity='.12' stroke-width='8'%3E%3Crect x='260' y='28' width='94' height='132' rx='18'/%3E%3Cpath d='M284 68h46M284 98h60M284 128h34'/%3E%3Ccircle cx='102' cy='230' r='44'/%3E%3Cpath d='M102 205v34M86 221h32'/%3E%3C/g%3E%3C/svg%3E"),
+  linear-gradient(135deg, rgba(11,60,93,.04), rgba(255,255,255,.18));
+}
+#tab-students::before, #stab-home::before { background-image:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='320' viewBox='0 0 420 320'%3E%3Cg fill='none' stroke='%230b3c5d' stroke-opacity='.10' stroke-width='8'%3E%3Ccircle cx='90' cy='92' r='34'/%3E%3Cpath d='M40 202c16-40 74-56 100-6 6 11 9 25 9 40'/%3E%3Crect x='260' y='44' width='110' height='80' rx='18'/%3E%3Cpath d='M286 68h58M286 92h34'/%3E%3C/g%3E%3C/svg%3E"),
+  linear-gradient(135deg, rgba(46,158,107,.03), rgba(255,255,255,.15));
+}
+#tab-groups::before, #stab-schedule::before { background-image:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='320' viewBox='0 0 420 320'%3E%3Cg fill='none' stroke='%230b3c5d' stroke-opacity='.10' stroke-width='8'%3E%3Ccircle cx='96' cy='88' r='28'/%3E%3Ccircle cx='184' cy='60' r='28'/%3E%3Ccircle cx='184' cy='144' r='28'/%3E%3Cpath d='M120 88h36M184 88v28'/%3E%3Crect x='258' y='46' width='118' height='118' rx='20'/%3E%3Cpath d='M286 84h62M286 114h42'/%3E%3C/g%3E%3C/svg%3E"),
+  linear-gradient(135deg, rgba(59,130,246,.03), rgba(255,255,255,.16));
+}
+#tab-daily::before, #stab-daily::before { background-image:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='320' viewBox='0 0 420 320'%3E%3Cg fill='none' stroke='%230b3c5d' stroke-opacity='.10' stroke-width='8'%3E%3Crect x='246' y='34' width='126' height='126' rx='18'/%3E%3Cpath d='M246 74h126M278 34v26M340 34v26'/%3E%3Cpath d='M72 224l30-30 26 26 50-56'/%3E%3C/g%3E%3C/svg%3E"),
+  linear-gradient(135deg, rgba(217,119,6,.03), rgba(255,255,255,.16));
+}
+#tab-scores::before, #stab-scores::before { background-image:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='320' viewBox='0 0 420 320'%3E%3Cg fill='none' stroke='%230b3c5d' stroke-opacity='.10' stroke-width='8'%3E%3Cpath d='M64 248h252'/%3E%3Crect x='82' y='174' width='34' height='74' rx='8'/%3E%3Crect x='132' y='140' width='34' height='108' rx='8'/%3E%3Crect x='182' y='110' width='34' height='138' rx='8'/%3E%3Crect x='280' y='60' width='74' height='74' rx='18'/%3E%3Cpath d='M296 96l14 14 26-32'/%3E%3C/g%3E%3C/svg%3E"),
+  linear-gradient(135deg, rgba(139,92,246,.03), rgba(255,255,255,.16));
+}
+#tab-topics::before, #stab-topics::before { background-image:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='320' viewBox='0 0 420 320'%3E%3Cg fill='none' stroke='%230b3c5d' stroke-opacity='.10' stroke-width='8'%3E%3Ccircle cx='114' cy='98' r='44'/%3E%3Cpath d='M114 74v24l18 14'/%3E%3Cpath d='M278 62h86M278 94h62M278 126h40'/%3E%3Cpath d='M60 248h118'/%3E%3C/g%3E%3C/svg%3E"),
+  linear-gradient(135deg, rgba(34,197,94,.03), rgba(255,255,255,.16));
+}
+#tab-materials::before, #stab-materials::before { background-image:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='320' viewBox='0 0 420 320'%3E%3Cg fill='none' stroke='%230b3c5d' stroke-opacity='.10' stroke-width='8'%3E%3Crect x='248' y='46' width='112' height='138' rx='16'/%3E%3Cpath d='M274 86h60M274 118h44M274 150h32'/%3E%3Cpath d='M70 228h112M70 198h80'/%3E%3C/g%3E%3C/svg%3E"),
+  linear-gradient(135deg, rgba(14,165,233,.03), rgba(255,255,255,.16));
+}
+#stab-race::before { background-image:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='320' viewBox='0 0 420 320'%3E%3Cg fill='none' stroke='%230b3c5d' stroke-opacity='.10' stroke-width='8'%3E%3Cpath d='M72 234c36-72 110-104 186-92'/%3E%3Cpath d='M268 86l38 14-14 38'/%3E%3Crect x='286' y='154' width='72' height='72' rx='18'/%3E%3Cpath d='M304 184h36M322 166v36'/%3E%3C/g%3E%3C/svg%3E"),
+  linear-gradient(135deg, rgba(245,158,11,.03), rgba(255,255,255,.16));
+}
+
+.btn-small, .btn-outline, .q-mini-btn, .floating-pdf-btn, .pdf-modal-close, .upload-card-btn { -webkit-tap-highlight-color: transparent; }
+
+.upload-hero { display:grid; grid-template-columns: 1.3fr .9fr; gap:10px; margin-bottom:12px; }
+.upload-card, .upload-tool-card { background:linear-gradient(145deg, #ffffff, #eff6ff); border:1px solid rgba(11,60,93,.08); border-radius:20px; box-shadow:0 10px 24px rgba(11,60,93,.07); padding:14px; }
+.upload-card { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.upload-card-left { display:flex; align-items:center; gap:12px; min-width:0; }
+.upload-avatar { width:44px; height:44px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:20px; background:linear-gradient(135deg,#0B3C5D,#14507d); color:#fff; box-shadow:0 10px 20px rgba(11,60,93,.18); flex-shrink:0; }
+.upload-title { font-weight:800; color:var(--color-primary); font-size:14px; }
+.upload-sub { color:var(--color-text-muted); font-size:12px; line-height:1.45; margin-top:2px; }
+.upload-actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+.upload-btn { display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:14px; background:linear-gradient(135deg,var(--color-primary),var(--color-primary-dark)); color:#fff; font-weight:800; font-size:12.5px; box-shadow:0 10px 20px rgba(11,60,93,.22); cursor:pointer; }
+.upload-btn input { display:none; }
+.upload-alt { display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:14px; background:#fff; color:var(--color-primary); font-weight:800; font-size:12.5px; border:1px solid rgba(11,60,93,.14); cursor:pointer; }
+.upload-tool-card { background:linear-gradient(145deg,#ffffff,#f8fafc); }
+.upload-tool-card .tool-title { font-size:13px; font-weight:800; color:var(--color-text); }
+.upload-tool-card .tool-sub { margin-top:4px; color:var(--color-text-muted); font-size:12px; line-height:1.5; }
+.q-image-preview { margin-top:10px; border-radius:16px; overflow:hidden; border:1px solid rgba(226,230,234,.95); background:#fff; box-shadow:0 10px 20px rgba(11,60,93,.06); }
+.q-image-preview img { width:100%; display:block; max-height:220px; object-fit:cover; }
+.q-image-actions { display:flex; gap:8px; padding:10px; flex-wrap:wrap; background:linear-gradient(180deg,#fff,#f8fafc); }
+.q-image-actions .q-mini-btn { background:#fff; }
+.q-image-actions .q-mini-btn.primary { background:var(--color-primary); color:#fff; border-color:var(--color-primary); }
+.q-upload-hidden { display:none; }
+
+.pdf-modal-overlay { position:fixed; inset:0; background:rgba(7,16,28,.58); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); z-index:200; display:none; align-items:flex-end; justify-content:flex-end; padding:16px; }
 .pdf-modal-overlay.show { display:flex; }
-.pdf-modal { width:min(1180px,100%); max-height:min(92vh,900px); background:var(--color-white); border-radius:26px; box-shadow:0 24px 80px rgba(0,0,0,.25); overflow:hidden; display:grid; grid-template-columns: 0.92fr 1.08fr; }
-.pdf-modal-left { padding:20px; border-right:1px solid var(--color-gray); overflow:auto; }
-.pdf-modal-right { padding:20px; overflow:auto; background:linear-gradient(180deg,#fbfdff 0%,#ffffff 100%); }
-.pdf-modal-header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:14px; }
+.pdf-modal { width:min(920px,100%); max-height:min(84vh,820px); background:var(--color-white); border-radius:24px; box-shadow:0 24px 80px rgba(0,0,0,.25); overflow:hidden; display:grid; grid-template-columns: .92fr 1.08fr; }
+.pdf-modal-left { padding:18px; border-right:1px solid var(--color-gray); overflow:auto; }
+.pdf-modal-right { padding:18px; overflow:auto; background:linear-gradient(180deg,#fbfdff 0%,#ffffff 100%); }
+.pdf-modal-header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px; }
 .pdf-modal-header h3 { margin:0; color:var(--color-primary); font-size:18px; }
 .pdf-modal-header p { margin-top:4px; color:var(--color-text-muted); font-size:13px; line-height:1.5; }
+.pdf-header-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
 .pdf-modal-close { width:38px; height:38px; border-radius:12px; border:none; background:var(--color-light-gray); color:var(--color-text); font-size:18px; font-weight:800; }
 .pdf-section { background:var(--color-light-gray); border-radius:18px; padding:14px; margin-bottom:14px; border:1px solid rgba(226,230,234,.9); }
 .pdf-section h4 { font-size:13px; margin-bottom:10px; color:var(--color-primary); }
+.pdf-quick-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.pdf-actions { display:flex; gap:8px; margin-top:12px; }
+.pdf-generate-btn { width:100%; padding:12px 16px; border-radius:14px; }
+.pdf-preview-card { background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%); border-radius:20px; border:1px solid rgba(226,230,234,.95); padding:14px; min-height:100%; box-shadow:0 12px 28px rgba(11,60,93,.05); }
+.pdf-preview-top { display:flex; flex-direction:column; gap:6px; padding-bottom:12px; border-bottom:1px dashed rgba(11,60,93,.12); margin-bottom:12px; }
+.pdf-preview-tag { display:inline-flex; align-self:flex-start; padding:4px 10px; border-radius:999px; background:rgba(11,60,93,.08); color:var(--color-primary); font-size:11px; font-weight:800; }
+.pdf-preview-title { font-size:20px; font-weight:900; color:var(--color-text); line-height:1.2; }
+.pdf-preview-sub, .pdf-preview-meta { display:flex; flex-wrap:wrap; gap:6px; }
+.pdf-chip { display:inline-flex; align-items:center; padding:5px 10px; border-radius:999px; background:#fff; border:1px solid rgba(11,60,93,.10); color:var(--color-text-muted); font-size:11.5px; font-weight:700; }
+.pdf-preview-list { display:flex; flex-direction:column; gap:8px; }
+.pdf-preview-item { padding:10px 12px; border-radius:14px; background:#fff; border:1px solid rgba(226,230,234,.95); font-size:12.5px; line-height:1.45; box-shadow:0 6px 14px rgba(11,60,93,.04); }
+.pdf-preview-foot { margin-top:10px; color:var(--color-text-muted); font-size:12px; line-height:1.5; }
+
+.crop-modal-overlay { position:fixed; inset:0; z-index:240; background:rgba(7,16,28,.60); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); display:none; align-items:center; justify-content:center; padding:18px; }
+.crop-modal-overlay.show { display:flex; }
+.crop-modal { width:min(760px,100%); background:#fff; border-radius:24px; overflow:hidden; box-shadow:0 28px 90px rgba(0,0,0,.32); display:grid; grid-template-rows:auto 1fr auto; }
+.crop-modal-header { padding:16px 18px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; border-bottom:1px solid var(--color-gray); }
+.crop-modal-header h3 { margin:0; color:var(--color-primary); font-size:18px; }
+.crop-modal-body { padding:16px 18px; display:grid; grid-template-columns:1.1fr .9fr; gap:14px; background:linear-gradient(180deg,#fafcff,#ffffff); }
+.crop-preview-stage { position:relative; min-height:340px; background:#0b3c5d; border-radius:18px; overflow:hidden; border:1px solid rgba(11,60,93,.10); box-shadow:inset 0 0 0 1px rgba(255,255,255,.06); }
+.crop-preview-img { position:absolute; inset:0; background-repeat:no-repeat; background-position:center; background-size:contain; }
+.crop-rect { position:absolute; border:2px solid #fff; box-shadow:0 0 0 9999px rgba(0,0,0,.40); border-radius:12px; }
+.crop-controls { display:grid; gap:10px; align-content:start; }
+.crop-control { background:var(--color-light-gray); border-radius:14px; padding:10px; border:1px solid rgba(226,230,234,.95); }
+.crop-control label { display:flex; justify-content:space-between; font-size:12px; font-weight:700; color:var(--color-text-muted); margin-bottom:6px; }
+.crop-control input[type="range"] { width:100%; }
+.crop-modal-footer { padding:14px 18px 18px; display:flex; justify-content:flex-end; gap:8px; border-top:1px solid var(--color-gray); background:#fff; }
+.crop-upload-note { margin-top:8px; font-size:12px; color:var(--color-text-muted); line-height:1.5; }
 .pdf-quick-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
 .pdf-quick-grid .field { min-width:0; }
 .pdf-actions { display:flex; gap:10px; margin-top:12px; }
@@ -437,9 +527,25 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
         </div>
 
         <h3 style="margin-top:20px;">Suallar</h3>
-        <div class="field" style="margin-bottom:14px;">
-          <label>📷 Bir neçə şəkli birdən seçin (hər şəkildən avtomatik sual yaranacaq, sırayla)</label>
-          <input type="file" accept="image/*" multiple id="exam-bulk-image-input" />
+        <div class="upload-hero">
+          <div class="upload-card">
+            <div class="upload-card-left">
+              <div class="upload-avatar">📎</div>
+              <div>
+                <div class="upload-title">Şəkil və ya PDF seç</div>
+                <div class="upload-sub">Sual şəkli, çoxlu şəkil və ya PDF səhifələrini birbaşa əlavə et. Sonra istəsən Kırp alətindən istifadə et.</div>
+              </div>
+            </div>
+            <div class="upload-actions">
+              <label class="upload-btn" for="exam-bulk-image-input">Fayl seç
+                <input type="file" accept="image/*,application/pdf" multiple id="exam-bulk-image-input" />
+              </label>
+            </div>
+          </div>
+          <div class="upload-tool-card">
+            <div class="tool-title">Kırp aracı</div>
+            <div class="tool-sub">Yüklədiyin sualın lazımsız hissəsini kəs, eyni səhifə üzərində saxlamaqla yenidən istifadə et.</div>
+          </div>
         </div>
         <div id="exam-questions-builder"></div>
         <button class="btn-outline" id="exam-add-question-btn" style="margin-bottom:14px;">+ Tək sual əlavə et</button>
@@ -496,7 +602,10 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
           <p>Buradan bütün PDF ayarlarını bir yerdə seçin, önizləməyə baxın və sənədi yaradın.</p>
           <div class="autosave-badge" id="autosave-badge">💾 Avto-saxlanır</div>
         </div>
-        <button class="pdf-modal-close" id="pdf-modal-close" type="button">✕</button>
+        <div class="pdf-header-actions">
+          <button class="btn-small pdf-generate-btn" id="pdf-generate-modal-btn" type="button">📄 PDF Hazırla</button>
+          <button class="pdf-modal-close" id="pdf-modal-close" type="button">✕</button>
+        </div>
       </div>
 
       <div class="pdf-section">
@@ -547,7 +656,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
         </div>
         <div class="pdf-actions">
           <button class="btn-outline" id="pdf-preview-btn" type="button">Önizlə</button>
-          <button class="btn-small" id="pdf-apply-btn" type="button">Tətbiq et</button>
+          <button class="btn-outline" id="pdf-apply-btn" type="button">Tətbiq et</button>
         </div>
       </div>
 
@@ -568,6 +677,35 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
         <div class="pdf-preview-list" id="pdf-preview-list"></div>
       </div>
       <div class="pdf-preview-foot">Bu önizləmə PDF-in ümumi görünüşünü göstərir. Dəqiq çıxış aşağıdakı sual məzmunu, şəkillər və cavab açarı parametrlərinə əsasən hazırlanır.</div>
+    </div>
+  </div>
+</div>
+
+<div class="crop-modal-overlay" id="crop-modal-overlay" aria-hidden="true">
+  <div class="crop-modal" role="dialog" aria-modal="true" aria-labelledby="crop-modal-title">
+    <div class="crop-modal-header">
+      <div>
+        <h3 id="crop-modal-title">Kırp aləti</h3>
+        <div class="crop-upload-note">Şəkli seç, lazımsız hissələri kəs və eyni fayl üzərində yenidən istifadə et.</div>
+      </div>
+      <button class="pdf-modal-close" id="crop-modal-close" type="button">✕</button>
+    </div>
+    <div class="crop-modal-body">
+      <div class="crop-preview-stage">
+        <div class="crop-preview-img" id="crop-preview-img"></div>
+        <div class="crop-rect" id="crop-rect"></div>
+      </div>
+      <div class="crop-controls">
+        <div class="crop-control"><label><span>Sol</span><span id="crop-x-val">0%</span></label><input type="range" id="crop-x" min="0" max="70" value="0"></div>
+        <div class="crop-control"><label><span>Yuxarı</span><span id="crop-y-val">0%</span></label><input type="range" id="crop-y" min="0" max="70" value="0"></div>
+        <div class="crop-control"><label><span>En</span><span id="crop-w-val">100%</span></label><input type="range" id="crop-w" min="20" max="100" value="100"></div>
+        <div class="crop-control"><label><span>Hündürlük</span><span id="crop-h-val">100%</span></label><input type="range" id="crop-h" min="20" max="100" value="100"></div>
+        <div class="muted-note">İstədiyin hissəni seçib yalnız həmin görüntünü saxla.</div>
+      </div>
+    </div>
+    <div class="crop-modal-footer">
+      <button class="btn-outline" id="crop-cancel-btn" type="button">Ləğv et</button>
+      <button class="btn-small" id="crop-apply-btn" type="button">Kəsimi tətbiq et</button>
     </div>
   </div>
 </div>
@@ -771,6 +909,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -891,12 +1030,49 @@ function esc(str) {
 }
 
 // ---- TAB NAVİGASİYASI ----
+const PANEL_BACKDROPS = {
+  "tab-students": `linear-gradient(135deg, rgba(46,158,107,.05), rgba(255,255,255,.16)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='360' viewBox='0 0 500 360'%3E%3Cg fill='none' stroke='%230b3c5d' stroke-opacity='.10' stroke-width='10'%3E%3Ccircle cx='110' cy='100' r='38'/%3E%3Cpath d='M42 262c22-58 88-78 136-18'/%3E%3Crect x='310' y='58' width='120' height='94' rx='20'/%3E%3Cpath d='M334 90h72M334 118h48'/%3E%3C/g%3E%3C/svg%3E")`,
+  "tab-groups": `linear-gradient(135deg, rgba(59,130,246,.05), rgba(255,255,255,.16)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='360' viewBox='0 0 500 360'%3E%3Cg fill='none' stroke='%230b3c5d' stroke-opacity='.10' stroke-width='10'%3E%3Ccircle cx='126' cy='98' r='30'/%3E%3Ccircle cx='212' cy='70' r='30'/%3E%3Ccircle cx='214' cy='152' r='30'/%3E%3Cpath d='M150 98h32M212 100v22'/%3E%3Crect x='318' y='54' width='118' height='118' rx='22'/%3E%3Cpath d='M346 92h60M346 122h40'/%3E%3C/g%3E%3C/svg%3E")`,
+  "tab-daily": `linear-gradient(135deg, rgba(217,119,6,.05), rgba(255,255,255,.16)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='360' viewBox='0 0 500 360'%3E%3Cg fill='none' stroke='%230b3c5d' stroke-opacity='.10' stroke-width='10'%3E%3Crect x='314' y='52' width='128' height='128' rx='22'/%3E%3Cpath d='M314 96h128M346 52v28M410 52v28'/%3E%3Cpath d='M72 250l34-34 30 30 58-66'/%3E%3C/g%3E%3C/svg%3E")`,
+  "tab-scores": `linear-gradient(135deg, rgba(139,92,246,.05), rgba(255,255,255,.16)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='360' viewBox='0 0 500 360'%3E%3Cg fill='none' stroke='%230b3c5d' stroke-opacity='.10' stroke-width='10'%3E%3Cpath d='M78 270h260'/%3E%3Crect x='98' y='196' width='36' height='74' rx='8'/%3E%3Crect x='152' y='160' width='36' height='110' rx='8'/%3E%3Crect x='206' y='126' width='36' height='144' rx='8'/%3E%3Crect x='330' y='72' width='88' height='88' rx='20'/%3E%3Cpath d='M352 118l16 16 30-38'/%3E%3C/g%3E%3C/svg%3E")`,
+  "tab-materials": `linear-gradient(135deg, rgba(14,165,233,.05), rgba(255,255,255,.16)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='360' viewBox='0 0 500 360'%3E%3Cg fill='none' stroke='%230b3c5d' stroke-opacity='.10' stroke-width='10'%3E%3Crect x='324' y='54' width='118' height='148' rx='18'/%3E%3Cpath d='M350 94h64M350 126h48M350 158h34'/%3E%3Cpath d='M74 240h126M74 206h88'/%3E%3C/g%3E%3C/svg%3E")`,
+  "tab-topics": `linear-gradient(135deg, rgba(34,197,94,.05), rgba(255,255,255,.16)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='360' viewBox='0 0 500 360'%3E%3Cg fill='none' stroke='%230b3c5d' stroke-opacity='.10' stroke-width='10'%3E%3Ccircle cx='124' cy='104' r='46'/%3E%3Cpath d='M124 78v28l18 14'/%3E%3Cpath d='M310 78h88M310 110h64M310 142h44'/%3E%3C/g%3E%3C/svg%3E")`,
+  "tab-exams": `linear-gradient(135deg, rgba(11,60,93,.05), rgba(255,255,255,.16)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='360' viewBox='0 0 500 360'%3E%3Cg fill='none' stroke='%230b3c5d' stroke-opacity='.10' stroke-width='10'%3E%3Crect x='320' y='40' width='108' height='144' rx='20'/%3E%3Cpath d='M346 82h54M346 112h68M346 142h40'/%3E%3Ccircle cx='102' cy='248' r='48'/%3E%3Cpath d='M102 220v40M82 240h40'/%3E%3C/g%3E%3C/svg%3E")`,
+  "stab-home": `linear-gradient(135deg, rgba(46,158,107,.04), rgba(255,255,255,.16)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='360' viewBox='0 0 500 360'%3E%3Cg fill='none' stroke='%230b3c5d' stroke-opacity='.10' stroke-width='10'%3E%3Ccircle cx='120' cy='92' r='34'/%3E%3Cpath d='M54 250c20-52 86-68 132-14'/%3E%3Crect x='316' y='54' width='120' height='90' rx='18'/%3E%3Cpath d='M340 86h64M340 114h44'/%3E%3C/g%3E%3C/svg%3E")`,
+  "stab-daily": `linear-gradient(135deg, rgba(217,119,6,.04), rgba(255,255,255,.16)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='360' viewBox='0 0 500 360'%3E%3Cg fill='none' stroke='%230b3c5d' stroke-opacity='.10' stroke-width='10'%3E%3Crect x='324' y='52' width='118' height='118' rx='20'/%3E%3Cpath d='M324 94h118M356 52v28M420 52v28'/%3E%3Cpath d='M82 232l34-34 30 30 58-66'/%3E%3C/g%3E%3C/svg%3E")`,
+  "stab-scores": `linear-gradient(135deg, rgba(139,92,246,.04), rgba(255,255,255,.16)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='360' viewBox='0 0 500 360'%3E%3Cg fill='none' stroke='%230b3c5d' stroke-opacity='.10' stroke-width='10'%3E%3Cpath d='M72 268h256'/%3E%3Crect x='92' y='192' width='36' height='76' rx='8'/%3E%3Crect x='146' y='160' width='36' height='108' rx='8'/%3E%3Crect x='200' y='124' width='36' height='144' rx='8'/%3E%3Crect x='318' y='70' width='82' height='82' rx='18'/%3E%3Cpath d='M338 112l14 14 28-34'/%3E%3C/g%3E%3C/svg%3E")`,
+  "stab-materials": `linear-gradient(135deg, rgba(14,165,233,.04), rgba(255,255,255,.16)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='360' viewBox='0 0 500 360'%3E%3Cg fill='none' stroke='%230b3c5d' stroke-opacity='.10' stroke-width='10'%3E%3Crect x='318' y='50' width='120' height='146' rx='18'/%3E%3Cpath d='M344 92h66M344 124h48M344 156h34'/%3E%3Cpath d='M72 236h126M72 204h84'/%3E%3C/g%3E%3C/svg%3E")`,
+  "stab-topics": `linear-gradient(135deg, rgba(34,197,94,.04), rgba(255,255,255,.16)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='360' viewBox='0 0 500 360'%3E%3Cg fill='none' stroke='%230b3c5d' stroke-opacity='.10' stroke-width='10'%3E%3Ccircle cx='120' cy='102' r='46'/%3E%3Cpath d='M120 76v30l18 14'/%3E%3Cpath d='M314 84h88M314 116h64M314 148h42'/%3E%3C/g%3E%3C/svg%3E")`,
+  "stab-exams": `linear-gradient(135deg, rgba(11,60,93,.04), rgba(255,255,255,.16)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='360' viewBox='0 0 500 360'%3E%3Cg fill='none' stroke='%230b3c5d' stroke-opacity='.10' stroke-width='10'%3E%3Crect x='320' y='40' width='108' height='144' rx='20'/%3E%3Cpath d='M346 82h54M346 112h68M346 142h40'/%3E%3Ccircle cx='102' cy='248' r='48'/%3E%3Cpath d='M102 220v40M82 240h40'/%3E%3C/g%3E%3C/svg%3E")`,
+  "stab-race": `linear-gradient(135deg, rgba(245,158,11,.04), rgba(255,255,255,.16)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='360' viewBox='0 0 500 360'%3E%3Cg fill='none' stroke='%230b3c5d' stroke-opacity='.10' stroke-width='10'%3E%3Cpath d='M72 252c38-74 114-106 190-92'/%3E%3Cpath d='M286 86l38 14-14 38'/%3E%3Crect x='320' y='156' width='84' height='84' rx='18'/%3E%3Cpath d='M340 188h44M362 168v44'/%3E%3C/g%3E%3C/svg%3E")`
+};
+
+function applyBackdrop(panelId) {
+  const panel = document.getElementById(panelId);
+  if (!panel) return;
+  panel.style.backgroundImage = PANEL_BACKDROPS[panelId] || "";
+  panel.style.backgroundRepeat = "no-repeat";
+  panel.style.backgroundSize = "cover";
+  panel.style.backgroundPosition = "center";
+}
+
+function clearInactiveBackdrops(scope) {
+  const panels = scope.querySelectorAll(".tab-panel");
+  panels.forEach(p => {
+    p.style.backgroundImage = "";
+    p.style.backgroundRepeat = "";
+    p.style.backgroundSize = "";
+    p.style.backgroundPosition = "";
+  });
+}
+
 document.querySelectorAll(".tab-btn[data-tab]").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".tab-btn[data-tab]").forEach(b => b.classList.remove("active"));
     document.querySelectorAll("#view-admin .tab-panel").forEach(p => p.classList.remove("active"));
     btn.classList.add("active");
     document.getElementById(btn.dataset.tab).classList.add("active");
+    applyBackdrop(btn.dataset.tab);
   });
 });
 document.querySelectorAll(".tab-btn[data-stab]").forEach(btn => {
@@ -905,10 +1081,12 @@ document.querySelectorAll(".tab-btn[data-stab]").forEach(btn => {
     document.querySelectorAll("#view-student .tab-panel").forEach(p => p.classList.remove("active"));
     btn.classList.add("active");
     document.getElementById(btn.dataset.stab).classList.add("active");
+    applyBackdrop(btn.dataset.stab);
   });
 });
 
 function initAdminPanel() {
+  applyBackdrop("tab-students");
   loadGroups();
   loadStudents();
   loadDailyReports();
@@ -1469,6 +1647,7 @@ function closePdfModal() {
 }
 
 // Şəkli sıxışdırıb base64-ə çevirir (Firestore limitini aşmamaq üçün)
+
 function compressImageToBase64(file, maxWidth) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -1477,11 +1656,11 @@ function compressImageToBase64(file, maxWidth) {
       img.onload = () => {
         const scale = Math.min(1, maxWidth / img.width);
         const canvas = document.createElement("canvas");
-        canvas.width = img.width * scale;
-        canvas.height = img.height * scale;
+        canvas.width = Math.max(1, Math.round(img.width * scale));
+        canvas.height = Math.max(1, Math.round(img.height * scale));
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL("image/jpeg", 0.6));
+        resolve(canvas.toDataURL("image/jpeg", 0.82));
       };
       img.onerror = reject;
       img.src = e.target.result;
@@ -1491,9 +1670,150 @@ function compressImageToBase64(file, maxWidth) {
   });
 }
 
+async function pdfFileToImages(file, maxPages = 20) {
+  if (!window.pdfjsLib) throw new Error("PDF kitabxanası yüklənmədi");
+  const buffer = await file.arrayBuffer();
+  const loadingTask = window.pdfjsLib.getDocument({ data: buffer });
+  const pdf = await loadingTask.promise;
+  const pages = [];
+  const count = Math.min(pdf.numPages, maxPages);
+  for (let i = 1; i <= count; i++) {
+    const page = await pdf.getPage(i);
+    const viewport = page.getViewport({ scale: 1.6 });
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = Math.ceil(viewport.width);
+    canvas.height = Math.ceil(viewport.height);
+    await page.render({ canvasContext: ctx, viewport }).promise;
+    pages.push(canvas.toDataURL("image/jpeg", 0.86));
+  }
+  return pages;
+}
+
+function normalizeQuestionImage(qi) {
+  const q = examQuestions[qi];
+  if (!q) return "";
+  return q.imageBase64 || "";
+}
+
+let cropState = { qi: null, src: "", x: 0, y: 0, w: 100, h: 100 };
+
+function updateCropPreview() {
+  const img = document.getElementById("crop-preview-img");
+  const rect = document.getElementById("crop-rect");
+  if (!img || !rect) return;
+  const { x, y, w, h } = cropState;
+  img.style.backgroundImage = `url('${cropState.src}')`;
+  rect.style.left = `${x}%`;
+  rect.style.top = `${y}%`;
+  rect.style.width = `${w}%`;
+  rect.style.height = `${h}%`;
+  const set = [
+    ["crop-x-val", x],
+    ["crop-y-val", y],
+    ["crop-w-val", w],
+    ["crop-h-val", h],
+  ];
+  set.forEach(([id,val]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = `${Math.round(val)}%`;
+  });
+}
+
+function openCropModal(qi) {
+  const q = examQuestions[qi];
+  if (!q || !q.imageBase64) { toast("Əvvəlcə şəkil əlavə edin"); return; }
+  cropState = { qi, src: q.imageBase64, x: 0, y: 0, w: 100, h: 100 };
+  document.getElementById("crop-x").value = 0;
+  document.getElementById("crop-y").value = 0;
+  document.getElementById("crop-w").value = 100;
+  document.getElementById("crop-h").value = 100;
+  updateCropPreview();
+  const overlay = document.getElementById("crop-modal-overlay");
+  overlay.classList.add("show");
+  overlay.setAttribute("aria-hidden","false");
+}
+
+function closeCropModal() {
+  const overlay = document.getElementById("crop-modal-overlay");
+  overlay.classList.remove("show");
+  overlay.setAttribute("aria-hidden","true");
+}
+
+function cropImageDataUrl(src, xPct, yPct, wPct, hPct) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const sx = Math.max(0, Math.round(img.width * xPct / 100));
+      const sy = Math.max(0, Math.round(img.height * yPct / 100));
+      const sw = Math.max(1, Math.round(img.width * wPct / 100));
+      const sh = Math.max(1, Math.round(img.height * hPct / 100));
+      const canvas = document.createElement("canvas");
+      canvas.width = sw;
+      canvas.height = sh;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+      resolve(canvas.toDataURL("image/jpeg", 0.88));
+    };
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+async function applyCropModal() {
+  if (cropState.qi === null) return;
+  const x = Number(document.getElementById("crop-x").value);
+  const y = Number(document.getElementById("crop-y").value);
+  const w = Number(document.getElementById("crop-w").value);
+  const h = Number(document.getElementById("crop-h").value);
+  try {
+    const cropped = await cropImageDataUrl(cropState.src, x, y, w, h);
+    examQuestions[cropState.qi].imageBase64 = cropped;
+    renderQuestionBuilder();
+    savePdfDraftSoon();
+    closeCropModal();
+    toast("Kəsim tətbiq edildi");
+  } catch (e) {
+    console.error(e);
+    toast("Kırp zamanı xəta baş verdi");
+  }
+}
+
+async function addFilesAsQuestions(files) {
+  const arr = Array.from(files || []);
+  if (!arr.length) return;
+  toast(`${arr.length} fayl işlənir, gözləyin...`);
+  let added = 0;
+  for (const file of arr) {
+    try {
+      if (file.type === "application/pdf") {
+        const pages = await pdfFileToImages(file, 24);
+        for (const pageImg of pages) {
+          examQuestions.push({ type: "mcq", text: "", imageBase64: pageImg, options: OPTION_LETTERS.slice(), correctIndex: 0, correctAnswer: "" });
+          added++;
+        }
+      } else if (file.type.startsWith("image/")) {
+        const base64 = await compressImageToBase64(file, 1200);
+        examQuestions.push({ type: "mcq", text: "", imageBase64: base64, options: OPTION_LETTERS.slice(), correctIndex: 0, correctAnswer: "" });
+        added++;
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  renderQuestionBuilder();
+  savePdfDraftSoon();
+  toast(`${added} sual əlavə edildi ✅`);
+}
+
+
 function renderQuestionBuilder() {
   const el = document.getElementById("exam-questions-builder");
-  if (examQuestions.length === 0) { el.innerHTML = `<div class="empty-state">Hələ sual əlavə edilməyib</div>`; return; }
+  if (!el) return;
+  if (examQuestions.length === 0) {
+    el.innerHTML = `<div class="empty-state">Hələ sual əlavə edilməyib</div>`;
+    return;
+  }
   el.innerHTML = examQuestions.map((q, qi) => `
     <div class="q-builder-item" draggable="true" ondragstart="startQuestionDrag(event, ${qi})" ondragover="allowQuestionDrop(event)" ondrop="dropQuestion(event, ${qi})" ondragend="endQuestionDrag(event)">
       <div class="q-builder-head">
@@ -1519,10 +1839,32 @@ function renderQuestionBuilder() {
         <input type="text" value="${esc(q.text)}" oninput="updateQuestionText(${qi}, this.value)" placeholder="Sual mətni və ya boş buraxın" />
       </div>
       <div class="field" style="margin-bottom:10px;">
-        <label>Sualın şəkli (istəyə görə)</label>
-        <input type="file" accept="image/*" onchange="uploadQuestionImage(${qi}, this)" />
-        ${q.imageBase64 ? `<img src="${q.imageBase64}" style="max-width:100%; margin-top:8px; border-radius:8px; border:1px solid var(--color-gray);" />
-          <button class="btn-outline" style="margin-top:6px;" onclick="removeQuestionImage(${qi})">Şəkli sil</button>` : ""}
+        <label>Sualın şəkli / PDF səhifəsi (istəyə görə)</label>
+        <div class="upload-hero" style="grid-template-columns:1fr; margin-bottom:0;">
+          <div class="upload-card" style="background:linear-gradient(145deg,#ffffff,#f8fbff);">
+            <div class="upload-card-left">
+              <div class="upload-avatar">🖼️</div>
+              <div>
+                <div class="upload-title">${q.imageBase64 ? "Şəkil əlavə olunub" : "Şəkil/PDF seç"}</div>
+                <div class="upload-sub">${q.imageBase64 ? "İstəsən Kırp aləti ilə düzəldə bilərsən." : "Bir şəkil və ya PDF seç. PDF yükləyəndə səhifələr şəkilə çevrilir."}</div>
+              </div>
+            </div>
+            <div class="upload-actions">
+              <label class="upload-btn">Fayl seç
+                <input class="q-upload-hidden" type="file" accept="image/*,application/pdf" onchange="uploadQuestionImage(${qi}, this)" />
+              </label>
+              ${q.imageBase64 ? `<button type="button" class="upload-alt" onclick="openCropModal(${qi})">Kırp</button>
+              <button type="button" class="upload-alt" onclick="removeQuestionImage(${qi})">Şəkli sil</button>` : ""}
+            </div>
+          </div>
+        </div>
+        ${q.imageBase64 ? `<div class="q-image-preview">
+          <img src="${q.imageBase64}" alt="Sual şəkli" />
+          <div class="q-image-actions">
+            <button type="button" class="q-mini-btn primary" onclick="openCropModal(${qi})">Kırp aləti</button>
+            <button type="button" class="q-mini-btn danger" onclick="removeQuestionImage(${qi})">Şəkli sil</button>
+          </div>
+        </div>` : ""}
       </div>
       ${q.type === "mcq" ? `
         <div class="field"><label>Düzgün cavab hansıdır?</label></div>
@@ -1545,12 +1887,11 @@ function renderQuestionBuilder() {
 }
 
 window.removeQuestion = (qi) => { examQuestions.splice(qi, 1); renderQuestionBuilder(); savePdfDraftSoon(); };
- (qi) => { examQuestions.splice(qi, 1); renderQuestionBuilder(); savePdfDraftSoon(); };
-window.updateQuestionText = (qi, val) => { examQuestions[qi].text = val; savePdfDraftSoon(); };
-window.setCorrectOption = (qi, oi) => { examQuestions[qi].correctIndex = oi; renderQuestionBuilder(); savePdfDraftSoon(); };
-window.updateCorrectAnswer = (qi, val) => { examQuestions[qi].correctAnswer = val; savePdfDraftSoon(); };
-window.setQuestionType = (qi, val) => { examQuestions[qi].type = val; renderQuestionBuilder(); savePdfDraftSoon(); };
-window.removeQuestionImage = (qi) => { examQuestions[qi].imageBase64 = ""; renderQuestionBuilder(); savePdfDraftSoon(); };
+window.updateQuestionText = (qi, val) => { if (examQuestions[qi]) examQuestions[qi].text = val; savePdfDraftSoon(); };
+window.setCorrectOption = (qi, oi) => { if (examQuestions[qi]) examQuestions[qi].correctIndex = oi; renderQuestionBuilder(); savePdfDraftSoon(); };
+window.updateCorrectAnswer = (qi, val) => { if (examQuestions[qi]) examQuestions[qi].correctAnswer = val; savePdfDraftSoon(); };
+window.setQuestionType = (qi, val) => { if (examQuestions[qi]) examQuestions[qi].type = val; renderQuestionBuilder(); savePdfDraftSoon(); };
+window.removeQuestionImage = (qi) => { if (examQuestions[qi]) examQuestions[qi].imageBase64 = ""; renderQuestionBuilder(); savePdfDraftSoon(); };
 
 window.moveQuestion = (qi, dir) => {
   const ni = qi + dir;
@@ -1583,17 +1924,26 @@ window.endQuestionDrag = () => {
 };
 
 window.uploadQuestionImage = async (qi, inputEl) => {
-  const file = inputEl.files[0];
+  const file = inputEl.files && inputEl.files[0];
   if (!file) return;
-  toast("Şəkil yüklənir...");
+  toast("Fayl yüklənir...");
   try {
-    const base64 = await compressImageToBase64(file, 900);
-    examQuestions[qi].imageBase64 = base64;
+    let img = "";
+    if (file.type === "application/pdf") {
+      const pages = await pdfFileToImages(file, 1);
+      img = pages[0] || "";
+    } else {
+      img = await compressImageToBase64(file, 1200);
+    }
+    examQuestions[qi].imageBase64 = img;
     renderQuestionBuilder();
-    toast("Şəkil əlavə edildi");
+    savePdfDraftSoon();
+    toast("Fayl əlavə edildi");
   } catch (e) {
     console.error(e);
-    toast("Şəkil yüklənərkən xəta baş verdi");
+    toast("Fayl yüklənərkən xəta baş verdi");
+  } finally {
+    inputEl.value = "";
   }
 };
 
@@ -1604,20 +1954,7 @@ document.getElementById("exam-add-question-btn").addEventListener("click", () =>
 });
 
 document.getElementById("exam-bulk-image-input").addEventListener("change", async (e) => {
-  const files = Array.from(e.target.files);
-  if (files.length === 0) return;
-  toast(`${files.length} şəkil yüklənir, gözləyin...`);
-  for (const file of files) {
-    try {
-      const base64 = await compressImageToBase64(file, 900);
-      examQuestions.push({ type: "mcq", text: "", imageBase64: base64, options: OPTION_LETTERS.slice(), correctIndex: 0, correctAnswer: "" });
-    } catch (err) {
-      console.error(err);
-    }
-  }
-  renderQuestionBuilder();
-  savePdfDraftSoon();
-  toast(`${files.length} sual əlavə edildi ✅`);
+  await addFilesAsQuestions(e.target.files);
   e.target.value = "";
 });
 
@@ -1668,6 +2005,9 @@ function registerPdfFont(doc) {
   doc.__pdfFontRegistered = true;
 }
 
+if (window.pdfjsLib) {
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+}
 
 async function generatePdfFromCurrentSettings() {
   if (examQuestions.length === 0) { toast("Əvvəlcə sual əlavə edin"); return; }
@@ -1699,28 +2039,24 @@ async function generatePdfFromCurrentSettings() {
       doc.setLineWidth(0.6);
       doc.line(marginX, 26, pageW - marginX, 26);
 
-      doc.setFillColor(cr, cg, cb);
-      doc.roundedRect(pageW / 2 - 10, 12, 20, 10, 2, 2, "F");
-      doc.setTextColor(255, 255, 255);
+      doc.setTextColor(cr, cg, cb);
       doc.setFont(PDF_FONT_NAME, "bold");
-      doc.setFontSize(9);
-      doc.text("TTM", pageW / 2, 18.5, { align: "center" });
+      doc.setFontSize(15);
+      const titleLines = doc.splitTextToSize(title, (pageW / 2) - marginX - 8);
+      doc.text(titleLines, marginX, 16, { align: "left" });
 
-      doc.setTextColor(30, 30, 30);
-      doc.setFont(PDF_FONT_NAME, "bold");
-      doc.setFontSize(13);
-      const titleLines = doc.splitTextToSize(title, pageW - marginX * 2 - 20);
-      doc.text(titleLines, pageW / 2, 33, { align: "center" });
+      const rightParts = [];
+      if (classVal) rightParts.push(`Sinif ${classVal}`);
+      if (numberVal) rightParts.push(`Sınaq № ${numberVal}`);
+      doc.setTextColor(85, 93, 104);
       doc.setFont(PDF_FONT_NAME, "normal");
-
-      const metaParts = [];
-      if (classVal) metaParts.push(`Sinif: ${classVal}`);
-      if (numberVal) metaParts.push(`Sınaq №: ${numberVal}`);
-      if (metaParts.length) {
-        doc.setTextColor(100, 100, 100);
-        doc.setFontSize(9);
-        doc.text(metaParts.join("   •   "), pageW / 2, 39, { align: "center" });
+      doc.setFontSize(9.5);
+      if (rightParts.length) {
+        doc.text(rightParts.join("   •   "), pageW - marginX, 14, { align: "right" });
       }
+      doc.setTextColor(125, 134, 145);
+      doc.setFontSize(8.5);
+      doc.text("TTM Tədris Mərkəzi", pageW - marginX, 20, { align: "right" });
     }
 
     function drawColumnDivider(pageTop) {
@@ -1869,12 +2205,30 @@ document.getElementById("pdf-generate-btn")?.addEventListener("click", async () 
   syncCardFromModal();
   await generatePdfFromCurrentSettings();
 });
+document.getElementById("pdf-generate-modal-btn")?.addEventListener("click", async () => {
+  syncCardFromModal();
+  await generatePdfFromCurrentSettings();
+});
 document.getElementById("open-pdf-modal-btn")?.addEventListener("click", openPdfModal);
 document.getElementById("floating-pdf-btn")?.addEventListener("click", openPdfModal);
 document.getElementById("pdf-modal-close")?.addEventListener("click", closePdfModal);
 document.getElementById("pdf-modal-overlay")?.addEventListener("click", (e) => { if (e.target.id === "pdf-modal-overlay") closePdfModal(); });
 document.getElementById("pdf-preview-btn")?.addEventListener("click", renderPdfPreview);
 document.getElementById("pdf-apply-btn")?.addEventListener("click", () => { syncCardFromModal(); savePdfDraftNow(); toast("Ayarlar tətbiq edildi"); closePdfModal(); });
+document.getElementById("crop-modal-close")?.addEventListener("click", closeCropModal);
+document.getElementById("crop-cancel-btn")?.addEventListener("click", closeCropModal);
+document.getElementById("crop-modal-overlay")?.addEventListener("click", (e) => { if (e.target.id === "crop-modal-overlay") closeCropModal(); });
+document.getElementById("crop-apply-btn")?.addEventListener("click", applyCropModal);
+["crop-x","crop-y","crop-w","crop-h"].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener("input", () => {
+    cropState.x = Number(document.getElementById("crop-x").value);
+    cropState.y = Number(document.getElementById("crop-y").value);
+    cropState.w = Number(document.getElementById("crop-w").value);
+    cropState.h = Number(document.getElementById("crop-h").value);
+    updateCropPreview();
+  });
+});
 ["pdfm-title","pdfm-class","pdfm-number","pdfm-spacing","pdfm-color","pdfm-columns","pdfm-answerkey","pdfm-template"].forEach(id => {
   const el = document.getElementById(id);
   if (el) {
@@ -2104,6 +2458,7 @@ document.getElementById("analytics-student-select").addEventListener("change", a
 // =========================================================================
 
 async function initStudentPanel(uid) {
+  applyBackdrop("stab-home");
   const sDoc = await db.collection("students").doc(uid).get();
   if (!sDoc.exists) return;
   const s = sDoc.data();
