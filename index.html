@@ -116,7 +116,6 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .floating-pdf-btn { position:fixed; right:18px; bottom:18px; z-index:90; background:linear-gradient(135deg,var(--color-primary),var(--color-primary-dark)); color:#fff; border:none; border-radius:999px; padding:14px 18px; box-shadow:0 16px 34px rgba(11,60,93,.28); font-size:14px; font-weight:800; display:flex; align-items:center; gap:10px; }
 .floating-pdf-btn:hover { filter:brightness(1.04); }
 .floating-pdf-btn:active { transform:scale(.98); }
-.autosave-badge { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; background:rgba(46,158,107,.12); color:#2e9e6b; font-size:12px; font-weight:700; }
 .panel-main { position:relative; }
 .tab-panel { position:relative; isolation:isolate; overflow:hidden; }
 .tab-panel::before { content:""; position:absolute; inset:0; z-index:0; pointer-events:none; opacity:.52; background-repeat:no-repeat; background-position:right top, left bottom, center top; background-size:340px, 260px, 100% 100%; }
@@ -178,11 +177,11 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .q-image-actions .q-mini-btn.primary { background:var(--color-primary); color:#fff; border-color:var(--color-primary); }
 .q-upload-hidden { display:none; }
 
-.pdf-modal-overlay { position:fixed; inset:0; background:rgba(7,16,28,.58); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); z-index:200; display:none; align-items:flex-end; justify-content:flex-end; padding:16px; }
+.pdf-modal-overlay { position:fixed; inset:0; background:rgba(7,16,28,.58); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); z-index:200; display:none; align-items:flex-end; justify-content:flex-end; padding:12px; }
 .pdf-modal-overlay.show { display:flex; }
-.pdf-modal { width:min(920px,100%); max-height:min(84vh,820px); background:var(--color-white); border-radius:24px; box-shadow:0 24px 80px rgba(0,0,0,.25); overflow:hidden; display:grid; grid-template-columns: .92fr 1.08fr; }
-.pdf-modal-left { padding:18px; border-right:1px solid var(--color-gray); overflow:auto; }
-.pdf-modal-right { padding:18px; overflow:auto; background:linear-gradient(180deg,#fbfdff 0%,#ffffff 100%); }
+.pdf-modal { width:min(760px,calc(100vw - 24px)); max-height:min(72vh,720px); background:var(--color-white); border-radius:22px; box-shadow:0 18px 56px rgba(0,0,0,.22); overflow:hidden; display:grid; grid-template-columns: .9fr 1.1fr; }
+.pdf-modal-left { padding:14px; border-right:1px solid var(--color-gray); overflow:auto; }
+.pdf-modal-right { padding:14px; overflow:auto; background:linear-gradient(180deg,#fbfdff 0%,#ffffff 100%); }
 .pdf-modal-header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px; }
 .pdf-modal-header h3 { margin:0; color:var(--color-primary); font-size:18px; }
 .pdf-modal-header p { margin-top:4px; color:var(--color-text-muted); font-size:13px; line-height:1.5; }
@@ -600,8 +599,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
         <div>
           <h3 id="pdf-modal-title">PDF Sihirbazı</h3>
           <p>Buradan bütün PDF ayarlarını bir yerdə seçin, önizləməyə baxın və sənədi yaradın.</p>
-          <div class="autosave-badge" id="autosave-badge">💾 Avto-saxlanır</div>
-        </div>
+                  </div>
         <div class="pdf-header-actions">
           <button class="btn-small pdf-generate-btn" id="pdf-generate-modal-btn" type="button">📄 PDF Hazırla</button>
           <button class="pdf-modal-close" id="pdf-modal-close" type="button">✕</button>
@@ -1097,9 +1095,8 @@ function initAdminPanel() {
   document.getElementById("daily-date").value = new Date().toISOString().slice(0, 10);
   document.getElementById("score-date").value = new Date().toISOString().slice(0, 10);
   setTimeout(() => {
-    restorePdfDraft();
     renderPdfPreview();
-  }, 350);
+  }, 200);
 }
 
 // ---- QRUPLAR ----
@@ -1527,76 +1524,9 @@ function getPdfSettings() {
   };
 }
 
-function savePdfDraftSoon() {
-  pdfDraftDirty = true;
-  clearTimeout(pdfDraftTimer);
-  pdfDraftTimer = setTimeout(savePdfDraftNow, 500);
-}
-
-function savePdfDraftNow() {
-  const payload = {
-    examMeta: {
-      title: document.getElementById("exam-title")?.value || "",
-      groupId: document.getElementById("exam-group")?.value || "",
-      topic: document.getElementById("exam-topic")?.value || "",
-      timeLimitMinutes: document.getElementById("exam-timelimit")?.value || "30",
-      activationAt: document.getElementById("exam-activation")?.value || "",
-      videoUrl: document.getElementById("exam-video")?.value || ""
-    },
-    pdf: getPdfSettings(),
-    questions: examQuestions,
-    savedAt: Date.now()
-  };
-  try {
-    localStorage.setItem(PDF_DRAFT_KEY, JSON.stringify(payload));
-    const badge = document.getElementById("autosave-badge");
-    if (badge) {
-      badge.textContent = "💾 Yadda saxlandı";
-      setTimeout(() => { badge.textContent = "💾 Avto-saxlanır"; }, 1800);
-    }
-    pdfDraftDirty = false;
-  } catch (e) {
-    console.warn("Draft save failed", e);
-  }
-}
-
-function restorePdfDraft() {
-  try {
-    const raw = localStorage.getItem(PDF_DRAFT_KEY);
-    if (!raw) return;
-    const data = JSON.parse(raw);
-    if (data.examMeta) {
-      const map = [
-        ["exam-title","title"],
-        ["exam-group","groupId"],
-        ["exam-topic","topic"],
-        ["exam-timelimit","timeLimitMinutes"],
-        ["exam-activation","activationAt"],
-        ["exam-video","videoUrl"]
-      ];
-      map.forEach(([id,key]) => { if (document.getElementById(id) && data.examMeta[key] !== undefined) document.getElementById(id).value = data.examMeta[key]; });
-    }
-    if (Array.isArray(data.questions)) {
-      examQuestions = data.questions;
-      renderQuestionBuilder();
-    }
-    if (data.pdf) {
-      const set = [
-        ["pdf-class-field","classVal"],
-        ["pdf-number-field","numberVal"],
-        ["pdf-spacing-field","spacing"],
-        ["pdf-color-field","colorHex"],
-        ["pdf-columns-field","numCols"],
-        ["pdf-answerkey-location","answerKey"]
-      ];
-      set.forEach(([id,key]) => { if (document.getElementById(id) && data.pdf[key] !== undefined) document.getElementById(id).value = data.pdf[key]; });
-      syncModalFromCard();
-    }
-    toast("Layihə bərpa edildi");
-  } catch (e) {
-    console.warn("Draft restore failed", e);
-  }
-}
+function savePdfDraftSoon() {}
+function savePdfDraftNow() {}
+function restorePdfDraft() {}
 
 function renderPdfPreview() {
   const title = (document.getElementById("pdfm-title")?.value || document.getElementById("exam-title")?.value || "Sınaq").trim();
@@ -2018,7 +1948,7 @@ async function generatePdfFromCurrentSettings() {
   try {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: "mm", format: "a4" });
-    const pageW = 210, pageH = 297, marginX = 12, headerBottom = 38, footerLimit = 20;
+    const pageW = 210, pageH = 297, marginX = 12, headerBottom = 34, footerLimit = 20;
     const settings = getPdfSettings();
     const spacing = settings.spacing;
     const [cr, cg, cb] = hexToRgb(settings.colorHex);
@@ -2035,35 +1965,53 @@ async function generatePdfFromCurrentSettings() {
 
     function drawHeader() {
       registerPdfFont(doc);
-      doc.setDrawColor(cr, cg, cb);
-      doc.setLineWidth(0.6);
-      doc.line(marginX, 26, pageW - marginX, 26);
+      const headerY = 10;
+      const headerH = 18;
+      const headerW = pageW - marginX * 2;
 
+      doc.setFillColor(249, 252, 255);
+      doc.setDrawColor(226, 232, 240);
+      doc.setLineWidth(0.35);
+      doc.roundedRect(marginX, headerY, headerW, headerH, 4, 4, "FD");
+
+      doc.setDrawColor(cr, cg, cb);
+      doc.setLineWidth(0.55);
+      doc.line(marginX + 2.5, headerY + headerH - 1.5, pageW - marginX - 2.5, headerY + headerH - 1.5);
+
+      const leftTitle = (title || "Sınaq").trim();
       doc.setTextColor(cr, cg, cb);
       doc.setFont(PDF_FONT_NAME, "bold");
-      doc.setFontSize(15);
-      const titleLines = doc.splitTextToSize(title, (pageW / 2) - marginX - 8);
-      doc.text(titleLines, marginX, 16, { align: "left" });
+      doc.setFontSize(13.5);
+      doc.text(leftTitle, marginX + 6, headerY + 8);
 
-      const rightParts = [];
-      if (classVal) rightParts.push(`Sinif ${classVal}`);
-      if (numberVal) rightParts.push(`Sınaq № ${numberVal}`);
-      doc.setTextColor(85, 93, 104);
       doc.setFont(PDF_FONT_NAME, "normal");
-      doc.setFontSize(9.5);
-      if (rightParts.length) {
-        doc.text(rightParts.join("   •   "), pageW - marginX, 14, { align: "right" });
+      doc.setFontSize(8.4);
+      doc.setTextColor(92, 100, 112);
+      if (classVal) {
+        doc.text(`Sinif: ${classVal}`, marginX + 6, headerY + 14.5);
       }
+
+      const rightTop = [];
+      if (numberVal) rightTop.push(`Sınaq № ${numberVal}`);
+      doc.setTextColor(85, 93, 104);
+      doc.setFont(PDF_FONT_NAME, "bold");
+      doc.setFontSize(9.4);
+      if (rightTop.length) {
+        doc.text(rightTop.join("   •   "), pageW - marginX - 6, headerY + 8, { align: "right" });
+      }
+
+      doc.setFont(PDF_FONT_NAME, "normal");
+      doc.setFontSize(8.0);
       doc.setTextColor(125, 134, 145);
-      doc.setFontSize(8.5);
-      doc.text("TTM Tədris Mərkəzi", pageW - marginX, 20, { align: "right" });
+      doc.text("TTM Tədris Mərkəzi", pageW - marginX - 6, headerY + 14.5, { align: "right" });
     }
 
     function drawColumnDivider(pageTop) {
       if (numCols !== 2) return;
+      const dividerBottom = answerKeyMode === "bottom" ? pageH - footerLimit - 2 : pageH - 16;
       doc.setDrawColor(210, 210, 210);
       doc.setLineWidth(0.3);
-      doc.line(pageW / 2, pageTop, pageW / 2, pageH - 15);
+      doc.line(pageW / 2, pageTop, pageW / 2, dividerBottom);
     }
 
     const pageQuestionMap = {};
