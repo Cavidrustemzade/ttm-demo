@@ -1493,7 +1493,9 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
       });
     }
 
-    doc.save(`${title.replace(/[^\wƏəıİĞğÜüŞşÖöÇç -]/g, "")}.pdf`);
+    const examTitleVal = (document.getElementById("exam-title")?.value || "").trim();
+    const fileBase = (examTitleVal || headerNote || "TTM sinaq").replace(/[^\wƏəıİĞğÜüŞşÖöÇç -]/g, "").trim() || "TTM sinaq";
+    doc.save(`${fileBase}.pdf`);
     toast("PDF hazırdır ✅");
   } catch (err) {
     console.error(err);
