@@ -114,6 +114,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .q-mini-btn:active { transform:scale(.96); }
 .q-mini-btn.danger { color:var(--color-danger); }
 .floating-pdf-btn { position:fixed; right:18px; bottom:18px; z-index:90; background:linear-gradient(135deg,var(--color-primary),var(--color-primary-dark)); color:#fff; border:none; border-radius:999px; padding:14px 18px; box-shadow:0 16px 34px rgba(11,60,93,.28); font-size:14px; font-weight:800; display:flex; align-items:center; gap:10px; }
+.floating-pdf-btn.pdf-fab-hidden { display:none; }
 .floating-pdf-btn:hover { filter:brightness(1.04); }
 .floating-pdf-btn:active { transform:scale(.98); }
 .panel-main { position:relative; }
@@ -177,9 +178,9 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .q-image-actions .q-mini-btn.primary { background:var(--color-primary); color:#fff; border-color:var(--color-primary); }
 .q-upload-hidden { display:none; }
 
-.pdf-modal-overlay { position:fixed; inset:0; background:rgba(7,16,28,.58); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); z-index:200; display:none; align-items:flex-end; justify-content:flex-end; padding:12px; }
+.pdf-modal-overlay { position:fixed; inset:0; background:rgba(7,16,28,.48); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); z-index:200; display:none; align-items:center; justify-content:center; padding:12px; }
 .pdf-modal-overlay.show { display:flex; }
-.pdf-modal { width:min(760px,calc(100vw - 24px)); max-height:min(72vh,720px); background:var(--color-white); border-radius:22px; box-shadow:0 18px 56px rgba(0,0,0,.22); overflow:hidden; display:grid; grid-template-columns: .9fr 1.1fr; }
+.pdf-modal { width:min(650px,calc(100vw - 32px)); max-height:min(64vh,610px); background:var(--color-white); border-radius:22px; box-shadow:0 18px 56px rgba(0,0,0,.22); overflow:hidden; display:grid; grid-template-columns: .9fr 1.1fr; }
 .pdf-modal-left { padding:14px; border-right:1px solid var(--color-gray); overflow:auto; }
 .pdf-modal-right { padding:14px; overflow:auto; background:linear-gradient(180deg,#fbfdff 0%,#ffffff 100%); }
 .pdf-modal-header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px; }
@@ -233,10 +234,11 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .pdf-preview-meta { margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; }
 .pdf-preview-foot { margin-top:14px; padding:12px 14px; background:rgba(11,60,93,.05); border-radius:14px; color:var(--color-text-muted); font-size:12px; line-height:1.55; }
 @media (max-width: 960px) {
-  .pdf-modal { grid-template-columns:1fr; max-height:94vh; }
+  .pdf-modal { grid-template-columns:1fr; width:min(620px,calc(100vw - 28px)); max-height:72vh; }
   .pdf-modal-left { border-right:none; border-bottom:1px solid var(--color-gray); }
 }
 @media (max-width: 640px) {
+  .pdf-modal { width:calc(100vw - 28px); max-height:72vh; border-radius:18px; }
   .pdf-quick-grid { grid-template-columns:1fr; }
   .floating-pdf-btn { right:14px; bottom:14px; padding:12px 16px; }
 }
@@ -529,10 +531,9 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
         <div class="upload-hero">
           <div class="upload-card">
             <div class="upload-card-left">
-              <div class="upload-avatar">📎</div>
               <div>
-                <div class="upload-title">Şəkil və ya PDF seç</div>
-                <div class="upload-sub">Sual şəkli, çoxlu şəkil və ya PDF səhifələrini birbaşa əlavə et. Sonra istəsən Kırp alətindən istifadə et.</div>
+                <div class="upload-title">PDF və ya şəkil seç</div>
+                <div class="upload-sub">Sualı birbaşa əlavə et. Lazım olsa Kırp alətindən istifadə et.</div>
               </div>
             </div>
             <div class="upload-actions">
@@ -542,8 +543,8 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
             </div>
           </div>
           <div class="upload-tool-card">
-            <div class="tool-title">Kırp aracı</div>
-            <div class="tool-sub">Yüklədiyin sualın lazımsız hissəsini kəs, eyni səhifə üzərində saxlamaqla yenidən istifadə et.</div>
+            <div class="tool-title">Kırp</div>
+            <div class="tool-sub">Sualın yalnız lazım olan hissəsini seç.</div>
           </div>
         </div>
         <div id="exam-questions-builder"></div>
@@ -554,31 +555,6 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
         </div>
       </div>
 
-      <div class="card">
-        <h3>📄 Kağız versiya (PDF) hazırla</h3>
-        <p class="muted-note" style="margin-bottom:12px;">Yuxarıdakı sualları A4 vərəqinə səliqəli düzüb PDF kimi hazırlayır — çap edib kağız üzərində paylaya bilərsiniz.</p>
-        <div class="field-row">
-          <div class="field"><label>Sinif (istəyə görə, boş olsa xətt qoyulur)</label><input type="text" id="pdf-class-field" placeholder="Məs: 11" /></div>
-          <div class="field"><label>Sınaq nömrəsi (istəyə görə)</label><input type="text" id="pdf-number-field" placeholder="Məs: 1 və ya BS1" /></div>
-        </div>
-        <div class="field-row">
-          <div class="field"><label>Suallar arası boşluq (mm)</label><input type="number" id="pdf-spacing-field" value="15" min="5" max="50" /></div>
-          <div class="field"><label>Başlıq xəttinin rəngi</label><input type="color" id="pdf-color-field" value="#0B3C5D" style="height:42px; padding:4px;" /></div>
-        </div>
-        <div class="field-row">
-          <div class="field"><label>Səhifə düzülüşü</label>
-            <select id="pdf-columns-field"><option value="2">2 sütun (yığcam)</option><option value="1">1 sütun (geniş)</option></select>
-          </div>
-          <div class="field"><label>Cavab açarının yeri</label>
-            <select id="pdf-answerkey-location">
-              <option value="end">Sənədin sonunda (ayrıca səhifə)</option>
-              <option value="bottom">Hər səhifənin altında (yığcam)</option>
-              <option value="none">Əlavə edilməsin</option>
-            </select>
-          </div>
-        </div>
-        <button class="btn-small" id="pdf-generate-btn" style="width:100%;">📄 PDF hazırla</button>
-      </div>
 
       <div class="card">
         <h3>Sınaq siyahısı</h3>
@@ -598,7 +574,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
       <div class="pdf-modal-header">
         <div>
           <h3 id="pdf-modal-title">PDF Sihirbazı</h3>
-          <p>Buradan bütün PDF ayarlarını bir yerdə seçin, önizləməyə baxın və sənədi yaradın.</p>
+          <p>Başlıq, məsafə və cavab açarını seçin.</p>
                   </div>
         <div class="pdf-header-actions">
           <button class="btn-small pdf-generate-btn" id="pdf-generate-modal-btn" type="button">📄 PDF Hazırla</button>
@@ -660,7 +636,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 
       <div class="pdf-section">
         <h4>Qısa kömək</h4>
-        <div class="muted-note">Başlıq, sinif, sınaq nömrəsi və cavab açarı buradan idarə olunur. Suallar isə aşağıda olan siyahıdan redaktə edilir.</div>
+        <div class="muted-note">Ayarları seçin, sonra PDF Hazırla düyməsinə basın.</div>
       </div>
     </div>
 
@@ -1064,6 +1040,12 @@ function clearInactiveBackdrops(scope) {
   });
 }
 
+function updatePdfFabVisibility(activeTab) {
+  const fab = document.getElementById("floating-pdf-btn");
+  if (!fab) return;
+  fab.classList.toggle("pdf-fab-hidden", activeTab !== "tab-exams");
+}
+
 document.querySelectorAll(".tab-btn[data-tab]").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".tab-btn[data-tab]").forEach(b => b.classList.remove("active"));
@@ -1071,6 +1053,7 @@ document.querySelectorAll(".tab-btn[data-tab]").forEach(btn => {
     btn.classList.add("active");
     document.getElementById(btn.dataset.tab).classList.add("active");
     applyBackdrop(btn.dataset.tab);
+    updatePdfFabVisibility(btn.dataset.tab);
   });
 });
 document.querySelectorAll(".tab-btn[data-stab]").forEach(btn => {
@@ -1085,6 +1068,7 @@ document.querySelectorAll(".tab-btn[data-stab]").forEach(btn => {
 
 function initAdminPanel() {
   applyBackdrop("tab-students");
+  updatePdfFabVisibility("tab-students");
   loadGroups();
   loadStudents();
   loadDailyReports();
@@ -1448,19 +1432,15 @@ let examQuestions = [];
 let examsCache = [];
 const OPTION_LETTERS = ["A", "B", "C", "D", "E"];
 
-const PDF_DRAFT_KEY = "ttm_pdf_draft_v2";
-let pdfDraftDirty = false;
-let pdfDraftTimer = null;
-
 function getDefaultPdfSettings() {
   return {
     title: document.getElementById("exam-title")?.value || "Sınaq",
-    classVal: document.getElementById("pdf-class-field")?.value || "",
-    numberVal: document.getElementById("pdf-number-field")?.value || "",
-    spacing: document.getElementById("pdf-spacing-field")?.value || "15",
-    color: document.getElementById("pdf-color-field")?.value || "#0B3C5D",
-    columns: document.getElementById("pdf-columns-field")?.value || "2",
-    answerKey: document.getElementById("pdf-answerkey-location")?.value || "end",
+    classVal: "",
+    numberVal: "",
+    spacing: "15",
+    color: "#0B3C5D",
+    columns: "2",
+    answerKey: "end",
     template: "clean"
   };
 }
@@ -1513,20 +1493,17 @@ function getPdfSettings() {
     };
   }
   return {
-    title: (document.getElementById("exam-title").value || "Sınaq").trim(),
-    classVal: document.getElementById("pdf-class-field").value.trim(),
-    numberVal: document.getElementById("pdf-number-field").value.trim(),
-    spacing: Number(document.getElementById("pdf-spacing-field").value) || 15,
-    colorHex: document.getElementById("pdf-color-field").value,
-    answerKeyMode: document.getElementById("pdf-answerkey-location").value,
-    numCols: Number(document.getElementById("pdf-columns-field").value) || 2,
-    template: "clean"
+    title: (document.getElementById("pdfm-title")?.value || document.getElementById("exam-title")?.value || "Sınaq").trim(),
+    classVal: document.getElementById("pdfm-class")?.value.trim() || "",
+    numberVal: document.getElementById("pdfm-number")?.value.trim() || "",
+    spacing: Number(document.getElementById("pdfm-spacing")?.value) || 15,
+    colorHex: document.getElementById("pdfm-color")?.value || "#0B3C5D",
+    answerKeyMode: document.getElementById("pdfm-answerkey")?.value || "end",
+    numCols: Number(document.getElementById("pdfm-columns")?.value) || 2,
+    template: document.getElementById("pdfm-template")?.value || "clean"
   };
 }
 
-function savePdfDraftSoon() {}
-function savePdfDraftNow() {}
-function restorePdfDraft() {}
 
 function renderPdfPreview() {
   const title = (document.getElementById("pdfm-title")?.value || document.getElementById("exam-title")?.value || "Sınaq").trim();
@@ -1700,7 +1677,7 @@ async function applyCropModal() {
     const cropped = await cropImageDataUrl(cropState.src, x, y, w, h);
     examQuestions[cropState.qi].imageBase64 = cropped;
     renderQuestionBuilder();
-    savePdfDraftSoon();
+    
     closeCropModal();
     toast("Kəsim tətbiq edildi");
   } catch (e) {
@@ -1732,7 +1709,7 @@ async function addFilesAsQuestions(files) {
     }
   }
   renderQuestionBuilder();
-  savePdfDraftSoon();
+  
   toast(`${added} sual əlavə edildi ✅`);
 }
 
@@ -1816,12 +1793,12 @@ function renderQuestionBuilder() {
   `).join("");
 }
 
-window.removeQuestion = (qi) => { examQuestions.splice(qi, 1); renderQuestionBuilder(); savePdfDraftSoon(); };
-window.updateQuestionText = (qi, val) => { if (examQuestions[qi]) examQuestions[qi].text = val; savePdfDraftSoon(); };
-window.setCorrectOption = (qi, oi) => { if (examQuestions[qi]) examQuestions[qi].correctIndex = oi; renderQuestionBuilder(); savePdfDraftSoon(); };
-window.updateCorrectAnswer = (qi, val) => { if (examQuestions[qi]) examQuestions[qi].correctAnswer = val; savePdfDraftSoon(); };
-window.setQuestionType = (qi, val) => { if (examQuestions[qi]) examQuestions[qi].type = val; renderQuestionBuilder(); savePdfDraftSoon(); };
-window.removeQuestionImage = (qi) => { if (examQuestions[qi]) examQuestions[qi].imageBase64 = ""; renderQuestionBuilder(); savePdfDraftSoon(); };
+window.removeQuestion = (qi) => { examQuestions.splice(qi, 1); renderQuestionBuilder();  };
+window.updateQuestionText = (qi, val) => { if (examQuestions[qi]) examQuestions[qi].text = val;  };
+window.setCorrectOption = (qi, oi) => { if (examQuestions[qi]) examQuestions[qi].correctIndex = oi; renderQuestionBuilder();  };
+window.updateCorrectAnswer = (qi, val) => { if (examQuestions[qi]) examQuestions[qi].correctAnswer = val;  };
+window.setQuestionType = (qi, val) => { if (examQuestions[qi]) examQuestions[qi].type = val; renderQuestionBuilder();  };
+window.removeQuestionImage = (qi) => { if (examQuestions[qi]) examQuestions[qi].imageBase64 = ""; renderQuestionBuilder();  };
 
 window.moveQuestion = (qi, dir) => {
   const ni = qi + dir;
@@ -1830,7 +1807,7 @@ window.moveQuestion = (qi, dir) => {
   examQuestions[qi] = examQuestions[ni];
   examQuestions[ni] = tmp;
   renderQuestionBuilder();
-  savePdfDraftSoon();
+  
 };
 
 let questionDragIndex = null;
@@ -1846,7 +1823,7 @@ window.dropQuestion = (e, targetQi) => {
   examQuestions.splice(targetQi, 0, item);
   questionDragIndex = null;
   renderQuestionBuilder();
-  savePdfDraftSoon();
+  
 };
 window.endQuestionDrag = () => {
   questionDragIndex = null;
@@ -1867,7 +1844,7 @@ window.uploadQuestionImage = async (qi, inputEl) => {
     }
     examQuestions[qi].imageBase64 = img;
     renderQuestionBuilder();
-    savePdfDraftSoon();
+    
     toast("Fayl əlavə edildi");
   } catch (e) {
     console.error(e);
@@ -1880,7 +1857,7 @@ window.uploadQuestionImage = async (qi, inputEl) => {
 document.getElementById("exam-add-question-btn").addEventListener("click", () => {
   examQuestions.push({ type: "mcq", text: "", imageBase64: "", options: OPTION_LETTERS.slice(), correctIndex: 0, correctAnswer: "" });
   renderQuestionBuilder();
-  savePdfDraftSoon();
+  
 });
 
 document.getElementById("exam-bulk-image-input").addEventListener("change", async (e) => {
@@ -1899,19 +1876,19 @@ function resetExamForm() {
   document.getElementById("exam-cancel-btn").style.display = "none";
   examQuestions = [];
   renderQuestionBuilder();
-  savePdfDraftSoon();
+  
 }
 document.getElementById("exam-cancel-btn").addEventListener("click", resetExamForm);
-["exam-title","exam-group","exam-topic","exam-timelimit","exam-activation","exam-video","pdf-class-field","pdf-number-field","pdf-spacing-field","pdf-color-field","pdf-columns-field","pdf-answerkey-location","pdfm-title","pdfm-class","pdfm-number","pdfm-spacing","pdfm-color","pdfm-columns","pdfm-answerkey","pdfm-template"].forEach(id => {
+["exam-title","exam-group","exam-topic","exam-timelimit","exam-activation","exam-video","pdfm-title","pdfm-class","pdfm-number","pdfm-spacing","pdfm-color","pdfm-columns","pdfm-answerkey","pdfm-template"].forEach(id => {
   const el = document.getElementById(id);
   if (el) {
     el.addEventListener("input", () => {
       if (id.startsWith("pdfm-")) renderPdfPreview();
-      savePdfDraftSoon();
+      
     });
     el.addEventListener("change", () => {
       if (id.startsWith("pdfm-")) renderPdfPreview();
-      savePdfDraftSoon();
+      
     });
   }
 });
@@ -1992,7 +1969,7 @@ async function generatePdfFromCurrentSettings() {
       }
 
       const rightTop = [];
-      if (numberVal) rightTop.push(`Sınaq № ${numberVal}`);
+      if (numberVal) rightTop.push(numberVal);
       doc.setTextColor(85, 93, 104);
       doc.setFont(PDF_FONT_NAME, "bold");
       doc.setFontSize(9.4);
@@ -2162,7 +2139,7 @@ document.getElementById("floating-pdf-btn")?.addEventListener("click", openPdfMo
 document.getElementById("pdf-modal-close")?.addEventListener("click", closePdfModal);
 document.getElementById("pdf-modal-overlay")?.addEventListener("click", (e) => { if (e.target.id === "pdf-modal-overlay") closePdfModal(); });
 document.getElementById("pdf-preview-btn")?.addEventListener("click", renderPdfPreview);
-document.getElementById("pdf-apply-btn")?.addEventListener("click", () => { syncCardFromModal(); savePdfDraftNow(); toast("Ayarlar tətbiq edildi"); closePdfModal(); });
+document.getElementById("pdf-apply-btn")?.addEventListener("click", () => { syncCardFromModal();  toast("Ayarlar tətbiq edildi"); closePdfModal(); });
 document.getElementById("crop-modal-close")?.addEventListener("click", closeCropModal);
 document.getElementById("crop-cancel-btn")?.addEventListener("click", closeCropModal);
 document.getElementById("crop-modal-overlay")?.addEventListener("click", (e) => { if (e.target.id === "crop-modal-overlay") closeCropModal(); });
@@ -2232,7 +2209,6 @@ document.getElementById("exam-save-btn").addEventListener("click", async () => {
     });
     await writeBatch.commit();
     toast(editId ? "Sınaq yeniləndi" : "Sınaq yaradıldı");
-    localStorage.removeItem(PDF_DRAFT_KEY);
     resetExamForm();
   } catch (err) {
     console.error(err);
