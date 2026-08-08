@@ -1301,7 +1301,9 @@ function arrayBufferToBase64(buffer) {
   return btoa(binary);
 }
 
-let pdfFontReady = false;
+let cachedFontBase64 = null; // font baytları bir dəfə endirilib burda saxlanılır
+let pdfFontReady = false; // bu jsPDF sənədinə font qoşulubmu
+
 async function fetchFirstWorking(urls) {
   for (const url of urls) {
     try {
@@ -1313,13 +1315,17 @@ async function fetchFirstWorking(urls) {
 }
 
 async function ensurePdfFont(doc) {
-  if (pdfFontReady) { doc.setFont("NotoSans", "normal"); return true; }
   try {
-    const regBuf = await fetchFirstWorking([
-      "https://raw.githubusercontent.com/googlefonts/noto-fonts/main/hinted/ttf/NotoSans/NotoSans-Regular.ttf",
-      "https://cdn.jsdelivr.net/gh/googlefonts/noto-fonts/hinted/ttf/NotoSans/NotoSans-Regular.ttf"
-    ]);
-    doc.addFileToVFS("NotoSans-Regular.ttf", arrayBufferToBase64(regBuf));
+    if (!cachedFontBase64) {
+      const regBuf = await fetchFirstWorking([
+        "https://raw.githubusercontent.com/googlefonts/noto-fonts/main/hinted/ttf/NotoSans/NotoSans-Regular.ttf",
+        "https://cdn.jsdelivr.net/gh/googlefonts/noto-fonts/hinted/ttf/NotoSans/NotoSans-Regular.ttf"
+      ]);
+      cachedFontBase64 = arrayBufferToBase64(regBuf);
+    }
+    // Hər yeni jsPDF sənədinə fontu YENİDƏN qoşmaq lazımdır (sənədlər arası
+    // paylaşılmır) — yalnız internetdən yükləməni keçirik, qeydiyyatı yox.
+    doc.addFileToVFS("NotoSans-Regular.ttf", cachedFontBase64);
     doc.addFont("NotoSans-Regular.ttf", "NotoSans", "normal");
     doc.setFont("NotoSans", "normal");
     pdfFontReady = true;
@@ -1327,6 +1333,7 @@ async function ensurePdfFont(doc) {
   } catch (e) {
     console.error("Font yüklənmədi, standart fontla davam edilir:", e);
     toast("⚠️ Şrift yüklənmədi, PDF-də bəzi hərflər fərqli görünə bilər");
+    pdfFontReady = false;
     return false;
   }
 }
@@ -1346,14 +1353,14 @@ function boldText(doc, text, x, y, opts) {
 
 document.getElementById("pdf-generate-btn").addEventListener("click", async () => {
   if (examQuestions.length === 0) { toast("Əvvəlcə sual əlavə edin"); return; }
-  toast("Şrift yüklənir, gözləyin...");
+  toast(cachedFontBase64 ? "PDF hazırlanır..." : "Şrift yüklənir, gözləyin...");
   document.getElementById("pdf-generate-btn").disabled = true;
 
   try {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: "mm", format: "a4" });
     await ensurePdfFont(doc);
-    toast("PDF hazırlanır...");
+    if (!cachedFontBase64) toast("PDF hazırlanır...");
     const pageW = 210, pageH = 297, marginX = 12, headerBottom = 38, footerLimit = 20;
     const spacing = Number(document.getElementById("pdf-spacing-field").value) || 15;
     const colorHex = document.getElementById("pdf-color-field").value;
