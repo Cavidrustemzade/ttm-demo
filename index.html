@@ -1369,47 +1369,48 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
 
     drawHeader();
     let curPage = 1;
-    let colIdx = 0;
     let y = headerBottom + 3;
     const answerKeyRowsAll = [];
 
-    function estimateHeight(q) {
-      let h = 6;
-      if (q.imageBase64) h += 55;
-      h += q.type === "mcq" ? 10 : 9;
-      return h + spacing / 3;
+    function measureQuestionHeight(q) {
+      let h = 0;
+      setPdfFont(doc, "normal");
+      doc.setFontSize(9.5);
+      if (q.text) {
+        const lines = doc.splitTextToSize(q.text, colWidth - 8);
+        h += lines.length * 4.8;
+      } else {
+        h += 5;
+      }
+      if (q.imageBase64) {
+        try {
+          const imgProps = doc.getImageProperties(q.imageBase64);
+          const maxW = colWidth - 7;
+          let imgH = (imgProps.height / imgProps.width) * maxW;
+          if (imgH > 55) imgH = 55;
+          h += imgH + 3;
+        } catch (e) { /* şəkil oxuna bilmədi, ölçüyə təsir etməsin */ }
+      }
+      if (q.type === "mcq") h += showCircles ? 8 : 2;
+      else h += 7;
+      return h;
     }
 
-    for (let qi = 0; qi < examQuestions.length; qi++) {
-      const q = examQuestions[qi];
-      const estHeight = estimateHeight(q);
-
-      if (y + estHeight > pageBottomLimit()) {
-        if (numCols === 2 && colIdx === 0) {
-          colIdx = 1;
-          y = headerBottom + 3;
-        } else {
-          doc.addPage();
-          curPage++;
-          colIdx = 0;
-          y = 15;
-        }
-      }
-      const x = colX[colIdx];
-
+    function drawQuestionAt(q, x, yStart, qNum) {
+      let yy = yStart;
       doc.setTextColor(cr, cg, cb);
       doc.setFontSize(10.5);
       setPdfFont(doc, "bold");
-      doc.text(`${qi + 1}.`, x, y);
+      doc.text(`${qNum}.`, x, yy);
       setPdfFont(doc, "normal");
       doc.setTextColor(30, 30, 30);
       doc.setFontSize(9.5);
       if (q.text) {
         const lines = doc.splitTextToSize(q.text, colWidth - 8);
-        doc.text(lines, x + 7, y);
-        y += lines.length * 4.8;
+        doc.text(lines, x + 7, yy);
+        yy += lines.length * 4.8;
       } else {
-        y += 5;
+        yy += 5;
       }
 
       if (q.imageBase64) {
@@ -1417,10 +1418,9 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
           const imgProps = doc.getImageProperties(q.imageBase64);
           const maxW = colWidth - 7;
           let imgW = maxW, imgH = (imgProps.height / imgProps.width) * imgW;
-          const maxImgH = 55;
-          if (imgH > maxImgH) { imgH = maxImgH; imgW = (imgProps.width / imgProps.height) * imgH; }
-          doc.addImage(q.imageBase64, "JPEG", x + 7, y, imgW, imgH);
-          y += imgH + 3;
+          if (imgH > 55) { imgH = 55; imgW = (imgProps.width / imgProps.height) * imgH; }
+          doc.addImage(q.imageBase64, "JPEG", x + 7, yy, imgW, imgH);
+          yy += imgH + 3;
         } catch (e) { console.error("Şəkil PDF-ə əlavə edilə bilmədi:", e); }
       }
 
@@ -1431,28 +1431,42 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
           doc.setFontSize(8.5);
           OPTION_LETTERS.forEach((letter) => {
             doc.setDrawColor(150, 150, 150);
-            doc.circle(ox + 2.4, y + 1.6, 2.4, "S");
-            doc.text(letter, ox + 2.4, y + 2.6, { align: "center" });
+            doc.circle(ox + 2.4, yy + 1.6, 2.4, "S");
+            doc.text(letter, ox + 2.4, yy + 2.6, { align: "center" });
             ox += 8.5;
           });
-          y += 8;
-        } else {
-          y += 2;
         }
         answerLabel = OPTION_LETTERS[q.correctIndex];
       } else {
         doc.setFontSize(8.5);
         doc.setTextColor(90, 90, 90);
-        doc.text("Cavab: _______________", x + 7, y + 3);
-        y += 7;
+        doc.text("Cavab: _______________", x + 7, yy + 3);
         answerLabel = q.correctAnswer || "-";
       }
       doc.setTextColor(30, 30, 30);
+      answerKeyRowsAll.push(`${qNum}-${answerLabel}`);
+      if (answerKeyMode === "bottom") trackAnswer(curPage, qNum, answerLabel);
+    }
 
-      answerKeyRowsAll.push(`${qi + 1}-${answerLabel}`);
-      if (answerKeyMode === "bottom") trackAnswer(curPage, qi + 1, answerLabel);
+    const step = numCols === 2 ? 2 : 1;
+    for (let qi = 0; qi < examQuestions.length; qi += step) {
+      const leftQ = examQuestions[qi];
+      const rightQ = (numCols === 2 && qi + 1 < examQuestions.length) ? examQuestions[qi + 1] : null;
 
-      y += spacing / 3;
+      const leftH = measureQuestionHeight(leftQ);
+      const rightH = rightQ ? measureQuestionHeight(rightQ) : 0;
+      const rowH = Math.max(leftH, rightH) + spacing / 3;
+
+      if (y + rowH > pageBottomLimit()) {
+        doc.addPage();
+        curPage++;
+        y = 15;
+      }
+
+      drawQuestionAt(leftQ, colX[0], y, qi + 1);
+      if (rightQ) drawQuestionAt(rightQ, colX[1], y, qi + 2);
+
+      y += rowH;
     }
 
     // Sütun ayırıcı xəttini bütün istifadə olunan səhifələrə çəkirik
