@@ -410,8 +410,11 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
           <h3 style="margin-bottom:6px;">📄 Kağız versiya (PDF) hazırla</h3>
           <p class="muted-note" style="margin-bottom:14px;">Sualları A4 vərəqinə səliqəli düzüb PDF kimi hazırlayır.</p>
           <div class="field-row">
-            <div class="field"><label>Sinif</label><input type="text" id="pdf-class-field" placeholder="Məs: 11" /></div>
-            <div class="field"><label>Sınaq nömrəsi</label><input type="text" id="pdf-number-field" placeholder="Qısa: 1" maxlength="8" /></div>
+            <div class="field"><label>Test adı (PDF başlığı, istədiyiniz kimi)</label><input type="text" id="pdf-title-field" placeholder="Məs: BSİ-1 Sınaq / Riyaziyyat Testi" /></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Sinif (sərbəst mətn, boş qala bilər)</label><input type="text" id="pdf-class-field" placeholder="Məs: 11 və ya 11-ci sinif" /></div>
+            <div class="field"><label>Sağ tərəf yazısı (istəyə görə)</label><input type="text" id="pdf-number-field" placeholder="Məs: BSİ-1" maxlength="14" /></div>
           </div>
           <div class="field-row">
             <div class="field"><label>Suallar arası boşluq (mm)</label><input type="number" id="pdf-spacing-field" value="15" min="5" max="50" /></div>
@@ -1357,7 +1360,7 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
     const answerKeyMode = document.getElementById("pdf-answerkey-location").value; // end | bottom | none
     const showCircles = document.getElementById("pdf-circles-check").checked;
     const numCols = Number(document.getElementById("pdf-columns-field").value) || 2;
-    const title = (document.getElementById("exam-title").value || "Test").trim();
+    const title = document.getElementById("pdf-title-field").value.trim();
     const classVal = document.getElementById("pdf-class-field").value.trim();
     const numberVal = document.getElementById("pdf-number-field").value.trim();
 
@@ -1365,49 +1368,80 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
     const colWidth = numCols === 2 ? (pageW - marginX * 2 - gutter) / 2 : (pageW - marginX * 2);
     const colX = numCols === 2 ? [marginX, marginX + colWidth + gutter] : [marginX];
     const pageBottomLimit = () => pageH - (answerKeyMode === "bottom" ? footerLimit : 15);
+    let contentStartY = headerBottom + 3;
+
+    function lerp(a, b, t) { return Math.round(a + (b - a) * t); }
 
     function drawHeader() {
+      // Gradient banner (referansdakı kimi, açıq boz -> ağ keçid)
+      const bannerY = 8, bannerH = 15;
+      const steps = 40;
+      for (let i = 0; i < steps; i++) {
+        const t = i / steps;
+        const g = lerp(225, 250, t);
+        doc.setFillColor(g, g, g);
+        doc.rect(marginX + (i * (pageW - marginX * 2) / steps), bannerY, (pageW - marginX * 2) / steps + 0.5, bannerH, "F");
+      }
+
+      // Sol pill: sinif (yalnız doldurulubsa)
+      if (classVal) {
+        setPdfFont(doc, "bold");
+        doc.setFontSize(10);
+        const w = doc.getTextWidth(classVal) + 10;
+        doc.setFillColor(cr, cg, cb);
+        doc.roundedRect(marginX + 4, bannerY + 2.5, w, 10, 3, 3, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.text(classVal, marginX + 4 + w / 2, bannerY + 9, { align: "center" });
+      }
+
+      // Sağ pill: sərbəst yazı (Times New Roman, yalnız doldurulubsa)
+      if (numberVal) {
+        doc.setFont("times", "bolditalic");
+        doc.setFontSize(10.5);
+        const w = doc.getTextWidth(numberVal) + 10;
+        doc.setFillColor(cr, cg, cb);
+        doc.roundedRect(pageW - marginX - 4 - w, bannerY + 2.5, w, 10, 3, 3, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.text(numberVal, pageW - marginX - 4 - w / 2, bannerY + 9, { align: "center" });
+      }
+
+      // Loqo - bannerin ortasında
+      doc.setFillColor(cr, cg, cb);
+      doc.roundedRect(pageW / 2 - 11, bannerY - 3, 22, 12, 3, 3, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(10);
+      setPdfFont(doc, "bold");
+      doc.text("TTM", pageW / 2, bannerY + 4.5, { align: "center" });
+
       doc.setDrawColor(cr, cg, cb);
       doc.setLineWidth(0.6);
-      doc.line(marginX, 26, pageW - marginX, 26);
-      doc.setFontSize(9);
-      doc.setTextColor(cr, cg, cb);
-      doc.text("Sinif:", marginX, 20);
-      if (classVal) { doc.setTextColor(30, 30, 30); doc.text(classVal, marginX + 12, 20); }
-      else { doc.setDrawColor(160, 160, 160); doc.line(marginX + 11, 20.5, marginX + 30, 20.5); }
+      doc.line(marginX, bannerY + bannerH + 4, pageW - marginX, bannerY + bannerH + 4);
 
-      // Sınaq nömrəsi - Times New Roman şrifti ilə
-      doc.setFont("times", "normal");
-      doc.setTextColor(cr, cg, cb);
-      doc.text("No:", pageW - marginX - 22, 20);
-      if (numberVal) { doc.setTextColor(30, 30, 30); doc.text(numberVal, pageW - marginX - 12, 20); }
-      else { doc.setDrawColor(160, 160, 160); doc.line(pageW - marginX - 12, 20.5, pageW - marginX, 20.5); }
-
-      // Loqo
-      doc.setFillColor(cr, cg, cb);
-      doc.roundedRect(pageW / 2 - 10, 12, 20, 10, 2, 2, "F");
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(9);
-      setPdfFont(doc, "bold");
-      doc.text("TTM", pageW / 2, 18.5, { align: "center" });
-
-      // Başlıq - şüşə effektli yumşaq çərçivə
-      setPdfFont(doc, "bold");
-      doc.setFontSize(13);
-      const titleWidth = doc.getTextWidth(title);
-      const boxW = titleWidth + 20, boxH = 11;
-      try {
-        doc.saveGraphicsState();
-        doc.setGState(new doc.GState({ opacity: 0.10 }));
-        doc.setFillColor(cr, cg, cb);
-        doc.roundedRect(pageW / 2 - boxW / 2, 27.5, boxW, boxH, 4, 4, "F");
-        doc.restoreGraphicsState();
-      } catch (e) { /* GState dəstəklənmirsə sadəcə çərçivəsiz davam et */ }
-      doc.setDrawColor(cr, cg, cb);
-      doc.setLineWidth(0.3);
-      doc.roundedRect(pageW / 2 - boxW / 2, 27.5, boxW, boxH, 4, 4, "S");
-      doc.setTextColor(30, 30, 30);
-      doc.text(title, pageW / 2, 34.5, { align: "center" });
+      // Başlıq (Test adı) - şüşə effektli çərçivə, böyük şrift
+      if (title) {
+        setPdfFont(doc, "bold");
+        doc.setFontSize(17);
+        const titleLines = doc.splitTextToSize(title, pageW - marginX * 2 - 40);
+        const titleWidth = Math.max(...titleLines.map(l => doc.getTextWidth(l)));
+        const boxW = Math.min(titleWidth + 24, pageW - marginX * 2 - 10);
+        const boxH = 9 + titleLines.length * 7;
+        const boxY = bannerY + bannerH + 8;
+        try {
+          doc.saveGraphicsState();
+          doc.setGState(new doc.GState({ opacity: 0.10 }));
+          doc.setFillColor(cr, cg, cb);
+          doc.roundedRect(pageW / 2 - boxW / 2, boxY, boxW, boxH, 4, 4, "F");
+          doc.restoreGraphicsState();
+        } catch (e) { /* GState dəstəklənmirsə sadəcə çərçivəsiz davam et */ }
+        doc.setDrawColor(cr, cg, cb);
+        doc.setLineWidth(0.3);
+        doc.roundedRect(pageW / 2 - boxW / 2, boxY, boxW, boxH, 4, 4, "S");
+        doc.setTextColor(30, 30, 30);
+        doc.text(titleLines, pageW / 2, boxY + 7, { align: "center" });
+        contentStartY = boxY + boxH + 6;
+      } else {
+        contentStartY = bannerY + bannerH + 10;
+      }
       setPdfFont(doc, "normal");
     }
 
@@ -1427,7 +1461,7 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
 
     drawHeader();
     let curPage = 1;
-    let y = headerBottom + 3;
+    let y = contentStartY;
     const answerKeyRowsAll = [];
 
     function measureQuestionHeight(q) {
@@ -1532,7 +1566,7 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
     if (numCols === 2) {
       for (let p = 1; p <= totalPages; p++) {
         doc.setPage(p);
-        const topY = p === 1 ? headerBottom : 12;
+        const topY = p === 1 ? contentStartY - 3 : 12;
         drawColumnDivider(topY, pageH - 15);
       }
     }
