@@ -154,6 +154,24 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .race-score-badge { display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg,#fbbf24,#d97706); color:#fff; padding:6px 14px; border-radius:999px; font-weight:800; font-size:13px; box-shadow:0 6px 14px rgba(217,119,6,.3); }
 .race-opt-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-top:14px; }
 .race-opt-btn { aspect-ratio:1; border-radius:12px; font-weight:800; font-size:17px; border:2px solid var(--color-gray); background:var(--color-white); transition:.15s; }
+
+.upload-choice-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
+.upload-choice-card { position:relative; border-radius:18px; padding:20px 14px; text-align:center; cursor:pointer; overflow:hidden;
+  background:linear-gradient(150deg, rgba(255,255,255,.9), rgba(244,246,248,.7));
+  backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,.6);
+  box-shadow:0 10px 28px rgba(11,60,93,.10), inset 0 1px 0 rgba(255,255,255,.8);
+  transition:transform var(--transition), box-shadow var(--transition); }
+.upload-choice-card:active { transform:scale(0.96); }
+.upload-choice-icon { width:52px; height:52px; margin:0 auto 10px; border-radius:16px; display:flex; align-items:center; justify-content:center; font-size:24px;
+  background:linear-gradient(135deg,var(--color-primary-light),var(--color-primary)); box-shadow:0 8px 18px rgba(11,60,93,.35), inset 0 1px 1px rgba(255,255,255,.3);
+  transform:perspective(200px) rotateX(8deg); }
+.upload-choice-title { font-weight:700; font-size:13.5px; color:var(--color-text); margin-bottom:3px; }
+.upload-choice-sub { font-size:11px; color:var(--color-text-muted); }
+.upload-choice-card input[type="file"] { position:absolute; inset:0; opacity:0; cursor:pointer; }
+
+.crop-modal-box { background:var(--color-white); border-radius:var(--radius-lg); max-width:520px; width:100%; max-height:92vh; overflow-y:auto; padding:18px; box-shadow:var(--shadow-lg); position:relative; }
+.crop-canvas-wrap { position:relative; width:100%; overflow:hidden; border-radius:10px; border:1px solid var(--color-gray); background:#666; touch-action:none; margin-bottom:10px; }
+.crop-selection-box { position:absolute; border:2px dashed #fff; background:rgba(11,60,93,.25); box-shadow:0 0 0 2000px rgba(0,0,0,.35); display:none; }
 .race-opt-btn:active { transform:scale(.92); }
 </style>
 </head>
@@ -388,9 +406,18 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
         </div>
 
         <h3 style="margin-top:20px;">Suallar</h3>
-        <div class="field" style="margin-bottom:14px;">
-          <label>📷 Bir neçə şəkli birdən seçin (hər şəkildən avtomatik sual yaranacaq, sırayla)</label>
-          <input type="file" accept="image/*" multiple id="exam-bulk-image-input" />
+        <div class="upload-choice-grid">
+          <div class="upload-choice-card">
+            <div class="upload-choice-icon">📷</div>
+            <div class="upload-choice-title">Şəkil seç</div>
+            <div class="upload-choice-sub">Qalereyadan birdən çox şəkil əlavə edin</div>
+            <input type="file" accept="image/*" multiple id="exam-bulk-image-input" />
+          </div>
+          <button type="button" class="upload-choice-card" id="crop-tool-open-btn" style="border:none; width:100%;">
+            <div class="upload-choice-icon">✂️</div>
+            <div class="upload-choice-title">Kırpma aləti</div>
+            <div class="upload-choice-sub">PDF-dən sualları kəsib əlavə edin</div>
+          </button>
         </div>
         <div id="exam-questions-builder"></div>
         <button class="btn-outline" id="exam-add-question-btn" style="margin-bottom:14px;">+ Tək sual əlavə et</button>
@@ -433,6 +460,36 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
             </div>
           </div>
           <button class="btn-small" id="pdf-generate-btn" style="width:100%;">📄 PDF hazırla</button>
+        </div>
+      </div>
+
+      <!-- KIRPMA ALƏTİ MODALI -->
+      <div id="crop-modal-overlay" style="display:none; position:fixed; inset:0; z-index:70; background:rgba(11,60,93,.35); backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:16px;">
+        <div class="crop-modal-box">
+          <button id="crop-modal-close-btn" style="position:absolute; top:14px; right:14px; width:30px; height:30px; border-radius:50%; background:var(--color-light-gray); color:var(--color-text-muted); font-size:16px;">✕</button>
+          <h3 style="margin-bottom:6px;">✂️ Kırpma aləti</h3>
+          <p class="muted-note" style="margin-bottom:12px;">PDF-i seçin, sualın ətrafında çərçivə çəkin, "Kəs və əlavə et" basın — eyni PDF-dən ardıcıl sual kəsə bilərsiniz.</p>
+
+          <div id="crop-step-upload">
+            <div class="field"><input type="file" accept="application/pdf" id="crop-pdf-input" /></div>
+          </div>
+
+          <div id="crop-step-editor" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <button class="btn-outline" id="crop-prev-page-btn">← Səhifə</button>
+              <span class="muted-note" id="crop-page-label">Səhifə 1/1</span>
+              <button class="btn-outline" id="crop-next-page-btn">Səhifə →</button>
+            </div>
+            <div class="crop-canvas-wrap" id="crop-canvas-wrap">
+              <canvas id="crop-canvas" style="width:100%; display:block;"></canvas>
+              <div class="crop-selection-box" id="crop-selection-box"></div>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button class="btn-small" id="crop-confirm-btn" style="flex:1;">✂️ Kəs və əlavə et</button>
+              <button class="btn-outline" id="crop-new-pdf-btn">Başqa PDF</button>
+            </div>
+            <div class="muted-note" style="margin-top:8px;" id="crop-added-count">Əlavə edilmiş sual: 0</div>
+          </div>
         </div>
       </div>
 
@@ -645,6 +702,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -1283,6 +1341,142 @@ function closePdfModal() {
 document.getElementById("pdf-modal-close-btn").addEventListener("click", closePdfModal);
 document.getElementById("pdf-modal-overlay").addEventListener("click", (e) => {
   if (e.target.id === "pdf-modal-overlay") closePdfModal();
+});
+
+// =========================================================================
+// KIRPMA ALƏTİ (PDF-dən sual kəsib əlavə etmək)
+// =========================================================================
+if (window.pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+}
+let cropPdfDoc = null;
+let cropCurrentPage = 1;
+let cropTotalPages = 1;
+let cropAddedCount = 0;
+let cropSelecting = false;
+let cropStartPt = null;
+
+function openCropModal() {
+  document.getElementById("crop-modal-overlay").style.display = "flex";
+  document.body.style.overflow = "hidden";
+}
+function closeCropModal() {
+  document.getElementById("crop-modal-overlay").style.display = "none";
+  document.body.style.overflow = "";
+}
+document.getElementById("crop-tool-open-btn").addEventListener("click", openCropModal);
+document.getElementById("crop-modal-close-btn").addEventListener("click", closeCropModal);
+document.getElementById("crop-modal-overlay").addEventListener("click", (e) => {
+  if (e.target.id === "crop-modal-overlay") closeCropModal();
+});
+
+document.getElementById("crop-new-pdf-btn").addEventListener("click", () => {
+  document.getElementById("crop-step-editor").style.display = "none";
+  document.getElementById("crop-step-upload").style.display = "block";
+  document.getElementById("crop-pdf-input").value = "";
+  cropPdfDoc = null;
+});
+
+document.getElementById("crop-pdf-input").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  toast("PDF yüklənir...");
+  try {
+    const buf = await file.arrayBuffer();
+    cropPdfDoc = await pdfjsLib.getDocument({ data: buf }).promise;
+    cropTotalPages = cropPdfDoc.numPages;
+    cropCurrentPage = 1;
+    cropAddedCount = 0;
+    document.getElementById("crop-added-count").textContent = "Əlavə edilmiş sual: 0";
+    document.getElementById("crop-step-upload").style.display = "none";
+    document.getElementById("crop-step-editor").style.display = "block";
+    await renderCropPage();
+  } catch (err) {
+    console.error(err);
+    toast("PDF açıla bilmədi: " + err.message);
+  }
+});
+
+async function renderCropPage() {
+  const page = await cropPdfDoc.getPage(cropCurrentPage);
+  const viewport = page.getViewport({ scale: 2 });
+  const canvas = document.getElementById("crop-canvas");
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  const ctx = canvas.getContext("2d");
+  await page.render({ canvasContext: ctx, viewport }).promise;
+  document.getElementById("crop-page-label").textContent = `Səhifə ${cropCurrentPage}/${cropTotalPages}`;
+  hideCropSelection();
+}
+
+document.getElementById("crop-prev-page-btn").addEventListener("click", async () => {
+  if (cropCurrentPage > 1) { cropCurrentPage--; await renderCropPage(); }
+});
+document.getElementById("crop-next-page-btn").addEventListener("click", async () => {
+  if (cropCurrentPage < cropTotalPages) { cropCurrentPage++; await renderCropPage(); }
+});
+
+// ---- Toxunma/mouse ilə çərçivə çəkmə ----
+const cropWrap = document.getElementById("crop-canvas-wrap");
+const cropBox = document.getElementById("crop-selection-box");
+let cropRectNorm = null; // {x0,y0,x1,y1} 0-1 aralığında (canvas ölçüsünə nisbətən)
+
+function hideCropSelection() {
+  cropBox.style.display = "none";
+  cropRectNorm = null;
+}
+
+function getRelPos(e) {
+  const rect = cropWrap.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / rect.width;
+  const y = (e.clientY - rect.top) / rect.height;
+  return { x: Math.min(Math.max(x, 0), 1), y: Math.min(Math.max(y, 0), 1) };
+}
+
+cropWrap.addEventListener("pointerdown", (e) => {
+  cropSelecting = true;
+  cropStartPt = getRelPos(e);
+  cropBox.style.display = "block";
+  cropWrap.setPointerCapture(e.pointerId);
+});
+cropWrap.addEventListener("pointermove", (e) => {
+  if (!cropSelecting) return;
+  const cur = getRelPos(e);
+  const x0 = Math.min(cropStartPt.x, cur.x), x1 = Math.max(cropStartPt.x, cur.x);
+  const y0 = Math.min(cropStartPt.y, cur.y), y1 = Math.max(cropStartPt.y, cur.y);
+  cropRectNorm = { x0, y0, x1, y1 };
+  const wrapRect = cropWrap.getBoundingClientRect();
+  cropBox.style.left = (x0 * wrapRect.width) + "px";
+  cropBox.style.top = (y0 * wrapRect.height) + "px";
+  cropBox.style.width = ((x1 - x0) * wrapRect.width) + "px";
+  cropBox.style.height = ((y1 - y0) * wrapRect.height) + "px";
+});
+cropWrap.addEventListener("pointerup", () => { cropSelecting = false; });
+
+document.getElementById("crop-confirm-btn").addEventListener("click", () => {
+  if (!cropRectNorm || cropRectNorm.x1 - cropRectNorm.x0 < 0.02 || cropRectNorm.y1 - cropRectNorm.y0 < 0.02) {
+    toast("Əvvəlcə sualın ətrafında çərçivə çəkin");
+    return;
+  }
+  const srcCanvas = document.getElementById("crop-canvas");
+  const sx = cropRectNorm.x0 * srcCanvas.width;
+  const sy = cropRectNorm.y0 * srcCanvas.height;
+  const sw = (cropRectNorm.x1 - cropRectNorm.x0) * srcCanvas.width;
+  const sh = (cropRectNorm.y1 - cropRectNorm.y0) * srcCanvas.height;
+
+  const outCanvas = document.createElement("canvas");
+  outCanvas.width = sw;
+  outCanvas.height = sh;
+  const ctx = outCanvas.getContext("2d");
+  ctx.drawImage(srcCanvas, sx, sy, sw, sh, 0, 0, sw, sh);
+  const base64 = outCanvas.toDataURL("image/jpeg", 0.85);
+
+  examQuestions.push({ type: "mcq", text: "", imageBase64: base64, options: OPTION_LETTERS.slice(), correctIndex: 0, correctAnswer: "" });
+  renderQuestionBuilder();
+  cropAddedCount++;
+  document.getElementById("crop-added-count").textContent = `Əlavə edilmiş sual: ${cropAddedCount}`;
+  hideCropSelection();
+  toast(`✅ Sual əlavə edildi (${cropAddedCount})`);
 });
 
 // ---- PDF HAZIRLAMA (jsPDF) ----
