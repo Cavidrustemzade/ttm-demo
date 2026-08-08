@@ -1373,12 +1373,12 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
     function lerp(a, b, t) { return Math.round(a + (b - a) * t); }
 
     function drawHeader() {
-      // Gradient banner (referansdakı kimi, açıq boz -> ağ keçid)
+      // Gradient banner: soldan sağa açıq tondan bir az tünd tona doğru
       const bannerY = 8, bannerH = 15;
-      const steps = 40;
+      const steps = 60;
       for (let i = 0; i < steps; i++) {
-        const t = i / steps;
-        const g = lerp(225, 250, t);
+        const t = i / (steps - 1);
+        const g = lerp(248, 224, t);
         doc.setFillColor(g, g, g);
         doc.rect(marginX + (i * (pageW - marginX * 2) / steps), bannerY, (pageW - marginX * 2) / steps + 0.5, bannerH, "F");
       }
@@ -1387,18 +1387,18 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
       if (classVal) {
         setPdfFont(doc, "bold");
         doc.setFontSize(10);
-        const w = doc.getTextWidth(classVal) + 10;
+        const w = Math.min(doc.getTextWidth(classVal) + 12, 48);
         doc.setFillColor(cr, cg, cb);
         doc.roundedRect(marginX + 4, bannerY + 2.5, w, 10, 3, 3, "F");
         doc.setTextColor(255, 255, 255);
         doc.text(classVal, marginX + 4 + w / 2, bannerY + 9, { align: "center" });
       }
 
-      // Sağ pill: sərbəst yazı (Times New Roman, yalnız doldurulubsa)
+      // Sağ pill: sərbəst yazı (NotoSans bold ilə, Azərbaycan hərfləri düzgün çıxsın)
       if (numberVal) {
-        doc.setFont("times", "bolditalic");
+        setPdfFont(doc, "bold");
         doc.setFontSize(10.5);
-        const w = doc.getTextWidth(numberVal) + 10;
+        const w = Math.min(doc.getTextWidth(numberVal) + 12, 52);
         doc.setFillColor(cr, cg, cb);
         doc.roundedRect(pageW - marginX - 4 - w, bannerY + 2.5, w, 10, 3, 3, "F");
         doc.setTextColor(255, 255, 255);
@@ -1407,37 +1407,38 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
 
       // Loqo - bannerin ortasında
       doc.setFillColor(cr, cg, cb);
-      doc.roundedRect(pageW / 2 - 11, bannerY - 3, 22, 12, 3, 3, "F");
+      doc.roundedRect(pageW / 2 - 12, bannerY - 2.5, 24, 12, 3, 3, "F");
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(10);
       setPdfFont(doc, "bold");
-      doc.text("TTM", pageW / 2, bannerY + 4.5, { align: "center" });
+      doc.text("TTM", pageW / 2, bannerY + 4.4, { align: "center" });
 
       doc.setDrawColor(cr, cg, cb);
-      doc.setLineWidth(0.6);
+      doc.setLineWidth(0.55);
       doc.line(marginX, bannerY + bannerH + 4, pageW - marginX, bannerY + bannerH + 4);
 
-      // Başlıq (Test adı) - şüşə effektli çərçivə, böyük şrift
+      // Başlıq (Test adı) - çərçivə səhifədən çıxmasın deyə daha sərt limit
       if (title) {
         setPdfFont(doc, "bold");
         doc.setFontSize(17);
-        const titleLines = doc.splitTextToSize(title, pageW - marginX * 2 - 40);
+        const titleLines = doc.splitTextToSize(title, pageW - marginX * 2 - 70);
         const titleWidth = Math.max(...titleLines.map(l => doc.getTextWidth(l)));
-        const boxW = Math.min(titleWidth + 24, pageW - marginX * 2 - 10);
-        const boxH = 9 + titleLines.length * 7;
+        const boxW = Math.min(Math.max(titleWidth + 28, 90), pageW - marginX * 2 - 30);
+        const boxH = 10 + titleLines.length * 7;
         const boxY = bannerY + bannerH + 8;
+        const boxX = pageW / 2 - boxW / 2;
         try {
           doc.saveGraphicsState();
           doc.setGState(new doc.GState({ opacity: 0.10 }));
           doc.setFillColor(cr, cg, cb);
-          doc.roundedRect(pageW / 2 - boxW / 2, boxY, boxW, boxH, 4, 4, "F");
+          doc.roundedRect(boxX, boxY, boxW, boxH, 4, 4, "F");
           doc.restoreGraphicsState();
         } catch (e) { /* GState dəstəklənmirsə sadəcə çərçivəsiz davam et */ }
         doc.setDrawColor(cr, cg, cb);
-        doc.setLineWidth(0.3);
-        doc.roundedRect(pageW / 2 - boxW / 2, boxY, boxW, boxH, 4, 4, "S");
+        doc.setLineWidth(0.35);
+        doc.roundedRect(boxX, boxY, boxW, boxH, 4, 4, "S");
         doc.setTextColor(30, 30, 30);
-        doc.text(titleLines, pageW / 2, boxY + 7, { align: "center" });
+        doc.text(titleLines, pageW / 2, boxY + 7.2, { align: "center" });
         contentStartY = boxY + boxH + 6;
       } else {
         contentStartY = bannerY + bannerH + 10;
