@@ -432,7 +432,6 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
               </select>
             </div>
           </div>
-          <div class="checkbox-row"><input type="checkbox" id="pdf-circles-check" checked /><label for="pdf-circles-check">A-E cavab dairələri əlavə edilsin</label></div>
           <button class="btn-small" id="pdf-generate-btn" style="width:100%;">📄 PDF hazırla</button>
         </div>
       </div>
@@ -1320,14 +1319,8 @@ async function ensurePdfFont(doc) {
       "https://raw.githubusercontent.com/googlefonts/noto-fonts/main/hinted/ttf/NotoSans/NotoSans-Regular.ttf",
       "https://cdn.jsdelivr.net/gh/googlefonts/noto-fonts/hinted/ttf/NotoSans/NotoSans-Regular.ttf"
     ]);
-    const boldBuf = await fetchFirstWorking([
-      "https://raw.githubusercontent.com/googlefonts/noto-fonts/main/hinted/ttf/NotoSans/NotoSans-Bold.ttf",
-      "https://cdn.jsdelivr.net/gh/googlefonts/noto-fonts/hinted/ttf/NotoSans/NotoSans-Bold.ttf"
-    ]);
     doc.addFileToVFS("NotoSans-Regular.ttf", arrayBufferToBase64(regBuf));
     doc.addFont("NotoSans-Regular.ttf", "NotoSans", "normal");
-    doc.addFileToVFS("NotoSans-Bold.ttf", arrayBufferToBase64(boldBuf));
-    doc.addFont("NotoSans-Bold.ttf", "NotoSans", "bold");
     doc.setFont("NotoSans", "normal");
     pdfFontReady = true;
     return true;
@@ -1338,9 +1331,17 @@ async function ensurePdfFont(doc) {
   }
 }
 
+// Qeyd: yalnız "Regular" şrift faylı yüklənir (bold faylının bəzən yüklənməməsi
+// korlanmış hərflərə səbəb olurdu). "Qalın" görünüş üçün mətni 2 dəfə, cüzi
+// sürüşmə ilə çəkirik (faux-bold) — bu, hər zaman düzgün hərflərlə işləyir.
 function setPdfFont(doc, style) {
-  if (pdfFontReady) doc.setFont("NotoSans", style === "bold" ? "bold" : "normal");
-  else doc.setFont(undefined, style === "bold" ? "bold" : "normal");
+  if (pdfFontReady) doc.setFont("NotoSans", "normal");
+  else doc.setFont(undefined, "normal");
+}
+
+function boldText(doc, text, x, y, opts) {
+  doc.text(text, x, y, opts);
+  doc.text(text, x + 0.18, y, opts);
 }
 
 document.getElementById("pdf-generate-btn").addEventListener("click", async () => {
@@ -1358,7 +1359,7 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
     const colorHex = document.getElementById("pdf-color-field").value;
     const [cr, cg, cb] = hexToRgb(colorHex);
     const answerKeyMode = document.getElementById("pdf-answerkey-location").value; // end | bottom | none
-    const showCircles = document.getElementById("pdf-circles-check").checked;
+    const showCircles = false; // istifadəçi bu funksiyanı istəmədi
     const numCols = Number(document.getElementById("pdf-columns-field").value) || 2;
     const title = document.getElementById("pdf-title-field").value.trim();
     const classVal = document.getElementById("pdf-class-field").value.trim();
@@ -1373,12 +1374,12 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
     function lerp(a, b, t) { return Math.round(a + (b - a) * t); }
 
     function drawHeader() {
-      // Gradient banner: soldan sağa açıq tondan bir az tünd tona doğru
+      // Gradient banner (referansdakı kimi, açıq boz -> ağ keçid)
       const bannerY = 8, bannerH = 15;
-      const steps = 60;
+      const steps = 40;
       for (let i = 0; i < steps; i++) {
-        const t = i / (steps - 1);
-        const g = lerp(248, 224, t);
+        const t = i / steps;
+        const g = lerp(225, 250, t);
         doc.setFillColor(g, g, g);
         doc.rect(marginX + (i * (pageW - marginX * 2) / steps), bannerY, (pageW - marginX * 2) / steps + 0.5, bannerH, "F");
       }
@@ -1387,58 +1388,57 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
       if (classVal) {
         setPdfFont(doc, "bold");
         doc.setFontSize(10);
-        const w = Math.min(doc.getTextWidth(classVal) + 12, 48);
+        const w = doc.getTextWidth(classVal) + 10;
         doc.setFillColor(cr, cg, cb);
         doc.roundedRect(marginX + 4, bannerY + 2.5, w, 10, 3, 3, "F");
         doc.setTextColor(255, 255, 255);
-        doc.text(classVal, marginX + 4 + w / 2, bannerY + 9, { align: "center" });
+        boldText(doc, classVal, marginX + 4 + w / 2, bannerY + 9, { align: "center" });
       }
 
-      // Sağ pill: sərbəst yazı (NotoSans bold ilə, Azərbaycan hərfləri düzgün çıxsın)
+      // Sağ pill: sərbəst yazı
       if (numberVal) {
         setPdfFont(doc, "bold");
         doc.setFontSize(10.5);
-        const w = Math.min(doc.getTextWidth(numberVal) + 12, 52);
+        const w = doc.getTextWidth(numberVal) + 10;
         doc.setFillColor(cr, cg, cb);
         doc.roundedRect(pageW - marginX - 4 - w, bannerY + 2.5, w, 10, 3, 3, "F");
         doc.setTextColor(255, 255, 255);
-        doc.text(numberVal, pageW - marginX - 4 - w / 2, bannerY + 9, { align: "center" });
+        boldText(doc, numberVal, pageW - marginX - 4 - w / 2, bannerY + 9, { align: "center" });
       }
 
       // Loqo - bannerin ortasında
       doc.setFillColor(cr, cg, cb);
-      doc.roundedRect(pageW / 2 - 12, bannerY - 2.5, 24, 12, 3, 3, "F");
+      doc.roundedRect(pageW / 2 - 11, bannerY - 3, 22, 12, 3, 3, "F");
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(10);
       setPdfFont(doc, "bold");
-      doc.text("TTM", pageW / 2, bannerY + 4.4, { align: "center" });
+      boldText(doc, "TTM", pageW / 2, bannerY + 4.5, { align: "center" });
 
       doc.setDrawColor(cr, cg, cb);
-      doc.setLineWidth(0.55);
+      doc.setLineWidth(0.6);
       doc.line(marginX, bannerY + bannerH + 4, pageW - marginX, bannerY + bannerH + 4);
 
-      // Başlıq (Test adı) - çərçivə səhifədən çıxmasın deyə daha sərt limit
+      // Başlıq (Test adı) - şüşə effektli çərçivə, böyük şrift
       if (title) {
         setPdfFont(doc, "bold");
         doc.setFontSize(17);
-        const titleLines = doc.splitTextToSize(title, pageW - marginX * 2 - 70);
+        const titleLines = doc.splitTextToSize(title, pageW - marginX * 2 - 36);
         const titleWidth = Math.max(...titleLines.map(l => doc.getTextWidth(l)));
-        const boxW = Math.min(Math.max(titleWidth + 28, 90), pageW - marginX * 2 - 30);
-        const boxH = 10 + titleLines.length * 7;
+        const boxW = Math.min(titleWidth + 30, pageW - marginX * 2 - 6);
+        const boxH = 10 + titleLines.length * 7.5;
         const boxY = bannerY + bannerH + 8;
-        const boxX = pageW / 2 - boxW / 2;
         try {
           doc.saveGraphicsState();
           doc.setGState(new doc.GState({ opacity: 0.10 }));
           doc.setFillColor(cr, cg, cb);
-          doc.roundedRect(boxX, boxY, boxW, boxH, 4, 4, "F");
+          doc.roundedRect(pageW / 2 - boxW / 2, boxY, boxW, boxH, 4, 4, "F");
           doc.restoreGraphicsState();
         } catch (e) { /* GState dəstəklənmirsə sadəcə çərçivəsiz davam et */ }
         doc.setDrawColor(cr, cg, cb);
-        doc.setLineWidth(0.35);
-        doc.roundedRect(boxX, boxY, boxW, boxH, 4, 4, "S");
+        doc.setLineWidth(0.3);
+        doc.roundedRect(pageW / 2 - boxW / 2, boxY, boxW, boxH, 4, 4, "S");
         doc.setTextColor(30, 30, 30);
-        doc.text(titleLines, pageW / 2, boxY + 7.2, { align: "center" });
+        boldText(doc, titleLines, pageW / 2, boxY + 7.5, { align: "center" });
         contentStartY = boxY + boxH + 6;
       } else {
         contentStartY = bannerY + bannerH + 10;
@@ -1494,7 +1494,7 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
       doc.setTextColor(cr, cg, cb);
       doc.setFontSize(10.5);
       setPdfFont(doc, "bold");
-      doc.text(`${qNum}.`, x, yy);
+      boldText(doc, `${qNum}.`, x, yy);
       setPdfFont(doc, "normal");
       doc.setTextColor(30, 30, 30);
       doc.setFontSize(9.5);
@@ -1583,7 +1583,7 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
         doc.setFontSize(8.5);
         doc.setTextColor(cr, cg, cb);
         setPdfFont(doc, "bold");
-        doc.text("Cavablar: ", marginX, pageH - footerLimit + 9);
+        boldText(doc, "Cavablar: ", marginX, pageH - footerLimit + 9);
         setPdfFont(doc, "normal");
         doc.setTextColor(90, 90, 90);
         doc.text(pageQuestionMap[p].join("   "), marginX + 18, pageH - footerLimit + 9);
@@ -1596,7 +1596,7 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
       doc.setTextColor(cr, cg, cb);
       doc.setFontSize(14);
       setPdfFont(doc, "bold");
-      doc.text("Cavab açarı", pageW / 2, 20, { align: "center" });
+      boldText(doc, "Cavab açarı", pageW / 2, 20, { align: "center" });
       setPdfFont(doc, "normal");
       doc.setFontSize(10.5);
       doc.setTextColor(30, 30, 30);
