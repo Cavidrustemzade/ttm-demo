@@ -4,6 +4,13 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>TTM Tədris Mərkəzi</title>
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#0B3C5D" />
+<link rel="icon" type="image/png" href="icon-192.png" />
+<link rel="apple-touch-icon" href="icon-180.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="TTM" />
 <style>
 :root {
   --color-primary: #0B3C5D;
@@ -173,6 +180,9 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .crop-canvas-wrap { position:relative; width:100%; overflow:hidden; border-radius:10px; border:1px solid var(--color-gray); background:#666; touch-action:none; margin-bottom:10px; }
 .crop-selection-box { position:absolute; border:2px dashed #fff; background:rgba(11,60,93,.25); box-shadow:0 0 0 2000px rgba(0,0,0,.35); display:none; }
 .race-opt-btn:active { transform:scale(.92); }
+.group-check-pill { display:flex; align-items:center; gap:6px; background:var(--color-light-gray); border:1.5px solid var(--color-gray); border-radius:999px; padding:7px 12px; font-size:12.5px; cursor:pointer; transition:var(--transition); }
+.group-check-pill input { width:15px; height:15px; }
+.group-check-pill.checked { background:rgba(11,60,93,.08); border-color:var(--color-primary); color:var(--color-primary); font-weight:600; }
 </style>
 </head>
 <body>
@@ -392,7 +402,12 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
         <input type="hidden" id="exam-edit-id" value="" />
         <div class="field-row">
           <div class="field"><label>Sınaq adı</label><input type="text" id="exam-title" placeholder="Məs: Riyaziyyat 1-ci sınaq" /></div>
-          <div class="field"><label>Qrup</label><select id="exam-group"></select></div>
+        </div>
+        <div class="field" style="margin-bottom:12px;">
+          <label>Qruplar (birdən çox seçə bilərsiniz)</label>
+          <div id="exam-groups-checklist" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;">
+            <div class="empty-state">Əvvəlcə qrup yaradın</div>
+          </div>
         </div>
         <div class="field-row">
           <div class="field"><label>Mövzu / Fənn</label><input type="text" id="exam-topic" placeholder="Məs: Kvadrat tənliklər" /></div>
@@ -858,15 +873,40 @@ function initAdminPanel() {
 
 // ---- QRUPLAR ----
 function fillGroupSelects() {
-  const selects = ["student-group", "daily-student", "material-group", "schedule-group", "topic-group"];
-  // student-group və material-group/schedule-group/topic-group qrup siyahısı ilə doldurulur
-  ["student-group", "material-group", "schedule-group", "topic-group", "exam-group"].forEach(id => {
+  ["student-group", "material-group", "schedule-group", "topic-group"].forEach(id => {
     const sel = document.getElementById(id);
     const current = sel.value;
     sel.innerHTML = groupsCache.map(g => `<option value="${g.id}">${esc(g.name)}</option>`).join("") || `<option value="">Əvvəlcə qrup yaradın</option>`;
     if (current) sel.value = current;
   });
+  renderExamGroupsChecklist();
   fillStudentSelects();
+}
+
+function renderExamGroupsChecklist() {
+  const el = document.getElementById("exam-groups-checklist");
+  if (!el) return;
+  // Hazırda işarələnmiş qrupları qoruyuruq (yenidən çəkilsə belə itməsin)
+  const prevChecked = new Set(Array.from(el.querySelectorAll('input:checked')).map(i => i.value));
+  if (groupsCache.length === 0) { el.innerHTML = `<div class="empty-state">Əvvəlcə qrup yaradın</div>`; return; }
+  el.innerHTML = groupsCache.map(g => `
+    <label class="group-check-pill ${prevChecked.has(g.id) ? "checked" : ""}">
+      <input type="checkbox" value="${g.id}" ${prevChecked.has(g.id) ? "checked" : ""} onchange="this.closest('.group-check-pill').classList.toggle('checked', this.checked)" />
+      ${esc(g.name)}
+    </label>
+  `).join("");
+}
+
+function getSelectedExamGroupIds() {
+  return Array.from(document.querySelectorAll('#exam-groups-checklist input:checked')).map(i => i.value);
+}
+
+function setSelectedExamGroupIds(ids) {
+  const idSet = new Set(ids || []);
+  document.querySelectorAll('#exam-groups-checklist input').forEach(inp => {
+    inp.checked = idSet.has(inp.value);
+    inp.closest('.group-check-pill').classList.toggle('checked', inp.checked);
+  });
 }
 
 function fillStudentSelects() {
@@ -1318,6 +1358,7 @@ document.getElementById("exam-bulk-image-input").addEventListener("change", asyn
 function resetExamForm() {
   document.getElementById("exam-edit-id").value = "";
   document.getElementById("exam-title").value = "";
+  setSelectedExamGroupIds([]);
   document.getElementById("exam-topic").value = "";
   document.getElementById("exam-timelimit").value = "30";
   document.getElementById("exam-activation").value = "";
@@ -1742,25 +1783,27 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
       if (answerKeyMode === "bottom") trackAnswer(curPage, qNum, answerLabel);
     }
 
-    const step = numCols === 2 ? 2 : 1;
-    for (let qi = 0; qi < examQuestions.length; qi += step) {
-      const leftQ = examQuestions[qi];
-      const rightQ = (numCols === 2 && qi + 1 < examQuestions.length) ? examQuestions[qi + 1] : null;
+    let colIdx = 0;
+    let qNum = 1;
+    for (let qi = 0; qi < examQuestions.length; qi++) {
+      const q = examQuestions[qi];
+      const h = measureQuestionHeight(q);
 
-      const leftH = measureQuestionHeight(leftQ);
-      const rightH = rightQ ? measureQuestionHeight(rightQ) : 0;
-      const rowH = Math.max(leftH, rightH) + spacing / 3;
-
-      if (y + rowH > pageBottomLimit()) {
-        doc.addPage();
-        curPage++;
-        y = 15;
+      if (y + h > pageBottomLimit()) {
+        if (numCols === 2 && colIdx === 0) {
+          colIdx = 1;
+          y = (curPage === 1) ? contentStartY : 15;
+        } else {
+          doc.addPage();
+          curPage++;
+          colIdx = 0;
+          y = 15;
+        }
       }
 
-      drawQuestionAt(leftQ, colX[0], y, qi + 1);
-      if (rightQ) drawQuestionAt(rightQ, colX[1], y, qi + 2);
-
-      y += rowH;
+      drawQuestionAt(q, colX[colIdx], y, qNum);
+      y += h;
+      qNum++;
     }
 
     // Sütun ayırıcı xəttini bütün istifadə olunan səhifələrə çəkirik
@@ -1822,14 +1865,14 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
 
 document.getElementById("exam-save-btn").addEventListener("click", async () => {
   const title = document.getElementById("exam-title").value.trim();
-  const groupId = document.getElementById("exam-group").value;
+  const groupIds = getSelectedExamGroupIds();
   const topic = document.getElementById("exam-topic").value.trim();
   const timeLimitMinutes = Number(document.getElementById("exam-timelimit").value) || 30;
   const activationInput = document.getElementById("exam-activation").value;
   const videoUrl = document.getElementById("exam-video").value.trim();
   const editId = document.getElementById("exam-edit-id").value;
 
-  if (!title || !groupId || !topic || !activationInput) { toast("Bütün əsas sahələri doldurun"); return; }
+  if (!title || groupIds.length === 0 || !topic || !activationInput) { toast("Bütün əsas sahələri doldurun (ən azı 1 qrup seçin)"); return; }
   if (examQuestions.length === 0) { toast("Ən azı 1 sual əlavə edin"); return; }
   for (const q of examQuestions) {
     if (!q.text.trim() && !q.imageBase64) { toast("Hər sualda mətn və ya şəkil olmalıdır"); return; }
@@ -1839,7 +1882,7 @@ document.getElementById("exam-save-btn").addEventListener("click", async () => {
   if (videoUrl && !/^https?:\/\//i.test(videoUrl)) { toast("Video linki http:// və ya https:// ilə başlamalıdır"); return; }
 
   const activationAt = new Date(activationInput).toISOString();
-  const meta = { title, groupId, topic, timeLimitMinutes, activationAt, videoUrl, questionCount: examQuestions.length };
+  const meta = { title, groupIds, topic, timeLimitMinutes, activationAt, videoUrl, questionCount: examQuestions.length };
 
   document.getElementById("exam-save-btn").disabled = true;
   try {
@@ -1877,7 +1920,7 @@ window.editExam = async (id) => {
   if (!ex) return;
   document.getElementById("exam-edit-id").value = id;
   document.getElementById("exam-title").value = ex.title;
-  document.getElementById("exam-group").value = ex.groupId || "";
+  setSelectedExamGroupIds(ex.groupIds || (ex.groupId ? [ex.groupId] : []));
   document.getElementById("exam-topic").value = ex.topic;
   document.getElementById("exam-timelimit").value = ex.timeLimitMinutes;
   document.getElementById("exam-activation").value = ex.activationAt ? ex.activationAt.slice(0, 16) : "";
@@ -1919,7 +1962,7 @@ function loadExams() {
       return `<div class="list-item">
         <div class="list-item-info">
           <div class="list-item-title">${esc(ex.title)}</div>
-          <div class="list-item-sub"><span class="badge">${groupName(ex.groupId)}</span> ${ex.questionCount || 0} sual · ${ex.timeLimitMinutes} dəq · ${activeNow ? "🟢 Aktiv" : "⏳ " + new Date(ex.activationAt).toLocaleString("az-AZ")}</div>
+          <div class="list-item-sub">${(ex.groupIds || (ex.groupId ? [ex.groupId] : [])).map(gid => `<span class="badge">${groupName(gid)}</span>`).join(" ")} ${ex.questionCount || 0} sual · ${ex.timeLimitMinutes} dəq · ${activeNow ? "🟢 Aktiv" : "⏳ " + new Date(ex.activationAt).toLocaleString("az-AZ")}</div>
         </div>
         <div class="list-item-actions">
           <button class="btn-outline" onclick="editExam('${ex.id}')">Redaktə</button>
@@ -2139,7 +2182,7 @@ let examEndTime = null;
 
 function loadStudentExams(uid, groupId) {
   if (!groupId) return;
-  db.collection("exams").where("groupId", "==", groupId).onSnapshot(snap => {
+  db.collection("exams").where("groupIds", "array-contains", groupId).onSnapshot(snap => {
     studentExamsCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderStudentExamList();
   }, err => console.error("exams xətası:", err));
@@ -2410,7 +2453,7 @@ async function finishExam(autoSubmit) {
   const scorePct = Math.round((correctCount / totalCount) * 100);
 
   const attemptData = {
-    examId: ex.id, studentId: currentStudentUid, groupId: ex.groupId, topic: ex.topic,
+    examId: ex.id, studentId: currentStudentUid, groupId: currentStudentGroupId, topic: ex.topic,
     answers: currentExamAnswers, perQuestion, correctCount, totalCount, score: scorePct,
     autoSubmitted: !!autoSubmit, submittedAt: firebase.firestore.FieldValue.serverTimestamp()
   };
@@ -2783,6 +2826,16 @@ function renderSubjectBreakdown(quizData, examData) {
       </div>
     </div>`;
   }).join("") + (rows.some(r => r.avg < 60) ? `<div class="muted-note">⚠️ 60%-dən aşağı fənnlərə əlavə diqqət tövsiyə olunur.</div>` : "");
+}
+</script>
+<script>
+// PWA - Service Worker qeydiyyatı (tətbiq kimi işləməsi və offline dəstək üçün)
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("service-worker.js").catch((err) => {
+      console.log("Service worker qeydiyyata alınmadı:", err);
+    });
+  });
 }
 </script>
 </body>
