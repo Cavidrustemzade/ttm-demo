@@ -1647,7 +1647,9 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
 
     function drawColumnDivider(pageTop, pageBottom) {
       if (numCols !== 2) return;
-      doc.setDrawColor(210, 210, 210);
+      // Seçilmiş rəngin açıq (ağa doğru qarışdırılmış) tonu istifadə olunur
+      const lr = lerp(cr, 255, 0.6), lg = lerp(cg, 255, 0.6), lb = lerp(cb, 255, 0.6);
+      doc.setDrawColor(lr, lg, lb);
       doc.setLineWidth(0.3);
       doc.line(pageW / 2, pageTop, pageW / 2, pageBottom);
     }
