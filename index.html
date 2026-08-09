@@ -1570,81 +1570,79 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
     const colWidth = numCols === 2 ? (pageW - marginX * 2 - gutter) / 2 : (pageW - marginX * 2);
     const colX = numCols === 2 ? [marginX, marginX + colWidth + gutter] : [marginX];
     const pageBottomLimit = () => pageH - (answerKeyMode === "bottom" ? footerLimit : 15);
-    let contentStartY = headerBottom + 3;
+    let contentStartY = 40;
 
     function lerp(a, b, t) { return Math.round(a + (b - a) * t); }
 
     function drawHeader() {
-      // Gradient banner (referansdakı kimi, açıq boz -> ağ keçid)
-      const bannerY = 8, bannerH = 15;
-      const steps = 40;
+      // Real gradient banner: tünd mavi -> orta mavi -> açıq mavi, soldan sağa
+      const headerH = pageH * 0.09; // səhifənin ~9%-i
+      const stops = [[11, 60, 93], [23, 106, 150], [90, 169, 214]];
+      const steps = 90;
       for (let i = 0; i < steps; i++) {
-        const t = i / steps;
-        const g = lerp(225, 250, t);
-        doc.setFillColor(g, g, g);
-        doc.rect(marginX + (i * (pageW - marginX * 2) / steps), bannerY, (pageW - marginX * 2) / steps + 0.5, bannerH, "F");
+        const t = i / (steps - 1);
+        let r, g, b;
+        if (t < 0.5) {
+          const tt = t / 0.5;
+          r = lerp(stops[0][0], stops[1][0], tt); g = lerp(stops[0][1], stops[1][1], tt); b = lerp(stops[0][2], stops[1][2], tt);
+        } else {
+          const tt = (t - 0.5) / 0.5;
+          r = lerp(stops[1][0], stops[2][0], tt); g = lerp(stops[1][1], stops[2][1], tt); b = lerp(stops[1][2], stops[2][2], tt);
+        }
+        doc.setFillColor(r, g, b);
+        doc.rect(i * pageW / steps, 0, pageW / steps + 0.6, headerH, "F");
       }
 
-      // Sol pill: sinif (yalnız doldurulubsa)
+      doc.setTextColor(255, 255, 255);
+
+      // Sol: sinif (kapsulsuz, sadə ağ mətn)
       if (classVal) {
         setPdfFont(doc, "bold");
-        doc.setFontSize(10);
-        const w = doc.getTextWidth(classVal) + 10;
-        doc.setFillColor(cr, cg, cb);
-        doc.roundedRect(marginX + 4, bannerY + 2.5, w, 10, 3, 3, "F");
-        doc.setTextColor(255, 255, 255);
-        boldText(doc, classVal, marginX + 4 + w / 2, bannerY + 9, { align: "center" });
+        doc.setFontSize(11);
+        boldText(doc, classVal, marginX, headerH / 2 + 2.5);
       }
 
-      // Sağ pill: sərbəst yazı
+      // Mərkəz: TTM + altında kiçik "TƏDRİS MƏRKƏZİ"
+      setPdfFont(doc, "bold");
+      doc.setFontSize(15);
+      boldText(doc, "TTM", pageW / 2, headerH / 2 - 0.5, { align: "center" });
+      doc.setFontSize(6.5);
+      boldText(doc, "TƏDRİS MƏRKƏZİ", pageW / 2, headerH / 2 + 5, { align: "center" });
+
+      // Sağ: sərbəst yazı (kapsulsuz)
       if (numberVal) {
         setPdfFont(doc, "bold");
-        doc.setFontSize(10.5);
-        const w = doc.getTextWidth(numberVal) + 10;
-        doc.setFillColor(cr, cg, cb);
-        doc.roundedRect(pageW - marginX - 4 - w, bannerY + 2.5, w, 10, 3, 3, "F");
-        doc.setTextColor(255, 255, 255);
-        boldText(doc, numberVal, pageW - marginX - 4 - w / 2, bannerY + 9, { align: "center" });
+        doc.setFontSize(11);
+        boldText(doc, numberVal, pageW - marginX, headerH / 2 + 2.5, { align: "right" });
       }
 
-      // Loqo - bannerin ortasında
-      doc.setFillColor(cr, cg, cb);
-      doc.roundedRect(pageW / 2 - 11, bannerY - 3, 22, 12, 3, 3, "F");
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(10);
-      setPdfFont(doc, "bold");
-      boldText(doc, "TTM", pageW / 2, bannerY + 4.5, { align: "center" });
+      let y = headerH + 14;
 
-      doc.setDrawColor(cr, cg, cb);
-      doc.setLineWidth(0.6);
-      doc.line(marginX, bannerY + bannerH + 4, pageW - marginX, bannerY + bannerH + 4);
-
-      // Başlıq (Test adı) - şüşə effektli çərçivə, böyük şrift
+      // Mövzu başlığı - ağ fonda, çərçivəsiz, böyük, mərkəzləşdirilmiş
       if (title) {
+        doc.setTextColor(cr, cg, cb);
         setPdfFont(doc, "bold");
-        doc.setFontSize(17);
-        const titleLines = doc.splitTextToSize(title, pageW - marginX * 2 - 36);
-        const titleWidth = Math.max(...titleLines.map(l => doc.getTextWidth(l)));
-        const boxW = Math.min(titleWidth + 30, pageW - marginX * 2 - 6);
-        const boxH = 10 + titleLines.length * 7.5;
-        const boxY = bannerY + bannerH + 8;
-        try {
-          doc.saveGraphicsState();
-          doc.setGState(new doc.GState({ opacity: 0.10 }));
-          doc.setFillColor(cr, cg, cb);
-          doc.roundedRect(pageW / 2 - boxW / 2, boxY, boxW, boxH, 4, 4, "F");
-          doc.restoreGraphicsState();
-        } catch (e) { /* GState dəstəklənmirsə sadəcə çərçivəsiz davam et */ }
+        doc.setFontSize(19);
+        const titleLines = doc.splitTextToSize(title, pageW - 44);
+        boldText(doc, titleLines, pageW / 2, y, { align: "center" });
+        y += titleLines.length * 8 + 3;
+
+        // Dekorativ incə xətt + ortada kiçik nöqtə
+        const lineW = 46;
         doc.setDrawColor(cr, cg, cb);
-        doc.setLineWidth(0.3);
-        doc.roundedRect(pageW / 2 - boxW / 2, boxY, boxW, boxH, 4, 4, "S");
-        doc.setTextColor(30, 30, 30);
-        boldText(doc, titleLines, pageW / 2, boxY + 7.5, { align: "center" });
-        contentStartY = boxY + boxH + 6;
+        doc.setLineWidth(0.4);
+        doc.line(pageW / 2 - lineW / 2, y, pageW / 2 - 2.5, y);
+        doc.line(pageW / 2 + 2.5, y, pageW / 2 + lineW / 2, y);
+        doc.setFillColor(cr, cg, cb);
+        doc.circle(pageW / 2, y, 1, "F");
+        y += 10;
       } else {
-        contentStartY = bannerY + bannerH + 10;
+        y += 4;
       }
+
+      contentStartY = y;
       setPdfFont(doc, "normal");
+      doc.setTextColor(30, 30, 30);
     }
 
     function drawColumnDivider(pageTop, pageBottom) {
