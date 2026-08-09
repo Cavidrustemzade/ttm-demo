@@ -1246,7 +1246,7 @@ let examsCache = [];
 const OPTION_LETTERS = ["A", "B", "C", "D", "E"];
 
 // Şəkli sıxışdırıb base64-ə çevirir (Firestore limitini aşmamaq üçün)
-function compressImageToBase64(file, maxWidth) {
+function compressImageToBase64(file, maxWidth, quality) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -1258,7 +1258,7 @@ function compressImageToBase64(file, maxWidth) {
         canvas.height = img.height * scale;
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL("image/jpeg", 0.6));
+        resolve(canvas.toDataURL("image/jpeg", quality || 0.82));
       };
       img.onerror = reject;
       img.src = e.target.result;
@@ -1323,7 +1323,7 @@ window.uploadQuestionImage = async (qi, inputEl) => {
   if (!file) return;
   toast("Şəkil yüklənir...");
   try {
-    const base64 = await compressImageToBase64(file, 900);
+    const base64 = await compressImageToBase64(file, 1100, 0.82);
     examQuestions[qi].imageBase64 = base64;
     renderQuestionBuilder();
     toast("Şəkil əlavə edildi");
@@ -1344,7 +1344,7 @@ document.getElementById("exam-bulk-image-input").addEventListener("change", asyn
   toast(`${files.length} şəkil yüklənir, gözləyin...`);
   for (const file of files) {
     try {
-      const base64 = await compressImageToBase64(file, 900);
+      const base64 = await compressImageToBase64(file, 1100, 0.82);
       examQuestions.push({ type: "mcq", text: "", imageBase64: base64, options: OPTION_LETTERS.slice(), correctIndex: 0, correctAnswer: "" });
     } catch (err) {
       console.error(err);
@@ -1783,28 +1783,79 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
       if (answerKeyMode === "bottom") trackAnswer(curPage, qNum, answerLabel);
     }
 
-    let colIdx = 0;
-    let qNum = 1;
-    for (let qi = 0; qi < examQuestions.length; qi++) {
-      const q = examQuestions[qi];
+let qGlobal = 0; // 0-indeksli, növbəti yazılacaq sualın indeksi
+let qNumCounter = 1;
+
+while (qGlobal < examQuestions.length) {
+  const pageTopY = (curPage === 1) ? contentStartY : 15;
+  const availableH = pageBottomLimit() - pageTopY;
+
+  if (numCols === 1) {
+    // Tək sütun: sadəcə ardıcıl yerləşdir, sətir sinxronlaşdırması lazım deyil
+    let yy = pageTopY;
+    let placed = 0;
+    while (qGlobal < examQuestions.length) {
+      const q = examQuestions[qGlobal];
       const h = measureQuestionHeight(q);
-
-      if (y + h > pageBottomLimit()) {
-        if (numCols === 2 && colIdx === 0) {
-          colIdx = 1;
-          y = (curPage === 1) ? contentStartY : 15;
-        } else {
-          doc.addPage();
-          curPage++;
-          colIdx = 0;
-          y = 15;
-        }
-      }
-
-      drawQuestionAt(q, colX[colIdx], y, qNum);
-      y += h;
-      qNum++;
+      if (placed > 0 && yy + h > pageBottomLimit()) break;
+      drawQuestionAt(q, colX[0], yy, qNumCounter);
+      yy += h;
+      qGlobal++; qNumCounter++; placed++;
     }
+    if (qGlobal < examQuestions.length) { doc.addPage(); curPage++; }
+    continue;
+  }
+
+  // 2 sütun: əvvəlcə sol sütuna neçə sual sığdığını təbii hündürlüklə tapırıq
+  let leftCount = 0;
+  let cum = 0;
+  while (qGlobal + leftCount < examQuestions.length) {
+    const h = measureQuestionHeight(examQuestions[qGlobal + leftCount]);
+    if (leftCount > 0 && cum + h > availableH) break;
+    cum += h;
+    leftCount++;
+  }
+  if (leftCount === 0) leftCount = 1; // ən azı 1 sual (çox böyük şəkil halı)
+
+  // Sağ sütun üçün eyni sayda sual (və ya qalan hamısı, əgər azdırsa)
+  const rightAvailable = Math.max(0, examQuestions.length - (qGlobal + leftCount));
+  let rightCount = Math.min(leftCount, rightAvailable);
+
+  // Sətir hündürlüklərini (hər ikisinin maksimumu) hesablayıb, səhifəyə sığana qədər azaldırıq
+  function computeRowHeights(lc, rc) {
+    const rows = [];
+    for (let i = 0; i < lc; i++) {
+      const lh = measureQuestionHeight(examQuestions[qGlobal + i]);
+      const rh = i < rc ? measureQuestionHeight(examQuestions[qGlobal + lc + i]) : 0;
+      rows.push(Math.max(lh, rh));
+    }
+    return rows;
+  }
+
+  let rows = computeRowHeights(leftCount, rightCount);
+  let totalH = rows.reduce((s, h) => s + h, 0);
+  while (totalH > availableH && leftCount > 1) {
+    leftCount--;
+    rightCount = Math.min(leftCount, rightAvailable);
+    rows = computeRowHeights(leftCount, rightCount);
+    totalH = rows.reduce((s, h) => s + h, 0);
+  }
+
+  // Çəkirik: hər sətir eyni hündürlükdə başlayır
+  let yy = pageTopY;
+  for (let i = 0; i < leftCount; i++) {
+    drawQuestionAt(examQuestions[qGlobal + i], colX[0], yy, qNumCounter + i);
+    if (i < rightCount) {
+      drawQuestionAt(examQuestions[qGlobal + leftCount + i], colX[1], yy, qNumCounter + leftCount + i);
+    }
+    yy += rows[i];
+  }
+
+  qNumCounter += leftCount + rightCount;
+  qGlobal += leftCount + rightCount;
+
+  if (qGlobal < examQuestions.length) { doc.addPage(); curPage++; }
+}
 
     // Sütun ayırıcı xəttini bütün istifadə olunan səhifələrə çəkirik
     const totalPages = doc.internal.getNumberOfPages();
