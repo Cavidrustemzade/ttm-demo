@@ -215,6 +215,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
       </button>
     </form>
     <div class="login-footer">© 2026 TTM Tədris Mərkəzi — Demo test səhifəsi</div>
+    <button id="pwa-install-btn" style="display:none; width:100%; margin-top:14px; background:var(--color-light-gray); color:var(--color-primary); padding:11px; border-radius:var(--radius-sm); font-size:13.5px; font-weight:600;">📲 Tətbiqi Yüklə</button>
   </div>
 </div>
 
@@ -2887,6 +2888,42 @@ if ("serviceWorker" in navigator) {
       console.log("Service worker qeydiyyata alınmadı:", err);
     });
   });
+}
+
+// PWA - "Tətbiqi Yüklə" düyməsi
+let pwaDeferredPrompt = null;
+const pwaBtn = document.getElementById("pwa-install-btn");
+
+// Artıq quraşdırılıbsa (standalone rejimdə açılıbsa) düyməni göstərmə
+const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  pwaDeferredPrompt = e;
+  if (!isStandalone && pwaBtn) pwaBtn.style.display = "block";
+});
+
+if (pwaBtn) {
+  pwaBtn.addEventListener("click", async () => {
+    if (pwaDeferredPrompt) {
+      pwaDeferredPrompt.prompt();
+      await pwaDeferredPrompt.userChoice;
+      pwaDeferredPrompt = null;
+      pwaBtn.style.display = "none";
+    } else {
+      // iPhone/Safari - avtomatik təklif dəstəklənmir, əl ilə təlimat göstəririk
+      const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+      if (isIOS) {
+        alert("iPhone-da quraşdırmaq üçün:\n\n1. Aşağıdakı 'Paylaş' (kvadrat + ox) düyməsinə basın\n2. 'Ana ekrana əlavə et' seçin\n3. 'Əlavə et' düyməsinə basın");
+      } else {
+        alert("Brauzerinizin sağ üst küncündəki menyudan 'Ana ekrana əlavə et' seçimini istifadə edin.");
+      }
+    }
+  });
+
+  // iOS-da avtomatik hadisə gəlmədiyi üçün düyməni özümüz göstəririk
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  if (isIOS && !isStandalone) pwaBtn.style.display = "block";
 }
 </script>
 </body>
