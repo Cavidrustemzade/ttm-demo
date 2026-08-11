@@ -1,806 +1,1753 @@
 <!DOCTYPE html>
 <html lang="az">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Tam Tədris Mərkəzi</title>
-<meta name="description" content="Tam Tədris Mərkəzi — şagird, müəllim və valideyn üçün premium rəqəmsal təhsil platforması." />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tam Tədris Mərkəzi — Peşəkar Rəqəmsal Təhsil Platforması</title>
+
+<meta name="description" content="Tam Tədris Mərkəzi — dərslər, sınaqlar, detallı analiz, video materiallar və peşəkar müəllim heyəti tək platformada.">
+
+<!-- Şriftlər: Plus Jakarta Sans və Outfit -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
 <style>
-  :root{
-    --bg:#040915;
-    --bg2:#081225;
-    --panel:rgba(255,255,255,.055);
-    --panel2:rgba(255,255,255,.035);
-    --line:rgba(255,255,255,.09);
-    --text:#f7fbff;
-    --muted:#93a3bb;
-    --cyan:#4be6ff;
-    --blue:#1d88ff;
-    --violet:#7a73ff;
-    --green:#3ee79a;
-    --max:1240px;
-    --radius:26px;
-    --shadow:0 30px 90px rgba(0,0,0,.38);
-  }
+:root {
+  --bg: #030712;
+  --bg-card: rgba(15, 23, 42, 0.65);
+  --bg-card-hover: rgba(30, 41, 59, 0.75);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(56, 189, 248, 0.3);
+  
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --muted-dark: #64748b;
 
-  *{box-sizing:border-box;margin:0;padding:0}
-  html{scroll-behavior:smooth}
-  body{
-    font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    color:var(--text);
-    background:
-      radial-gradient(circle at 10% 0%, rgba(29,136,255,.18), transparent 27%),
-      radial-gradient(circle at 90% 10%, rgba(75,230,255,.12), transparent 26%),
-      radial-gradient(circle at 50% 100%, rgba(122,115,255,.11), transparent 35%),
-      var(--bg);
-    overflow-x:hidden;
-  }
+  --primary: #38bdf8;
+  --primary-glow: rgba(56, 189, 248, 0.4);
+  --secondary: #6366f1;
+  --accent: #22c55e;
+  --warning: #f59e0b;
+  --cyan: #06b6d4;
 
-  body:before{
-    content:"";
-    position:fixed; inset:0;
-    pointer-events:none;
-    opacity:.03;
-    background-image:
-      linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),
-      linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px);
-    background-size:56px 56px;
-    mask-image:linear-gradient(to bottom, black, transparent 88%);
-  }
+  --container: 1280px;
+  --radius-lg: 24px;
+  --radius-md: 16px;
+  --radius-sm: 10px;
+  --font-main: 'Plus Jakarta Sans', sans-serif;
+  --font-heading: 'Outfit', sans-serif;
+}
 
-  a{color:inherit;text-decoration:none}
-  button,input{font:inherit}
-  img{display:block;width:100%;height:100%;object-fit:cover}
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-  .container{
-    width:min(var(--max),calc(100% - 40px));
-    margin:auto;
-    position:relative;
-    z-index:1;
-  }
+html {
+  scroll-behavior: smooth;
+  color-scheme: dark;
+}
 
-  .blur-orb{
-    position:fixed;
-    pointer-events:none;
-    filter:blur(70px);
-    opacity:.8;
-    z-index:0;
-  }
-  .orb1{width:280px;height:280px;left:-90px;top:120px;background:rgba(75,230,255,.10)}
-  .orb2{width:320px;height:320px;right:-120px;top:220px;background:rgba(29,136,255,.12)}
-  .orb3{width:300px;height:300px;left:12%;bottom:-120px;background:rgba(122,115,255,.10)}
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  line-height: 1.6;
+}
 
-  /* HEADER */
-  header{
-    position:sticky; top:0; z-index:1000;
-    background:rgba(4,9,21,.72);
-    backdrop-filter:blur(22px);
-    border-bottom:1px solid rgba(255,255,255,.06);
-  }
-  .nav{
-    min-height:78px;
-    display:flex; align-items:center; justify-content:space-between; gap:18px;
-  }
-  .brand{display:flex;align-items:center;gap:12px;min-width:0}
-  .logo{
-    width:46px;height:46px;border-radius:15px;
-    display:grid;place-items:center;
-    font-weight:900;font-size:13px;color:#03101b;
-    background:linear-gradient(135deg,var(--cyan),var(--blue));
-    box-shadow:0 12px 35px rgba(29,136,255,.24);
-    flex:none;
-  }
-  .brand-text strong{display:block;font-size:13px;line-height:1.15}
-  .brand-text span{display:block;margin-top:4px;font-size:9px;color:var(--muted)}
-  .nav-links{display:flex;align-items:center;gap:24px;color:#9eb0c8;font-size:11px}
-  .nav-links a{transition:.25s}
-  .nav-links a:hover{color:#fff}
-  .nav-actions{display:flex;gap:10px;align-items:center}
-  .btn{
-    min-height:43px;padding:0 18px;border-radius:14px;
-    display:inline-flex;align-items:center;justify-content:center;gap:8px;
-    border:1px solid var(--line);background:rgba(255,255,255,.04);color:#fff;
-    font-size:11px;font-weight:800;transition:.25s;cursor:pointer;
-  }
-  .btn:hover{transform:translateY(-2px);background:rgba(255,255,255,.08)}
-  .btn-primary{border:none;color:#03101b;background:linear-gradient(135deg,var(--cyan),var(--blue));box-shadow:0 12px 35px rgba(29,136,255,.22)}
-  .btn-ghost{background:rgba(255,255,255,.035)}
-  .menu-btn{display:none;width:44px;height:44px;border-radius:14px;border:1px solid var(--line);background:var(--panel);color:#fff}
+/* Fon Isıqları və Şəbəkə */
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+  z-index: 0;
+  mask-image: radial-gradient(circle at 50% 30%, black 20%, transparent 80%);
+}
 
-  /* HERO */
-  .hero{padding:42px 0 90px}
-  .hero-grid{
-    display:grid;grid-template-columns:.98fr 1.02fr;gap:30px;align-items:center;
-    min-height:720px;
-  }
-  .kicker{
-    display:inline-flex;align-items:center;gap:8px;
-    padding:9px 14px;border-radius:999px;
-    border:1px solid rgba(75,230,255,.16);background:rgba(75,230,255,.06);
-    color:#b7f5ff;font-size:10px;font-weight:800;letter-spacing:.4px;
-  }
-  .dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 12px var(--cyan)}
-  .hero h1{
-    margin-top:20px;max-width:700px;
-    font-size:clamp(44px,5.4vw,78px);line-height:1.02;letter-spacing:-4px;
-  }
-  .grad{
-    background:linear-gradient(100deg,#fff 0%,var(--cyan) 34%,var(--blue) 66%,var(--violet) 100%);
-    color:transparent;-webkit-background-clip:text;background-clip:text;
-  }
-  .hero p{
-    margin-top:20px;max-width:620px;color:#98a9c2;font-size:14px;line-height:1.85;
-  }
-  .hero-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
-  .hero-stats{display:flex;gap:24px;flex-wrap:wrap;margin-top:28px}
-  .mini strong{display:block;font-size:18px}
-  .mini span{display:block;margin-top:4px;color:#72849d;font-size:8px}
+.glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+}
 
-  /* SLIDESHOW */
-  .showcase{
-    position:relative;
-    padding:10px;
-    border-radius:30px;
-    background:linear-gradient(135deg,rgba(255,255,255,.14),rgba(255,255,255,.03));
-    border:1px solid rgba(255,255,255,.12);
-    box-shadow:var(--shadow);
-  }
-  .showcase-inner{
-    position:relative;overflow:hidden;border-radius:22px;background:#07131f;border:1px solid rgba(255,255,255,.07);
-    min-height:640px;
-  }
-  .slides{position:relative;height:100%}
-  .slide{
-    position:absolute;inset:0;
-    opacity:0;transform:scale(1.04);
-    transition:opacity .9s ease, transform 1.1s ease;
-    background:#07131f;
-  }
-  .slide.active{opacity:1;transform:scale(1)}
-  .slide img{opacity:.72}
-  .slide-overlay{
-    position:absolute;inset:auto 0 0 0;
-    padding:26px;
-    background:linear-gradient(to top, rgba(3,7,15,.96), rgba(3,7,15,.05));
-  }
-  .slide-badge{
-    display:inline-flex;align-items:center;gap:8px;
-    padding:8px 12px;border-radius:999px;
-    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);
-    font-size:9px;font-weight:800;color:#dbe9ff;
-  }
-  .slide-title{
-    margin-top:12px;font-size:clamp(18px,2.2vw,28px);line-height:1.12;letter-spacing:-1px;
-    max-width:520px;
-  }
-  .slide-text{
-    margin-top:10px;max-width:520px;color:#c0d0e6;font-size:12px;line-height:1.7;
-  }
-  .slide-controls{
-    position:absolute;left:18px;right:18px;top:18px;
-    display:flex;justify-content:space-between;align-items:center;gap:12px;z-index:3;
-  }
-  .dots{display:flex;gap:7px}
-  .dot-btn{
-    width:9px;height:9px;border-radius:50%;
-    border:none;background:rgba(255,255,255,.25);cursor:pointer;
-  }
-  .dot-btn.active{background:var(--cyan);box-shadow:0 0 0 6px rgba(75,230,255,.14)}
-  .slide-nav{display:flex;gap:8px}
-  .icon-btn{
-    width:38px;height:38px;border-radius:13px;border:1px solid rgba(255,255,255,.10);
-    background:rgba(255,255,255,.05);color:#fff;cursor:pointer
-  }
+.glow-1 {
+  width: 500px;
+  height: 500px;
+  background: rgba(56, 189, 248, 0.15);
+  top: -100px;
+  left: -100px;
+}
 
-  /* SECTION */
-  section{padding:86px 0}
-  .section-head{max-width:760px}
-  .eyebrow{
-    color:var(--cyan);font-size:10px;font-weight:900;letter-spacing:1.4px;text-transform:uppercase
-  }
-  .section-title{
-    margin-top:12px;font-size:clamp(30px,4vw,50px);line-height:1.08;letter-spacing:-2px
-  }
-  .section-text{
-    margin-top:14px;max-width:690px;color:#94a5be;font-size:13px;line-height:1.85
-  }
+.glow-2 {
+  width: 600px;
+  height: 600px;
+  background: rgba(99, 102, 241, 0.12);
+  top: 400px;
+  right: -150px;
+}
 
-  /* VIDEO HERO CARDS */
-  .video-grid{
-    margin-top:30px;
-    display:grid;grid-template-columns:1.2fr .8fr;gap:16px;
-  }
-  .card{
-    border-radius:28px;
-    border:1px solid var(--line);
-    background:linear-gradient(145deg,rgba(255,255,255,.065),rgba(255,255,255,.025));
-    box-shadow:0 18px 55px rgba(0,0,0,.20);
-  }
-  .video-card{padding:14px}
-  .video-viewport{
-    position:relative;aspect-ratio:16/9;border-radius:20px;overflow:hidden;background:#050b15;border:1px solid rgba(255,255,255,.08);cursor:pointer;
-  }
-  .video-viewport img{opacity:.78;transform:scale(1.02)}
-  .video-viewport:before{
-    content:"";position:absolute;inset:18px;border-radius:14px;border:1px solid rgba(255,255,255,.08);z-index:1
-  }
-  .video-play{
-    position:absolute;inset:0;display:grid;place-items:center;z-index:2;
-  }
-  .video-play .circle{
-    width:74px;height:74px;border-radius:50%;
-    display:grid;place-items:center;
-    background:#fff;color:#07101b;font-size:22px;
-    box-shadow:0 0 0 12px rgba(255,255,255,.06), 0 18px 45px rgba(0,0,0,.45);
-  }
-  .video-info{padding:16px 8px 8px}
-  .video-info h3{font-size:14px}
-  .video-info p{margin-top:6px;color:#73859a;font-size:10px;line-height:1.7}
+.glow-3 {
+  width: 450px;
+  height: 450px;
+  background: rgba(34, 197, 94, 0.1);
+  bottom: 200px;
+  left: 10%;
+}
 
-  .right-stack{display:grid;gap:16px}
-  .stack-card{padding:24px}
-  .stack-card ul{margin-top:18px;display:grid;gap:10px;list-style:none}
-  .stack-card li{
-    display:flex;gap:10px;align-items:flex-start;
-    color:#c5d2e6;font-size:12px;line-height:1.65
-  }
-  .tick{
-    width:24px;height:24px;border-radius:8px;flex:none;
-    display:grid;place-items:center;background:rgba(62,231,154,.10);color:var(--green);font-size:11px
-  }
+a {
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.25s ease;
+}
 
-  /* ANALYSIS */
-  .analysis-grid{
-    margin-top:30px;
-    display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:stretch;
-  }
-  .analysis-box{padding:24px;position:relative;overflow:hidden}
-  .analysis-box:after{
-    content:"";position:absolute;right:-60px;top:-60px;width:180px;height:180px;border-radius:50%;
-    background:rgba(29,136,255,.12);filter:blur(18px)
-  }
-  .feature-list{margin-top:18px;display:grid;gap:12px}
-  .feature-row{
-    display:flex;gap:14px;align-items:flex-start;
-    padding:15px;border-radius:18px;background:rgba(0,0,0,.11);border:1px solid rgba(255,255,255,.05)
-  }
-  .feature-ico{
-    width:38px;height:38px;border-radius:13px;flex:none;display:grid;place-items:center;
-    background:rgba(29,136,255,.11);color:#a7d0ff
-  }
-  .feature-row h4{font-size:12px}
-  .feature-row p{margin-top:5px;color:#7d8fa8;font-size:9px;line-height:1.6}
-  .analysis-media{
-    padding:14px;
-    display:grid;align-items:stretch;
-  }
-  .analysis-media .video-viewport{min-height:100%;aspect-ratio:auto}
+button {
+  font-family: var(--font-main);
+  border: none;
+  outline: none;
+  background: none;
+  cursor: pointer;
+}
 
-  /* MATERIALS */
-  .materials-grid{
-    margin-top:30px;
-    display:grid;grid-template-columns:.9fr 1.1fr;gap:16px;align-items:stretch;
-  }
-  .materials-badges{
-    display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:18px
-  }
-  .badge-card{
-    padding:16px;border-radius:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06)
-  }
-  .badge-card strong{display:block;font-size:13px}
-  .badge-card span{display:block;margin-top:5px;color:#7c8da6;font-size:9px;line-height:1.6}
+.container {
+  width: min(var(--container), calc(100% - 40px));
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+}
 
-  /* TEACHERS */
-  .teacher-toolbar{
-    display:flex;flex-wrap:wrap;gap:10px;margin-top:28px
-  }
-  .filter-btn{
-    height:40px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.08);
-    background:rgba(255,255,255,.035);color:#dbe7f7;font-size:10px;font-weight:800;cursor:pointer
-  }
-  .filter-btn.active{
-    background:linear-gradient(135deg,var(--cyan),var(--blue));
-    color:#04101a;border:none
-  }
+/* ==========================================
+TYPOGRAPHY & BADGES
+========================================== */
+h1, h2, h3, h4 {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
 
-  .rail-wrap{
-    margin-top:20px;
-    overflow:auto;
-    scrollbar-width:none;
-    scroll-behavior:smooth;
-  }
-  .rail-wrap::-webkit-scrollbar{display:none}
-  .rail{
-    display:flex;gap:12px;padding-bottom:4px;
-  }
-  .teacher-card{
-    width:260px;flex:0 0 auto;
-    overflow:hidden;border-radius:22px;border:1px solid var(--line);background:var(--panel2);cursor:pointer;
-    transition:transform .25s, border-color .25s;
-    scroll-snap-align:start;
-  }
-  .teacher-card:hover{transform:translateY(-5px);border-color:rgba(75,230,255,.24)}
-  .teacher-photo{
-    aspect-ratio:4/4.8;position:relative;overflow:hidden;background:#122238
-  }
-  .teacher-photo:after{
-    content:"";position:absolute;inset:0;
-    background:linear-gradient(to top,rgba(3,7,15,.62),rgba(3,7,15,.02));
-  }
-  .teacher-meta{padding:15px}
-  .teacher-meta h3{font-size:14px}
-  .teacher-meta p{margin-top:5px;color:#7b8ea6;font-size:9px;line-height:1.65}
-  .teacher-tag{
-    display:inline-flex;margin-top:10px;padding:7px 10px;border-radius:999px;
-    background:rgba(75,230,255,.08);border:1px solid rgba(75,230,255,.12);color:#c8f8ff;font-size:8px;font-weight:800
-  }
+.gradient-text {
+  background: linear-gradient(135deg, #ffffff 10%, #38bdf8 50%, #818cf8 90%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
 
-  .teacher-marquee{
-    margin-top:18px;
-    padding:14px;
-    border-radius:24px;
-    border:1px solid var(--line);
-    background:rgba(255,255,255,.03);
-    overflow:hidden;
-  }
-  .marquee-track{
-    display:flex;gap:12px;
-    animation:marquee 26s linear infinite;
-    width:max-content;
-  }
-  .mini-teacher{
-    width:160px;flex:0 0 auto;
-    border-radius:18px;overflow:hidden;
-    border:1px solid rgba(255,255,255,.08);
-    background:rgba(255,255,255,.04);
-  }
-  .mini-teacher .pic{height:110px}
-  .mini-teacher .txt{padding:10px}
-  .mini-teacher strong{display:block;font-size:11px}
-  .mini-teacher span{display:block;margin-top:4px;font-size:8px;color:#7b8da6}
-  @keyframes marquee{
-    from{transform:translateX(0)}
-    to{transform:translateX(-50%)}
-  }
+.badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  color: var(--primary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
 
-  /* CONTACT/CTA */
-  .cta{
-    padding:56px 30px;border-radius:30px;text-align:center;
-    background:radial-gradient(circle at 50% 0%, rgba(75,230,255,.15), transparent 55%), linear-gradient(135deg, rgba(29,136,255,.10), rgba(122,115,255,.08));
-    border:1px solid rgba(75,230,255,.12);
-  }
-  .cta h2{font-size:clamp(30px,4vw,48px);line-height:1.08;letter-spacing:-2px}
-  .cta p{max-width:660px;margin:14px auto 24px;color:#97a8c0;font-size:12px;line-height:1.8}
-  .cta-buttons{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.badge-pill i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 10px var(--primary);
+  animation: pulse 2s infinite;
+}
 
-  .contact{
-    margin-top:30px;
-    display:grid;grid-template-columns:1fr 1fr;gap:16px;
-  }
-  .contact-card{padding:26px}
-  .contact-list{
-    margin-top:20px;
-    display:grid;grid-template-columns:repeat(2,1fr);gap:10px
-  }
-  .contact-item{
-    padding:14px;border-radius:18px;background:rgba(0,0,0,.12);border:1px solid rgba(255,255,255,.06)
-  }
-  .contact-item strong{display:block;font-size:11px}
-  .contact-item span{display:block;margin-top:6px;color:#7d90a9;font-size:9px;line-height:1.6}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
 
-  footer{
-    margin-top:80px;border-top:1px solid rgba(255,255,255,.07);background:rgba(0,0,0,.16)
-  }
-  .footer{
-    min-height:96px;display:flex;align-items:center;justify-content:space-between;gap:16px;
-    color:#65778e;font-size:9px;
-  }
-  .footer-links{display:flex;gap:16px;flex-wrap:wrap}
+/* ==========================================
+BUTTONS
+========================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 48px;
+  padding: 0 24px;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  backdrop-filter: blur(10px);
+}
 
-  /* REVEAL */
-  .reveal{opacity:0;transform:translateY(26px);transition:opacity .7s ease, transform .7s ease}
-  .reveal.visible{opacity:1;transform:translateY(0)}
+.btn:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
 
-  /* MODALS */
-  .modal{
-    position:fixed;inset:0;z-index:2000;display:none;align-items:center;justify-content:center;
-    background:rgba(1,4,10,.82);backdrop-filter:blur(14px);padding:20px;
-  }
-  .modal.open{display:flex}
-  .modal-card{
-    width:min(1140px,100%);
-    max-height:90vh;
-    overflow:auto;
-    border-radius:30px;
-    border:1px solid rgba(255,255,255,.10);
-    background:linear-gradient(180deg, rgba(9,17,32,.98), rgba(7,12,21,.98));
-    box-shadow:0 30px 100px rgba(0,0,0,.55);
-    position:relative;
-  }
-  .modal-close{
-    position:absolute;right:16px;top:16px;z-index:5;
-    width:40px;height:40px;border-radius:14px;
-  }
-  .modal-body{padding:26px}
-  .modal-head{
-    display:flex;justify-content:space-between;gap:18px;align-items:flex-start;flex-wrap:wrap;
-  }
-  .modal-head h3{font-size:24px;letter-spacing:-1px}
-  .modal-head p{margin-top:8px;color:#8fa1b9;font-size:12px;line-height:1.8;max-width:720px}
-  .modal-grid{
-    margin-top:20px;
-    display:grid;grid-template-columns:1fr 1fr;gap:16px;
-  }
-  .teacher-bio, .teacher-video{
-    padding:18px;border-radius:24px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04)
-  }
-  .teacher-bio ul{margin-top:12px;display:grid;gap:8px;list-style:none}
-  .teacher-bio li{display:flex;gap:10px;color:#c4d1e5;font-size:12px;line-height:1.7}
-  .teacher-video .video-embed{
-    aspect-ratio:16/9;border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,.07);background:#000
-  }
-  .teacher-video iframe, .promo-iframe{
-    width:100%;height:100%;border:0
-  }
-  .two-videos{
-    margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px
-  }
-  .small-caption{
-    margin-top:10px;color:#9eb0c8;font-size:9px;line-height:1.6
-  }
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  border: none;
+  color: #fff;
+  box-shadow: 0 8px 25px var(--primary-glow);
+}
 
-  /* RESPONSIVE */
-  @media (max-width: 1080px){
-    .nav-links{display:none}
-    .menu-btn{display:block}
-    .hero-grid,.video-grid,.analysis-grid,.materials-grid,.contact,.footer,.modal-grid{grid-template-columns:1fr}
-    .hero{padding-top:32px}
-    .hero-grid{min-height:auto}
-    .showcase-inner{min-height:560px}
-    .cards{grid-template-columns:repeat(2,1fr)}
+.btn-primary:hover {
+  background: linear-gradient(135deg, #0284c7, #4f46e5);
+  box-shadow: 0 12px 30px var(--primary-glow);
+  transform: translateY(-2px);
+}
+
+.btn-sm {
+  height: 38px;
+  padding: 0 16px;
+  font-size: 0.82rem;
+  border-radius: var(--radius-sm);
+}
+
+/* ==========================================
+HEADER & NAV
+========================================== */
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: rgba(3, 7, 18, 0.75);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  transition: all 0.3s ease;
+}
+
+.nav {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-weight: 900;
+  font-size: 1.1rem;
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(56, 189, 248, 0.3);
+}
+
+.brand-text h4 {
+  font-size: 1.05rem;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.brand-text span {
+  font-size: 0.72rem;
+  color: var(--muted);
+  display: block;
+  font-weight: 500;
+}
+
+.nav-links {
+  display: flex;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.nav-links a:hover {
+  color: var(--primary);
+}
+
+.nav-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.mobile-toggle {
+  display: none;
+  font-size: 1.5rem;
+  color: var(--text);
+  padding: 8px;
+}
+
+/* Mobil Menyu Drawer */
+.mobile-drawer {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 7, 18, 0.95);
+  backdrop-filter: blur(25px);
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  padding: 100px 30px 40px;
+  transform: translateX(100%);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mobile-drawer.active {
+  transform: translateX(0);
+}
+
+.mobile-drawer .nav-links {
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.mobile-drawer .nav-links a {
+  font-size: 1.25rem;
+  color: var(--text);
+}
+
+/* ==========================================
+HERO SECTION
+========================================== */
+.hero {
+  min-height: 100vh;
+  padding-top: 140px;
+  padding-bottom: 80px;
+  display: flex;
+  align-items: center;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: center;
+}
+
+.hero-content h1 {
+  font-size: clamp(2.5rem, 5vw, 4.2rem);
+  margin: 20px 0;
+  letter-spacing: -0.03em;
+}
+
+.hero-content .lead {
+  font-size: 1.05rem;
+  color: var(--muted);
+  margin-bottom: 32px;
+  max-width: 540px;
+  line-height: 1.8;
+}
+
+.hero-stats {
+  display: flex;
+  gap: 36px;
+  margin-top: 40px;
+  padding-top: 28px;
+  border-top: 1px solid var(--border);
+}
+
+.stat-item h3 {
+  font-size: 1.8rem;
+  color: var(--text);
+}
+
+.stat-item p {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* Hero Visual Slider */
+.hero-visual {
+  position: relative;
+}
+
+.hero-screen-wrapper {
+  position: relative;
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--border);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+}
+
+.hero-screen {
+  height: 520px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  position: relative;
+  background: #090d16;
+}
+
+.hero-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.8s ease-in-out;
+}
+
+.hero-slide.active {
+  opacity: 1;
+}
+
+.hero-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.55;
+  transform: scale(1.03);
+  transition: transform 6s ease;
+}
+
+.hero-slide.active img {
+  transform: scale(1);
+}
+
+.slide-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(3, 7, 18, 0.95) 10%, rgba(3, 7, 18, 0.2) 60%, transparent);
+}
+
+.slide-content {
+  position: absolute;
+  bottom: 32px;
+  left: 32px;
+  right: 32px;
+  z-index: 2;
+}
+
+.slide-tag {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 10px;
+}
+
+.slide-content h3 {
+  font-size: 1.5rem;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.slide-content p {
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+/* Floating Glass Cards */
+.floating-card {
+  position: absolute;
+  padding: 16px 20px;
+  border-radius: var(--radius-md);
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+  animation: float 4s ease-in-out infinite;
+}
+
+.float-top-right {
+  top: -20px;
+  right: -20px;
+  width: 200px;
+}
+
+.float-bottom-left {
+  bottom: -20px;
+  left: -20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.progress-bar {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 99px;
+  margin-top: 8px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 92%;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  border-radius: 99px;
+}
+
+/* ==========================================
+SECTION HEADERS & CARDS
+========================================== */
+section {
+  padding: 100px 0;
+  position: relative;
+}
+
+.section-header {
+  text-align: center;
+  max-width: 720px;
+  margin: 0 auto 60px;
+}
+
+.section-header.text-left {
+  text-align: left;
+  margin-left: 0;
+}
+
+.section-title {
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  margin-top: 12px;
+  margin-bottom: 16px;
+}
+
+.section-desc {
+  font-size: 1rem;
+  color: var(--muted);
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  backdrop-filter: blur(15px);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* ==========================================
+VIDEO SECTION & CARDS
+========================================== */
+.video-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 28px;
+  align-items: center;
+}
+
+.video-card-thumb {
+  position: relative;
+  aspect-ratio: 16/9;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.video-card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.video-card-thumb:hover img {
+  transform: scale(1.05);
+}
+
+.play-button {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(3, 7, 18, 0.35);
+  transition: background 0.3s ease;
+}
+
+.play-button span {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  box-shadow: 0 0 30px var(--primary-glow);
+  transition: transform 0.3s ease;
+  padding-left: 4px;
+}
+
+.video-card-thumb:hover .play-button span {
+  transform: scale(1.15);
+}
+
+.feature-list {
+  list-style: none;
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.feature-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  font-size: 0.95rem;
+  color: #cbd5e1;
+}
+
+.feature-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* ==========================================
+INTERACTIVE SINAQ ANALIZ DASHBOARD DEMO
+========================================== */
+.demo-dashboard {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  margin-top: 40px;
+}
+
+.dash-box {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+}
+
+.dash-nav-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+}
+
+.dash-tab {
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.dash-tab.active {
+  background: rgba(56, 189, 248, 0.12);
+  color: var(--primary);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+.subject-bar-item {
+  margin-bottom: 18px;
+}
+
+.subject-bar-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.bar-bg {
+  height: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.bar-value {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 1s ease-in-out;
+}
+
+/* ==========================================
+TEACHERS CAROUSEL & FILTERS
+========================================== */
+.filter-bar {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+}
+
+.filter-btn {
+  padding: 10px 20px;
+  border-radius: 99px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.filter-btn:hover, .filter-btn.active {
+  background: var(--primary);
+  color: #030712;
+  border-color: var(--primary);
+  box-shadow: 0 6px 20px var(--primary-glow);
+}
+
+.teachers-carousel-wrapper {
+  position: relative;
+  overflow: hidden;
+  padding: 10px 0;
+}
+
+.teachers-track {
+  display: flex;
+  gap: 24px;
+  transition: transform 0.5s ease-out;
+}
+
+.teacher-card {
+  min-width: 280px;
+  max-width: 280px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.teacher-card:hover {
+  transform: translateY(-8px);
+  border-color: var(--border-glow);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+.teacher-img-wrapper {
+  height: 310px;
+  position: relative;
+  overflow: hidden;
+  background: #0f172a;
+}
+
+.teacher-img-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.teacher-card:hover .teacher-img-wrapper img {
+  transform: scale(1.06);
+}
+
+.teacher-img-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, transparent 60%);
+}
+
+.teacher-body {
+  padding: 20px;
+  position: relative;
+}
+
+.teacher-subject {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 99px;
+  background: rgba(56, 189, 248, 0.1);
+  color: var(--primary);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.teacher-name {
+  font-size: 1.2rem;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.teacher-bio {
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.carousel-nav {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.nav-arrow {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.nav-arrow:hover {
+  background: var(--primary);
+  color: #000;
+  border-color: var(--primary);
+}
+
+/* ==========================================
+PORTAL CTA SECTION
+========================================== */
+.cta-box {
+  background: radial-gradient(circle at 50% -20%, rgba(56, 189, 248, 0.25), transparent 70%), var(--bg-card);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: var(--radius-lg);
+  padding: 60px 40px;
+  text-align: center;
+}
+
+.cta-box h2 {
+  font-size: clamp(2rem, 3.5vw, 2.8rem);
+  margin-bottom: 16px;
+}
+
+.cta-box p {
+  color: var(--muted);
+  max-width: 600px;
+  margin: 0 auto 32px;
+  font-size: 1rem;
+}
+
+/* ==========================================
+FAQ ACCORDION
+========================================== */
+.faq-grid {
+  max-width: 800px;
+  margin: 0 auto;
+  display: grid;
+  gap: 16px;
+}
+
+.faq-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.faq-header {
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.faq-body {
+  padding: 0 24px 20px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.7;
+  display: none;
+}
+
+.faq-item.active .faq-body {
+  display: block;
+}
+
+.faq-item.active {
+  border-color: var(--primary);
+  background: rgba(15, 23, 42, 0.85);
+}
+
+.faq-icon {
+  font-size: 1.2rem;
+  transition: transform 0.3s ease;
+}
+
+.faq-item.active .faq-icon {
+  transform: rotate(45deg);
+  color: var(--primary);
+}
+
+/* ==========================================
+CONTACT SECTION
+========================================== */
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+.contact-card-items {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.contact-info-item {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  padding: 20px;
+  border-radius: var(--radius-md);
+}
+
+.contact-info-item b {
+  display: block;
+  font-size: 0.95rem;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.contact-info-item span {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+/* ==========================================
+FOOTER
+========================================== */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 60px 0 30px;
+  background: rgba(3, 7, 18, 0.9);
+}
+
+.footer-top {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 40px;
+  margin-bottom: 40px;
+}
+
+.footer-about p {
+  color: var(--muted);
+  font-size: 0.88rem;
+  margin-top: 16px;
+  max-width: 320px;
+}
+
+.footer-col h5 {
+  font-size: 0.95rem;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+
+.footer-col ul {
+  list-style: none;
+  display: grid;
+  gap: 12px;
+}
+
+.footer-col a {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.footer-col a:hover {
+  color: var(--primary);
+}
+
+.footer-bottom {
+  border-top: 1px solid var(--border);
+  padding-top: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: var(--muted-dark);
+}
+
+/* ==========================================
+MODALS (VIDEO, TEACHER & AUTH)
+========================================== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(3, 7, 18, 0.85);
+  backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.modal-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-container {
+  width: min(960px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #0b1324;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  position: relative;
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8);
+  transform: translateY(20px);
+  transition: transform 0.3s ease;
+}
+
+.modal-overlay.open .modal-container {
+  transform: translateY(0);
+}
+
+.modal-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: rotate(90deg);
+}
+
+.embed-responsive {
+  aspect-ratio: 16/9;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: #000;
+  margin-top: 20px;
+}
+
+.embed-responsive iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.teacher-modal-grid {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.teacher-videos-dual {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Auth Modal Styles */
+.auth-tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+}
+
+.auth-tab {
+  padding: 10px 20px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.auth-tab.active {
+  color: var(--primary);
+  border-bottom: 2px solid var(--primary);
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.form-control {
+  width: 100%;
+  height: 48px;
+  padding: 0 16px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--font-main);
+  outline: none;
+  transition: all 0.25s ease;
+}
+
+.form-control:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 15px var(--primary-glow);
+}
+
+/* Scroll reveal class */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ==========================================
+RESPONSIVE DESIGN
+========================================== */
+@media (max-width: 1024px) {
+  .hero-grid, .video-grid, .demo-dashboard, .contact-grid {
+    grid-template-columns: 1fr;
   }
-  @media (max-width: 720px){
-    .container{width:calc(100% - 28px)}
-    .nav{min-height:70px}
-    .nav-actions{display:none}
-    .hero h1{font-size:44px;letter-spacing:-2.5px}
-    .hero p,.section-text{font-size:12px}
-    section{padding:72px 0}
-    .cards{grid-template-columns:1fr}
-    .teacher-card{width:82vw;max-width:290px}
-    .mini-teacher{width:140px}
-    .contact-list{grid-template-columns:1fr}
-    .two-videos{grid-template-columns:1fr}
-    .modal-body{padding:18px}
+  .nav-links, .nav-actions {
+    display: none;
   }
+  .mobile-toggle {
+    display: block;
+  }
+  .footer-top {
+    grid-template-columns: 1fr 1fr;
+  }
+  .teacher-modal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero {
+    padding-top: 120px;
+  }
+  .hero-stats {
+    flex-direction: column;
+    gap: 20px;
+  }
+  .floating-card {
+    display: none;
+  }
+  .teacher-videos-dual {
+    grid-template-columns: 1fr;
+  }
+  .footer-top {
+    grid-template-columns: 1fr;
+  }
+  .contact-card-items {
+    grid-template-columns: 1fr;
+  }
+}
 </style>
 </head>
-<body>
-<div class="blur-orb orb1"></div>
-<div class="blur-orb orb2"></div>
-<div class="blur-orb orb3"></div>
 
-<header>
+<body>
+
+<div class="bg-grid"></div>
+<div class="glow-orb glow-1"></div>
+<div class="glow-orb glow-2"></div>
+<div class="glow-orb glow-3"></div>
+
+<!-- ==========================================
+HEADER
+========================================== -->
+<header id="header">
   <div class="container nav">
-    <a href="#home" class="brand">
-      <div class="logo">TTM</div>
+    <a class="brand" href="#home">
+      <div class="logo-box">TTM</div>
       <div class="brand-text">
-        <strong>Tam Tədris Mərkəzi</strong>
-        <span>Rəqəmsal təhsil platforması</span>
+        <h4>Tam Tədris Mərkəzi</h4>
+        <span>Rəqəmsal təhsil və analitika</span>
       </div>
     </a>
-    <nav class="nav-links">
-      <a href="#home">Ana səhifə</a>
-      <a href="#tanitim">Tanıtım</a>
-      <a href="#analiz">Analiz</a>
-      <a href="#materiallar">Materiallar</a>
-      <a href="#muellimler">Müəllimlər</a>
-      <a href="#elaqe">Əlaqə</a>
-    </nav>
+
+    <ul class="nav-links">
+      <li><a href="#tanitim">Tanıtım</a></li>
+      <li><a href="#analiz">Sınaq & Analiz</a></li>
+      <li><a href="#material">Materiallar</a></li>
+      <li><a href="#muellim">Müəllimlər</a></li>
+      <li><a href="#faq">Suallar</a></li>
+      <li><a href="#elaqe">Əlaqə</a></li>
+    </ul>
+
     <div class="nav-actions">
-      <a href="#sagird" class="btn btn-ghost">Şagird paneli</a>
-      <a href="#muellimler" class="btn btn-primary">Müəllimlər</a>
+      <button class="btn btn-sm" onclick="window.location.href='index.html'">Şagird Girişi</button>
+      <button class="btn btn-sm btn-primary" onclick="window.location.href='index.html'">Müəllim Girişi</button>
     </div>
-    <button class="menu-btn" id="menuBtn">☰</button>
+
+    <button class="mobile-toggle" id="mobileMenuBtn" aria-label="Menyu">☰</button>
   </div>
 </header>
 
-<main id="home" class="hero">
-  <div class="container hero-grid">
-    <div class="reveal">
-      <div class="kicker"><span class="dot"></span> Bütün dərslər tək platformada</div>
-      <h1>“<span class="grad">Tam Tədris Mərkəzinə xoş gəlmisiniz</span>”</h1>
-      <p>
-        Yol yorgunluğuna son. Dərslər, sınaqlar, analiz, video izahlar və müəllim nəzarəti bir ünvanda.
-        Şagird, müəllim və valideyn eyni sistemdə, aydın və sürətli təhsil təcrübəsi yaşayır.
-      </p>
-      <div class="hero-actions">
-        <a href="#tanitim" class="btn btn-primary">Tanıtımı izləmək</a>
-        <a href="#muellimler" class="btn btn-ghost">Müəllimləri gör</a>
-      </div>
-      <div class="hero-stats">
-        <div class="mini"><strong>Onlayn</strong><span>Sınaq + analiz sistemi</span></div>
-        <div class="mini"><strong>Video</strong><span>Dərs və izah arxivi</span></div>
-        <div class="mini"><strong>Valideyn</strong><span>Nəticə izləmə paneli</span></div>
-      </div>
-    </div>
+<!-- Mobil Menyu Drawer -->
+<div class="mobile-drawer" id="mobileDrawer">
+  <ul class="nav-links">
+    <li><a href="#tanitim" onclick="closeMobileMenu()">Tanıtım</a></li>
+    <li><a href="#analiz" onclick="closeMobileMenu()">Sınaq & Analiz</a></li>
+    <li><a href="#material" onclick="closeMobileMenu()">Materiallar</a></li>
+    <li><a href="#muellim" onclick="closeMobileMenu()">Müəllimlər</a></li>
+    <li><a href="#faq" onclick="closeMobileMenu()">Suallar</a></li>
+    <li><a href="#elaqe" onclick="closeMobileMenu()">Əlaqə</a></li>
+  </ul>
+  <div style="display: flex; flex-direction: column; gap: 12px;">
+    <button class="btn" onclick="window.location.href='index.html'">Şagird Girişi</button>
+    <button class="btn btn-primary" onclick="window.location.href='index.html'">Müəllim Girişi</button>
+  </div>
+</div>
 
-    <div class="showcase reveal">
-      <div class="showcase-inner">
-        <div class="slides" id="heroSlides"></div>
-        <div class="slide-controls">
-          <div class="dots" id="heroDots"></div>
-          <div class="slide-nav">
-            <button class="icon-btn" id="prevSlide">‹</button>
-            <button class="icon-btn" id="nextSlide">›</button>
-          </div>
+<main id="home">
+
+<!-- ==========================================
+HERO SECTION
+========================================== -->
+<section class="hero">
+  <div class="container hero-grid">
+    
+    <div class="hero-content reveal">
+      <div class="badge-pill">
+        <i></i> Bütün hazırlıqlar tək platformada
+      </div>
+      
+      <h1>
+        Gələcəyinizi <br>
+        <span class="gradient-text">Tam Tədris Mərkəzi</span> ilə qurun
+      </h1>
+      
+      <p class="lead">
+        Dərslər, video izahlar, canlı sınaqlar, anlıq net analizi və müəllim nəzarəti. Şagird üçün rahat, müəllim üçün effektiv, valideyn üçün tam şəffaf sistem.
+      </p>
+
+      <div style="display: flex; gap: 14px; flex-wrap: wrap;">
+        <a href="#tanitim" class="btn btn-primary">
+          Platformanı kəşf et →
+        </a>
+        <a href="#muellim" class="btn">
+          Müəllim Heyəti
+        </a>
+      </div>
+
+      <div class="hero-stats">
+        <div class="stat-item">
+          <h3>100%</h3>
+          <p>Rəqəmsallaşdırılmış Dərsliklər</p>
+        </div>
+        <div class="stat-item">
+          <h3>24/7</h3>
+          <p>Video Material Çıxışı</p>
+        </div>
+        <div class="stat-item">
+          <h3>+15,000</h3>
+          <p>Sınaq və Tapşırıq Bankı</p>
         </div>
       </div>
     </div>
-  </div>
-</main>
 
+    <div class="hero-visual reveal">
+      <div class="hero-screen-wrapper">
+        <div class="hero-screen" id="heroSlider">
+          <!-- Dinamik Hero Slaydlar yüklənəcək -->
+        </div>
+      </div>
+
+      <!-- Üzən Statistik Panellər -->
+      <div class="floating-card float-top-right">
+        <span style="font-size: 0.75rem; color: var(--muted);">Son Sınaq Nəticəsi</span>
+        <div style="font-size: 1.8rem; font-weight: 900; color: #fff; margin: 4px 0;">94.8%</div>
+        <div class="progress-bar">
+          <div class="progress-fill"></div>
+        </div>
+        <span style="font-size: 0.7rem; color: var(--accent); display: block; margin-top: 6px;">↑ Səviyyə yüksəlişi: +12%</span>
+      </div>
+
+      <div class="floating-card float-bottom-left">
+        <div style="width: 38px; height: 38px; border-radius: 50%; background: rgba(34, 197, 94, 0.2); color: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: bold;">✓</div>
+        <div>
+          <b style="font-size: 0.88rem; display: block;">Mövzu Analizi Hazırdır</b>
+          <span style="font-size: 0.75rem; color: var(--muted);">Riyaziyyat — Bərabərsizliklər</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ==========================================
+TANITIM SECTION
+========================================== -->
 <section id="tanitim">
   <div class="container">
-    <div class="section-head reveal">
-      <div class="eyebrow">Tanıtım videosu</div>
-      <div class="section-title">Kursu bir videoda izah edən<br>premium təqdimat bölməsi.</div>
-      <div class="section-text">
-        Burada siz öz YouTube tanıtım videonuzu yerləşdirirsiniz. Play düyməsinə basanda kursun ümumi təqdimatı,
-        məqsədi, şagird və valideyn üçün necə işlədiyi bir çərçivədə açılır.
-      </div>
+    
+    <div class="section-header reveal">
+      <div class="badge-pill">Platforma Haqqında</div>
+      <h2 class="section-title">Təhsilin Bütün Mərhələləri Bir Ekranda</h2>
+      <p class="section-desc">Mərkəzimizin tədris sistemi və rəqəmsal imkanları ilə tanış olmaq üçün tanıtım videosunu izləyin.</p>
     </div>
 
     <div class="video-grid">
-      <div class="card video-card reveal">
-        <div class="video-viewport play-trigger" data-video="M7lc1UVf-VE">
-          <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1600&q=80" alt="Tanıtım video arxa fon" />
-          <div class="video-play"><div class="circle">▶</div></div>
+      <div class="card reveal" style="padding: 16px;">
+        <div class="video-card-thumb video-trigger" data-id="M7lc1UVf-VE" data-title="Tam Tədris Mərkəzi — Geniş Tanıtım">
+          <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1800&q=85" alt="Tanıtım videosu">
+          <div class="play-button">
+            <span>▶</span>
+          </div>
         </div>
-        <div class="video-info">
-          <h3>Tam Tədris Mərkəzi tanıtım videosu</h3>
-          <p>Burada kurs haqqında ümumi məlumat, platforma, nəticə sistemi və istifadə qaydası göstərilir.</p>
+        <div style="padding: 20px 10px 10px;">
+          <h3 style="font-size: 1.2rem; margin-bottom: 6px;">Kursumuzun Rəqəmsal Metodikası</h3>
+          <p style="color: var(--muted); font-size: 0.88rem;">Video çarxda şagirdlərin dərslərə qoşulma, sınaq işləmə və analiz sistemindən istifadə qaydaları izah olunur.</p>
         </div>
       </div>
 
-      <div class="right-stack reveal">
-        <div class="card stack-card">
-          <div class="eyebrow">Niyə fərqlidir?</div>
-          <ul>
-            <li><span class="tick">✓</span><span>Bütün dərslər, sınaqlar və izahlar eyni yerdə toplanır.</span></li>
-            <li><span class="tick">✓</span><span>Şagird nəticələri və zəiflikləri avtomatik izlənir.</span></li>
-            <li><span class="tick">✓</span><span>Valideyn kurs prosesini şəffaf şəkildə görə bilir.</span></li>
-            <li><span class="tick">✓</span><span>Müəllimlər üçün yükləmə, təhlil və idarəetmə rahat olur.</span></li>
-          </ul>
+      <div class="card reveal">
+        <div class="badge-pill" style="margin-bottom: 16px;">Üstünlüklərimiz</div>
+        <h3 style="font-size: 1.6rem; margin-bottom: 12px;">Niyə Tam Tədris Mərkəzi?</h3>
+        
+        <ul class="feature-list">
+          <li>
+            <div class="feature-icon">✓</div>
+            <div><b>Mərkəzləşdirilmiş Dərs Materialları:</b> Kitab və qeydləri itirmək dərdi yoxdur, hamısı profilinizdədir.</div>
+          </li>
+          <li>
+            <div class="feature-icon">✓</div>
+            <div><b>Taymerli və Sürətli Sınaqlar:</b> Qəbul və buraxılış imtahanı mühitini canlı yaşayın.</div>
+          </li>
+          <li>
+            <div class="feature-icon">✓</div>
+            <div><b>Ağıllı Zəiflik Analizi:</b> Sistem hansı mövzuda xətanız olduğunu avtomatik aşkar edir.</div>
+          </li>
+          <li>
+            <div class="feature-icon">✓</div>
+            <div><b>Valideyn Hesabatlılığı:</b> Şagirdin dərsdəki inkişafı grafiklərlə təqdim olunur.</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ==========================================
+SINAQ & INTERAKTIV ANALIZ SECTION
+========================================== -->
+<section id="analiz">
+  <div class="container">
+    
+    <div class="section-header reveal">
+      <div class="badge-pill">Ağıllı Statistika</div>
+      <h2 class="section-title">Sınaq Yalnız Bal Deyil, Nəticəni Anlamaqdır</h2>
+      <p class="section-desc">Platformamız şagirdin zəif tərəflərini aşkar edir və hədəfli təkrar rejimi təklif edir.</p>
+    </div>
+
+    <!-- İnteraktiv Analiz Dashboard Demosu -->
+    <div class="demo-dashboard reveal">
+      
+      <div class="dash-box">
+        <div class="dash-nav-tabs">
+          <div class="dash-tab active" onclick="switchDashTab(this, 'math')">Riyaziyyat</div>
+          <div class="dash-tab" onclick="switchDashTab(this, 'aze')">Azərbaycan Dili</div>
+          <div class="dash-tab" onclick="switchDashTab(this, 'eng')">İngilis Dili</div>
         </div>
-        <div class="card stack-card">
-          <div class="eyebrow">Qısa mesaj</div>
-          <div class="section-title" style="font-size:28px">Bütün hazırlar<br>tək ünvanda.</div>
-          <div class="section-text" style="margin-top:10px">
-            Dərsə getmək, izah axtarmaq, sınaq toplamaq və nəticə çıxarmaq üçün fərqli yerlərdə vaxt itirməyə son.
+
+        <div id="dashContent">
+          <!-- JavaScript ilə dinamik dolacaq -->
+        </div>
+      </div>
+
+      <div class="card" style="display: flex; flex-direction: column; justify-content: center;">
+        <div class="badge-pill" style="align-self: flex-start; margin-bottom: 16px;">Performans Rejimi</div>
+        <h3 style="font-size: 1.8rem; margin-bottom: 12px;">Vaxt İdarəetməsi və İmtahan Strategiyası</h3>
+        <p style="color: var(--muted); font-size: 0.95rem; line-height: 1.8; margin-bottom: 24px;">
+          Şagird sınağı bitirdikdən sonra hər bir suala neçə saniyə vaxt sərf etdiyini və hansı mövzu tipində daha çox çətinlik çəkdiyini dəqiq qrafiklərlə görür.
+        </p>
+
+        <div class="video-card-thumb video-trigger" data-id="dQw4w9WgXcQ" data-title="Sınaq Analiz Sisteminin Videosu">
+          <img src="https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=1800&q=85" alt="Analiz Videosu">
+          <div class="play-button">
+            <span>▶</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- ==========================================
+VIDEO DƏRS MATERİALLARI
+========================================== -->
+<section id="material">
+  <div class="container">
+    
+    <div class="section-header reveal">
+      <div class="badge-pill">Video Kitabxana</div>
+      <h2 class="section-title">Dərsi İzlə və Tətbiq Et</h2>
+      <p class="section-desc">Müəllimlərimizin hazırladığı mikro-dərs videoları ilə mövzunu cəmi 5 dəqiqəyə tam mənimsəyin.</p>
+    </div>
+
+    <div class="video-grid">
+      <div class="card reveal">
+        <div class="video-card-thumb video-trigger" data-id="M7lc1UVf-VE" data-title="Video Dərs Metodikamız">
+          <img src="https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1800&q=85" alt="Dərs materialı">
+          <div class="play-button">
+            <span>▶</span>
+          </div>
+        </div>
+        <h3 style="font-size: 1.2rem; margin-top: 16px;">Qısa və Effektiv İzahlar</h3>
+        <p style="color: var(--muted); font-size: 0.88rem; margin-top: 6px;">
+          Yalnız nəzəriyyə deyil, qəbulda düşən real sual tiplərinin sadə həll üsulları.
+        </p>
+      </div>
+
+      <div class="card reveal">
+        <h3 style="font-size: 1.4rem; margin-bottom: 20px;">Təhsil Dövrəsi</h3>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); padding: 16px; border-radius: var(--radius-md);">
+            <strong style="color: var(--primary); font-size: 1.2rem;">01</strong>
+            <p style="font-size: 0.85rem; font-weight: 700; margin-top: 4px;">Dərsi İzlə</p>
+          </div>
+          <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); padding: 16px; border-radius: var(--radius-md);">
+            <strong style="color: var(--primary); font-size: 1.2rem;">02</strong>
+            <p style="font-size: 0.85rem; font-weight: 700; margin-top: 4px;">Tapşırığı Həll Et</p>
+          </div>
+          <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); padding: 16px; border-radius: var(--radius-md);">
+            <strong style="color: var(--primary); font-size: 1.2rem;">03</strong>
+            <p style="font-size: 0.85rem; font-weight: 700; margin-top: 4px;">Sınağı İşlə</p>
+          </div>
+          <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); padding: 16px; border-radius: var(--radius-md);">
+            <strong style="color: var(--primary); font-size: 1.2rem;">04</strong>
+            <p style="font-size: 0.85rem; font-weight: 700; margin-top: 4px;">Zəifliyi Aradan Qaldır</p>
           </div>
         </div>
       </div>
     </div>
+
   </div>
 </section>
 
-<section id="analiz">
+<!-- ==========================================
+TEACHERS SECTION
+========================================== -->
+<section id="muellim">
   <div class="container">
-    <div class="section-head reveal">
-      <div class="eyebrow">Analiz və sınaqlar</div>
-      <div class="section-title">Zamanla yarışan sınaqlar,<br>güclü nəticə analizi.</div>
-      <div class="section-text">
-        Sınaqları vaxtla işləmək, nəticəni analiz etmək və zəif mövzuları görmək üçün güclü sistem.
-        Bu hissədə ayrıca müəllim və ya sizin müsahibə/izah videonuz yerləşə bilər.
+    
+    <div class="section-header reveal">
+      <div class="badge-pill">Peşəkar Kadrolar</div>
+      <h2 class="section-title">Tam Tədris Mərkəzi Müəllimləri</h2>
+      <p class="section-desc">Təcrübəli komandamızın təqdimat və izah videolarını izləyərək fənlər üzrə hədəflərinizi müəyyənləşdirin.</p>
+    </div>
+
+    <!-- Filtirlər -->
+    <div class="filter-bar reveal">
+      <button class="filter-btn active" onclick="filterTeachers('all', this)">Bütün Müəllimlər</button>
+      <button class="filter-btn" onclick="filterTeachers('riyaziyyat', this)">Riyaziyyat</button>
+      <button class="filter-btn" onclick="filterTeachers('azerbaycan', this)">Azərbaycan Dili</button>
+      <button class="filter-btn" onclick="filterTeachers('tarix', this)">Tarix</button>
+      <button class="filter-btn" onclick="filterTeachers('ingilis', this)">İngilis Dili</button>
+    </div>
+
+    <!-- Karusel -->
+    <div class="teachers-carousel-wrapper reveal">
+      <div class="teachers-track" id="teachersTrack">
+        <!-- JavaScript ilə müəllimlər yüklənəcək -->
       </div>
     </div>
 
-    <div class="analysis-grid">
-      <div class="card analysis-box reveal">
-        <div class="eyebrow">Sınaq üstünlüyü</div>
-        <div class="section-title" style="font-size:31px">Vaxt ilə sınaq işləmək<br>hazırlığı gücləndirir.</div>
-        <div class="feature-list">
-          <div class="feature-row"><div class="feature-ico">⏱</div><div><h4>Vaxt idarəsi</h4><p>Sınaq zamanı ilə işləmək imtahan ritminə yaxınlıq yaradır.</p></div></div>
-          <div class="feature-row"><div class="feature-ico">📈</div><div><h4>Analiz</h4><p>Şagird hansı mövzuda zəifdir, dərhal görür.</p></div></div>
-          <div class="feature-row"><div class="feature-ico">🎯</div><div><h4>Dəqiq fokus</h4><p>Hədəfli təkrar və praktika ilə nəticə daha sürətli artır.</p></div></div>
-        </div>
-      </div>
-
-      <div class="card analysis-media reveal">
-        <div class="video-viewport play-trigger" data-video="dQw4w9WgXcQ">
-          <img src="https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=1600&q=80" alt="Analiz video arxa fon" />
-          <div class="video-play"><div class="circle">▶</div></div>
-        </div>
-        <div class="video-info">
-          <h3>Analiz barədə izah videosu</h3>
-          <p>Burada başqa bir müəllim və ya sizin öz videonuz yerləşir: sınaqların analizi, zəifliklərin tapılması, inkişaf yol xəritəsi.</p>
-        </div>
-      </div>
+    <div class="carousel-nav reveal">
+      <button class="nav-arrow" id="prevTeacher">←</button>
+      <button class="nav-arrow" id="nextTeacher">→</button>
     </div>
+
   </div>
 </section>
 
-<section id="materiallar">
+<!-- ==========================================
+FAQ SECTION
+========================================== -->
+<section id="faq">
   <div class="container">
-    <div class="section-head reveal">
-      <div class="eyebrow">Video dərs materialları</div>
-      <div class="section-title">Dərs izahları 3–4 dəqiqəlik<br>qısa, aydın və rahat.</div>
-      <div class="section-text">
-        Burada mövzu təqdimatı edən müəllim videosu yerləşir. Şagird dərsi izləyir, sonra sınağa keçir.
-      </div>
+    <div class="section-header reveal">
+      <div class="badge-pill">Tez-Tez Verilən Suallar</div>
+      <h2 class="section-title">Sizi Maraqlandıran Sualların Cavabı</h2>
+      <p class="section-desc">Valideyn və şagirdlərin ən çox verdiyi sualları topladıq.</p>
     </div>
 
-    <div class="materials-grid">
-      <div class="card video-card reveal">
-        <div class="video-viewport play-trigger" data-video="M7lc1UVf-VE">
-          <img src="https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=1600&q=80" alt="Dərs videosu fon" />
-          <div class="video-play"><div class="circle">▶</div></div>
+    <div class="faq-grid reveal">
+      <div class="faq-item">
+        <div class="faq-header" onclick="toggleFaq(this)">
+          <span>Platformaya dərslər necə əlavə olunur?</span>
+          <span class="faq-icon">+</span>
         </div>
-        <div class="video-info">
-          <h3>Video dərs materialları təqdimatı</h3>
-          <p>Müəllim qısa, yığcam və premium üslubda dərsi izah edir.</p>
+        <div class="faq-body">
+          Hər həftə müəllimlər tərəfindən yenilənmiş mövzu izahları, sınaqlar və ev tapşırıqları şəxsi kabinetinizə avtomatik olaraq yerləşdirilir.
         </div>
       </div>
 
-      <div class="card stack-card reveal">
-        <div class="eyebrow">Materialların faydası</div>
-        <div class="section-title" style="font-size:30px">Dərsi izləyən şagird<br>daha tez anlayır.</div>
-        <div class="materials-badges">
-          <div class="badge-card"><strong>Qısa izah</strong><span>3–4 dəqiqəlik rahat video formatı.</span></div>
-          <div class="badge-card"><strong>Yenidən bax</strong><span>Şagird istədiyi an dərsi təkrarlaya bilir.</span></div>
-          <div class="badge-card"><strong>Tapşırıqla birlikdə</strong><span>Video + sınaq + analiz bir yerdə işləyir.</span></div>
-          <div class="badge-card"><strong>Daha məhsuldar</strong><span>Vaxt itkisi azalır, nəticə artır.</span></div>
+      <div class="faq-item">
+        <div class="faq-header" onclick="toggleFaq(this)">
+          <span>Sınaq nəticələrimi valideynim necə görə bilər?</span>
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-body">
+          Valideynlər üçün xüsusi izləmə linki və ya hesabat SMS xidməti mövcuddur. Hər sınaqdan sonra avtomatik xulase təqdim edilir.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-header" onclick="toggleFaq(this)">
+          <span>Video dərsləri təkrar izləmək limiti varmı?</span>
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-body">
+          Xeyr, tədris ili boyunca bütün video izahları istədiyiniz qədər və 24/7 rejimində təkrar izləyə bilərsiniz.
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<section id="sagird">
-  <div class="container">
-    <div class="cta reveal">
-      <div class="eyebrow">Şagird paneli</div>
-      <h2>Şagirdin nəticəsi, tapşırığı və sınağı<br>bir klik uzaqlığında.</h2>
-      <p>Paneldə dərslərə giriş, sınaq işləmə, nəticə izləmə və inkişaf analizi aydın və sürətli formada təqdim olunur.</p>
-      <div class="cta-buttons">
-        <a href="#muellimler" class="btn btn-primary">Müəllimləri gör</a>
-        <a href="#elaqe" class="btn btn-ghost">Əlaqə saxla</a>
+<!-- ==========================================
+CTA PORTAL ACCESS
+========================================== -->
+<section>
+  <div class="container reveal">
+    <div class="cta-box">
+      <div class="badge-pill" style="margin-bottom: 16px;">Təhsil Portalına Giriş</div>
+      <h2>Uğura Gedən Yolu İndi Başlayın</h2>
+      <p>Şagird və ya Müəllim kabinetinizə daxil olaraq dərslərə dərhal başlayın.</p>
+      
+      <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+        <button class="btn btn-primary" onclick="window.location.href='index.html'">Şagird Girişi →</button>
+        <button class="btn" onclick="window.location.href='index.html'">Müəllim Kabineti</button>
       </div>
     </div>
   </div>
 </section>
 
-<section id="muellimler">
-  <div class="container">
-    <div class="section-head reveal">
-      <div class="eyebrow">Tam Tədris Mərkəzi müəllimləri</div>
-      <div class="section-title">Müəllimləri seç,<br>haqqında məlumat və videoları aç.</div>
-      <div class="section-text">
-        Riyaziyyat düyməsində riyaziyyat müəllimləri, Azərbaycan dili düyməsində həmin fənnin müəllimləri görünür.
-        “Hamısı” seçəndə bütün müəllimlər 2 saniyədən bir rahat şəkildə sürüşür.
-      </div>
-    </div>
-
-    <div class="teacher-toolbar reveal">
-      <button class="filter-btn active" data-filter="all">Hamısı</button>
-      <button class="filter-btn" data-filter="riyaziyyat">Riyaziyyat</button>
-      <button class="filter-btn" data-filter="azerbaycan dili">Azərbaycan dili</button>
-      <button class="filter-btn" data-filter="tarix">Tarix</button>
-      <button class="filter-btn" data-filter="ingilis dili">İngilis dili</button>
-    </div>
-
-    <div class="rail-wrap reveal" id="teacherRailWrap">
-      <div class="rail" id="teacherRail"></div>
-    </div>
-
-    <div class="teacher-marquee reveal" aria-hidden="true">
-      <div class="marquee-track" id="marqueeTrack"></div>
-    </div>
-  </div>
-</section>
-
+<!-- ==========================================
+CONTACT SECTION
+========================================== -->
 <section id="elaqe">
   <div class="container">
-    <div class="contact">
-      <div class="card contact-card reveal">
-        <div class="eyebrow">Əlaqə</div>
-        <div class="section-title" style="font-size:34px">Sualın varsa,<br>buradan yaz.</div>
-        <div class="section-text">
-          Qeydiyyat, giriş, müəllimlər və platforma ilə bağlı bütün məlumatlar üçün əlaqə bölməsi açıqdır.
-        </div>
-        <div class="contact-list">
-          <div class="contact-item"><strong>Telefon</strong><span>+994 XX XXX XX XX</span></div>
-          <div class="contact-item"><strong>WhatsApp</strong><span>Sürətli cavab üçün</span></div>
-          <div class="contact-item"><strong>Instagram</strong><span>@tamtedrismerkezi</span></div>
-          <div class="contact-item"><strong>YouTube</strong><span>Tanıtım videoları</span></div>
+    <div class="contact-grid">
+      
+      <div class="card reveal">
+        <div class="badge-pill" style="margin-bottom: 16px;">Bizimlə Əlaqə</div>
+        <h2 style="font-size: 2.2rem; margin-bottom: 12px;">Sualınız Var? Biz Buradayıq</h2>
+        <p style="color: var(--muted); font-size: 0.95rem;">
+          Mərkəzimiz haqqında ətraflı məlumat almaq və ya qeydiyyatdan keçmək üçün istənilən vaxt əlaqə saxlayın.
+        </p>
+
+        <div class="contact-card-items">
+          <div class="contact-info-item">
+            <b>Telefon</b>
+            <span>+994 (12) 000 00 00</span>
+          </div>
+          <div class="contact-info-item">
+            <b>WhatsApp</b>
+            <span>+994 (50) 000 00 00</span>
+          </div>
+          <div class="contact-info-item">
+            <b>Instagram</b>
+            <span>@tamtedrismerkezi</span>
+          </div>
+          <div class="contact-info-item">
+            <b>YouTube</b>
+            <span>Tam Tədris Mərkəzi</span>
+          </div>
         </div>
       </div>
 
-      <div class="card contact-card reveal">
-        <div class="eyebrow">Qeydiyyat</div>
-        <div class="section-title" style="font-size:34px">Platformaya qoşul.</div>
-        <div class="section-text">Burada şagird və müəllim giriş düymələri ayrıca verilə bilər.</div>
-        <div class="hero-actions">
-          <a href="index.html" class="btn btn-primary">Şagird girişi</a>
-          <a href="index.html" class="btn btn-ghost">Müəllim girişi</a>
+      <div class="card reveal" style="display: flex; flex-direction: column; justify-content: center;">
+        <h3 style="font-size: 1.5rem; margin-bottom: 16px;">Bütün Hazırlıqlar Tək Ünvanda</h3>
+        <p style="color: var(--muted); font-size: 0.9rem; line-height: 1.8; margin-bottom: 24px;">
+          Ən müasir metodika və yüksək nəticə təminatı ilə hazırlıqlarımız davam edir. Bizi sosial şəbəkələrdən izləməyi unutmayın.
+        </p>
+
+        <div style="display: flex; gap: 12px;">
+          <a href="#" class="btn btn-primary btn-sm">Instagram-a Keç</a>
+          <a href="#" class="btn btn-sm">YouTube Kanalı</a>
         </div>
       </div>
+
     </div>
   </div>
 </section>
+
 </main>
 
+<!-- ==========================================
+FOOTER
+========================================== -->
 <footer>
-  <div class="container footer">
-    <div>© 2026 Tam Tədris Mərkəzi</div>
-    <div class="footer-links">
-      <a href="#home">Ana səhifə</a>
-      <a href="#tanitim">Tanıtım</a>
-      <a href="#analiz">Analiz</a>
-      <a href="#materiallar">Materiallar</a>
-      <a href="#muellimler">Müəllimlər</a>
+  <div class="container">
+    <div class="footer-top">
+      <div class="footer-about">
+        <div class="brand">
+          <div class="logo-box">TTM</div>
+          <div class="brand-text">
+            <h4>Tam Tədris Mərkəzi</h4>
+          </div>
+        </div>
+        <p>Rəqəmsal təhsil platforması ilə dərslərinizi yüksək səviyyədə mənimsəyin və imtahanlarda maksimal nəticə toplayın.</p>
+      </div>
+
+      <div class="footer-col">
+        <h5>Naviqasiya</h5>
+        <ul>
+          <li><a href="#tanitim">Tanıtım</a></li>
+          <li><a href="#analiz">Sınaq Analizi</a></li>
+          <li><a href="#material">Materiallar</a></li>
+          <li><a href="#muellim">Müəllimlər</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h5>Keçidlər</h5>
+        <ul>
+          <li><a href="#" onclick="window.location.href='index.html'">Şagird Girişi</a></li>
+          <li><a href="#" onclick="window.location.href='index.html'">Müəllim Girişi</a></li>
+          <li><a href="#faq">Suallar və Cavablar</a></li>
+          <li><a href="#elaqe">Əlaqə</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h5>Ünvan & Dəstək</h5>
+        <ul>
+          <li style="color: var(--muted); font-size: 0.85rem;">Bakı şəhəri, Mərkəz filialı</li>
+          <li style="color: var(--muted); font-size: 0.85rem;">Dəstək: info@tamtedris.az</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>© 2026 Tam Tədris Mərkəzi. Bütün hüquqlar qorunur.</span>
+      <span>Dizayn və Sistem: Peşəkar EdTech Platforması</span>
     </div>
   </div>
 </footer>
 
-<!-- VIDEO MODAL -->
-<div class="modal" id="videoModal" aria-hidden="true">
-  <div class="modal-card">
-    <button class="btn btn-ghost modal-close" id="closeVideo">✕</button>
-    <div class="modal-body">
-      <div class="modal-head">
-        <div>
-          <div class="eyebrow">Video pəncərəsi</div>
-          <h3 id="videoModalTitle">Video</h3>
-          <p id="videoModalText">Burada YouTube videosu oynayır.</p>
-        </div>
-      </div>
-      <div class="video-embed" style="margin-top:18px;aspect-ratio:16/9;border-radius:22px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:#000;">
-        <iframe id="videoFrame" class="promo-iframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-      </div>
+<!-- ==========================================
+MODALS
+========================================== -->
+
+<!-- Video Modal -->
+<div class="modal-overlay" id="videoModal">
+  <div class="modal-container">
+    <button class="modal-close" onclick="closeVideoModal()">×</button>
+    <div class="badge-pill" style="margin-bottom: 8px;">Video İzah</div>
+    <h3 id="videoModalTitle" style="font-size: 1.5rem;">Video İzlə</h3>
+    <div class="embed-responsive">
+      <iframe id="videoIframe" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
     </div>
   </div>
 </div>
 
-<!-- TEACHER MODAL -->
-<div class="modal" id="teacherModal" aria-hidden="true">
-  <div class="modal-card">
-    <button class="btn btn-ghost modal-close" id="closeTeacher">✕</button>
-    <div class="modal-body">
-      <div class="modal-head">
-        <div>
-          <div class="eyebrow" id="teacherSubject">Müəllim</div>
-          <h3 id="teacherName">Müəllim adı</h3>
-          <p id="teacherDesc">Haqqında qısa məlumat.</p>
-        </div>
+<!-- Teacher Profile Modal -->
+<div class="modal-overlay" id="teacherModal">
+  <div class="modal-container">
+    <button class="modal-close" onclick="closeTeacherModal()">×</button>
+    <div class="badge-pill" id="tmSubject">FƏNN</div>
+    <h2 id="tmName" style="font-size: 1.8rem; margin: 6px 0;">Müəllim Haqqında</h2>
+    <p id="tmDesc" style="color: var(--muted); font-size: 0.95rem; line-height: 1.7;"></p>
+
+    <div class="teacher-modal-grid">
+      <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--border);">
+        <h4 style="font-size: 1rem; margin-bottom: 12px; color: var(--primary);">Tədris Metodologiyası</h4>
+        <ul class="feature-list" id="tmPoints" style="margin-top: 0;">
+          <!-- Dinamik kontent -->
+        </ul>
       </div>
 
-      <div class="modal-grid">
-        <div class="teacher-bio">
-          <div class="eyebrow">Məlumat</div>
-          <ul id="teacherPoints"></ul>
-          <div class="small-caption">Müəllimin üzərinə basanda 2 video və məlumat burada görünür.</div>
-        </div>
-
-        <div class="teacher-video">
-          <div class="eyebrow">Video 1</div>
-          <div class="video-embed" style="margin-top:10px">
-            <iframe id="teacherVideo1" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-          </div>
-          <div class="two-videos">
-            <div>
-              <div class="eyebrow">Video 2</div>
-              <div class="video-embed" style="margin-top:10px">
-                <iframe id="teacherVideo2" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-              </div>
+      <div>
+        <h4 style="font-size: 1rem; margin-bottom: 12px;">Nümunə Dərs Videosu</h4>
+        <div class="teacher-videos-dual">
+          <div>
+            <span style="font-size: 0.75rem; color: var(--muted);">Mövzu İzahı</span>
+            <div class="embed-responsive" style="margin-top: 6px;">
+              <iframe id="tmV1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
             </div>
-            <div class="teacher-bio" style="margin-top:24px">
-              <div class="eyebrow">Qısa qeyd</div>
-              <div class="small-caption" id="teacherNote"></div>
+          </div>
+          <div>
+            <span style="font-size: 0.75rem; color: var(--muted);">Sual Həlli</span>
+            <div class="embed-responsive" style="margin-top: 6px;">
+              <iframe id="tmV2" allow="autoplay; encrypted-media" allowfullscreen></iframe>
             </div>
           </div>
         </div>
@@ -809,369 +1756,363 @@
   </div>
 </div>
 
+<!-- Auth Modal (Şagird / Müəllim Girişi) -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal-container" style="max-width: 440px;">
+    <button class="modal-close" onclick="closeAuthModal()">×</button>
+    
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tabSagird" onclick="switchAuthTab('sagird')">Şagird Girişi</div>
+      <div class="auth-tab" id="tabMuellim" onclick="switchAuthTab('muellim')">Müəllim Girişi</div>
+    </div>
+
+    <form onsubmit="event.preventDefault(); alert('Portala yönləndirilirsiniz...'); closeAuthModal();">
+      <div class="form-group">
+        <label id="authLabelUser">İstifadəçi Adı və ya FIN Kod</label>
+        <input type="text" class="form-control" placeholder="Məsələn: 7ABC123" required>
+      </div>
+
+      <div class="form-group">
+        <label>Şifrə</label>
+        <input type="password" class="form-control" placeholder="••••••••" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">Kabinetə Daxil Ol →</button>
+    </form>
+  </div>
+</div>
+
+<!-- ==========================================
+JAVASCRIPT LOGIC
+========================================== -->
 <script>
-  const heroSlidesData = [
-    {
-      img: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1600&q=80",
-      badge: "Yüksək bal alan şagirdin müsahibəsi",
-      title: "Nəticə verən sistemin arxasında real şagird təcrübəsi var.",
-      text: "Şagirdlərimizin uğur hekayələri, motivasiya müsahibələri və nəticə vizualları ilə platforma daha canlı görünür."
-    },
-    {
-      img: "https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=1600&q=80",
-      badge: "Dərs görüntüsü",
-      title: "Dərslər tək platformada, səliqəli və rahat şəkildə.",
-      text: "Sistemli hazırlıq, aydın izah və rahat giriş sayəsində şagird dərsə fokuslanır."
-    },
-    {
-      img: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1600&q=80",
-      badge: "Kurs görüntüsü",
-      title: "Tam Tədris Mərkəzinin gündəlik iş ritmi.",
-      text: "Canlı dərs mühiti, müəllim nəzarəti, test sistemi və peşəkar platforma bir arada."
-    },
-    {
-      img: "https://images.unsplash.com/photo-1523580846011-d3a5bc25702b?auto=format&fit=crop&w=1600&q=80",
-      badge: "Sınaq və analiz",
-      title: "Hər sınaq zəifliyi göstərir, hər analiz yolu açır.",
-      text: "Vaxtla işləyən sınaqlar və nəticə analizi ilə şagird öz inkişafını aydın görür."
-    }
-  ];
-
-  const teachers = [
-    {
-      name: "Lalə müəllimə",
-      subject: "Riyaziyyat",
-      category: "riyaziyyat",
-      photo: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=80",
-      short: "Qrafik, test və izahı aydın üslubda təqdim edən müəllim.",
-      bio: "Lalə müəllimə şagirdlərə sistemli təkrar, sual həlli və güclü baza qurmaqda kömək edir.",
-      points: ["Mövzuları sadə dildə izah edir", "Sınaq taktikası öyrədir", "Şagird zəifliyini tez müəyyənləşdirir"],
-      note: "Müəllimin videosunda metodik izah, sual həlli və uğur yolu göstərilir.",
-      v1: "dQw4w9WgXcQ",
-      v2: "M7lc1UVf-VE"
-    },
-    {
-      name: "Cavid müəllim",
-      subject: "Riyaziyyat",
-      category: "riyaziyyat",
-      photo: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=900&q=80",
-      short: "İmtahan yönümlü dərslər və sürətli nəticə sistemi.",
-      bio: "Cavid müəllim şagirdlərə vaxtla işləmə, qısa yol tapmaq və sınaqda taktiki düşünmə qazandırır.",
-      points: ["İmtahan strategiyası", "Sürətli sual həlli", "Daimi nəticə analizi"],
-      note: "İkinci videoda müəllim sınaqdan əvvəl hansı üsullarla işlədiyini danışır.",
-      v1: "M7lc1UVf-VE",
-      v2: "dQw4w9WgXcQ"
-    },
-    {
-      name: "Elçin müəllim",
-      subject: "Riyaziyyat",
-      category: "riyaziyyat",
-      photo: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=900&q=80",
-      short: "Mürəkkəb mövzuları sadə strukturla təqdim edir.",
-      bio: "Elçin müəllim riyaziyyatın çətin mövzularını addım-addım, məntiqi ardıcıllıqla izah edir.",
-      points: ["Məntiqi ardıcıllıq", "Çətin mövzularda rahatlıq", "Şagirdin özünə inamı"],
-      note: "Bu müəllim üçün ayrıca iki video ilə dərs təqdimatı yerləşdirilə bilər.",
-      v1: "dQw4w9WgXcQ",
-      v2: "M7lc1UVf-VE"
-    },
-    {
-      name: "Aysel müəllimə",
-      subject: "Azərbaycan dili",
-      category: "azerbaycan dili",
-      photo: "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=900&q=80",
-      short: "Oxu, qrammatika və mətn analizi üzrə səliqəli izah.",
-      bio: "Aysel müəllimə Azərbaycan dili dərslərində qaydaları, mətnləri və imla sistemini aydın izah edir.",
-      points: ["Qrammatika və qayda", "Mətn izahı", "Testlə möhkəmləndirmə"],
-      note: "Dilin əsaslarını möhkəmləndirən qısa tanıtım videosu burada görünə bilər.",
-      v1: "M7lc1UVf-VE",
-      v2: "dQw4w9WgXcQ"
-    },
-    {
-      name: "Günel müəllimə",
-      subject: "Azərbaycan dili",
-      category: "azerbaycan dili",
-      photo: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=900&q=80",
-      short: "Mətn anlayışı və fənn sevgisini birləşdirən yanaşma.",
-      bio: "Günel müəllimə şagirdlərin Azərbaycan dilində dəqiq yazmaq və oxumaq vərdişini gücləndirir.",
-      points: ["Düzgün yazı vərdişi", "Oxu bacarığı", "Mətn təhlili"],
-      note: "Burada 2 videoda dərs təqdimatı və metodik izah yerləşdirilir.",
-      v1: "dQw4w9WgXcQ",
-      v2: "M7lc1UVf-VE"
-    },
-    {
-      name: "Nərmin müəllimə",
-      subject: "Tarix",
-      category: "tarix",
-      photo: "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=900&q=80",
-      short: "Tarixi hadisələri hekayə kimi yadda qalan formada təqdim edir.",
-      bio: "Nərmin müəllimə tarix mövzularını xəritə, ardıcıllıq və müqayisə ilə izah edir.",
-      points: ["Dövr və ardıcıllıq", "Sual cavab sistemləri", "Tarixi mövzuların yadda saxlanması"],
-      note: "Tarix müəlliməsinin tanıtım videosu və ikinci izah videosu burada açılır.",
-      v1: "M7lc1UVf-VE",
-      v2: "dQw4w9WgXcQ"
-    },
-    {
-      name: "Rəşad müəllim",
-      subject: "İngilis dili",
-      category: "ingilis dili",
-      photo: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=900&q=80",
-      short: "Sərbəst danışıq və test strategiyası yönümlü yanaşma.",
-      bio: "Rəşad müəllim ingilis dilində söz bazası, qrammatika və danışıq vərdişlərini inkişaf etdirir.",
-      points: ["Söz bazası", "Qrammatika", "Danışıq təcrübəsi"],
-      note: "İngilis dili üzrə 2 video ilə təqdimat və nümunə dərs göstərilə bilər.",
-      v1: "dQw4w9WgXcQ",
-      v2: "M7lc1UVf-VE"
-    }
-  ];
-
-  const heroSlidesEl = document.getElementById("heroSlides");
-  const heroDotsEl = document.getElementById("heroDots");
-  const prevSlideBtn = document.getElementById("prevSlide");
-  const nextSlideBtn = document.getElementById("nextSlide");
-
-  let heroIndex = 0;
-  let heroTimer = null;
-
-  function renderHeroSlides(){
-    heroSlidesEl.innerHTML = "";
-    heroDotsEl.innerHTML = "";
-    heroSlidesData.forEach((s, idx) => {
-      const slide = document.createElement("div");
-      slide.className = "slide" + (idx === 0 ? " active" : "");
-      slide.innerHTML = `
-        <img src="${s.img}" alt="${s.badge}">
-        <div class="slide-overlay">
-          <div class="slide-badge"><span class="dot"></span>${s.badge}</div>
-          <div class="slide-title">${s.title}</div>
-          <div class="slide-text">${s.text}</div>
-        </div>
-      `;
-      heroSlidesEl.appendChild(slide);
-
-      const dot = document.createElement("button");
-      dot.className = "dot-btn" + (idx === 0 ? " active" : "");
-      dot.addEventListener("click", () => setHeroSlide(idx));
-      heroDotsEl.appendChild(dot);
-    });
+/* ==========================================
+1. HERO SLIDER DATA & LOGIC
+========================================== */
+const heroSlidesData = [
+  {
+    img: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1800&q=85",
+    tag: "YÜKSƏK NƏTİCƏLƏR",
+    title: "Sistemli Təhsil İlə Uğura Doğru",
+    desc: "Şagirdlərimizin real imtahan nəticələri və davamlı inkişaf dinamikası."
+  },
+  {
+    img: "https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=1800&q=85",
+    tag: "RƏQƏMSAL DƏRS MÜHİTİ",
+    title: "İnteraktiv Və Canlı Tədris",
+    desc: "Müəllim, tapşırıqlar və video izahlar tək paneldə mərkəzləşdirilib."
+  },
+  {
+    img: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1800&q=85",
+    tag: "TAM TƏDRİS MƏRKƏZİ",
+    title: "Gələcəyin Təhsil Platforması",
+    desc: "Şagird üçün rahatlıq, müəllim üçün güclü alətlər, valideyn üçün şəffaflıq."
   }
+];
 
-  function setHeroSlide(idx){
-    heroIndex = (idx + heroSlidesData.length) % heroSlidesData.length;
-    const slides = [...heroSlidesEl.querySelectorAll(".slide")];
-    const dots = [...heroDotsEl.querySelectorAll(".dot-btn")];
-    slides.forEach((el, i) => el.classList.toggle("active", i === heroIndex));
-    dots.forEach((el, i) => el.classList.toggle("active", i === heroIndex));
-    restartHeroTimer();
-  }
+const heroSlider = document.getElementById("heroSlider");
+heroSlidesData.forEach((s, idx) => {
+  const slideEl = document.createElement("div");
+  slideEl.className = `hero-slide ${idx === 0 ? 'active' : ''}`;
+  slideEl.innerHTML = `
+    <img src="${s.img}" alt="${s.title}">
+    <div class="slide-overlay"></div>
+    <div class="slide-content">
+      <span class="slide-tag">${s.tag}</span>
+      <h3>${s.title}</h3>
+      <p>${s.desc}</p>
+    </div>
+  `;
+  heroSlider.appendChild(slideEl);
+});
 
-  function restartHeroTimer(){
-    clearInterval(heroTimer);
-    heroTimer = setInterval(() => setHeroSlide(heroIndex + 1), 5500);
-  }
+let currentSlide = 0;
+setInterval(() => {
+  const slides = heroSlider.querySelectorAll(".hero-slide");
+  slides[currentSlide].classList.remove("active");
+  currentSlide = (currentSlide + 1) % slides.length;
+  slides[currentSlide].classList.add("active");
+}, 5000);
 
-  prevSlideBtn.addEventListener("click", () => setHeroSlide(heroIndex - 1));
-  nextSlideBtn.addEventListener("click", () => setHeroSlide(heroIndex + 1));
 
-  renderHeroSlides();
-  restartHeroTimer();
+/* ==========================================
+2. INTERAKTIV ANALIZ DASHBOARD TABLARI
+========================================== */
+const dashData = {
+  math: [
+    { subject: "Cəbr və Funksiyalar", percentage: 92, color: "var(--primary)" },
+    { subject: "Həndəsə və Fəza", percentage: 78, color: "var(--warning)" },
+    { subject: "Tənliklər Sistemi", percentage: 88, color: "var(--accent)" }
+  ],
+  aze: [
+    { subject: "Qrammatika Qaydaları", percentage: 95, color: "var(--accent)" },
+    { subject: "Mətn Analizi və Oxu", percentage: 84, color: "var(--primary)" },
+    { subject: "Leksikologiya", percentage: 90, color: "var(--cyan)" }
+  ],
+  eng: [
+    { subject: "Grammar & Tenses", percentage: 89, color: "var(--primary)" },
+    { subject: "Vocabulary & Idioms", percentage: 75, color: "var(--warning)" },
+    { subject: "Listening & Reading", percentage: 94, color: "var(--accent)" }
+  ]
+};
 
-  /* REVEAL */
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if(entry.isIntersecting) entry.target.classList.add("visible");
-    });
-  }, { threshold: 0.12 });
-
-  document.querySelectorAll(".reveal").forEach(el => observer.observe(el));
-
-  /* MOBILE NAV */
-  const menuBtn = document.getElementById("menuBtn");
-  const navLinks = document.querySelector(".nav-links");
-  let navOpen = false;
-
-  menuBtn.addEventListener("click", () => {
-    navOpen = !navOpen;
-    if(navOpen){
-      navLinks.style.display = "flex";
-      navLinks.style.position = "absolute";
-      navLinks.style.top = "68px";
-      navLinks.style.left = "14px";
-      navLinks.style.right = "14px";
-      navLinks.style.flexDirection = "column";
-      navLinks.style.gap = "14px";
-      navLinks.style.padding = "18px";
-      navLinks.style.border = "1px solid rgba(255,255,255,.10)";
-      navLinks.style.borderRadius = "20px";
-      navLinks.style.background = "rgba(4,10,20,.97)";
-      navLinks.style.boxShadow = "0 25px 60px rgba(0,0,0,.42)";
-    }else{
-      navLinks.style.display = "none";
-    }
-  });
-
-  document.querySelectorAll(".nav-links a").forEach(a => {
-    a.addEventListener("click", () => {
-      if(window.innerWidth <= 1080){
-        navLinks.style.display = "none";
-        navOpen = false;
-      }
-    });
-  });
-
-  /* VIDEO MODAL */
-  const videoModal = document.getElementById("videoModal");
-  const videoFrame = document.getElementById("videoFrame");
-  const videoModalTitle = document.getElementById("videoModalTitle");
-  const videoModalText = document.getElementById("videoModalText");
-  const closeVideo = document.getElementById("closeVideo");
-
-  function openVideo(title, text, videoId){
-    videoModalTitle.textContent = title;
-    videoModalText.textContent = text;
-    videoFrame.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`;
-    videoModal.classList.add("open");
-    document.body.style.overflow = "hidden";
-  }
-
-  function closeVideoModal(){
-    videoModal.classList.remove("open");
-    videoFrame.src = "";
-    document.body.style.overflow = "";
-  }
-
-  document.querySelectorAll(".play-trigger").forEach(el => {
-    el.addEventListener("click", () => {
-      const videoId = el.dataset.video || "M7lc1UVf-VE";
-      const title = el.closest(".card").querySelector("h3")?.textContent?.trim() || "Video";
-      const text = el.closest(".card").querySelector("p")?.textContent?.trim() || "";
-      openVideo(title, text, videoId);
-    });
-  });
-
-  closeVideo.addEventListener("click", closeVideoModal);
-  videoModal.addEventListener("click", e => { if(e.target === videoModal) closeVideoModal(); });
-
-  /* TEACHER RENDERING / FILTERING / CAROUSEL */
-  const teacherRail = document.getElementById("teacherRail");
-  const marqueeTrack = document.getElementById("marqueeTrack");
-  const filterBtns = [...document.querySelectorAll(".filter-btn")];
-  let currentFilter = "all";
-  let railScrollTimer = null;
-
-  function makeTeacherCard(t){
-    const card = document.createElement("button");
-    card.className = "teacher-card";
-    card.type = "button";
-    card.dataset.category = t.category;
-    card.innerHTML = `
-      <div class="teacher-photo">
-        <img src="${t.photo}" alt="${t.name}">
+function renderDashContent(key) {
+  const container = document.getElementById("dashContent");
+  const items = dashData[key] || dashData.math;
+  
+  container.innerHTML = items.map(i => `
+    <div class="subject-bar-item">
+      <div class="subject-bar-header">
+        <span>${i.subject}</span>
+        <span style="color: ${i.color};">${i.percentage}% Nəticə</span>
       </div>
-      <div class="teacher-meta">
-        <h3>${t.name}</h3>
-        <p>${t.short}</p>
-        <div class="teacher-tag">${t.subject}</div>
+      <div class="bar-bg">
+        <div class="bar-value" style="width: ${i.percentage}%; background: ${i.color};"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function switchDashTab(btn, key) {
+  document.querySelectorAll(".dash-tab").forEach(t => t.classList.remove("active"));
+  btn.classList.add("active");
+  renderDashContent(key);
+}
+
+renderDashContent('math');
+
+
+/* ==========================================
+3. TEACHERS DATA & CAROUSEL
+========================================== */
+const teachersData = [
+  {
+    name: "Lalə Müəllimə",
+    subjectName: "Riyaziyyat",
+    cat: "riyaziyyat",
+    photo: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=85",
+    desc: "Riyaziyyatı sadə və vizual düsturlarla izah edir.",
+    fullBio: "Riyaziyyat fənni üzrə 10 ildən artıq təcrübə. Qəbul imtahanlarına tam uyğun proqram.",
+    v1: "M7lc1UVf-VE",
+    v2: "dQw4w9WgXcQ"
+  },
+  {
+    name: "Cavid Müəllim",
+    subjectName: "Riyaziyyat",
+    cat: "riyaziyyat",
+    photo: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=900&q=85",
+    desc: "Məntiqi düşüncə və vaxt idarəetməsi strategiyası.",
+    fullBio: "Sürətli həll metodları və imtahan psixologiyası üzrə ixtisaslaşıb.",
+    v1: "dQw4w9WgXcQ",
+    v2: "M7lc1UVf-VE"
+  },
+  {
+    name: "Aysel Müəllimə",
+    subjectName: "Azərbaycan Dili",
+    cat: "azerbaycan",
+    photo: "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=900&q=85",
+    desc: "Mətn təhlili və dil qaydalarının aydın izahı.",
+    fullBio: "Dövlət İmtahan Mərkəzinin standartlarına uyğun dərinləşdirilmiş hazırlıq.",
+    v1: "M7lc1UVf-VE",
+    v2: "dQw4w9WgXcQ"
+  },
+  {
+    name: "Nərmin Müəllimə",
+    subjectName: "Tarix",
+    cat: "tarix",
+    photo: "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=900&q=85",
+    desc: "Xronologiya və səbəb-nəticə əlaqələrinin xəritəsi.",
+    fullBio: "Tarixi xəritələr və hadisələr üzərində interaktiv yaddaş texnikaları.",
+    v1: "dQw4w9WgXcQ",
+    v2: "M7lc1UVf-VE"
+  },
+  {
+    name: "Rəşad Müəllim",
+    subjectName: "İngilis Dili",
+    cat: "ingilis",
+    photo: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=900&q=85",
+    desc: "Qrammatika və dinləmə (Listening) üzrə praktika.",
+    fullBio: "Xarici dillər üzrə sertifikatlı mütəxəssis, interaktiv dinləmə dərsləri.",
+    v1: "M7lc1UVf-VE",
+    v2: "dQw4w9WgXcQ"
+  }
+];
+
+const teachersTrack = document.getElementById("teachersTrack");
+
+function renderTeachersCard(filter = "all") {
+  teachersTrack.innerHTML = "";
+  const filtered = teachersData.filter(t => filter === "all" || t.cat === filter);
+
+  filtered.forEach(t => {
+    const card = document.createElement("div");
+    card.className = "teacher-card";
+    card.innerHTML = `
+      <div class="teacher-img-wrapper">
+        <img src="${t.photo}" alt="${t.name}">
+        <div class="teacher-img-overlay"></div>
+      </div>
+      <div class="teacher-body">
+        <span class="teacher-subject">${t.subjectName}</span>
+        <h4 class="teacher-name">${t.name}</h4>
+        <p class="teacher-bio">${t.desc}</p>
       </div>
     `;
-    card.addEventListener("click", () => openTeacher(t));
-    return card;
-  }
-
-  function renderTeachers(){
-    const filtered = currentFilter === "all"
-      ? teachers
-      : teachers.filter(t => t.category === currentFilter);
-
-    teacherRail.innerHTML = "";
-    filtered.forEach(t => teacherRail.appendChild(makeTeacherCard(t)));
-
-    // marqee for all teachers (duplicated for smooth infinite effect)
-    marqueeTrack.innerHTML = "";
-    const run = [...teachers, ...teachers];
-    run.forEach(t => {
-      const mini = document.createElement("div");
-      mini.className = "mini-teacher";
-      mini.innerHTML = `
-        <div class="pic"><img src="${t.photo}" alt="${t.name}"></div>
-        <div class="txt">
-          <strong>${t.name}</strong>
-          <span>${t.subject}</span>
-        </div>
-      `;
-      marqueeTrack.appendChild(mini);
-    });
-
-    teacherRail.scrollTo({ left: 0, behavior: "auto" });
-    startRailAutoScroll();
-  }
-
-  function startRailAutoScroll(){
-    clearInterval(railScrollTimer);
-    const step = 272;
-    railScrollTimer = setInterval(() => {
-      if(window.innerWidth <= 720) return;
-      const max = teacherRail.scrollWidth - teacherRail.clientWidth - 10;
-      if(teacherRail.scrollLeft >= max){
-        teacherRail.scrollTo({ left: 0, behavior: "smooth" });
-      }else{
-        teacherRail.scrollBy({ left: step, behavior: "smooth" });
-      }
-    }, 2000);
-  }
-
-  filterBtns.forEach(btn => {
-    btn.addEventListener("click", () => {
-      filterBtns.forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      currentFilter = btn.dataset.filter;
-      renderTeachers();
-    });
+    card.onclick = () => openTeacherModal(t);
+    teachersTrack.appendChild(card);
   });
+}
 
-  function openTeacher(t){
-    document.getElementById("teacherSubject").textContent = t.subject;
-    document.getElementById("teacherName").textContent = t.name;
-    document.getElementById("teacherDesc").textContent = t.bio;
-    document.getElementById("teacherNote").textContent = t.note;
+renderTeachersCard();
 
-    const list = document.getElementById("teacherPoints");
-    list.innerHTML = "";
-    t.points.forEach(p => {
-      const li = document.createElement("li");
-      li.innerHTML = `<span class="tick">✓</span><span>${p}</span>`;
-      list.appendChild(li);
-    });
+function filterTeachers(cat, btn) {
+  document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  renderTeachersCard(cat);
+}
 
-    document.getElementById("teacherVideo1").src = `https://www.youtube-nocookie.com/embed/${t.v1}?autoplay=1&rel=0`;
-    document.getElementById("teacherVideo2").src = `https://www.youtube-nocookie.com/embed/${t.v2}?autoplay=0&rel=0`;
+// Karusel Naviqasiyası
+let carouselPos = 0;
+const cardWidth = 304; // 280px + 24px gap
 
-    document.getElementById("teacherModal").classList.add("open");
-    document.body.style.overflow = "hidden";
+document.getElementById("nextTeacher").onclick = () => {
+  const maxScroll = teachersTrack.scrollWidth - teachersTrack.parentElement.clientWidth;
+  if (Math.abs(carouselPos) < maxScroll) {
+    carouselPos -= cardWidth;
+    teachersTrack.style.transform = `translateX(${carouselPos}px)`;
+  } else {
+    carouselPos = 0;
+    teachersTrack.style.transform = `translateX(0px)`;
   }
+};
 
-  function closeTeacherModal(){
-    document.getElementById("teacherModal").classList.remove("open");
-    document.getElementById("teacherVideo1").src = "";
-    document.getElementById("teacherVideo2").src = "";
-    document.body.style.overflow = "";
+document.getElementById("prevTeacher").onclick = () => {
+  if (carouselPos < 0) {
+    carouselPos += cardWidth;
+    teachersTrack.style.transform = `translateX(${carouselPos}px)`;
   }
+};
 
-  document.getElementById("closeTeacher").addEventListener("click", closeTeacherModal);
-  document.getElementById("teacherModal").addEventListener("click", e => {
-    if(e.target === document.getElementById("teacherModal")) closeTeacherModal();
+
+/* ==========================================
+4. MODALS MANAGEMENT
+========================================== */
+
+// Video Modal
+function openVideoModal(id, title) {
+  const modal = document.getElementById("videoModal");
+  document.getElementById("videoModalTitle").textContent = title || "Video İzah";
+  document.getElementById("videoIframe").src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`;
+  modal.classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+
+function closeVideoModal() {
+  const modal = document.getElementById("videoModal");
+  modal.classList.remove("open");
+  document.getElementById("videoIframe").src = "";
+  document.body.style.overflow = "";
+}
+
+document.querySelectorAll(".video-trigger").forEach(el => {
+  el.addEventListener("click", () => {
+    openVideoModal(el.dataset.id, el.dataset.title);
   });
+});
 
-  renderTeachers();
+// Teacher Modal
+function openTeacherModal(t) {
+  const modal = document.getElementById("teacherModal");
+  document.getElementById("tmSubject").textContent = t.subjectName;
+  document.getElementById("tmName").textContent = t.name;
+  document.getElementById("tmDesc").textContent = t.fullBio;
 
-  /* KEEP RAIL SCROLLING */
-  teacherRail.addEventListener("mouseenter", () => clearInterval(railScrollTimer));
-  teacherRail.addEventListener("mouseleave", startRailAutoScroll);
+  document.getElementById("tmPoints").innerHTML = `
+    <li><div class="feature-icon">✓</div> İmtahan yönümlü xüsusi proqram</li>
+    <li><div class="feature-icon">✓</div> Anlıq sual-cavab və dəstək</li>
+    <li><div class="feature-icon">✓</div> Zəif mövzular üzrə fərdi tapşırıqlar</li>
+  `;
 
-  window.addEventListener("resize", () => {
-    if(window.innerWidth <= 720){
-      teacherRail.scrollLeft = 0;
+  document.getElementById("tmV1").src = `https://www.youtube-nocookie.com/embed/${t.v1}?rel=0`;
+  document.getElementById("tmV2").src = `https://www.youtube-nocookie.com/embed/${t.v2}?rel=0`;
+
+  modal.classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+
+function closeTeacherModal() {
+  const modal = document.getElementById("teacherModal");
+  modal.classList.remove("open");
+  document.getElementById("tmV1").src = "";
+  document.getElementById("tmV2").src = "";
+  document.body.style.overflow = "";
+}
+
+// Auth Modal
+function openAuthModal(role) {
+  const modal = document.getElementById("authModal");
+  switchAuthTab(role);
+  modal.classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+
+function closeAuthModal() {
+  const modal = document.getElementById("authModal");
+  modal.classList.remove("open");
+  document.body.style.overflow = "";
+}
+
+function switchAuthTab(role) {
+  const tabS = document.getElementById("tabSagird");
+  const tabM = document.getElementById("tabMuellim");
+  const label = document.getElementById("authLabelUser");
+
+  if (role === 'sagird') {
+    tabS.classList.add("active");
+    tabM.classList.remove("active");
+    label.textContent = "Şagird FIN Kodu və ya İstifadəçi Adı";
+  } else {
+    tabM.classList.add("active");
+    tabS.classList.remove("active");
+    label.textContent = "Müəllim Giriş Kodu / Email";
+  }
+}
+
+
+/* ==========================================
+5. FAQ ACCORDION & MOBİL MENYU
+========================================== */
+function toggleFaq(headerEl) {
+  const item = headerEl.parentElement;
+  item.classList.toggle("active");
+}
+
+const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+const mobileDrawer = document.getElementById("mobileDrawer");
+
+mobileMenuBtn.onclick = () => {
+  mobileDrawer.classList.toggle("active");
+};
+
+function closeMobileMenu() {
+  mobileDrawer.classList.remove("active");
+}
+
+
+/* ==========================================
+6. SCROLL ANIMATION (REVEAL)
+========================================== */
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add("visible");
     }
   });
+}, { threshold: 0.1 });
+
+document.querySelectorAll(".reveal").forEach(el => observer.observe(el));
 </script>
+
 </body>
 </html>
+
