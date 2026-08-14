@@ -234,6 +234,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
       <button class="tab-btn" data-tab="tab-schedule">Cədvəl</button>
       <button class="tab-btn" data-tab="tab-topics">Mövzular</button>
       <button class="tab-btn" data-tab="tab-exams">Sınaqlar</button>
+      <button class="tab-btn" data-tab="tab-sitesettings">Sayt Ayarları</button>
     </div>
 
     <!-- ŞAGİRDLƏR -->
@@ -513,6 +514,37 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
         <h3>Sınaq siyahısı</h3>
         <div id="exams-list"><div class="empty-state">Yüklənir...</div></div>
       </div>
+    </div>
+
+    <!-- SAYT AYARLARI -->
+    <div class="tab-panel" id="tab-sitesettings">
+      <div class="card">
+        <h3>🎬 Video linkləri</h3>
+        <div class="field-row">
+          <div class="field"><label>Tanıtım videosu (YouTube linki)</label><input type="text" id="ss-intro-video" placeholder="https://youtube.com/..." /></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Analiz bölməsi videosu</label><input type="text" id="ss-analiz-video" placeholder="https://youtube.com/..." /></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Material bölməsi videosu</label><input type="text" id="ss-material-video" placeholder="https://youtube.com/..." /></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🖼️ Baş səhifə slaydları</h3>
+        <p class="muted-note" style="margin-bottom:12px;">Hər slayd üçün şəkil linki (imgur, google drive paylaşım linki və s.) yerləşdirin.</p>
+        <div id="ss-slides-builder"></div>
+        <button class="btn-outline" id="ss-add-slide-btn">+ Slayd əlavə et</button>
+      </div>
+
+      <div class="card">
+        <h3>👩‍🏫 Müəllimlər</h3>
+        <div id="ss-teachers-builder"></div>
+        <button class="btn-outline" id="ss-add-teacher-btn">+ Müəllim əlavə et</button>
+      </div>
+
+      <button class="btn-small" id="ss-save-btn" style="width:100%;">💾 Sayt Ayarlarını Yadda Saxla</button>
     </div>
   </main>
 </div>
@@ -2027,7 +2059,110 @@ function loadExams() {
 }
 renderQuestionBuilder();
 
-// ---- SINAQ ANALİTİKASI (ADMIN) ----
+// =========================================================================
+// SAYT AYARLARI (ADMIN) - Landing səhifəsinin şəkil/video/müəllim idarəetməsi
+// =========================================================================
+let ssSlides = [];
+let ssTeachers = [];
+
+function renderSlidesBuilder() {
+  const el = document.getElementById("ss-slides-builder");
+  if (ssSlides.length === 0) { el.innerHTML = `<div class="empty-state">Hələ slayd əlavə edilməyib</div>`; return; }
+  el.innerHTML = ssSlides.map((s, i) => `
+    <div class="q-builder-item">
+      <button class="btn-danger" onclick="removeSlide(${i})">Sil</button>
+      <div class="field" style="margin-bottom:8px;"><label>Şəkil linki</label>
+        <input type="text" value="${esc(s.img || "")}" oninput="updateSlide(${i},'img',this.value)" placeholder="https://..." />
+      </div>
+      <div class="field" style="margin-bottom:8px;"><label>Kiçik etiket (badge)</label>
+        <input type="text" value="${esc(s.badge || "")}" oninput="updateSlide(${i},'badge',this.value)" placeholder="Məs: Kurs görüntüsü" />
+      </div>
+      <div class="field" style="margin-bottom:8px;"><label>Başlıq</label>
+        <input type="text" value="${esc(s.title || "")}" oninput="updateSlide(${i},'title',this.value)" placeholder="Qısa cümlə" />
+      </div>
+      <div class="field"><label>Mətn</label>
+        <input type="text" value="${esc(s.text || "")}" oninput="updateSlide(${i},'text',this.value)" placeholder="Açıqlama" />
+      </div>
+    </div>
+  `).join("");
+}
+window.removeSlide = (i) => { ssSlides.splice(i, 1); renderSlidesBuilder(); };
+window.updateSlide = (i, field, val) => { ssSlides[i][field] = val; };
+document.getElementById("ss-add-slide-btn").addEventListener("click", () => {
+  if (ssSlides.length >= 6) { toast("Maksimum 6 slayd əlavə edə bilərsiniz"); return; }
+  ssSlides.push({ img: "", badge: "", title: "", text: "" });
+  renderSlidesBuilder();
+});
+
+function renderTeachersBuilder() {
+  const el = document.getElementById("ss-teachers-builder");
+  if (ssTeachers.length === 0) { el.innerHTML = `<div class="empty-state">Hələ müəllim əlavə edilməyib</div>`; return; }
+  el.innerHTML = ssTeachers.map((t, i) => `
+    <div class="q-builder-item">
+      <button class="btn-danger" onclick="removeTeacher(${i})">Sil</button>
+      <div class="field-row" style="margin-bottom:8px;">
+        <div class="field"><label>Ad Soyad</label><input type="text" value="${esc(t.name || "")}" oninput="updateTeacher(${i},'name',this.value)" placeholder="Məs: Cavid müəllim" /></div>
+        <div class="field"><label>Fənn</label><input type="text" value="${esc(t.subject || "")}" oninput="updateTeacher(${i},'subject',this.value)" placeholder="Məs: Riyaziyyat" /></div>
+      </div>
+      <div class="field" style="margin-bottom:8px;"><label>Foto linki</label><input type="text" value="${esc(t.photo || "")}" oninput="updateTeacher(${i},'photo',this.value)" placeholder="https://..." /></div>
+      <div class="field" style="margin-bottom:8px;"><label>Qısa cümlə</label><input type="text" value="${esc(t.short || "")}" oninput="updateTeacher(${i},'short',this.value)" placeholder="Bir cümləlik təqdimat" /></div>
+      <div class="field" style="margin-bottom:8px;"><label>Bio</label><input type="text" value="${esc(t.bio || "")}" oninput="updateTeacher(${i},'bio',this.value)" placeholder="Ətraflı təqdimat" /></div>
+      <div class="field" style="margin-bottom:8px;"><label>Üstünlüklər (vergüllə ayırın)</label><input type="text" value="${esc((t.points || []).join(", "))}" oninput="updateTeacherPoints(${i},this.value)" placeholder="Üstünlük 1, Üstünlük 2" /></div>
+      <div class="field-row">
+        <div class="field"><label>Video 1 (YouTube linki)</label><input type="text" value="${esc(t.v1 || "")}" oninput="updateTeacher(${i},'v1',this.value)" placeholder="https://youtube.com/..." /></div>
+        <div class="field"><label>Video 2 (YouTube linki)</label><input type="text" value="${esc(t.v2 || "")}" oninput="updateTeacher(${i},'v2',this.value)" placeholder="https://youtube.com/..." /></div>
+      </div>
+    </div>
+  `).join("");
+}
+window.removeTeacher = (i) => { ssTeachers.splice(i, 1); renderTeachersBuilder(); };
+window.updateTeacher = (i, field, val) => { ssTeachers[i][field] = val; };
+window.updateTeacherPoints = (i, val) => { ssTeachers[i].points = val.split(",").map(s => s.trim()).filter(Boolean); };
+document.getElementById("ss-add-teacher-btn").addEventListener("click", () => {
+  ssTeachers.push({ name: "", subject: "", category: "", photo: "", short: "", bio: "", points: [], note: "", v1: "", v2: "" });
+  renderTeachersBuilder();
+});
+
+async function loadSiteSettings() {
+  try {
+    const doc = await db.collection("siteSettings").doc("landing").get();
+    if (doc.exists) {
+      const d = doc.data();
+      document.getElementById("ss-intro-video").value = d.introVideo || "";
+      document.getElementById("ss-analiz-video").value = d.analizVideo || "";
+      document.getElementById("ss-material-video").value = d.materialVideo || "";
+      ssSlides = d.heroSlides || [];
+      ssTeachers = d.teachers || [];
+    }
+  } catch (e) { console.error(e); }
+  renderSlidesBuilder();
+  renderTeachersBuilder();
+}
+
+document.getElementById("ss-save-btn").addEventListener("click", async () => {
+  const payload = {
+    introVideo: document.getElementById("ss-intro-video").value.trim(),
+    analizVideo: document.getElementById("ss-analiz-video").value.trim(),
+    materialVideo: document.getElementById("ss-material-video").value.trim(),
+    heroSlides: ssSlides,
+    teachers: ssTeachers,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  try {
+    await db.collection("siteSettings").doc("landing").set(payload);
+    toast("✅ Sayt ayarları yadda saxlandı");
+  } catch (e) {
+    console.error(e);
+    toast("Xəta: " + e.message);
+  }
+});
+
+let ssLoaded = false;
+document.querySelectorAll('.tab-btn[data-tab="tab-sitesettings"]').forEach(btn => {
+  btn.addEventListener("click", () => { if (!ssLoaded) { ssLoaded = true; loadSiteSettings(); } });
+});
+
+
 document.getElementById("analytics-exam-select").addEventListener("change", async (e) => {
   const examId = e.target.value;
   const el = document.getElementById("analytics-exam-result");
