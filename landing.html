@@ -557,8 +557,7 @@
 
     <div class="video-grid">
       <div class="card video-card reveal">
-        <div class="video-viewport play-trigger" data-video="M7lc1UVf-VE">
-          <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1600&q=80" alt="Tanıtım video arxa fon" />
+        <div class="video-viewport play-trigger" id="introVideoTrigger" data-video="M7lc1UVf-VE">
           <div class="video-play"><div class="circle">▶</div></div>
         </div>
         <div class="video-info">
@@ -611,8 +610,7 @@
       </div>
 
       <div class="card analysis-media reveal">
-        <div class="video-viewport play-trigger" data-video="dQw4w9WgXcQ">
-          <img src="https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=1600&q=80" alt="Analiz video arxa fon" />
+        <div class="video-viewport play-trigger" id="analizVideoTrigger" data-video="dQw4w9WgXcQ">
           <div class="video-play"><div class="circle">▶</div></div>
         </div>
         <div class="video-info">
@@ -636,8 +634,7 @@
 
     <div class="materials-grid">
       <div class="card video-card reveal">
-        <div class="video-viewport play-trigger" data-video="M7lc1UVf-VE">
-          <img src="https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=1600&q=80" alt="Dərs videosu fon" />
+        <div class="video-viewport play-trigger" id="materialVideoTrigger" data-video="M7lc1UVf-VE">
           <div class="video-play"><div class="circle">▶</div></div>
         </div>
         <div class="video-info">
@@ -808,8 +805,10 @@
   </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
-  const heroSlidesData = [
+  let heroSlidesData = [
     {
       img: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1600&q=80",
       badge: "Yüksək bal alan şagirdin müsahibəsi",
@@ -836,7 +835,7 @@
     }
   ];
 
-  const teachers = [
+  let teachers = [
     {
       name: "Lalə müəllimə",
       subject: "Riyaziyyat",
@@ -1171,6 +1170,49 @@
       teacherRail.scrollLeft = 0;
     }
   });
+
+  /* ---- SAYT AYARLARI - Firestore-dan dinamik yükləmə ---- */
+  function extractYouTubeId(url) {
+    if (!url) return null;
+    const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+    return m ? m[1] : (/^[\w-]{11}$/.test(url.trim()) ? url.trim() : null);
+  }
+
+  (async function loadSiteSettings() {
+    try {
+      const firebaseConfig = {
+        apiKey: "AIzaSyDk9JWyY8V3T_GRIP32WOF59qKgztHPE9M",
+        authDomain: "ttmsayt.firebaseapp.com",
+        projectId: "ttmsayt",
+        storageBucket: "ttmsayt.firebasestorage.app",
+        messagingSenderId: "202196664531",
+        appId: "1:202196664531:web:4a45b96c5fb655b47bd426"
+      };
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
+      const snap = await db.collection("siteSettings").doc("landing").get();
+      if (!snap.exists) return;
+      const d = snap.data();
+
+      if (d.heroSlides && d.heroSlides.length) {
+        heroSlidesData = d.heroSlides;
+        renderHeroSlides();
+        restartHeroTimer();
+      }
+      if (d.teachers && d.teachers.length) {
+        teachers = d.teachers;
+        renderTeachers();
+      }
+      const introId = extractYouTubeId(d.introVideo);
+      if (introId) document.getElementById("introVideoTrigger").dataset.video = introId;
+      const analizId = extractYouTubeId(d.analizVideo);
+      if (analizId) document.getElementById("analizVideoTrigger").dataset.video = analizId;
+      const materialId = extractYouTubeId(d.materialVideo);
+      if (materialId) document.getElementById("materialVideoTrigger").dataset.video = materialId;
+    } catch (e) {
+      console.error("Sayt ayarları yüklənmədi, standart məzmun göstərilir:", e);
+    }
+  })();
 </script>
 </body>
 </html>
