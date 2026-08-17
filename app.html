@@ -551,6 +551,21 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 
 <div class="toast" id="toast"></div>
 
+<div id="material-video-overlay" style="display:none; position:fixed; inset:0; z-index:3000; background:rgba(0,0,0,.9); align-items:center; justify-content:center; padding:14px;">
+  <div id="material-video-box" style="width:100%; max-width:900px; background:#000; border-radius:16px; overflow:hidden; position:relative;">
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:#111;">
+      <div id="material-video-title" style="color:#fff; font-size:13.5px; font-weight:700; padding-right:10px;">Video</div>
+      <div style="display:flex; gap:8px; flex-shrink:0;">
+        <button onclick="toggleMaterialVideoFullscreen()" style="background:rgba(255,255,255,.12); color:#fff; width:34px; height:34px; border-radius:8px; font-size:15px;">⛶</button>
+        <button onclick="closeMaterialVideo()" style="background:rgba(255,255,255,.12); color:#fff; width:34px; height:34px; border-radius:8px; font-size:15px;">✕</button>
+      </div>
+    </div>
+    <div style="aspect-ratio:16/9; width:100%;">
+      <iframe id="material-video-frame" src="" style="width:100%; height:100%; border:0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+  </div>
+</div>
+
 <div id="view-student" style="display:none">
   <header class="panel-topbar">
     <div class="panel-brand"><div class="brand-icon">TTM</div><span>Şagird Paneli</span></div>
@@ -754,6 +769,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyDk9JWyY8V3T_GRIP32WOF59qKgztHPE9M",
@@ -767,6 +783,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
+const storage = firebase.storage();
 const USERNAME_DOMAIN = "@ttm.internal";
 
 function showView(id) {
@@ -860,6 +877,38 @@ function toast(msg) {
 
 // Təhlükəsizlik: istifadəçi mətnlərini ekrana çıxarmazdan əvvəl "təmizləyir"
 // ki, kimsə ad/qeyd sahəsinə zərərli kod yazıb sistemi poza bilməsin.
+function extractYouTubeId(url) {
+  if (!url) return null;
+  const m = String(url).match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+  return m ? m[1] : (/^[\w-]{11}$/.test(String(url).trim()) ? url.trim() : null);
+}
+
+window.openMaterialVideo = (encodedUrl, title) => {
+  const url = decodeURIComponent(encodedUrl);
+  const vid = extractYouTubeId(url);
+  const overlay = document.getElementById("material-video-overlay");
+  const frame = document.getElementById("material-video-frame");
+  const titleEl = document.getElementById("material-video-title");
+  if (!vid) {
+    window.open(url, "_blank", "noopener,noreferrer");
+    return;
+  }
+  titleEl.textContent = title || "Video";
+  frame.src = `https://www.youtube-nocookie.com/embed/${vid}?autoplay=1&rel=0&modestbranding=1&iv_load_policy=3&disablekb=1&playsinline=1`;
+  overlay.style.display = "flex";
+  document.body.style.overflow = "hidden";
+};
+function closeMaterialVideo() {
+  document.getElementById("material-video-overlay").style.display = "none";
+  document.getElementById("material-video-frame").src = "";
+  document.body.style.overflow = "";
+}
+function toggleMaterialVideoFullscreen() {
+  const box = document.getElementById("material-video-box");
+  if (!document.fullscreenElement) box.requestFullscreen?.();
+  else document.exitFullscreen?.();
+}
+
 function esc(str) {
   if (str === null || str === undefined) return "";
   return String(str)
@@ -2095,15 +2144,18 @@ window.removeSlideImage = (i) => { ssSlides[i].img = ""; renderSlidesBuilder(); 
 window.uploadSlideImage = async (i, inputEl) => {
   const file = inputEl.files[0];
   if (!file) return;
-  toast("Şəkil yüklənir...");
+  toast("Şəkil yüklənir, gözləyin...");
   try {
-    const base64 = await compressImageToBase64(file, 1000, 0.72);
-    ssSlides[i].img = base64;
+    const path = `siteSlides/${Date.now()}_${i}_${file.name.replace(/[^\w.-]/g, "_")}`;
+    const ref = storage.ref().child(path);
+    await ref.put(file);
+    const url = await ref.getDownloadURL();
+    ssSlides[i].img = url;
     renderSlidesBuilder();
-    toast("Şəkil əlavə edildi");
+    toast("Şəkil yükləndi ✅");
   } catch (e) {
     console.error(e);
-    toast("Şəkil yüklənərkən xəta baş verdi");
+    toast("Şəkil yüklənərkən xəta: " + (e.message || e));
   }
 };
 document.getElementById("ss-add-slide-btn").addEventListener("click", () => {
@@ -2333,13 +2385,16 @@ async function initStudentPanel(uid) {
       el.innerHTML = docs.map(d => {
         const m = d.data();
         const isPdf = m.type === "pdf";
+        const actionBtn = isPdf
+          ? `<a href="${esc(m.url)}" target="_blank" rel="noopener noreferrer" class="btn-small" style="text-decoration:none;">Aç</a>`
+          : `<button class="btn-small" onclick="openMaterialVideo('${encodeURIComponent(m.url)}','${esc(m.title).replace(/'/g, "&#39;")}')">Bax</button>`;
         return `<div class="list-item">
           <div class="stat-icon-badge ${isPdf ? "grad-orange" : "grad-purple"}" style="flex-shrink:0;">${isPdf ? "📄" : "🎬"}</div>
           <div class="list-item-info">
             <div class="list-item-title">${esc(m.title)}</div>
             <div class="list-item-sub"><span class="badge">${isPdf ? "PDF" : "Video"}</span></div>
           </div>
-          <div class="list-item-actions"><a href="${esc(m.url)}" target="_blank" rel="noopener noreferrer" class="btn-small" style="text-decoration:none;">Aç</a></div>
+          <div class="list-item-actions">${actionBtn}</div>
         </div>`;
       }).join("");
     }, err => console.error("materials xətası:", err));
