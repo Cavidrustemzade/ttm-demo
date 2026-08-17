@@ -359,7 +359,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
           <div class="field"><label>Link (URL)</label><input type="text" id="material-url" placeholder="https://..." /></div>
         </div>
         <button class="btn-small" id="material-save-btn">Əlavə et</button>
-        <div class="muted-note">PDF üçün Google Drive/Dropbox linki, video üçün YouTube linki paylaşa bilərsiniz.</div>
+        <div class="muted-note">PDF üçün Google Drive/Dropbox linki, video üçün YouTube linki paylaşa bilərsiniz. Video "Siyahıda gizli" (unlisted) olaraq yükləsəniz, YouTube axtarışında çıxmaz. Şagird videonu saytın öz pəncərəsində izləyir, lakin YouTube heç bir platformada linkin köçürülməsinin (copy) qarşısını 100% almağa imkan vermir — bu, YouTube-un öz məhdudiyyətidir.</div>
       </div>
       <div class="card">
         <h3>Fayl siyahısı</h3>
@@ -533,7 +533,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 
       <div class="card">
         <h3>🖼️ Baş səhifə slaydları</h3>
-        <p class="muted-note" style="margin-bottom:12px;">Hər slayd üçün şəkil linki (imgur, google drive paylaşım linki və s.) yerləşdirin.</p>
+        <p class="muted-note" style="margin-bottom:12px;">Şəkli birbaşa cihazınızdan seçib yükləyin. Tövsiyə olunan ölçü: en azı 1200px enində, şaquli (portret) və ya kvadrata yaxın şəkillər (məs. 4:5) daha yaxşı görünür — şəkil avtomatik uyğunlaşdırılır (kənarlardan kəsilə bilər).</p>
         <div id="ss-slides-builder"></div>
         <button class="btn-outline" id="ss-add-slide-btn">+ Slayd əlavə et</button>
       </div>
@@ -2071,8 +2071,11 @@ function renderSlidesBuilder() {
   el.innerHTML = ssSlides.map((s, i) => `
     <div class="q-builder-item">
       <button class="btn-danger" onclick="removeSlide(${i})">Sil</button>
-      <div class="field" style="margin-bottom:8px;"><label>Şəkil linki</label>
-        <input type="text" value="${esc(s.img || "")}" oninput="updateSlide(${i},'img',this.value)" placeholder="https://..." />
+      <div class="field" style="margin-bottom:8px;">
+        <label>Slayd şəkli</label>
+        <input type="file" accept="image/*" onchange="uploadSlideImage(${i}, this)" />
+        ${s.img ? `<img src="${s.img}" style="max-width:100%; margin-top:8px; border-radius:8px; border:1px solid var(--color-gray);" />
+          <button class="btn-outline" style="margin-top:6px;" onclick="removeSlideImage(${i})">Şəkli sil</button>` : `<div class="muted-note" style="margin-top:6px;">Hələ şəkil seçilməyib</div>`}
       </div>
       <div class="field" style="margin-bottom:8px;"><label>Kiçik etiket (badge)</label>
         <input type="text" value="${esc(s.badge || "")}" oninput="updateSlide(${i},'badge',this.value)" placeholder="Məs: Kurs görüntüsü" />
@@ -2088,6 +2091,21 @@ function renderSlidesBuilder() {
 }
 window.removeSlide = (i) => { ssSlides.splice(i, 1); renderSlidesBuilder(); };
 window.updateSlide = (i, field, val) => { ssSlides[i][field] = val; };
+window.removeSlideImage = (i) => { ssSlides[i].img = ""; renderSlidesBuilder(); };
+window.uploadSlideImage = async (i, inputEl) => {
+  const file = inputEl.files[0];
+  if (!file) return;
+  toast("Şəkil yüklənir...");
+  try {
+    const base64 = await compressImageToBase64(file, 1000, 0.72);
+    ssSlides[i].img = base64;
+    renderSlidesBuilder();
+    toast("Şəkil əlavə edildi");
+  } catch (e) {
+    console.error(e);
+    toast("Şəkil yüklənərkən xəta baş verdi");
+  }
+};
 document.getElementById("ss-add-slide-btn").addEventListener("click", () => {
   if (ssSlides.length >= 6) { toast("Maksimum 6 slayd əlavə edə bilərsiniz"); return; }
   ssSlides.push({ img: "", badge: "", title: "", text: "" });
