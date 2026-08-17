@@ -2121,12 +2121,16 @@ function renderSlidesBuilder() {
     <div class="q-builder-item">
       <button class="btn-danger" onclick="removeSlide(${i})">Sil</button>
       <div class="field" style="margin-bottom:8px;">
-        <label>Slayd şəkli</label>
+        <label>Fayldan yüklə (avtomatik linki aşağı doldurur)</label>
         <input type="file" accept="image/*" onchange="uploadSlideImage(${i}, this)" />
-        ${s.img ? `<img src="${s.img}" style="max-width:100%; margin-top:8px; border-radius:8px; border:1px solid var(--color-gray);" />
-          <button class="btn-outline" style="margin-top:6px;" onclick="removeSlideImage(${i})">Şəkli sil</button>` : `<div class="muted-note" style="margin-top:6px;">Hələ şəkil seçilməyib</div>`}
       </div>
-      <div class="field" style="margin-bottom:8px;"><label>Kiçik etiket (badge)</label>
+      <div class="field" style="margin-bottom:8px;">
+        <label>Şəkil linki (yuxarıdan yükləyəndə özü dolur, ya da özün link yapışdıra bilərsən)</label>
+        <input type="text" value="${esc(s.img || "")}" oninput="updateSlide(${i},'img',this.value)" placeholder="https://..." />
+      </div>
+      ${s.img ? `<img src="${s.img}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" style="max-width:100%; margin-top:4px; border-radius:8px; border:1px solid var(--color-gray);" />
+        <div class="muted-note" style="display:none; color:var(--color-danger);">⚠️ Bu link şəkli göstərmir, düzgün deyil.</div>` : `<div class="muted-note">Hələ şəkil seçilməyib</div>`}
+      <div class="field" style="margin-top:8px; margin-bottom:8px;"><label>Kiçik etiket (badge)</label>
         <input type="text" value="${esc(s.badge || "")}" oninput="updateSlide(${i},'badge',this.value)" placeholder="Məs: Kurs görüntüsü" />
       </div>
       <div class="field" style="margin-bottom:8px;"><label>Başlıq</label>
@@ -2152,10 +2156,11 @@ window.uploadSlideImage = async (i, inputEl) => {
     const url = await ref.getDownloadURL();
     ssSlides[i].img = url;
     renderSlidesBuilder();
-    toast("Şəkil yükləndi ✅");
+    toast("Şəkil yükləndi ✅ İndi 'Sayt Ayarlarını Yadda Saxla' düyməsinə basmağı unutma");
   } catch (e) {
     console.error(e);
-    toast("Şəkil yüklənərkən xəta: " + (e.message || e));
+    toast("Xəta (" + (e.code || "naməlum") + "): " + (e.message || e));
+    alert("Şəkil yüklənmədi.\nXəta kodu: " + (e.code || "naməlum") + "\n\nBu adətən Firebase Storage-ın icazə qaydaları (Security Rules) səbəbindən olur. Bu mesajı olduğu kimi göndər ki, düzəldək.");
   }
 };
 document.getElementById("ss-add-slide-btn").addEventListener("click", () => {
