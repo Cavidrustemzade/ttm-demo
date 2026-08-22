@@ -2252,8 +2252,11 @@ document.getElementById("analytics-exam-select").addEventListener("change", asyn
     db.collection("examAttempts").where("examId", "==", examId).get(),
     db.collection("exams").doc(examId).collection("questions").orderBy("order").get()
   ]);
-  const attempts = attemptsSnap.docs.map(d => d.data());
+  const attempts = attemptsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
   const questions = questionsSnap.docs.map(d => d.data());
+
+  window._analyticsQuestions = questions;
+  window._analyticsAttempts = attempts;
 
   if (attempts.length === 0) { el.innerHTML = `<div class="empty-state">Bu sınağı hələ heç kim işləməyib</div>`; return; }
 
@@ -2271,7 +2274,17 @@ document.getElementById("analytics-exam-select").addEventListener("change", asyn
 
   const studentRows = attempts.slice().sort((a, b) => b.score - a.score).map(a => {
     const s = studentsCache.find(s => s.id === a.studentId);
-    return `<div class="list-item"><div class="list-item-info"><div class="list-item-title">${s ? esc(s.fullName) : "Naməlum"}</div></div><div style="font-weight:800; color:var(--color-primary);">${a.score}%</div></div>`;
+    return `
+      <div class="list-item" style="flex-direction:column; align-items:stretch;">
+        <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleAttemptDetail('${a.id}')">
+          <div class="list-item-info">
+            <div class="list-item-title">${s ? esc(s.fullName) : "Naməlum"}</div>
+            <div class="list-item-sub">✅ ${a.correctCount} düzgün · ❌ ${a.totalCount - a.correctCount} səhv (${a.totalCount} sualdan)</div>
+          </div>
+          <div style="font-weight:800; color:var(--color-primary);">${a.score}% <span style="font-size:11px; color:var(--color-text-muted);">▾</span></div>
+        </div>
+        <div id="attempt-detail-${a.id}" style="display:none; margin-top:10px;"></div>
+      </div>`;
   }).join("");
 
   el.innerHTML = `
@@ -2289,10 +2302,39 @@ document.getElementById("analytics-exam-select").addEventListener("change", asyn
         <div style="font-weight:700; color:${q.wrongPct > 50 ? "var(--color-danger)" : q.wrongPct > 25 ? "#d99a2b" : "#2e9e6b"};">${q.wrongPct}% səhv</div>
       </div>
     `).join("")}
-    <h3 style="font-size:14px; margin:14px 0 10px;">Şagird nəticələri</h3>
+    <h3 style="font-size:14px; margin:14px 0 10px;">Şagird nəticələri (üzərinə toxunun — hansı sualları səhv etdiyini görün)</h3>
     ${studentRows}
   `;
 });
+
+window.toggleAttemptDetail = (attemptId) => {
+  const box = document.getElementById(`attempt-detail-${attemptId}`);
+  if (!box) return;
+  if (box.style.display === "block") { box.style.display = "none"; return; }
+  const attempt = (window._analyticsAttempts || []).find(a => a.id === attemptId);
+  const questions = window._analyticsQuestions || [];
+  if (!attempt) return;
+
+  box.innerHTML = questions.map((q, i) => {
+    const pq = (attempt.perQuestion || [])[i];
+    if (!pq) return "";
+    const qText = q.text ? esc(q.text) : `Sual ${i + 1}`;
+    const OPT = ["A","B","C","D","E"];
+    if (q.type === "open") {
+      return `<div style="padding:8px 10px; border-radius:8px; margin-bottom:6px; background:${pq.isCorrect ? "rgba(46,158,107,.08)" : "rgba(217,76,76,.08)"};">
+        <div style="font-size:12.5px; font-weight:600;">${i + 1}. ${qText} ${pq.isCorrect ? "✅" : "❌"}</div>
+        ${q.imageBase64 ? `<img src="${q.imageBase64}" style="max-width:110px; max-height:110px; border-radius:6px; margin-top:6px; border:1px solid var(--color-gray); cursor:pointer;" onclick="window.open(this.src)" />` : ""}
+        ${!pq.isCorrect ? `<div style="font-size:11.5px; color:var(--color-text-muted); margin-top:3px;">Cavabı: <b>${esc(pq.selected || "(boş)")}</b> · Düzgünü: <b>${esc(q.correctAnswer || "")}</b></div>` : ""}
+      </div>`;
+    }
+    return `<div style="padding:8px 10px; border-radius:8px; margin-bottom:6px; background:${pq.isCorrect ? "rgba(46,158,107,.08)" : "rgba(217,76,76,.08)"};">
+      <div style="font-size:12.5px; font-weight:600;">${i + 1}. ${qText} ${pq.isCorrect ? "✅" : "❌"}</div>
+      ${q.imageBase64 ? `<img src="${q.imageBase64}" style="max-width:110px; max-height:110px; border-radius:6px; margin-top:6px; border:1px solid var(--color-gray); cursor:pointer;" onclick="window.open(this.src)" />` : ""}
+      ${!pq.isCorrect ? `<div style="font-size:11.5px; color:var(--color-text-muted); margin-top:3px;">Cavabı: <b>${pq.selected !== null && pq.selected !== undefined ? OPT[pq.selected] : "(boş)"}</b> · Düzgünü: <b>${OPT[q.correctIndex]}</b></div>` : ""}
+    </div>`;
+  }).join("");
+  box.style.display = "block";
+};
 
 document.getElementById("analytics-student-select").addEventListener("change", async (e) => {
   const studentId = e.target.value;
