@@ -329,19 +329,23 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
       </div>
 
       <div class="card">
+        <h3>👤 Şagird üzrə təhlil</h3>
+        <div class="field-row">
+          <div class="field">
+            <label>Şagird adını yazın</label>
+            <input type="text" id="analytics-student-search" list="analytics-student-datalist" placeholder="Adı yazmağa başlayın..." autocomplete="off" />
+            <datalist id="analytics-student-datalist"></datalist>
+          </div>
+        </div>
+        <div id="analytics-student-result"><div class="empty-state">Şagird seçin ki, təhlil görünsün</div></div>
+      </div>
+
+      <div class="card">
         <h3>📊 Sınaq analitikası (bütün qrup üzrə)</h3>
         <div class="field-row">
           <div class="field"><label>Sınaq seçin</label><select id="analytics-exam-select"><option value="">— Seçin —</option></select></div>
         </div>
         <div id="analytics-exam-result"><div class="empty-state">Sınaq seçin ki, təhlil görünsün</div></div>
-      </div>
-
-      <div class="card">
-        <h3>👤 Şagird üzrə təhlil</h3>
-        <div class="field-row">
-          <div class="field"><label>Şagird seçin</label><select id="analytics-student-select"><option value="">— Seçin —</option></select></div>
-        </div>
-        <div id="analytics-student-result"><div class="empty-state">Şagird seçin ki, təhlil görünsün</div></div>
       </div>
     </div>
 
@@ -1001,11 +1005,9 @@ function fillStudentSelects() {
     sel.innerHTML = studentsCache.filter(s => s.active !== false).map(s => `<option value="${s.id}">${esc(s.fullName)}</option>`).join("") || `<option value="">Əvvəlcə şagird əlavə edin</option>`;
     if (current) sel.value = current;
   });
-  const asSel = document.getElementById("analytics-student-select");
-  if (asSel) {
-    const current = asSel.value;
-    asSel.innerHTML = `<option value="">— Seçin —</option>` + studentsCache.filter(s => s.active !== false).map(s => `<option value="${s.id}">${esc(s.fullName)}</option>`).join("");
-    if (current) asSel.value = current;
+  const asList = document.getElementById("analytics-student-datalist");
+  if (asList) {
+    asList.innerHTML = studentsCache.filter(s => s.active !== false).map(s => `<option value="${esc(s.fullName)}"></option>`).join("");
   }
 }
 
@@ -2241,6 +2243,14 @@ document.querySelectorAll('.tab-btn[data-tab="tab-sitesettings"]').forEach(btn =
 });
 
 
+function openImageLightbox(src) {
+  const overlay = document.createElement("div");
+  overlay.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;padding:16px;";
+  overlay.innerHTML = `<img src="${src}" style="max-width:100%;max-height:100%;border-radius:8px;" />`;
+  overlay.addEventListener("click", () => overlay.remove());
+  document.body.appendChild(overlay);
+}
+
 document.getElementById("analytics-exam-select").addEventListener("change", async (e) => {
   const examId = e.target.value;
   const el = document.getElementById("analytics-exam-result");
@@ -2323,29 +2333,39 @@ window.toggleAttemptDetail = (attemptId) => {
     if (q.type === "open") {
       return `<div style="padding:8px 10px; border-radius:8px; margin-bottom:6px; background:${pq.isCorrect ? "rgba(46,158,107,.08)" : "rgba(217,76,76,.08)"};">
         <div style="font-size:12.5px; font-weight:600;">${i + 1}. ${qText} ${pq.isCorrect ? "✅" : "❌"}</div>
-        ${q.imageBase64 ? `<img src="${q.imageBase64}" style="max-width:110px; max-height:110px; border-radius:6px; margin-top:6px; border:1px solid var(--color-gray); cursor:pointer;" onclick="window.open(this.src)" />` : ""}
+        ${q.imageBase64 ? `<img src="${q.imageBase64}" style="max-width:110px; max-height:110px; border-radius:6px; margin-top:6px; border:1px solid var(--color-gray); cursor:pointer;" onclick="openImageLightbox(this.src)" />` : ""}
         ${!pq.isCorrect ? `<div style="font-size:11.5px; color:var(--color-text-muted); margin-top:3px;">Cavabı: <b>${esc(pq.selected || "(boş)")}</b> · Düzgünü: <b>${esc(q.correctAnswer || "")}</b></div>` : ""}
       </div>`;
     }
     return `<div style="padding:8px 10px; border-radius:8px; margin-bottom:6px; background:${pq.isCorrect ? "rgba(46,158,107,.08)" : "rgba(217,76,76,.08)"};">
       <div style="font-size:12.5px; font-weight:600;">${i + 1}. ${qText} ${pq.isCorrect ? "✅" : "❌"}</div>
-      ${q.imageBase64 ? `<img src="${q.imageBase64}" style="max-width:110px; max-height:110px; border-radius:6px; margin-top:6px; border:1px solid var(--color-gray); cursor:pointer;" onclick="window.open(this.src)" />` : ""}
+      ${q.imageBase64 ? `<img src="${q.imageBase64}" style="max-width:110px; max-height:110px; border-radius:6px; margin-top:6px; border:1px solid var(--color-gray); cursor:pointer;" onclick="openImageLightbox(this.src)" />` : ""}
       ${!pq.isCorrect ? `<div style="font-size:11.5px; color:var(--color-text-muted); margin-top:3px;">Cavabı: <b>${pq.selected !== null && pq.selected !== undefined ? OPT[pq.selected] : "(boş)"}</b> · Düzgünü: <b>${OPT[q.correctIndex]}</b></div>` : ""}
     </div>`;
   }).join("");
   box.style.display = "block";
 };
 
-document.getElementById("analytics-student-select").addEventListener("change", async (e) => {
-  const studentId = e.target.value;
+document.getElementById("analytics-student-search").addEventListener("input", (e) => {
+  const name = e.target.value.trim().toLowerCase();
+  const s = studentsCache.find(st => st.fullName.toLowerCase() === name);
+  if (s) loadStudentAnalytics(s.id);
+});
+
+window._studentAnalyticsCache = {};
+
+async function loadStudentAnalytics(studentId) {
   const el = document.getElementById("analytics-student-result");
   if (!studentId) { el.innerHTML = `<div class="empty-state">Şagird seçin ki, təhlil görünsün</div>`; return; }
   el.innerHTML = `<div class="empty-state">Yüklənir...</div>`;
 
   const snap = await db.collection("examAttempts").where("studentId", "==", studentId).get();
-  const attempts = snap.docs.map(d => d.data()).sort((a, b) => (a.submittedAt ? a.submittedAt.toMillis() : 0) - (b.submittedAt ? b.submittedAt.toMillis() : 0));
+  const attempts = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.submittedAt ? a.submittedAt.toMillis() : 0) - (b.submittedAt ? b.submittedAt.toMillis() : 0));
 
   if (attempts.length === 0) { el.innerHTML = `<div class="empty-state">Bu şagird hələ sınaq işləməyib</div>`; return; }
+
+  window._studentAnalyticsCache = {};
+  attempts.forEach(a => { window._studentAnalyticsCache[a.id] = { attempt: a, questions: null }; });
 
   const byTopic = {};
   attempts.forEach(a => {
@@ -2355,6 +2375,21 @@ document.getElementById("analytics-student-select").addEventListener("change", a
     byTopic[t].total += a.totalCount;
   });
   const topicRows = Object.keys(byTopic).map(t => ({ topic: t, pct: Math.round((byTopic[t].correct / byTopic[t].total) * 100) })).sort((a, b) => a.pct - b.pct);
+
+  const attemptRows = attempts.slice().reverse().map(a => {
+    const ex = examsCache.find(x => x.id === a.examId);
+    return `
+      <div class="list-item" style="flex-direction:column; align-items:stretch;">
+        <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleStudentAttemptDetail('${a.id}')">
+          <div class="list-item-info">
+            <div class="list-item-title">${ex ? esc(ex.title) : "Sınaq"}</div>
+            <div class="list-item-sub">✅ ${a.correctCount} düzgün · ❌ ${a.totalCount - a.correctCount} səhv (${a.totalCount} sualdan)</div>
+          </div>
+          <div style="font-weight:800; color:var(--color-primary);">${a.score}% <span style="font-size:11px; color:var(--color-text-muted);">▾</span></div>
+        </div>
+        <div id="student-attempt-detail-${a.id}" style="display:none; margin-top:10px;"></div>
+      </div>`;
+  }).join("");
 
   el.innerHTML = `
     <h3 style="font-size:14px; margin-bottom:10px;">Xronoloji irəliləyiş</h3>
@@ -2379,117 +2414,48 @@ document.getElementById("analytics-student-select").addEventListener("change", a
         </div>
       </div>`;
     }).join("")}
+    <h3 style="font-size:14px; margin:14px 0 10px;">Sınaq nəticələri (üzərinə toxunun)</h3>
+    ${attemptRows}
   `;
-});
-
-// =========================================================================
-// ŞAGİRD PANELİ MƏNTİQİ
-// =========================================================================
-
-async function initStudentPanel(uid) {
-  const sDoc = await db.collection("students").doc(uid).get();
-  if (!sDoc.exists) return;
-  const s = sDoc.data();
-  document.getElementById("s-welcome-name").textContent = "Xoş gəldin, " + s.fullName + "! 👋";
-
-  let groupNameText = "—";
-  if (s.groupId) {
-    const gDoc = await db.collection("groups").doc(s.groupId).get();
-    if (gDoc.exists) groupNameText = gDoc.data().name;
-  }
-  document.getElementById("s-group-badge").innerHTML = `<span class="badge">${esc(groupNameText)}</span>`;
-
-  // Gündəlik hesabatlar
-  db.collection("dailyReports").where("studentId", "==", uid).onSnapshot(snap => {
-    const reports = snap.docs.map(d => d.data()).sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 30);
-    renderStudentDaily(reports);
-    updateStudentStats(reports);
-  }, err => console.error("dailyReports xətası:", err));
-
-  // Quiz nəticələri
-  let quizData = [], examData = [];
-  const renderScores = () => renderStudentScores(quizData, examData);
-  db.collection("quizResults").where("studentId", "==", uid).onSnapshot(snap => {
-    quizData = snap.docs.map(d => d.data()).sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 20);
-    renderScores();
-    updateAverages(quizData, examData);
-    renderSubjectBreakdown(quizData, examData);
-  }, err => console.error("quizResults xətası:", err));
-  db.collection("examResults").where("studentId", "==", uid).onSnapshot(snap => {
-    examData = snap.docs.map(d => d.data()).sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 20);
-    renderScores();
-    updateAverages(quizData, examData);
-    renderSubjectBreakdown(quizData, examData);
-  }, err => console.error("examResults xətası:", err));
-
-  // Fayllar (qrupa görə)
-  if (s.groupId) {
-    db.collection("materials").where("groupId", "==", s.groupId).onSnapshot(snap => {
-      const el = document.getElementById("s-materials-list");
-      if (snap.empty) { el.innerHTML = `<div class="empty-state">Hələ fayl əlavə edilməyib</div>`; return; }
-      const docs = snap.docs.slice().sort((a, b) => {
-        const ta = a.data().createdAt ? a.data().createdAt.toMillis() : 0;
-        const tb = b.data().createdAt ? b.data().createdAt.toMillis() : 0;
-        return tb - ta;
-      });
-      el.innerHTML = docs.map(d => {
-        const m = d.data();
-        const isPdf = m.type === "pdf";
-        const actionBtn = isPdf
-          ? `<a href="${esc(m.url)}" target="_blank" rel="noopener noreferrer" class="btn-small" style="text-decoration:none;">Aç</a>`
-          : `<button class="btn-small" onclick="openMaterialVideo('${encodeURIComponent(m.url)}','${esc(m.title).replace(/'/g, "&#39;")}')">Bax</button>`;
-        return `<div class="list-item">
-          <div class="stat-icon-badge ${isPdf ? "grad-orange" : "grad-purple"}" style="flex-shrink:0;">${isPdf ? "📄" : "🎬"}</div>
-          <div class="list-item-info">
-            <div class="list-item-title">${esc(m.title)}</div>
-            <div class="list-item-sub"><span class="badge">${isPdf ? "PDF" : "Video"}</span></div>
-          </div>
-          <div class="list-item-actions">${actionBtn}</div>
-        </div>`;
-      }).join("");
-    }, err => console.error("materials xətası:", err));
-
-    // Cədvəl
-    db.collection("schedule").doc(s.groupId).onSnapshot(doc => {
-      document.getElementById("s-schedule-text").textContent = doc.exists && doc.data().text ? doc.data().text : "Hələ cədvəl əlavə edilməyib";
-    }, err => console.error("schedule xətası:", err));
-
-    // Mövzular
-    db.collection("topics").where("groupId", "==", s.groupId).onSnapshot(snap => {
-      const el = document.getElementById("s-topics-list");
-      if (snap.empty) { el.innerHTML = `<div class="empty-state">Hələ mövzu yoxdur</div>`; return; }
-      const docs = snap.docs.slice().sort((a, b) => {
-        const ta = a.data().createdAt ? a.data().createdAt.toMillis() : 0;
-        const tb = b.data().createdAt ? b.data().createdAt.toMillis() : 0;
-        return tb - ta;
-      });
-      el.innerHTML = docs.map(d => {
-        const t = d.data();
-        return `<div class="list-item">
-          <div class="list-item-info"><div class="list-item-title">${t.completed ? "✅" : "⏳"} ${esc(t.name)}</div></div>
-        </div>`;
-      }).join("");
-    }, err => console.error("topics xətası:", err));
-
-    // Sınaqlar
-    currentStudentUid = uid;
-    currentStudentGroupId = s.groupId;
-    loadStudentExams(uid, s.groupId);
-  }
 }
 
-// =========================================================================
-// SINAQ SİSTEMİ (ŞAGİRD)
-// =========================================================================
-let currentStudentUid = null;
-let currentStudentGroupId = null;
-let studentExamsCache = [];
-let studentAttemptsCache = [];
-let currentExam = null;
-let currentExamAnswers = [];
-let currentExamIndex = 0;
-let examTimerInterval = null;
-let examEndTime = null;
+window.toggleStudentAttemptDetail = async (attemptId) => {
+  const box = document.getElementById(`student-attempt-detail-${attemptId}`);
+  if (!box) return;
+  if (box.style.display === "block") { box.style.display = "none"; return; }
+  box.style.display = "block";
+  box.innerHTML = `<div class="empty-state">Yüklənir...</div>`;
+
+  const cacheEntry = window._studentAnalyticsCache[attemptId];
+  if (!cacheEntry) return;
+  const { attempt } = cacheEntry;
+
+  if (!cacheEntry.questions) {
+    const qSnap = await db.collection("exams").doc(attempt.examId).collection("questions").orderBy("order").get();
+    cacheEntry.questions = qSnap.docs.map(d => d.data());
+  }
+  const questions = cacheEntry.questions;
+  const OPT = ["A","B","C","D","E"];
+
+  box.innerHTML = questions.map((q, i) => {
+    const pq = (attempt.perQuestion || [])[i];
+    if (!pq) return "";
+    const qText = q.text ? esc(q.text) : `Sual ${i + 1}`;
+    const imgHtml = q.imageBase64 ? `<img src="${q.imageBase64}" style="max-width:110px; max-height:110px; border-radius:6px; margin-top:6px; border:1px solid var(--color-gray); cursor:pointer;" onclick="openImageLightbox(this.src)" />` : "";
+    if (q.type === "open") {
+      return `<div style="padding:8px 10px; border-radius:8px; margin-bottom:6px; background:${pq.isCorrect ? "rgba(46,158,107,.08)" : "rgba(217,76,76,.08)"};">
+        <div style="font-size:12.5px; font-weight:600;">${i + 1}. ${qText} ${pq.isCorrect ? "✅" : "❌"}</div>
+        ${imgHtml}
+        ${!pq.isCorrect ? `<div style="font-size:11.5px; color:var(--color-text-muted); margin-top:3px;">Cavabı: <b>${esc(pq.selected || "(boş)")}</b> · Düzgünü: <b>${esc(q.correctAnswer || "")}</b></div>` : ""}
+      </div>`;
+    }
+    return `<div style="padding:8px 10px; border-radius:8px; margin-bottom:6px; background:${pq.isCorrect ? "rgba(46,158,107,.08)" : "rgba(217,76,76,.08)"};">
+      <div style="font-size:12.5px; font-weight:600;">${i + 1}. ${qText} ${pq.isCorrect ? "✅" : "❌"}</div>
+      ${imgHtml}
+      ${!pq.isCorrect ? `<div style="font-size:11.5px; color:var(--color-text-muted); margin-top:3px;">Cavabı: <b>${pq.selected !== null && pq.selected !== undefined ? OPT[pq.selected] : "(boş)"}</b> · Düzgünü: <b>${OPT[q.correctIndex]}</b></div>` : ""}
+    </div>`;
+  }).join("");
+};
 
 function loadStudentExams(uid, groupId) {
   if (!groupId) return;
