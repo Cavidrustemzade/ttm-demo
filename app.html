@@ -1967,49 +1967,39 @@ while (qGlobal < examQuestions.length) {
     continue;
   }
 
-  // 2 sütun: əvvəlcə sol sütuna neçə sual sığdığını təbii hündürlüklə tapırıq
+  // 2 sütun: sol sütuna neçə sual sığdığını təbii hündürlüklə tapırıq
   let leftCount = 0;
-  let cum = 0;
+  let leftCum = 0;
   while (qGlobal + leftCount < examQuestions.length) {
     const h = measureQuestionHeight(examQuestions[qGlobal + leftCount]);
-    if (leftCount > 0 && cum + h > availableH) break;
-    cum += h;
+    if (leftCount > 0 && leftCum + h > availableH) break;
+    leftCum += h;
     leftCount++;
   }
   if (leftCount === 0) leftCount = 1; // ən azı 1 sual (çox böyük şəkil halı)
 
-  // Sağ sütun üçün eyni sayda sual (və ya qalan hamısı, əgər azdırsa)
-  const rightAvailable = Math.max(0, examQuestions.length - (qGlobal + leftCount));
-  let rightCount = Math.min(leftCount, rightAvailable);
-
-  // Sətir hündürlüklərini (hər ikisinin maksimumu) hesablayıb, səhifəyə sığana qədər azaldırıq
-  function computeRowHeights(lc, rc) {
-    const rows = [];
-    for (let i = 0; i < lc; i++) {
-      const lh = measureQuestionHeight(examQuestions[qGlobal + i]);
-      const rh = i < rc ? measureQuestionHeight(examQuestions[qGlobal + lc + i]) : 0;
-      rows.push(Math.max(lh, rh));
-    }
-    return rows;
-  }
-
-  let rows = computeRowHeights(leftCount, rightCount);
-  let totalH = rows.reduce((s, h) => s + h, 0);
-  while (totalH > availableH && leftCount > 1) {
-    leftCount--;
-    rightCount = Math.min(leftCount, rightAvailable);
-    rows = computeRowHeights(leftCount, rightCount);
-    totalH = rows.reduce((s, h) => s + h, 0);
+  // Sağ sütun sol sütundan ASILI OLMADAN öz boş sahəsini müstəqil doldurur —
+  // beləliklə sağda daha çox yer qalarsa, boş buraxılmır, növbəti sual əlavə olunur.
+  const rightStart = qGlobal + leftCount;
+  let rightCount = 0;
+  let rightCum = 0;
+  while (rightStart + rightCount < examQuestions.length) {
+    const h = measureQuestionHeight(examQuestions[rightStart + rightCount]);
+    if (rightCount > 0 && rightCum + h > availableH) break;
+    rightCum += h;
+    rightCount++;
   }
 
   // Hər sütunu müstəqil yerləşdiririk ki, hər sualdan sonra seçilən boşluq eyni qalsın
   let yyLeft = pageTopY;
   let yyRight = pageTopY;
-  for (let i = 0; i < leftCount; i++) {
-    const leftQ = examQuestions[qGlobal + i];
-    drawQuestionAt(leftQ, colX[0], yyLeft, qNumCounter + i);
-    yyLeft += measureQuestionHeight(leftQ);
-
+  const maxRowCount = Math.max(leftCount, rightCount);
+  for (let i = 0; i < maxRowCount; i++) {
+    if (i < leftCount) {
+      const leftQ = examQuestions[qGlobal + i];
+      drawQuestionAt(leftQ, colX[0], yyLeft, qNumCounter + i);
+      yyLeft += measureQuestionHeight(leftQ);
+    }
     if (i < rightCount) {
       const rightQ = examQuestions[qGlobal + leftCount + i];
       drawQuestionAt(rightQ, colX[1], yyRight, qNumCounter + leftCount + i);
