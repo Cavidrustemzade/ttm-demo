@@ -1929,14 +1929,19 @@ while (qGlobal < examQuestions.length) {
     totalH = rows.reduce((s, h) => s + h, 0);
   }
 
-  // Çəkirik: hər sətir eyni hündürlükdə başlayır
-  let yy = pageTopY;
+  // Hər sütunu müstəqil yerləşdiririk ki, hər sualdan sonra seçilən boşluq eyni qalsın
+  let yyLeft = pageTopY;
+  let yyRight = pageTopY;
   for (let i = 0; i < leftCount; i++) {
-    drawQuestionAt(examQuestions[qGlobal + i], colX[0], yy, qNumCounter + i);
+    const leftQ = examQuestions[qGlobal + i];
+    drawQuestionAt(leftQ, colX[0], yyLeft, qNumCounter + i);
+    yyLeft += measureQuestionHeight(leftQ);
+
     if (i < rightCount) {
-      drawQuestionAt(examQuestions[qGlobal + leftCount + i], colX[1], yy, qNumCounter + leftCount + i);
+      const rightQ = examQuestions[qGlobal + leftCount + i];
+      drawQuestionAt(rightQ, colX[1], yyRight, qNumCounter + leftCount + i);
+      yyRight += measureQuestionHeight(rightQ);
     }
-    yy += rows[i];
   }
 
   qNumCounter += leftCount + rightCount;
@@ -2456,6 +2461,112 @@ window.toggleStudentAttemptDetail = async (attemptId) => {
     </div>`;
   }).join("");
 };
+
+// =========================================================================
+// ŞAGİRD PANELİ MƏNTİQİ
+// =========================================================================
+
+async function initStudentPanel(uid) {
+  const sDoc = await db.collection("students").doc(uid).get();
+  if (!sDoc.exists) return;
+  const s = sDoc.data();
+  document.getElementById("s-welcome-name").textContent = "Xoş gəldin, " + s.fullName + "! 👋";
+
+  let groupNameText = "—";
+  if (s.groupId) {
+    const gDoc = await db.collection("groups").doc(s.groupId).get();
+    if (gDoc.exists) groupNameText = gDoc.data().name;
+  }
+  document.getElementById("s-group-badge").innerHTML = `<span class="badge">${esc(groupNameText)}</span>`;
+
+  // Gündəlik hesabatlar
+  db.collection("dailyReports").where("studentId", "==", uid).onSnapshot(snap => {
+    const reports = snap.docs.map(d => d.data()).sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 30);
+    renderStudentDaily(reports);
+    updateStudentStats(reports);
+  }, err => console.error("dailyReports xətası:", err));
+
+  // Quiz nəticələri
+  let quizData = [], examData = [];
+  const renderScores = () => renderStudentScores(quizData, examData);
+  db.collection("quizResults").where("studentId", "==", uid).onSnapshot(snap => {
+    quizData = snap.docs.map(d => d.data()).sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 20);
+    renderScores();
+    updateAverages(quizData, examData);
+    renderSubjectBreakdown(quizData, examData);
+  }, err => console.error("quizResults xətası:", err));
+  db.collection("examResults").where("studentId", "==", uid).onSnapshot(snap => {
+    examData = snap.docs.map(d => d.data()).sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 20);
+    renderScores();
+    updateAverages(quizData, examData);
+    renderSubjectBreakdown(quizData, examData);
+  }, err => console.error("examResults xətası:", err));
+
+  // Fayllar (qrupa görə)
+  if (s.groupId) {
+    db.collection("materials").where("groupId", "==", s.groupId).onSnapshot(snap => {
+      const el = document.getElementById("s-materials-list");
+      if (snap.empty) { el.innerHTML = `<div class="empty-state">Hələ fayl əlavə edilməyib</div>`; return; }
+      const docs = snap.docs.slice().sort((a, b) => {
+        const ta = a.data().createdAt ? a.data().createdAt.toMillis() : 0;
+        const tb = b.data().createdAt ? b.data().createdAt.toMillis() : 0;
+        return tb - ta;
+      });
+      el.innerHTML = docs.map(d => {
+        const m = d.data();
+        const isPdf = m.type === "pdf";
+        return `<div class="list-item">
+          <div class="stat-icon-badge ${isPdf ? "grad-orange" : "grad-purple"}" style="flex-shrink:0;">${isPdf ? "📄" : "🎬"}</div>
+          <div class="list-item-info">
+            <div class="list-item-title">${esc(m.title)}</div>
+            <div class="list-item-sub"><span class="badge">${isPdf ? "PDF" : "Video"}</span></div>
+          </div>
+          <div class="list-item-actions"><a href="${esc(m.url)}" target="_blank" rel="noopener noreferrer" class="btn-small" style="text-decoration:none;">Aç</a></div>
+        </div>`;
+      }).join("");
+    }, err => console.error("materials xətası:", err));
+
+    // Cədvəl
+    db.collection("schedule").doc(s.groupId).onSnapshot(doc => {
+      document.getElementById("s-schedule-text").textContent = doc.exists && doc.data().text ? doc.data().text : "Hələ cədvəl əlavə edilməyib";
+    }, err => console.error("schedule xətası:", err));
+
+    // Mövzular
+    db.collection("topics").where("groupId", "==", s.groupId).onSnapshot(snap => {
+      const el = document.getElementById("s-topics-list");
+      if (snap.empty) { el.innerHTML = `<div class="empty-state">Hələ mövzu yoxdur</div>`; return; }
+      const docs = snap.docs.slice().sort((a, b) => {
+        const ta = a.data().createdAt ? a.data().createdAt.toMillis() : 0;
+        const tb = b.data().createdAt ? b.data().createdAt.toMillis() : 0;
+        return tb - ta;
+      });
+      el.innerHTML = docs.map(d => {
+        const t = d.data();
+        return `<div class="list-item">
+          <div class="list-item-info"><div class="list-item-title">${t.completed ? "✅" : "⏳"} ${esc(t.name)}</div></div>
+        </div>`;
+      }).join("");
+    }, err => console.error("topics xətası:", err));
+
+    // Sınaqlar
+    currentStudentUid = uid;
+    currentStudentGroupId = s.groupId;
+    loadStudentExams(uid, s.groupId);
+  }
+}
+
+// =========================================================================
+// SINAQ SİSTEMİ (ŞAGİRD)
+// =========================================================================
+let currentStudentUid = null;
+let currentStudentGroupId = null;
+let studentExamsCache = [];
+let studentAttemptsCache = [];
+let currentExam = null;
+let currentExamAnswers = [];
+let currentExamIndex = 0;
+let examTimerInterval = null;
+let examEndTime = null;
 
 function loadStudentExams(uid, groupId) {
   if (!groupId) return;
