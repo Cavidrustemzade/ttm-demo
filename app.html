@@ -1333,18 +1333,91 @@ let examsCache = [];
 const OPTION_LETTERS = ["A", "B", "C", "D", "E"];
 
 // Şəkli sıxışdırıb base64-ə çevirir (Firestore limitini aşmamaq üçün)
+// Şəklin ətrafındakı boş (arxa fon rəngində) kənarları avtomatik tapıb kəsir.
+// Kırpma zamanı əl ilə dəqiq kəsmək çətin olduğu üçün bu, hər şəkildə
+// eyni "sıxlıqda" nəticə almaq üçün istifadə olunur.
+function autoTrimCanvas(sourceCanvas, threshold) {
+  const w = sourceCanvas.width, h = sourceCanvas.height;
+  if (w < 10 || h < 10) return sourceCanvas;
+  const ctx = sourceCanvas.getContext("2d");
+  const imgData = ctx.getImageData(0, 0, w, h).data;
+
+  function getPixel(x, y) {
+    const idx = (y * w + x) * 4;
+    return [imgData[idx], imgData[idx + 1], imgData[idx + 2]];
+  }
+  // Arxa fon rəngini şəklin küncündən götürürük (adətən ağ və ya açıq boz olur)
+  const bg = getPixel(1, 1);
+  function isBackground(x, y) {
+    const [r, g, b] = getPixel(x, y);
+    const diff = Math.abs(r - bg[0]) + Math.abs(g - bg[1]) + Math.abs(b - bg[2]);
+    return diff < (threshold || 28);
+  }
+
+  let top = 0, bottom = h - 1, left = 0, right = w - 1;
+
+  topLoop:
+  for (; top < h; top++) {
+    for (let x = 0; x < w; x += 2) { if (!isBackground(x, top)) break topLoop; }
+  }
+  bottomLoop:
+  for (; bottom > top; bottom--) {
+    for (let x = 0; x < w; x += 2) { if (!isBackground(x, bottom)) break bottomLoop; }
+  }
+  leftLoop:
+  for (; left < w; left++) {
+    for (let y = top; y <= bottom; y += 2) { if (!isBackground(left, y)) break leftLoop; }
+  }
+  rightLoop:
+  for (; right > left; right--) {
+    for (let y = top; y <= bottom; y += 2) { if (!isBackground(right, y)) break rightLoop; }
+  }
+
+  const pad = 6; // mətn kənarları kəsilməsin deyə kiçik pay saxlayırıq
+  top = Math.max(0, top - pad);
+  left = Math.max(0, left - pad);
+  bottom = Math.min(h - 1, bottom + pad);
+  right = Math.min(w - 1, right + pad);
+
+  const trimW = right - left + 1;
+  const trimH = bottom - top + 1;
+  // Trim mənasız olubsa (demək olar ki, dəyişməyib) orijinalı saxlayırıq
+  if (trimW <= 0 || trimH <= 0 || (trimW >= w * 0.98 && trimH >= h * 0.98)) {
+    return sourceCanvas;
+  }
+
+  const outCanvas = document.createElement("canvas");
+  outCanvas.width = trimW;
+  outCanvas.height = trimH;
+  outCanvas.getContext("2d").drawImage(sourceCanvas, left, top, trimW, trimH, 0, 0, trimW, trimH);
+  return outCanvas;
+}
+
 function compressImageToBase64(file, maxWidth, quality) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = new Image();
       img.onload = () => {
-        const scale = Math.min(1, maxWidth / img.width);
+        // Əvvəlcə orijinal ölçüdə çəkib ətrafdakı boş sahəni avtomatik kəsirik
+        const fullCanvas = document.createElement("canvas");
+        fullCanvas.width = img.width;
+        fullCanvas.height = img.height;
+        fullCanvas.getContext("2d").drawImage(img, 0, 0);
+
+        let trimmed;
+        try {
+          trimmed = autoTrimCanvas(fullCanvas, 28);
+        } catch (err) {
+          trimmed = fullCanvas; // trim alınmasa, orijinal şəkillə davam et
+        }
+
+        const scale = Math.min(1, maxWidth / trimmed.width);
         const canvas = document.createElement("canvas");
-        canvas.width = img.width * scale;
-        canvas.height = img.height * scale;
+        canvas.width = trimmed.width * scale;
+        canvas.height = trimmed.height * scale;
         const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        ctx.drawImage(trimmed, 0, 0, canvas.width, canvas.height);
         resolve(canvas.toDataURL("image/jpeg", quality || 0.82));
       };
       img.onerror = reject;
