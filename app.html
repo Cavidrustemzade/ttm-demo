@@ -1024,11 +1024,49 @@ function renderGroupsList() {
   if (groupsCache.length === 0) { el.innerHTML = `<div class="empty-state">Hələ qrup yaradılmayıb</div>`; return; }
   el.innerHTML = groupsCache.map(g => `
     <div class="list-item">
-      <div class="list-item-info"><div class="list-item-title">${esc(g.name)}</div></div>
+      <div class="list-item-info" style="cursor:pointer;" onclick="showGroupStudents('${g.id}')">
+        <div class="list-item-title">${esc(g.name)}</div>
+        <div class="list-item-sub">👆 Şagirdləri görmək üçün toxunun</div>
+      </div>
       <div class="list-item-actions"><button class="btn-danger" onclick="deleteGroup('${g.id}')">Sil</button></div>
     </div>
   `).join("");
 }
+
+window.showGroupStudents = (groupId) => {
+  const g = groupsCache.find(x => x.id === groupId);
+  const students = studentsCache.filter(s => s.active !== false && s.groupId === groupId);
+  const overlay = document.createElement("div");
+  overlay.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(11,60,93,.45);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px;";
+  const box = document.createElement("div");
+  box.style.cssText = "background:var(--color-white);border-radius:var(--radius-lg);max-width:420px;width:100%;max-height:80vh;overflow-y:auto;padding:22px;box-shadow:var(--shadow-lg);position:relative;";
+  const closeBtn = document.createElement("button");
+  closeBtn.textContent = "✕";
+  closeBtn.style.cssText = "position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;background:var(--color-light-gray);color:var(--color-text-muted);font-size:16px;";
+  closeBtn.onclick = () => { overlay.remove(); document.body.style.overflow = ""; };
+  box.appendChild(closeBtn);
+  const title = document.createElement("h3");
+  title.style.cssText = "margin-bottom:14px;color:var(--color-primary);padding-right:30px;";
+  title.textContent = (g ? g.name : "Qrup") + " — Şagirdlər (" + students.length + ")";
+  box.appendChild(title);
+  if (students.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    empty.textContent = "Bu qrupda şagird yoxdur";
+    box.appendChild(empty);
+  } else {
+    students.forEach(s => {
+      const item = document.createElement("div");
+      item.className = "list-item";
+      item.innerHTML = `<div class="list-item-info"><div class="list-item-title">${esc(s.fullName)}</div><div class="list-item-sub">@${esc(s.username)}</div></div>`;
+      box.appendChild(item);
+    });
+  }
+  overlay.appendChild(box);
+  overlay.addEventListener("click", e => { if (e.target === overlay) { overlay.remove(); document.body.style.overflow = ""; } });
+  document.body.appendChild(overlay);
+  document.body.style.overflow = "hidden";
+};
 
 document.getElementById("group-save-btn").addEventListener("click", async () => {
   const name = document.getElementById("group-name").value.trim();
@@ -2112,7 +2150,12 @@ document.getElementById("exam-save-btn").addEventListener("click", async () => {
       writeBatch.set(qRef, { ...q, order: i });
     });
     await writeBatch.commit();
-    toast(editId ? "Sınaq yeniləndi" : "Sınaq yaradıldı");
+    if (editId) {
+      await recalcExamAttempts(examId, examQuestions);
+      toast("Sınaq və şagird nəticələri yeniləndi ✅");
+    } else {
+      toast("Sınaq yaradıldı");
+    }
     resetExamForm();
   } catch (err) {
     console.error(err);
@@ -2121,6 +2164,36 @@ document.getElementById("exam-save-btn").addEventListener("click", async () => {
     document.getElementById("exam-save-btn").disabled = false;
   }
 });
+
+// Sınaq redaktə olunanda (məs. cavab açarı düzələndə) artıq işlənmiş
+// bütün şagird nəticələrini (examAttempts) yeni cavab açarına görə yenidən hesablayır.
+async function recalcExamAttempts(examId, questions) {
+  try {
+    const snap = await db.collection("examAttempts").where("examId", "==", examId).get();
+    if (snap.empty) return;
+    const batch = db.batch();
+    snap.docs.forEach(d => {
+      const a = d.data();
+      const answers = a.answers || [];
+      let correctCount = 0;
+      const perQuestion = questions.map((q, i) => {
+        const given = answers[i] !== undefined ? answers[i] : null;
+        let isCorrect;
+        if (q.type === "open") isCorrect = checkOpenAnswer(given, q.correctAnswer);
+        else isCorrect = given === q.correctIndex;
+        if (isCorrect) correctCount++;
+        return { selected: given, correct: q.type === "open" ? q.correctAnswer : q.correctIndex, isCorrect, type: q.type };
+      });
+      const totalCount = questions.length;
+      const score = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
+      batch.update(d.ref, { perQuestion, correctCount, totalCount, score });
+    });
+    await batch.commit();
+  } catch (e) {
+    console.error("Nəticələr yenidən hesablanarkən xəta:", e);
+    toast("Diqqət: şagird nəticələri avtomatik yenilənə bilmədi");
+  }
+}
 
 window.editExam = async (id) => {
   const ex = examsCache.find(e => e.id === id);
