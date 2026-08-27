@@ -135,6 +135,17 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .progress-ring span { position:relative; z-index:1; color:var(--color-text); }
 .q-builder-item { background:var(--color-light-gray); border-radius:var(--radius-sm); padding:14px; margin-bottom:10px; position:relative; }
 .q-builder-item .btn-danger { position:absolute; top:10px; right:10px; }
+.q-builder-item.has-num { padding-top:44px; }
+.q-num-badge {
+  position:absolute; top:-14px; left:14px;
+  width:52px; height:52px; border-radius:16px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px; font-weight:900; color:#fff;
+  background:linear-gradient(145deg,var(--color-primary-light),var(--color-primary-dark));
+  box-shadow:0 8px 0 var(--color-primary-dark), 0 14px 22px rgba(11,60,93,.45), inset 0 2px 2px rgba(255,255,255,.35);
+  transform:perspective(300px) rotateX(8deg);
+  border:2px solid rgba(255,255,255,.5);
+}
 .q-opt-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
 .q-opt-row input[type="radio"] { width:18px; height:18px; flex-shrink:0; }
 .q-opt-row input[type="text"] { flex:1; padding:8px 10px; border:1.5px solid var(--color-gray); border-radius:6px; font-size:13px; background:var(--color-white); }
@@ -1470,10 +1481,11 @@ function renderQuestionBuilder() {
   const el = document.getElementById("exam-questions-builder");
   if (examQuestions.length === 0) { el.innerHTML = `<div class="empty-state">Hələ sual əlavə edilməyib</div>`; return; }
   el.innerHTML = examQuestions.map((q, qi) => `
-    <div class="q-builder-item">
+    <div class="q-builder-item has-num">
+      <div class="q-num-badge">${qi + 1}</div>
       <button class="btn-danger" onclick="removeQuestion(${qi})">Sil</button>
       <div class="field" style="margin-bottom:8px;">
-        <label>Sual ${qi + 1} növü</label>
+        <label>Sual növü</label>
         <select onchange="setQuestionType(${qi}, this.value)">
           <option value="mcq" ${q.type === "mcq" ? "selected" : ""}>Variantlı (A-E)</option>
           <option value="open" ${q.type === "open" ? "selected" : ""}>Açıq (şagird özü yazır)</option>
