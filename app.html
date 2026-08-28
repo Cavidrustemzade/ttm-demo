@@ -150,6 +150,17 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .q-opt-row input[type="radio"] { width:18px; height:18px; flex-shrink:0; }
 .q-opt-row input[type="text"] { flex:1; padding:8px 10px; border:1.5px solid var(--color-gray); border-radius:6px; font-size:13px; background:var(--color-white); }
 .exam-nav-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:16px; }
+.exam-text-toggle-btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:999px; background:var(--color-primary); color:#fff; font-weight:700; font-size:12.5px; margin-bottom:14px; }
+.exam-text-panel { display:none; }
+.exam-text-panel.open { display:block; margin-bottom:14px; padding:16px; border-radius:16px; background:#fff; border:2px solid var(--color-primary); max-height:300px; overflow-y:auto; box-shadow:var(--shadow-sm); }
+.exam-text-panel-title { font-weight:800; color:var(--color-primary); margin-bottom:8px; font-size:14px; display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.exam-text-panel-body { font-size:13.5px; line-height:1.75; color:var(--color-text); }
+.exam-text-panel-body img { max-width:100%; border-radius:10px; margin-top:8px; }
+@media (min-width: 1080px) {
+  .exam-taking-layout.has-text { display:flex; gap:18px; align-items:flex-start; }
+  .exam-taking-layout.has-text .exam-text-panel { flex:0 0 320px; margin-bottom:0; position:sticky; top:76px; }
+  .exam-taking-layout.has-text .exam-question-col { flex:1; min-width:0; }
+}
 .exam-nav-btn { aspect-ratio:1; border-radius:8px; background:var(--color-light-gray); color:var(--color-text); font-weight:700; font-size:13px; border:2px solid transparent; }
 .exam-nav-btn.answered { background:rgba(46,158,107,.15); color:#2e9e6b; }
 .exam-nav-btn.current { border-color:var(--color-primary); }
@@ -440,6 +451,11 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
           <div class="field"><label>İzahat videosu (YouTube linki, sınaqdan sonra göstərilir)</label><input type="text" id="exam-video" placeholder="https://youtube.com/..." /></div>
         </div>
 
+        <h3 style="margin-top:20px;">📖 Mətnlər (mətnə bağlı suallar üçün, istəyə görə)</h3>
+        <p class="muted-note" style="margin-bottom:10px;">Bir neçə sual eyni mətnə (məs: oxu mətni) əsaslanırsa, əvvəlcə mətni bura əlavə edin, sonra aşağıda hər sualı ona bağlayın. Sual nömrələri avtomatik davam edir, mətn nömrə almır.</p>
+        <div id="exam-texts-builder"></div>
+        <button class="btn-outline" id="exam-add-text-btn" style="margin-bottom:16px;">+ Mətn əlavə et</button>
+
         <h3 style="margin-top:20px;">Suallar</h3>
         <div class="upload-choice-grid">
           <div class="upload-choice-card">
@@ -709,14 +725,17 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 
       <div id="exam-view-taking" style="display:none;">
         <div class="exam-timer" id="exam-timer-box">00:00</div>
-        <div class="card">
-          <div class="exam-nav-grid" id="exam-nav-grid"></div>
-          <div id="exam-question-box"></div>
-          <div style="display:flex; gap:8px; margin-top:14px;">
-            <button class="btn-outline" id="exam-prev-btn">← Əvvəlki</button>
-            <button class="btn-outline" id="exam-next-btn">Növbəti →</button>
+        <div class="exam-taking-layout" id="exam-taking-layout">
+          <div class="exam-text-panel" id="exam-text-panel"></div>
+          <div class="card exam-question-col">
+            <div class="exam-nav-grid" id="exam-nav-grid"></div>
+            <div id="exam-question-box"></div>
+            <div style="display:flex; gap:8px; margin-top:14px;">
+              <button class="btn-outline" id="exam-prev-btn">← Əvvəlki</button>
+              <button class="btn-outline" id="exam-next-btn">Növbəti →</button>
+            </div>
+            <button class="btn-small" id="exam-finish-btn" style="width:100%; margin-top:14px; background:var(--color-danger);">Sınağı bitir</button>
           </div>
-          <button class="btn-small" id="exam-finish-btn" style="width:100%; margin-top:14px; background:var(--color-danger);">Sınağı bitir</button>
         </div>
       </div>
 
@@ -1378,6 +1397,7 @@ window.deleteDoc = async (coll, id) => {
 // ---- SINAQLAR (ADMIN) ----
 // Sual formatı: { type:"mcq"|"open", text, imageBase64, options:["A","B","C","D","E"], correctIndex, correctAnswer }
 let examQuestions = [];
+let examTexts = [];
 let examsCache = [];
 const OPTION_LETTERS = ["A", "B", "C", "D", "E"];
 
@@ -1491,6 +1511,14 @@ function renderQuestionBuilder() {
           <option value="open" ${q.type === "open" ? "selected" : ""}>Açıq (şagird özü yazır)</option>
         </select>
       </div>
+      ${examTexts.length > 0 ? `
+      <div class="field" style="margin-bottom:8px;">
+        <label>Mətnə bağlılıq</label>
+        <select onchange="setQuestionTextId(${qi}, this.value)">
+          <option value="">— Bağlı deyil —</option>
+          ${examTexts.map(t => `<option value="${t.id}" ${q.textId === t.id ? "selected" : ""}>${esc(t.title)}</option>`).join("")}
+        </select>
+      </div>` : ""}
       <div class="field" style="margin-bottom:8px;">
         <label>Sual mətni (istəyə görə, şəkil qoyanda boş buraxıla bilər)</label>
         <input type="text" value="${esc(q.text)}" oninput="updateQuestionText(${qi}, this.value)" placeholder="Sual mətni və ya boş buraxın" />
@@ -1521,6 +1549,56 @@ function renderQuestionBuilder() {
   `).join("");
 }
 
+window.setQuestionTextId = (qi, val) => { examQuestions[qi].textId = val; renderQuestionBuilder(); };
+
+// ---- MƏTNLƏR (sual qruplarının əsaslandığı oxu mətnləri) ----
+function renderTextsBuilder() {
+  const el = document.getElementById("exam-texts-builder");
+  if (examTexts.length === 0) { el.innerHTML = `<div class="empty-state">Hələ mətn əlavə edilməyib</div>`; renderQuestionBuilder(); return; }
+  el.innerHTML = examTexts.map((t, ti) => `
+    <div class="q-builder-item">
+      <button class="btn-danger" onclick="removeExamText(${ti})">Sil</button>
+      <div class="field" style="margin-bottom:8px;">
+        <label>Mətn başlığı</label>
+        <input type="text" value="${esc(t.title)}" oninput="updateExamText(${ti},'title',this.value)" placeholder="Məs: Mətn 1" />
+      </div>
+      <div class="field" style="margin-bottom:8px;">
+        <label>Mətn məzmunu (yazılı, istəyə görə)</label>
+        <textarea oninput="updateExamText(${ti},'content',this.value)" placeholder="Mətni bura yazın">${esc(t.content || "")}</textarea>
+      </div>
+      <div class="field">
+        <label>Mətnin şəkli (istəyə görə, məs: skan edilmiş mətn)</label>
+        <input type="file" accept="image/*" onchange="uploadExamTextImage(${ti}, this)" />
+        ${t.imageBase64 ? `<img src="${t.imageBase64}" style="max-width:100%; margin-top:8px; border-radius:8px; border:1px solid var(--color-gray);" />
+          <button class="btn-outline" style="margin-top:6px;" onclick="removeExamTextImage(${ti})">Şəkli sil</button>` : ""}
+      </div>
+    </div>
+  `).join("");
+  renderQuestionBuilder();
+}
+window.removeExamText = (ti) => {
+  const removedId = examTexts[ti].id;
+  examTexts.splice(ti, 1);
+  examQuestions.forEach(q => { if (q.textId === removedId) q.textId = ""; });
+  renderTextsBuilder();
+};
+window.updateExamText = (ti, field, val) => { examTexts[ti][field] = val; };
+window.uploadExamTextImage = async (ti, inputEl) => {
+  const file = inputEl.files[0];
+  if (!file) return;
+  toast("Şəkil yüklənir...");
+  try {
+    const base64 = await compressImageToBase64(file, 1400, 0.85);
+    examTexts[ti].imageBase64 = base64;
+    renderTextsBuilder();
+    toast("Şəkil əlavə edildi");
+  } catch (e) {
+    console.error(e);
+    toast("Şəkil yüklənərkən xəta baş verdi");
+  }
+};
+window.removeExamTextImage = (ti) => { examTexts[ti].imageBase64 = ""; renderTextsBuilder(); };
+
 window.removeQuestion = (qi) => { examQuestions.splice(qi, 1); renderQuestionBuilder(); };
 window.updateQuestionText = (qi, val) => { examQuestions[qi].text = val; };
 window.setCorrectOption = (qi, oi) => { examQuestions[qi].correctIndex = oi; renderQuestionBuilder(); };
@@ -1543,8 +1621,13 @@ window.uploadQuestionImage = async (qi, inputEl) => {
   }
 };
 
+document.getElementById("exam-add-text-btn").addEventListener("click", () => {
+  examTexts.push({ id: "t" + Date.now() + Math.floor(Math.random() * 1000), title: "Mətn " + (examTexts.length + 1), content: "", imageBase64: "" });
+  renderTextsBuilder();
+});
+
 document.getElementById("exam-add-question-btn").addEventListener("click", () => {
-  examQuestions.push({ type: "mcq", text: "", imageBase64: "", options: OPTION_LETTERS.slice(), correctIndex: 0, correctAnswer: "" });
+  examQuestions.push({ type: "mcq", text: "", imageBase64: "", options: OPTION_LETTERS.slice(), correctIndex: 0, correctAnswer: "", textId: "" });
   renderQuestionBuilder();
 });
 
@@ -1555,7 +1638,7 @@ document.getElementById("exam-bulk-image-input").addEventListener("change", asyn
   for (const file of files) {
     try {
       const base64 = await compressImageToBase64(file, 1100, 0.82);
-      examQuestions.push({ type: "mcq", text: "", imageBase64: base64, options: OPTION_LETTERS.slice(), correctIndex: 0, correctAnswer: "" });
+      examQuestions.push({ type: "mcq", text: "", imageBase64: base64, options: OPTION_LETTERS.slice(), correctIndex: 0, correctAnswer: "", textId: "" });
     } catch (err) {
       console.error(err);
     }
@@ -1576,7 +1659,8 @@ function resetExamForm() {
   document.getElementById("exam-form-title").textContent = "Yeni sınaq yarat";
   document.getElementById("exam-cancel-btn").style.display = "none";
   examQuestions = [];
-  renderQuestionBuilder();
+  examTexts = [];
+  renderTextsBuilder();
 }
 document.getElementById("exam-cancel-btn").addEventListener("click", resetExamForm);
 
@@ -1722,7 +1806,7 @@ document.getElementById("crop-confirm-btn").addEventListener("click", () => {
   ctx.drawImage(srcCanvas, sx, sy, sw, sh, 0, 0, sw, sh);
   const base64 = outCanvas.toDataURL("image/jpeg", 0.85);
 
-  examQuestions.push({ type: "mcq", text: "", imageBase64: base64, options: OPTION_LETTERS.slice(), correctIndex: 0, correctAnswer: "" });
+  examQuestions.push({ type: "mcq", text: "", imageBase64: base64, options: OPTION_LETTERS.slice(), correctIndex: 0, correctAnswer: "", textId: "" });
   renderQuestionBuilder();
   cropAddedCount++;
   document.getElementById("crop-added-count").textContent = `Əlavə edilmiş sual: ${cropAddedCount}`;
@@ -2139,7 +2223,7 @@ document.getElementById("exam-save-btn").addEventListener("click", async () => {
   if (videoUrl && !/^https?:\/\//i.test(videoUrl)) { toast("Video linki http:// və ya https:// ilə başlamalıdır"); return; }
 
   const activationAt = new Date(activationInput).toISOString();
-  const meta = { title, groupIds, topic, timeLimitMinutes, activationAt, videoUrl, questionCount: examQuestions.length };
+  const meta = { title, groupIds, topic, timeLimitMinutes, activationAt, videoUrl, questionCount: examQuestions.length, texts: examTexts };
 
   document.getElementById("exam-save-btn").disabled = true;
   try {
@@ -2219,10 +2303,11 @@ window.editExam = async (id) => {
   document.getElementById("exam-video").value = ex.videoUrl || "";
   document.getElementById("exam-form-title").textContent = "Sınaqı redaktə et: " + ex.title;
   document.getElementById("exam-cancel-btn").style.display = "inline-block";
+  examTexts = ex.texts || [];
   toast("Suallar yüklənir...");
   const qSnap = await db.collection("exams").doc(id).collection("questions").orderBy("order").get();
   examQuestions = qSnap.docs.map(d => d.data());
-  renderQuestionBuilder();
+  renderTextsBuilder();
   window.scrollTo({ top: 0, behavior: "smooth" });
 };
 
@@ -2264,7 +2349,7 @@ function loadExams() {
     }).join("");
   });
 }
-renderQuestionBuilder();
+renderTextsBuilder();
 
 // =========================================================================
 // SAYT AYARLARI (ADMIN) - Landing səhifəsinin şəkil/video/müəllim idarəetməsi
@@ -2715,6 +2800,7 @@ let currentExamAnswers = [];
 let currentExamIndex = 0;
 let examTimerInterval = null;
 let examEndTime = null;
+let textPanelOpen = false;
 
 function loadStudentExams(uid, groupId) {
   if (!groupId) return;
@@ -2871,6 +2957,7 @@ window.startExam = async (examId) => {
   currentExam = { ...ex, questions };
   currentExamAnswers = new Array(questions.length).fill(null);
   currentExamIndex = 0;
+  textPanelOpen = false;
   examEndTime = Date.now() + ex.timeLimitMinutes * 60000;
 
   document.getElementById("exam-view-list").style.display = "none";
@@ -2915,14 +3002,51 @@ function saveOpenAnswerFromInput() {
   }
 }
 
+function getCurrentQuestionText() {
+  if (!currentExam) return null;
+  const q = currentExam.questions[currentExamIndex];
+  if (!q || !q.textId) return null;
+  return (currentExam.texts || []).find(t => t.id === q.textId) || null;
+}
+
+function renderTextPanel() {
+  const layout = document.getElementById("exam-taking-layout");
+  const panel = document.getElementById("exam-text-panel");
+  const text = getCurrentQuestionText();
+  if (!text) {
+    layout.classList.remove("has-text");
+    panel.classList.remove("open");
+    panel.innerHTML = "";
+    return;
+  }
+  layout.classList.add("has-text");
+  panel.classList.toggle("open", textPanelOpen);
+  panel.innerHTML = `
+    <div class="exam-text-panel-title">
+      <span>📖 ${esc(text.title)}</span>
+      <button class="btn-outline" style="padding:4px 10px; font-size:11px;" onclick="toggleTextPanel()">Bağla ✕</button>
+    </div>
+    <div class="exam-text-panel-body">
+      ${text.content ? esc(text.content).replace(/\n/g, "<br>") : ""}
+      ${text.imageBase64 ? `<img src="${text.imageBase64}" />` : ""}
+    </div>
+  `;
+}
+
+window.toggleTextPanel = () => {
+  textPanelOpen = !textPanelOpen;
+  renderTextPanel();
+};
+
 function renderExamQuestion() {
   const q = currentExam.questions[currentExamIndex];
   const box = document.getElementById("exam-question-box");
   const imgHtml = q.imageBase64 ? `<img src="${q.imageBase64}" style="max-width:100%; border-radius:10px; margin-bottom:14px; border:1px solid var(--color-gray);" />` : "";
   const textHtml = q.text ? `<div style="font-weight:700; margin-bottom:14px; font-size:15px;">Sual ${currentExamIndex + 1}/${currentExam.questions.length}: ${esc(q.text)}</div>` : `<div style="font-weight:700; margin-bottom:14px; font-size:15px;">Sual ${currentExamIndex + 1}/${currentExam.questions.length}</div>`;
+  const textBtnHtml = q.textId ? `<button type="button" class="exam-text-toggle-btn" onclick="toggleTextPanel()">📖 ${textPanelOpen ? "Mətni gizlət" : "Mətni göstər"}</button>` : "";
 
   if (q.type === "open") {
-    box.innerHTML = `${textHtml}${imgHtml}
+    box.innerHTML = `${textBtnHtml}${textHtml}${imgHtml}
       <div class="field"><label>Cavabınızı yazın</label>
         <input type="text" id="exam-open-input" value="${esc(currentExamAnswers[currentExamIndex] || "")}" placeholder="Cavabı yazın" />
       </div>`;
@@ -2931,7 +3055,7 @@ function renderExamQuestion() {
       renderExamNavGrid();
     });
   } else {
-    box.innerHTML = `${textHtml}${imgHtml}
+    box.innerHTML = `${textBtnHtml}${textHtml}${imgHtml}
       <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:10px;">
         ${q.options.map((opt, oi) => `
           <button onclick="selectExamOption(${oi})"
@@ -2941,6 +3065,7 @@ function renderExamQuestion() {
         `).join("")}
       </div>`;
   }
+  renderTextPanel();
 }
 
 window.selectExamOption = (oi) => {
