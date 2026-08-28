@@ -134,15 +134,14 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .progress-ring::after { content:""; position:absolute; inset:5px; background:var(--color-white); border-radius:50%; z-index:0; }
 .progress-ring span { position:relative; z-index:1; color:var(--color-text); }
 .q-num-badge-sm { width:30px; height:30px; border-radius:10px; background:var(--color-primary); color:#fff; font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.q-item-compact { display:flex; align-items:center; gap:10px; cursor:pointer; }
+.q-item-header { display:flex; align-items:center; gap:8px; }
 .q-item-compact-title { font-weight:700; font-size:13px; color:var(--color-text); }
-.q-item-compact-preview { font-size:11px; color:var(--color-text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .q-item-tag { font-size:9px; font-weight:800; padding:3px 8px; border-radius:999px; background:rgba(11,60,93,.08); color:var(--color-primary); flex-shrink:0; }
 .q-item-del-icon { width:26px; height:26px; border-radius:8px; background:rgba(217,76,76,.1); color:var(--color-danger); flex-shrink:0; font-size:13px; display:flex; align-items:center; justify-content:center; }
-.q-item-chevron { color:var(--color-text-muted); font-size:11px; flex-shrink:0; transition:transform .2s; }
-.q-item-chevron.open { transform:rotate(180deg); }
+.q-item-gear { width:26px; height:26px; border-radius:8px; background:var(--color-white); border:1.5px solid var(--color-gray); color:var(--color-text-muted); flex-shrink:0; font-size:13px; display:flex; align-items:center; justify-content:center; }
+.q-item-gear.open { background:var(--color-primary); border-color:var(--color-primary); color:#fff; }
+.q-item-settings-panel { margin-top:10px; padding:10px; border-radius:10px; background:rgba(11,60,93,.05); border:1px dashed var(--color-gray); }
 .q-builder-item.compact-mode { padding:12px 14px; }
-.q-item-expanded-body { margin-top:12px; padding-top:12px; border-top:1px dashed var(--color-gray); }
 .q-builder-item { background:var(--color-light-gray); border-radius:var(--radius-sm); padding:14px; margin-bottom:10px; position:relative; }
 .q-builder-item .btn-danger { position:absolute; top:10px; right:10px; }
 .q-builder-item.has-num { padding-top:44px; }
@@ -1509,10 +1508,10 @@ function compressImageToBase64(file, maxWidth, quality) {
   });
 }
 
-let expandedQuestions = new Set();
-window.toggleQuestionExpand = (qi) => {
-  if (expandedQuestions.has(qi)) expandedQuestions.delete(qi);
-  else expandedQuestions.add(qi);
+let settingsOpenQuestions = new Set();
+window.toggleQuestionSettings = (qi) => {
+  if (settingsOpenQuestions.has(qi)) settingsOpenQuestions.delete(qi);
+  else settingsOpenQuestions.add(qi);
   renderQuestionBuilder();
 };
 
@@ -1520,25 +1519,22 @@ function renderQuestionBuilder() {
   const el = document.getElementById("exam-questions-builder");
   if (examQuestions.length === 0) { el.innerHTML = `<div class="empty-state">Hələ sual əlavə edilməyib</div>`; return; }
   el.innerHTML = examQuestions.map((q, qi) => {
-    const isOpen = expandedQuestions.has(qi);
+    const settingsOpen = settingsOpenQuestions.has(qi);
     const typeLabel = q.type === "mcq" ? "A-E" : "Açıq";
-    const preview = q.text ? esc(q.text).slice(0, 50) : (q.imageBase64 ? "🖼 Şəkilli sual" : "(boş)");
     const linkedText = q.textId ? examTexts.find(t => t.id === q.textId) : null;
     return `
     <div class="q-builder-item compact-mode">
-      <div class="q-item-compact" onclick="toggleQuestionExpand(${qi})">
+      <div class="q-item-header">
         <div class="q-num-badge-sm">${qi + 1}</div>
-        <div style="min-width:0; flex:1;">
-          <div class="q-item-compact-title">${qi + 1}-ci sual</div>
-          <div class="q-item-compact-preview">${preview}</div>
-        </div>
+        <div class="q-item-compact-title" style="flex:1;">${qi + 1}-ci sual</div>
         <div class="q-item-tag">${typeLabel}</div>
         ${linkedText ? `<div class="q-item-tag" title="${esc(linkedText.title)}">📖</div>` : ""}
-        <div class="q-item-del-icon" onclick="event.stopPropagation(); removeQuestion(${qi})">✕</div>
-        <div class="q-item-chevron ${isOpen ? "open" : ""}">▼</div>
+        <button type="button" class="q-item-gear ${settingsOpen ? "open" : ""}" onclick="toggleQuestionSettings(${qi})">⚙</button>
+        <div class="q-item-del-icon" onclick="removeQuestion(${qi})">✕</div>
       </div>
-      ${isOpen ? `
-      <div class="q-item-expanded-body">
+
+      ${settingsOpen ? `
+      <div class="q-item-settings-panel">
         <div class="field" style="margin-bottom:8px;">
           <label>Sual növü</label>
           <select onchange="setQuestionType(${qi}, this.value)">
@@ -1547,40 +1543,38 @@ function renderQuestionBuilder() {
           </select>
         </div>
         ${examTexts.length > 0 ? `
-        <div class="field" style="margin-bottom:8px;">
+        <div class="field">
           <label>Mətnə bağlılıq</label>
           <select onchange="setQuestionTextId(${qi}, this.value)">
             <option value="">— Bağlı deyil —</option>
             ${examTexts.map(t => `<option value="${t.id}" ${q.textId === t.id ? "selected" : ""}>${esc(t.title)}</option>`).join("")}
           </select>
         </div>` : ""}
-        <div class="field" style="margin-bottom:8px;">
-          <label>Sual mətni (istəyə görə, şəkil qoyanda boş buraxıla bilər)</label>
-          <input type="text" value="${esc(q.text)}" oninput="updateQuestionText(${qi}, this.value)" placeholder="Sual mətni və ya boş buraxın" />
-        </div>
-        <div class="field" style="margin-bottom:10px;">
-          <label>Sualın şəkli (istəyə görə)</label>
-          <input type="file" accept="image/*" onchange="uploadQuestionImage(${qi}, this)" />
-          ${q.imageBase64 ? `<img src="${q.imageBase64}" style="max-width:100%; margin-top:8px; border-radius:8px; border:1px solid var(--color-gray);" />
-            <button class="btn-outline" style="margin-top:6px;" onclick="removeQuestionImage(${qi})">Şəkli sil</button>` : ""}
-        </div>
-        ${q.type === "mcq" ? `
-          <div class="field"><label>Düzgün cavab hansıdır?</label></div>
-          <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            ${OPTION_LETTERS.map((letter, oi) => `
-              <button type="button" onclick="setCorrectOption(${qi}, ${oi})"
-                style="width:46px; height:46px; border-radius:12px; font-weight:800; font-size:15px; border:2px solid ${q.correctIndex === oi ? "var(--color-primary)" : "var(--color-gray)"}; background:${q.correctIndex === oi ? "var(--color-primary)" : "var(--color-white)"}; color:${q.correctIndex === oi ? "#fff" : "var(--color-text)"};">
-                ${letter}
-              </button>
-            `).join("")}
-          </div>
-        ` : `
-          <div class="field">
-            <label>Düzgün cavab (şagird nə yazmalıdır, məs: 15)</label>
-            <input type="text" value="${esc(q.correctAnswer || "")}" oninput="updateCorrectAnswer(${qi}, this.value)" placeholder="Düzgün cavabı yazın" />
-          </div>
-        `}
       </div>` : ""}
+
+      <div class="field" style="margin:10px 0 8px;">
+        <input type="text" value="${esc(q.text)}" oninput="updateQuestionText(${qi}, this.value)" placeholder="Sual mətni və ya boş buraxın" />
+      </div>
+      <div class="field" style="margin-bottom:10px;">
+        <input type="file" accept="image/*" onchange="uploadQuestionImage(${qi}, this)" />
+        ${q.imageBase64 ? `<img src="${q.imageBase64}" style="max-width:100%; margin-top:8px; border-radius:8px; border:1px solid var(--color-gray);" />
+          <button class="btn-outline" style="margin-top:6px;" onclick="removeQuestionImage(${qi})">Şəkli sil</button>` : ""}
+      </div>
+      ${q.type === "mcq" ? `
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          ${OPTION_LETTERS.map((letter, oi) => `
+            <button type="button" onclick="setCorrectOption(${qi}, ${oi})"
+              style="width:46px; height:46px; border-radius:12px; font-weight:800; font-size:15px; border:2px solid ${q.correctIndex === oi ? "var(--color-primary)" : "var(--color-gray)"}; background:${q.correctIndex === oi ? "var(--color-primary)" : "var(--color-white)"}; color:${q.correctIndex === oi ? "#fff" : "var(--color-text)"};">
+              ${letter}
+            </button>
+          `).join("")}
+        </div>
+      ` : `
+        <div class="field">
+          <label>Düzgün cavab (şagird nə yazmalıdır, məs: 15)</label>
+          <input type="text" value="${esc(q.correctAnswer || "")}" oninput="updateCorrectAnswer(${qi}, this.value)" placeholder="Düzgün cavabı yazın" />
+        </div>
+      `}
     </div>`;
   }).join("");
 }
@@ -1664,7 +1658,6 @@ document.getElementById("exam-add-text-btn").addEventListener("click", () => {
 
 document.getElementById("exam-add-question-btn").addEventListener("click", () => {
   examQuestions.push({ type: "mcq", text: "", imageBase64: "", options: OPTION_LETTERS.slice(), correctIndex: 0, correctAnswer: "", textId: "" });
-  expandedQuestions.add(examQuestions.length - 1);
   renderQuestionBuilder();
 });
 
@@ -1686,7 +1679,7 @@ document.getElementById("exam-bulk-image-input").addEventListener("change", asyn
 });
 
 function resetExamForm() {
-  expandedQuestions = new Set();
+  settingsOpenQuestions = new Set();
   document.getElementById("exam-edit-id").value = "";
   document.getElementById("exam-title").value = "";
   setSelectedExamGroupIds([]);
@@ -2429,7 +2422,7 @@ async function recalcExamAttempts(examId, questions) {
 }
 
 window.editExam = async (id) => {
-  expandedQuestions = new Set();
+  settingsOpenQuestions = new Set();
   const ex = examsCache.find(e => e.id === id);
   if (!ex) return;
   document.getElementById("exam-edit-id").value = id;
