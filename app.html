@@ -151,6 +151,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .q-opt-row input[type="text"] { flex:1; padding:8px 10px; border:1.5px solid var(--color-gray); border-radius:6px; font-size:13px; background:var(--color-white); }
 .exam-nav-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:16px; }
 .exam-text-toggle-btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:999px; background:var(--color-primary); color:#fff; font-weight:700; font-size:12.5px; margin-bottom:14px; }
+.exam-text-toggle-btn.active { background:var(--color-danger); }
 .exam-text-panel { display:none; }
 .exam-text-panel.open { display:block; margin-bottom:14px; padding:16px; border-radius:16px; background:#fff; border:2px solid var(--color-primary); max-height:300px; overflow-y:auto; box-shadow:var(--shadow-sm); }
 .exam-text-panel-title { font-weight:800; color:var(--color-primary); margin-bottom:8px; font-size:14px; display:flex; justify-content:space-between; align-items:center; gap:10px; }
@@ -728,6 +729,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
         <div class="exam-taking-layout" id="exam-taking-layout">
           <div class="exam-text-panel" id="exam-text-panel"></div>
           <div class="card exam-question-col">
+            <div id="exam-text-toolbar" style="display:none; flex-wrap:wrap; gap:8px; margin-bottom:12px;"></div>
             <div class="exam-nav-grid" id="exam-nav-grid"></div>
             <div id="exam-question-box"></div>
             <div style="display:flex; gap:8px; margin-top:14px;">
@@ -2078,81 +2080,153 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
       if (answerKeyMode === "bottom") trackAnswer(curPage, qNum, answerLabel);
     }
 
-let qGlobal = 0; // 0-indeksli, növbəti yazılacaq sualın indeksi
-let qNumCounter = 1;
-
-while (qGlobal < examQuestions.length) {
-  const pageTopY = (curPage === 1) ? contentStartY : 15;
-  const availableH = pageBottomLimit() - pageTopY;
-
-  if (numCols === 1) {
-    // Tək sütun: sadəcə ardıcıl yerləşdir, sətir sinxronlaşdırması lazım deyil
-    let yy = pageTopY;
-    let placed = 0;
-    while (qGlobal < examQuestions.length) {
-      const q = examQuestions[qGlobal];
-      const h = measureQuestionHeight(q);
-      if (placed > 0 && yy + h > pageBottomLimit()) break;
-      drawQuestionAt(q, colX[0], yy, qNumCounter);
-      yy += h;
-      qGlobal++; qNumCounter++; placed++;
+    function buildQuestionBlocks() {
+      const blocks = [];
+      let current = null;
+      examQuestions.forEach(q => {
+        const tid = q.textId || null;
+        if (!current || current.textId !== tid) {
+          current = { textId: tid, questions: [] };
+          blocks.push(current);
+        }
+        current.questions.push(q);
+      });
+      return blocks;
     }
-    if (qGlobal < examQuestions.length) { doc.addPage(); curPage++; }
-    continue;
-  }
 
-  // 2 sütun: sol sütuna neçə sual sığdığını təbii hündürlüklə tapırıq
-  let leftCount = 0;
-  let leftCum = 0;
-  while (qGlobal + leftCount < examQuestions.length) {
-    const h = measureQuestionHeight(examQuestions[qGlobal + leftCount]);
-    if (leftCount > 0 && leftCum + h > availableH) break;
-    leftCum += h;
-    leftCount++;
-  }
-  if (leftCount === 0) leftCount = 1; // ən azı 1 sual (çox böyük şəkil halı)
+    const textBottomByPage = {};
 
-  // Sağ sütun sol sütundan ASILI OLMADAN öz boş sahəsini müstəqil doldurur —
-  // beləliklə sağda daha çox yer qalarsa, boş buraxılmır, növbəti sual əlavə olunur.
-  const rightStart = qGlobal + leftCount;
-  let rightCount = 0;
-  let rightCum = 0;
-  while (rightStart + rightCount < examQuestions.length) {
-    const h = measureQuestionHeight(examQuestions[rightStart + rightCount]);
-    if (rightCount > 0 && rightCum + h > availableH) break;
-    rightCum += h;
-    rightCount++;
-  }
+    function drawTextBlock(textObj, startY) {
+      const contentW = pageW - marginX * 2;
+      let y = startY;
+      doc.setTextColor(cr, cg, cb);
+      setPdfFont(doc, "bold");
+      doc.setFontSize(12.5);
+      boldText(doc, "📖 " + textObj.title, marginX, y);
+      y += 6;
+      doc.setDrawColor(cr, cg, cb);
+      doc.setLineWidth(0.3);
+      doc.line(marginX, y, pageW - marginX, y);
+      y += 6;
 
-  // Hər sütunu müstəqil yerləşdiririk ki, hər sualdan sonra seçilən boşluq eyni qalsın
-  let yyLeft = pageTopY;
-  let yyRight = pageTopY;
-  const maxRowCount = Math.max(leftCount, rightCount);
-  for (let i = 0; i < maxRowCount; i++) {
-    if (i < leftCount) {
-      const leftQ = examQuestions[qGlobal + i];
-      drawQuestionAt(leftQ, colX[0], yyLeft, qNumCounter + i);
-      yyLeft += measureQuestionHeight(leftQ);
+      setPdfFont(doc, "normal");
+      doc.setFontSize(9.5);
+      doc.setTextColor(30, 30, 30);
+
+      if (textObj.content) {
+        const lines = doc.splitTextToSize(textObj.content, contentW);
+        lines.forEach(line => {
+          if (y > pageH - 20) { doc.addPage(); curPage++; y = 15; }
+          doc.text(line, marginX, y);
+          y += 5;
+        });
+        y += 3;
+      }
+
+      if (textObj.imageBase64) {
+        try {
+          const imgProps = doc.getImageProperties(textObj.imageBase64);
+          let imgW = contentW;
+          let imgH = (imgProps.height / imgProps.width) * imgW;
+          const maxH = pageH - y - 25;
+          if (imgH > maxH && maxH > 40) { imgH = maxH; imgW = (imgProps.width / imgProps.height) * imgH; }
+          if (y + Math.min(imgH, 60) > pageH - 15) { doc.addPage(); curPage++; y = 15; }
+          doc.addImage(textObj.imageBase64, "JPEG", marginX + (contentW - imgW) / 2, y, imgW, imgH);
+          y += imgH + 4;
+        } catch (e) { console.error("Mətn şəkli PDF-ə əlavə edilə bilmədi:", e); }
+      }
+
+      y += 4;
+      textBottomByPage[curPage] = y;
+      return y;
     }
-    if (i < rightCount) {
-      const rightQ = examQuestions[qGlobal + leftCount + i];
-      drawQuestionAt(rightQ, colX[1], yyRight, qNumCounter + leftCount + i);
-      yyRight += measureQuestionHeight(rightQ);
-    }
-  }
 
-  qNumCounter += leftCount + rightCount;
-  qGlobal += leftCount + rightCount;
+    const questionBlocks = buildQuestionBlocks();
+    let qNumCounter = 1;
 
-  if (qGlobal < examQuestions.length) { doc.addPage(); curPage++; }
-}
+    questionBlocks.forEach((block, blockIdx) => {
+      if (blockIdx > 0) { doc.addPage(); curPage++; }
+      let blockStartY = (curPage === 1) ? contentStartY : 15;
 
-    // Sütun ayırıcı xəttini bütün istifadə olunan səhifələrə çəkirik
+      if (block.textId) {
+        const textObj = examTexts.find(t => t.id === block.textId);
+        if (textObj) blockStartY = drawTextBlock(textObj, blockStartY);
+      }
+
+      const blockQuestions = block.questions;
+      let bIdx = 0;
+      let firstIteration = true;
+
+      while (bIdx < blockQuestions.length) {
+        const pageTopY = firstIteration ? blockStartY : ((curPage === 1) ? contentStartY : 15);
+        firstIteration = false;
+        const availableH = pageBottomLimit() - pageTopY;
+
+        if (numCols === 1) {
+          let yy = pageTopY;
+          let placed = 0;
+          while (bIdx < blockQuestions.length) {
+            const q = blockQuestions[bIdx];
+            const h = measureQuestionHeight(q);
+            if (placed > 0 && yy + h > pageBottomLimit()) break;
+            drawQuestionAt(q, colX[0], yy, qNumCounter);
+            yy += h;
+            bIdx++; qNumCounter++; placed++;
+          }
+          if (bIdx < blockQuestions.length) { doc.addPage(); curPage++; }
+          continue;
+        }
+
+        // 2 sütun: sol sütuna neçə sual sığdığını təbii hündürlüklə tapırıq
+        let leftCount = 0;
+        let leftCum = 0;
+        while (bIdx + leftCount < blockQuestions.length) {
+          const h = measureQuestionHeight(blockQuestions[bIdx + leftCount]);
+          if (leftCount > 0 && leftCum + h > availableH) break;
+          leftCum += h;
+          leftCount++;
+        }
+        if (leftCount === 0) leftCount = 1;
+
+        const rightStart = bIdx + leftCount;
+        let rightCount = 0;
+        let rightCum = 0;
+        while (rightStart + rightCount < blockQuestions.length) {
+          const h = measureQuestionHeight(blockQuestions[rightStart + rightCount]);
+          if (rightCount > 0 && rightCum + h > availableH) break;
+          rightCum += h;
+          rightCount++;
+        }
+
+        let yyLeft = pageTopY;
+        let yyRight = pageTopY;
+        const maxRowCount = Math.max(leftCount, rightCount);
+        for (let i = 0; i < maxRowCount; i++) {
+          if (i < leftCount) {
+            const leftQ = blockQuestions[bIdx + i];
+            drawQuestionAt(leftQ, colX[0], yyLeft, qNumCounter + i);
+            yyLeft += measureQuestionHeight(leftQ);
+          }
+          if (i < rightCount) {
+            const rightQ = blockQuestions[bIdx + leftCount + i];
+            drawQuestionAt(rightQ, colX[1], yyRight, qNumCounter + leftCount + i);
+            yyRight += measureQuestionHeight(rightQ);
+          }
+        }
+
+        qNumCounter += leftCount + rightCount;
+        bIdx += leftCount + rightCount;
+
+        if (bIdx < blockQuestions.length) { doc.addPage(); curPage++; }
+      }
+    });
+
+    // Sütun ayırıcı xəttini bütün istifadə olunan səhifələrə çəkirik (mətn olan hissədən aşağı başlayır)
     const totalPages = doc.internal.getNumberOfPages();
     if (numCols === 2) {
       for (let p = 1; p <= totalPages; p++) {
         doc.setPage(p);
-        const topY = p === 1 ? contentStartY - 3 : 12;
+        const topY = textBottomByPage[p] !== undefined ? (textBottomByPage[p] - 2) : (p === 1 ? contentStartY - 3 : 12);
         drawColumnDivider(topY, pageH - 15);
       }
     }
@@ -2204,6 +2278,24 @@ while (qGlobal < examQuestions.length) {
 });
 
 
+// Firestore-a yazmazdan əvvəl massiv-içində-massiv (nested array) xətasını tapmaq üçün yoxlama
+function findInvalidNesting(value, path) {
+  path = path || "kök";
+  if (Array.isArray(value)) {
+    for (let i = 0; i < value.length; i++) {
+      if (Array.isArray(value[i])) return path + "[" + i + "] (massiv içində massiv)";
+      const res = findInvalidNesting(value[i], path + "[" + i + "]");
+      if (res) return res;
+    }
+  } else if (value && typeof value === "object" && typeof value.toDate !== "function") {
+    for (const key of Object.keys(value)) {
+      const res = findInvalidNesting(value[key], path + "." + key);
+      if (res) return res;
+    }
+  }
+  return null;
+}
+
 document.getElementById("exam-save-btn").addEventListener("click", async () => {
   const title = document.getElementById("exam-title").value.trim();
   const groupIds = getSelectedExamGroupIds();
@@ -2224,6 +2316,15 @@ document.getElementById("exam-save-btn").addEventListener("click", async () => {
 
   const activationAt = new Date(activationInput).toISOString();
   const meta = { title, groupIds, topic, timeLimitMinutes, activationAt, videoUrl, questionCount: examQuestions.length, texts: examTexts };
+
+  const badMetaPath = findInvalidNesting(meta);
+  const badQPath = !badMetaPath && examQuestions.map((q, i) => findInvalidNesting(q, "sual" + (i + 1))).find(Boolean);
+  const badPath = badMetaPath || badQPath;
+  if (badPath) {
+    console.error("Uyğunsuz massiv strukturu:", badPath);
+    toast("Xəta: " + badPath + " sahəsində problem var. Skrinşot atın.");
+    return;
+  }
 
   document.getElementById("exam-save-btn").disabled = true;
   try {
@@ -2800,7 +2901,7 @@ let currentExamAnswers = [];
 let currentExamIndex = 0;
 let examTimerInterval = null;
 let examEndTime = null;
-let textPanelOpen = false;
+let openTextId = null;
 
 function loadStudentExams(uid, groupId) {
   if (!groupId) return;
@@ -2957,7 +3058,7 @@ window.startExam = async (examId) => {
   currentExam = { ...ex, questions };
   currentExamAnswers = new Array(questions.length).fill(null);
   currentExamIndex = 0;
-  textPanelOpen = false;
+  openTextId = null;
   examEndTime = Date.now() + ex.timeLimitMinutes * 60000;
 
   document.getElementById("exam-view-list").style.display = "none";
@@ -3002,17 +3103,23 @@ function saveOpenAnswerFromInput() {
   }
 }
 
-function getCurrentQuestionText() {
-  if (!currentExam) return null;
-  const q = currentExam.questions[currentExamIndex];
-  if (!q || !q.textId) return null;
-  return (currentExam.texts || []).find(t => t.id === q.textId) || null;
+function renderExamTextToolbar() {
+  const box = document.getElementById("exam-text-toolbar");
+  if (!box) return;
+  const texts = (currentExam && currentExam.texts) || [];
+  if (texts.length === 0) { box.innerHTML = ""; box.style.display = "none"; return; }
+  box.style.display = "flex";
+  box.innerHTML = texts.map(t => `
+    <button type="button" class="exam-text-toggle-btn ${openTextId === t.id ? "active" : ""}" onclick="toggleTextPanel('${t.id}')">
+      📖 ${esc(t.title)}
+    </button>
+  `).join("");
 }
 
 function renderTextPanel() {
   const layout = document.getElementById("exam-taking-layout");
   const panel = document.getElementById("exam-text-panel");
-  const text = getCurrentQuestionText();
+  const text = ((currentExam && currentExam.texts) || []).find(t => t.id === openTextId);
   if (!text) {
     layout.classList.remove("has-text");
     panel.classList.remove("open");
@@ -3020,11 +3127,11 @@ function renderTextPanel() {
     return;
   }
   layout.classList.add("has-text");
-  panel.classList.toggle("open", textPanelOpen);
+  panel.classList.add("open");
   panel.innerHTML = `
     <div class="exam-text-panel-title">
       <span>📖 ${esc(text.title)}</span>
-      <button class="btn-outline" style="padding:4px 10px; font-size:11px;" onclick="toggleTextPanel()">Bağla ✕</button>
+      <button class="btn-outline" style="padding:4px 10px; font-size:11px;" onclick="closeTextPanel()">Bağla ✕</button>
     </div>
     <div class="exam-text-panel-body">
       ${text.content ? esc(text.content).replace(/\n/g, "<br>") : ""}
@@ -3033,9 +3140,15 @@ function renderTextPanel() {
   `;
 }
 
-window.toggleTextPanel = () => {
-  textPanelOpen = !textPanelOpen;
+window.toggleTextPanel = (textId) => {
+  openTextId = (openTextId === textId) ? null : textId;
   renderTextPanel();
+  renderExamTextToolbar();
+};
+window.closeTextPanel = () => {
+  openTextId = null;
+  renderTextPanel();
+  renderExamTextToolbar();
 };
 
 function renderExamQuestion() {
@@ -3043,10 +3156,9 @@ function renderExamQuestion() {
   const box = document.getElementById("exam-question-box");
   const imgHtml = q.imageBase64 ? `<img src="${q.imageBase64}" style="max-width:100%; border-radius:10px; margin-bottom:14px; border:1px solid var(--color-gray);" />` : "";
   const textHtml = q.text ? `<div style="font-weight:700; margin-bottom:14px; font-size:15px;">Sual ${currentExamIndex + 1}/${currentExam.questions.length}: ${esc(q.text)}</div>` : `<div style="font-weight:700; margin-bottom:14px; font-size:15px;">Sual ${currentExamIndex + 1}/${currentExam.questions.length}</div>`;
-  const textBtnHtml = q.textId ? `<button type="button" class="exam-text-toggle-btn" onclick="toggleTextPanel()">📖 ${textPanelOpen ? "Mətni gizlət" : "Mətni göstər"}</button>` : "";
 
   if (q.type === "open") {
-    box.innerHTML = `${textBtnHtml}${textHtml}${imgHtml}
+    box.innerHTML = `${textHtml}${imgHtml}
       <div class="field"><label>Cavabınızı yazın</label>
         <input type="text" id="exam-open-input" value="${esc(currentExamAnswers[currentExamIndex] || "")}" placeholder="Cavabı yazın" />
       </div>`;
@@ -3055,7 +3167,7 @@ function renderExamQuestion() {
       renderExamNavGrid();
     });
   } else {
-    box.innerHTML = `${textBtnHtml}${textHtml}${imgHtml}
+    box.innerHTML = `${textHtml}${imgHtml}
       <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:10px;">
         ${q.options.map((opt, oi) => `
           <button onclick="selectExamOption(${oi})"
@@ -3066,6 +3178,7 @@ function renderExamQuestion() {
       </div>`;
   }
   renderTextPanel();
+  renderExamTextToolbar();
 }
 
 window.selectExamOption = (oi) => {
