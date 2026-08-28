@@ -2125,8 +2125,17 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
 
     const textBottomByPage = {};
 
-    function drawTextBlock(textObj, startY) {
-      const contentW = pageW - marginX * 2;
+    function loadImageElement(dataUrl) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = dataUrl;
+      });
+    }
+
+    async function drawTextBlock(textObj, startY) {
+      const colImgWidth = colWidth; // mətn həmişə sol sütun eninə uyğunlaşır (sınaq kitabçası görünüşü)
       let y = startY;
       doc.setTextColor(cr, cg, cb);
       setPdfFont(doc, "bold");
@@ -2143,9 +2152,9 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
       doc.setTextColor(30, 30, 30);
 
       if (textObj.content) {
-        const lines = doc.splitTextToSize(textObj.content, contentW);
+        const lines = doc.splitTextToSize(textObj.content, colImgWidth);
         lines.forEach(line => {
-          if (y > pageH - 20) { doc.addPage(); curPage++; y = 15; }
+          if (y > pageBottomLimit()) { doc.addPage(); curPage++; y = 15; }
           doc.text(line, marginX, y);
           y += 5;
         });
@@ -2154,14 +2163,33 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
 
       if (textObj.imageBase64) {
         try {
-          const imgProps = doc.getImageProperties(textObj.imageBase64);
-          let imgW = contentW;
-          let imgH = (imgProps.height / imgProps.width) * imgW;
-          const maxH = pageH - y - 25;
-          if (imgH > maxH && maxH > 40) { imgH = maxH; imgW = (imgProps.width / imgProps.height) * imgH; }
-          if (y + Math.min(imgH, 60) > pageH - 15) { doc.addPage(); curPage++; y = 15; }
-          doc.addImage(textObj.imageBase64, "JPEG", marginX + (contentW - imgW) / 2, y, imgW, imgH);
-          y += imgH + 4;
+          const imgEl = await loadImageElement(textObj.imageBase64);
+          const naturalW = imgEl.naturalWidth || imgEl.width;
+          const naturalH = imgEl.naturalHeight || imgEl.height;
+          const scale = colImgWidth / naturalW; // mm per px, en sol sütuna görə sabitlənir
+          let consumedPx = 0;
+
+          while (consumedPx < naturalH) {
+            if (y > pageBottomLimit() - 15) { doc.addPage(); curPage++; y = 15; }
+            const availableMm = pageBottomLimit() - y;
+            const availablePx = Math.max(10, Math.floor(availableMm / scale));
+            const sliceHeightPx = Math.min(availablePx, naturalH - consumedPx);
+
+            const canvas = document.createElement("canvas");
+            canvas.width = naturalW;
+            canvas.height = sliceHeightPx;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(imgEl, 0, consumedPx, naturalW, sliceHeightPx, 0, 0, naturalW, sliceHeightPx);
+            const sliceDataUrl = canvas.toDataURL("image/jpeg", 0.85);
+            const sliceHmm = sliceHeightPx * scale;
+
+            doc.addImage(sliceDataUrl, "JPEG", marginX, y, colImgWidth, sliceHmm);
+            y += sliceHmm;
+            consumedPx += sliceHeightPx;
+
+            if (consumedPx < naturalH) { doc.addPage(); curPage++; y = 15; }
+          }
+          y += 4;
         } catch (e) { console.error("Mətn şəkli PDF-ə əlavə edilə bilmədi:", e); }
       }
 
@@ -2173,13 +2201,14 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
     const questionBlocks = buildQuestionBlocks();
     let qNumCounter = 1;
 
-    questionBlocks.forEach((block, blockIdx) => {
+    for (let blockIdx = 0; blockIdx < questionBlocks.length; blockIdx++) {
+      const block = questionBlocks[blockIdx];
       if (blockIdx > 0) { doc.addPage(); curPage++; }
       let blockStartY = (curPage === 1) ? contentStartY : 15;
 
       if (block.textId) {
         const textObj = examTexts.find(t => t.id === block.textId);
-        if (textObj) blockStartY = drawTextBlock(textObj, blockStartY);
+        if (textObj) blockStartY = await drawTextBlock(textObj, blockStartY);
       }
 
       const blockQuestions = block.questions;
@@ -2248,7 +2277,7 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
 
         if (bIdx < blockQuestions.length) { doc.addPage(); curPage++; }
       }
-    });
+    }
 
     // Sütun ayırıcı xəttini bütün istifadə olunan səhifələrə çəkirik (mətn olan hissədən aşağı başlayır)
     const totalPages = doc.internal.getNumberOfPages();
