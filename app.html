@@ -2180,19 +2180,52 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
           const naturalW = imgEl.naturalWidth || imgEl.width;
           const naturalH = imgEl.naturalHeight || imgEl.height;
           const scale = colWidth / naturalW;
+
+          // Tam şəkli bir dəfə çəkirik ki, piksel sətirlərini yoxlayıb boş (ağ) yer tapaq —
+          // beləliklə kəsim xətti hərfin ortasından deyil, sətirlər arasındakı boşluqdan keçir.
+          const fullCanvas = document.createElement("canvas");
+          fullCanvas.width = naturalW;
+          fullCanvas.height = naturalH;
+          const fullCtx = fullCanvas.getContext("2d");
+          fullCtx.drawImage(imgEl, 0, 0);
+
+          const isRowBlank = (row) => {
+            const data = fullCtx.getImageData(0, row, naturalW, 1).data;
+            for (let i = 0; i < data.length; i += 4) {
+              const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
+              if (brightness < 235) return false;
+            }
+            return true;
+          };
+
+          const findSafeCutRow = (candidateRow, maxLookback) => {
+            for (let row = candidateRow; row > Math.max(0, candidateRow - maxLookback); row--) {
+              if (isRowBlank(row)) return row;
+            }
+            return candidateRow;
+          };
           let consumedPx = 0;
 
           while (consumedPx < naturalH) {
             if (remainingColHeight() < 15) moveToNextColumnOrPage();
             const availableMm = remainingColHeight();
             const availablePx = Math.max(10, Math.floor(availableMm / scale));
-            const sliceHeightPx = Math.min(availablePx, naturalH - consumedPx);
+            let sliceHeightPx = Math.min(availablePx, naturalH - consumedPx);
+
+            // Əgər bu, şəklin son hissəsi deyilsə, kəsim nöqtəsini boş sətrə tənzimləyirik
+            if (consumedPx + sliceHeightPx < naturalH) {
+              const candidateRow = consumedPx + sliceHeightPx;
+              const maxLookback = Math.min(sliceHeightPx, Math.round(25 / scale));
+              const safeRow = findSafeCutRow(candidateRow, maxLookback);
+              const adjustedHeight = safeRow - consumedPx;
+              if (adjustedHeight > sliceHeightPx * 0.6) sliceHeightPx = adjustedHeight;
+            }
 
             const canvas = document.createElement("canvas");
             canvas.width = naturalW;
             canvas.height = sliceHeightPx;
             const ctx = canvas.getContext("2d");
-            ctx.drawImage(imgEl, 0, consumedPx, naturalW, sliceHeightPx, 0, 0, naturalW, sliceHeightPx);
+            ctx.drawImage(fullCanvas, 0, consumedPx, naturalW, sliceHeightPx, 0, 0, naturalW, sliceHeightPx);
             const sliceDataUrl = canvas.toDataURL("image/jpeg", 0.85);
             const sliceHmm = sliceHeightPx * scale;
 
