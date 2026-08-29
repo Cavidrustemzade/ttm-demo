@@ -2718,13 +2718,21 @@ document.getElementById("analytics-exam-select").addEventListener("change", asyn
   `;
 });
 
-window.toggleAttemptDetail = (attemptId) => {
+window.toggleAttemptDetail = async (attemptId) => {
   const box = document.getElementById(`attempt-detail-${attemptId}`);
   if (!box) return;
   if (box.style.display === "block") { box.style.display = "none"; return; }
   const attempt = (window._analyticsAttempts || []).find(a => a.id === attemptId);
   const questions = window._analyticsQuestions || [];
   if (!attempt) return;
+
+  let photoMap = {};
+  if (attempt.detailedCount > 0) {
+    box.innerHTML = `<div class="empty-state">Yüklənir...</div>`;
+    box.style.display = "block";
+    const photoSnap = await db.collection("detailedAnswers").where("attemptId", "==", attemptId).get();
+    photoSnap.forEach(d => { const dd = d.data(); photoMap[dd.questionIndex] = dd.photoBase64; });
+  }
 
   box.innerHTML = questions.map((q, i) => {
     const pq = (attempt.perQuestion || [])[i];
@@ -2733,9 +2741,11 @@ window.toggleAttemptDetail = (attemptId) => {
     const OPT = ["A","B","C","D","E"];
     if (q.type === "detailed") {
       const graded = pq.points !== null && pq.points !== undefined;
+      const photo = photoMap[i] || null;
       return `<div style="padding:8px 10px; border-radius:8px; margin-bottom:6px; background:${graded ? "rgba(11,60,93,.06)" : "rgba(217,154,43,.10)"};">
         <div style="font-size:12.5px; font-weight:600;">${i + 1}. ${qText} ${graded ? `— ${pq.points}/${pq.maxPoints ?? 1} bal` : "⏳ Yoxlanılır"}</div>
-        ${pq.selected ? `<img src="${pq.selected}" style="max-width:110px; max-height:110px; border-radius:6px; margin-top:6px; border:1px solid var(--color-gray); cursor:pointer;" onclick="openImageLightbox(this.src)" />` : `<div style="font-size:11.5px; color:var(--color-text-muted); margin-top:3px;">Şəkil göndərilməyib</div>`}
+        ${pq.selected ? `<div style="font-size:11.5px; margin-top:3px;">Yazdığı cavab: <b>${esc(pq.selected)}</b></div>` : ""}
+        ${photo ? `<img src="${photo}" style="max-width:110px; max-height:110px; border-radius:6px; margin-top:6px; border:1px solid var(--color-gray); cursor:pointer;" onclick="openImageLightbox(this.src)" />` : `<div style="font-size:11.5px; color:var(--color-text-muted); margin-top:3px;">Şəkil göndərilməyib</div>`}
       </div>`;
     }
     if (q.type === "open") {
@@ -2845,6 +2855,12 @@ window.toggleStudentAttemptDetail = async (attemptId) => {
   const questions = cacheEntry.questions;
   const OPT = ["A","B","C","D","E"];
 
+  let photoMap = {};
+  if (attempt.detailedCount > 0) {
+    const photoSnap = await db.collection("detailedAnswers").where("attemptId", "==", attemptId).get();
+    photoSnap.forEach(d => { const dd = d.data(); photoMap[dd.questionIndex] = dd.photoBase64; });
+  }
+
   box.innerHTML = questions.map((q, i) => {
     const pq = (attempt.perQuestion || [])[i];
     if (!pq) return "";
@@ -2852,10 +2868,12 @@ window.toggleStudentAttemptDetail = async (attemptId) => {
     const imgHtml = q.imageBase64 ? `<img src="${q.imageBase64}" style="max-width:110px; max-height:110px; border-radius:6px; margin-top:6px; border:1px solid var(--color-gray); cursor:pointer;" onclick="openImageLightbox(this.src)" />` : "";
     if (q.type === "detailed") {
       const graded = pq.points !== null && pq.points !== undefined;
+      const photo = photoMap[i] || null;
       return `<div style="padding:8px 10px; border-radius:8px; margin-bottom:6px; background:${graded ? "rgba(11,60,93,.06)" : "rgba(217,154,43,.10)"};">
         <div style="font-size:12.5px; font-weight:600;">${i + 1}. ${qText} ${graded ? `— ${pq.points}/${pq.maxPoints ?? 1} bal` : "⏳ Yoxlanılır"}</div>
         ${imgHtml}
-        ${pq.selected ? `<img src="${pq.selected}" style="max-width:110px; max-height:110px; border-radius:6px; margin-top:6px; border:1px solid var(--color-gray); cursor:pointer;" onclick="openImageLightbox(this.src)" />` : `<div style="font-size:11.5px; color:var(--color-text-muted); margin-top:3px;">Şəkil göndərilməyib</div>`}
+        ${pq.selected ? `<div style="font-size:11.5px; margin-top:3px;">Yazdığı cavab: <b>${esc(pq.selected)}</b></div>` : ""}
+        ${photo ? `<img src="${photo}" style="max-width:110px; max-height:110px; border-radius:6px; margin-top:6px; border:1px solid var(--color-gray); cursor:pointer;" onclick="openImageLightbox(this.src)" />` : `<div style="font-size:11.5px; color:var(--color-text-muted); margin-top:3px;">Şəkil göndərilməyib</div>`}
       </div>`;
     }
     if (q.type === "open") {
@@ -3160,10 +3178,17 @@ function startExamTimer() {
   }, 500);
 }
 
+function isAnswered(i) {
+  const q = currentExam.questions[i];
+  const a = currentExamAnswers[i];
+  if (q.type === "detailed") return !!(a && (a.text || a.photo));
+  return a !== null && a !== "";
+}
+
 function renderExamNavGrid() {
   const grid = document.getElementById("exam-nav-grid");
   grid.innerHTML = currentExam.questions.map((_, i) => `
-    <button class="exam-nav-btn ${currentExamAnswers[i] !== null && currentExamAnswers[i] !== "" ? "answered" : ""} ${i === currentExamIndex ? "current" : ""}" onclick="goToExamQuestion(${i})">${i + 1}</button>
+    <button class="exam-nav-btn ${isAnswered(i) ? "answered" : ""} ${i === currentExamIndex ? "current" : ""}" onclick="goToExamQuestion(${i})">${i + 1}</button>
   `).join("");
 }
 
@@ -3177,6 +3202,12 @@ function saveOpenAnswerFromInput() {
   if (q.type === "open") {
     const inp = document.getElementById("exam-open-input");
     if (inp) currentExamAnswers[currentExamIndex] = inp.value.trim();
+  } else if (q.type === "detailed") {
+    const inp = document.getElementById("exam-detailed-text-input");
+    if (inp) {
+      if (!currentExamAnswers[currentExamIndex]) currentExamAnswers[currentExamIndex] = {};
+      currentExamAnswers[currentExamIndex].text = inp.value.trim();
+    }
   }
 }
 
@@ -3244,19 +3275,34 @@ function renderExamQuestion() {
       renderExamNavGrid();
     });
   } else if (q.type === "detailed") {
-    const photo = currentExamAnswers[currentExamIndex];
+    const ans = currentExamAnswers[currentExamIndex] || {};
+    const photo = ans.photo || null;
     box.innerHTML = `${textHtml}${imgHtml}
-      <div class="muted-note" style="margin-bottom:10px;">📝 Cavabınızı kağız üzərində yazıb şəklini çəkin və ya qalereyadan seçib yükləyin. Müəllim bu sualı əl ilə yoxlayacaq.</div>
-      ${photo ? `<img src="${photo}" style="max-width:100%; border-radius:10px; margin-bottom:10px; border:2px solid var(--color-primary);" />` : ""}
-      <input type="file" accept="image/*" capture="environment" id="exam-detailed-input" />
-      <div class="muted-note" id="exam-detailed-status" style="margin-top:6px;">${photo ? "✅ Şəkil yükləndi. Dəyişmək üçün yenidən seçin." : "Hələ şəkil yüklənməyib."}</div>`;
+      <div class="muted-note" style="margin-bottom:10px;">📝 Cavabınızı aşağıda yaza bilər və/və ya kağız üzərində yazıb şəklini əlavə edə bilərsiniz. Müəllim bu sualı əl ilə yoxlayacaq.</div>
+      <div class="field" style="margin-bottom:10px;">
+        <label>Cavabınızı yazın (istəyə görə)</label>
+        <input type="text" id="exam-detailed-text-input" value="${esc(ans.text || "")}" placeholder="Qısa cavabınızı buraya yaza bilərsiniz" />
+      </div>
+      ${photo ? `<img src="${photo}" style="max-width:100%; border-radius:10px; margin-bottom:8px; border:2px solid var(--color-primary);" />
+        <button class="btn-outline" style="margin-bottom:10px;" onclick="removeDetailedPhoto()">Şəkli sil</button>` : ""}
+      <div class="field">
+        <label>Kağızdakı həllin şəkli (istəyə görə)</label>
+        <input type="file" accept="image/*" id="exam-detailed-input" />
+      </div>
+      <div class="muted-note" id="exam-detailed-status" style="margin-top:6px;">${photo ? "✅ Şəkil əlavə edilib." : "Hələ şəkil əlavə edilməyib."}</div>`;
+    document.getElementById("exam-detailed-text-input").addEventListener("input", (e) => {
+      if (!currentExamAnswers[currentExamIndex]) currentExamAnswers[currentExamIndex] = {};
+      currentExamAnswers[currentExamIndex].text = e.target.value;
+      renderExamNavGrid();
+    });
     document.getElementById("exam-detailed-input").addEventListener("change", async (e) => {
       const file = e.target.files[0];
       if (!file) return;
       document.getElementById("exam-detailed-status").textContent = "Yüklənir...";
       try {
-        const base64 = await compressImageToBase64(file, 1300, 0.8);
-        currentExamAnswers[currentExamIndex] = base64;
+        const base64 = await compressImageToBase64(file, 1200, 0.75);
+        if (!currentExamAnswers[currentExamIndex]) currentExamAnswers[currentExamIndex] = {};
+        currentExamAnswers[currentExamIndex].photo = base64;
         renderExamNavGrid();
         renderExamQuestion();
       } catch (err) {
@@ -3279,6 +3325,12 @@ function renderExamQuestion() {
   renderExamTextToolbar();
 }
 
+window.removeDetailedPhoto = () => {
+  if (currentExamAnswers[currentExamIndex]) currentExamAnswers[currentExamIndex].photo = null;
+  renderExamNavGrid();
+  renderExamQuestion();
+};
+
 window.selectExamOption = (oi) => {
   currentExamAnswers[currentExamIndex] = oi;
   renderExamNavGrid();
@@ -3295,7 +3347,7 @@ document.getElementById("exam-next-btn").addEventListener("click", () => {
 });
 document.getElementById("exam-finish-btn").addEventListener("click", () => {
   saveOpenAnswerFromInput();
-  const unanswered = currentExamAnswers.filter(a => a === null || a === "").length;
+  const unanswered = currentExam.questions.filter((q, i) => !isAnswered(i)).length;
   const msg = unanswered > 0 ? `${unanswered} sual cavabsızdır. Yenə də bitirmək istəyirsiniz?` : "Sınağı bitirmək istədiyinizə əminsiniz?";
   if (confirm(msg)) finishExam(false);
 });
@@ -3314,16 +3366,22 @@ async function finishExam(autoSubmit) {
   saveOpenAnswerFromInput();
   const ex = currentExam;
   let correctCount = 0, totalCount = 0, detailedCount = 0;
+  const detailedPhotos = []; // { index, photo } — böyük şəkillər ayrıca kolleksiyaya gedir
+  const lightAnswers = [];
   const perQuestion = ex.questions.map((q, i) => {
     if (q.type === "detailed") {
       detailedCount++;
-      return { selected: currentExamAnswers[i], correct: null, isCorrect: null, type: q.type, points: null, maxPoints: 1 };
+      const ans = currentExamAnswers[i] || {};
+      if (ans.photo) detailedPhotos.push({ index: i, photo: ans.photo });
+      lightAnswers.push(ans.text || null);
+      return { selected: ans.text || null, correct: null, isCorrect: null, type: q.type, points: null, maxPoints: 1, hasPhoto: !!ans.photo };
     }
     totalCount++;
     let isCorrect;
     if (q.type === "open") isCorrect = checkOpenAnswer(currentExamAnswers[i], q.correctAnswer);
     else isCorrect = currentExamAnswers[i] === q.correctIndex;
     if (isCorrect) correctCount++;
+    lightAnswers.push(currentExamAnswers[i]);
     return { selected: currentExamAnswers[i], correct: q.type === "open" ? q.correctAnswer : q.correctIndex, isCorrect, type: q.type, points: isCorrect ? 1 : 0, maxPoints: 1 };
   });
   const maxPoints = totalCount + detailedCount;
@@ -3332,14 +3390,44 @@ async function finishExam(autoSubmit) {
 
   const attemptData = {
     examId: ex.id, studentId: currentStudentUid, groupId: currentStudentGroupId, topic: ex.topic,
-    answers: currentExamAnswers, perQuestion, correctCount, totalCount, score: scorePct,
+    answers: lightAnswers, perQuestion, correctCount, totalCount, score: scorePct,
     detailedCount, detailedGradedCount: 0, pendingGrading,
     autoSubmitted: !!autoSubmit, submittedAt: firebase.firestore.FieldValue.serverTimestamp()
   };
-  const ref = await db.collection("examAttempts").add(attemptData);
+
+  let ref;
+  try {
+    ref = await db.collection("examAttempts").add(attemptData);
+  } catch (err) {
+    console.error("Sınaq nəticəsi yadda saxlanılmadı:", err);
+    toast("❌ Xəta: nəticə yadda saxlanılmadı. İnterneti yoxlayıb yenidən cəhd edin.");
+    if (!autoSubmit) startExamTimer(); // yalnız əl ilə bitirmədə taymeri davam etdiririk
+    return; // Sınaq ekranı açıq qalır, şagird yenidən "Sınağı bitir" basa bilər
+  }
+
+  if (detailedPhotos.length > 0) {
+    try {
+      const batch = db.batch();
+      detailedPhotos.forEach(({ index, photo }) => {
+        const docRef = db.collection("detailedAnswers").doc(`${ref.id}_${index}`);
+        batch.set(docRef, {
+          attemptId: ref.id, examId: ex.id, studentId: currentStudentUid, groupId: currentStudentGroupId,
+          questionIndex: index, photoBase64: photo, points: null, maxPoints: 1,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      });
+      await batch.commit();
+    } catch (err) {
+      console.error("Ətraflı sual şəkilləri yadda saxlanılmadı:", err);
+      toast("⚠️ Nəticə saxlanıldı, amma bəzi şəkillər yüklənmədi. Müəllimə bildirin.");
+    }
+  }
+
+  const localPhotoMap = {};
+  detailedPhotos.forEach(({ index, photo }) => { localPhotoMap[index] = photo; });
 
   document.getElementById("exam-view-taking").style.display = "none";
-  renderExamResult(ex, { ...attemptData, id: ref.id });
+  renderExamResult(ex, { ...attemptData, id: ref.id }, localPhotoMap);
 }
 
 window.viewPastResult = async (attemptId) => {
@@ -3349,11 +3437,17 @@ window.viewPastResult = async (attemptId) => {
   toast("Yüklənir...");
   const qSnap = await db.collection("exams").doc(a.examId).collection("questions").orderBy("order").get();
   const ex = { ...exMeta, questions: qSnap.docs.map(d => d.data()) };
+  let photoMap = {};
+  if (a.detailedCount > 0) {
+    const photoSnap = await db.collection("detailedAnswers").where("attemptId", "==", attemptId).get();
+    photoSnap.forEach(d => { const dd = d.data(); photoMap[dd.questionIndex] = dd.photoBase64; });
+  }
   document.getElementById("exam-view-list").style.display = "none";
-  renderExamResult(ex, a);
+  renderExamResult(ex, a, photoMap);
 };
 
-function renderExamResult(ex, attempt) {
+function renderExamResult(ex, attempt, photoMap) {
+  photoMap = photoMap || {};
   document.getElementById("exam-view-result").style.display = "block";
   document.getElementById("exam-result-pct").textContent = attempt.score + "%";
   const badge = document.getElementById("exam-result-badge");
@@ -3366,10 +3460,12 @@ function renderExamResult(ex, attempt) {
     const imgHtml = q.imageBase64 ? `<img src="${q.imageBase64}" style="max-width:100%; border-radius:8px; margin:6px 0;" />` : "";
     if (q.type === "detailed") {
       const graded = pq.points !== null && pq.points !== undefined;
+      const photo = photoMap[i] || null;
       return `<div class="list-item" style="flex-direction:column; align-items:flex-start; gap:6px;">
         <div class="list-item-title">${i + 1}. ${esc(q.text || "Ətraflı sual")} ${graded ? `— ${pq.points} / ${pq.maxPoints ?? 1} bal` : "⏳ Yoxlanılır"}</div>
         ${imgHtml}
-        ${pq.selected ? `<img src="${pq.selected}" style="max-width:100%; border-radius:8px; border:2px solid var(--color-primary); margin-top:4px;" />` : `<div class="muted-note">Şəkil göndərilməyib</div>`}
+        ${pq.selected ? `<div class="muted-note">Yazdığınız cavab: <b>${esc(pq.selected)}</b></div>` : ""}
+        ${photo ? `<img src="${photo}" style="max-width:100%; border-radius:8px; border:2px solid var(--color-primary); margin-top:4px;" />` : `<div class="muted-note">Şəkil göndərilməyib</div>`}
       </div>`;
     }
     if (q.type === "open") {
