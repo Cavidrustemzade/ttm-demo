@@ -379,6 +379,16 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
         </div>
         <div id="analytics-exam-result"><div class="empty-state">Sınaq seçin ki, təhlil görünsün</div></div>
       </div>
+
+      <div class="card">
+        <h3>📝 Ətraflı sualların yoxlanışı</h3>
+        <p class="muted-note" style="margin-bottom:10px;">Sınaq və sual seçin — həmin suala cavab verən şagirdlərin cavabları (adları gizli) bir-bir göstəriləcək.</p>
+        <div class="field-row">
+          <div class="field"><label>Sınaq seçin</label><select id="grading-exam-select"><option value="">— Seçin —</option></select></div>
+          <div class="field"><label>Sual seçin</label><select id="grading-question-select"><option value="">— Əvvəlcə sınaq seçin —</option></select></div>
+        </div>
+        <div id="grading-panel"><div class="empty-state">Sınaq və sual seçin ki, yoxlamaya başlayasınız</div></div>
+      </div>
     </div>
 
     <!-- PDF / VIDEO -->
@@ -2495,6 +2505,13 @@ function loadExams() {
       if (current) analyticsSel.value = current;
     }
 
+    const gradingSel = document.getElementById("grading-exam-select");
+    if (gradingSel) {
+      const current = gradingSel.value;
+      gradingSel.innerHTML = `<option value="">— Seçin —</option>` + examsCache.map(ex => `<option value="${ex.id}">${esc(ex.title)}</option>`).join("");
+      if (current) gradingSel.value = current;
+    }
+
     const el = document.getElementById("exams-list");
     if (examsCache.length === 0) { el.innerHTML = `<div class="empty-state">Hələ sınaq yaradılmayıb</div>`; return; }
     el.innerHTML = examsCache.map(ex => {
@@ -2774,6 +2791,120 @@ document.getElementById("analytics-student-search").addEventListener("input", (e
   const s = studentsCache.find(st => st.fullName.toLowerCase() === name);
   if (s) loadStudentAnalytics(s.id);
 });
+
+// =========================================================================
+// ƏTRAFLI SUALLARIN YOXLANIŞI (ANONİM, BİR-BİR)
+// =========================================================================
+let gradingQueue = [];
+let gradingIndex = 0;
+let gradingQIndex = null;
+
+document.getElementById("grading-exam-select").addEventListener("change", async (e) => {
+  const examId = e.target.value;
+  const qSel = document.getElementById("grading-question-select");
+  const panel = document.getElementById("grading-panel");
+  gradingQueue = []; gradingIndex = 0; gradingQIndex = null;
+  panel.innerHTML = `<div class="empty-state">Sual seçin ki, yoxlamaya başlayasınız</div>`;
+  if (!examId) { qSel.innerHTML = `<option value="">— Əvvəlcə sınaq seçin —</option>`; return; }
+  qSel.innerHTML = `<option value="">Yüklənir...</option>`;
+  try {
+    const qSnap = await db.collection("exams").doc(examId).collection("questions").orderBy("order").get();
+    const questions = qSnap.docs.map(d => d.data());
+    const detailed = questions.map((q, i) => ({ q, i })).filter(x => x.q.type === "detailed");
+    if (detailed.length === 0) {
+      qSel.innerHTML = `<option value="">— Bu sınaqda ətraflı sual yoxdur —</option>`;
+      return;
+    }
+    qSel.innerHTML = `<option value="">— Seçin —</option>` + detailed.map(x => `<option value="${x.i}">${x.i + 1}-ci sual${x.q.text ? ": " + esc(x.q.text).slice(0, 40) : ""}</option>`).join("");
+  } catch (err) {
+    console.error(err);
+    qSel.innerHTML = `<option value="">Xəta baş verdi</option>`;
+  }
+});
+
+document.getElementById("grading-question-select").addEventListener("change", async (e) => {
+  const qIndexRaw = e.target.value;
+  const examId = document.getElementById("grading-exam-select").value;
+  const panel = document.getElementById("grading-panel");
+  if (qIndexRaw === "" || !examId) { panel.innerHTML = `<div class="empty-state">Sual seçin ki, yoxlamaya başlayasınız</div>`; return; }
+  panel.innerHTML = `<div class="empty-state">Yüklənir...</div>`;
+  gradingQIndex = Number(qIndexRaw);
+
+  try {
+    const [attemptsSnap, photosSnap] = await Promise.all([
+      db.collection("examAttempts").where("examId", "==", examId).get(),
+      db.collection("detailedAnswers").where("examId", "==", examId).where("questionIndex", "==", gradingQIndex).get()
+    ]);
+    const photoMap = {};
+    photosSnap.forEach(d => { const dd = d.data(); photoMap[dd.attemptId] = dd.photoBase64; });
+
+    gradingQueue = [];
+    attemptsSnap.forEach(d => {
+      const a = d.data();
+      const pq = (a.perQuestion || [])[gradingQIndex];
+      if (!pq || pq.type !== "detailed") return;
+      if (pq.points !== null && pq.points !== undefined) return; // artıq yoxlanılıb, keçirik
+      gradingQueue.push({ attemptId: d.id, text: pq.selected || null, photo: photoMap[d.id] || null });
+    });
+    gradingIndex = 0;
+    renderGradingPanel();
+  } catch (err) {
+    console.error(err);
+    panel.innerHTML = `<div class="empty-state">Xəta baş verdi: ${esc(err.message)}</div>`;
+  }
+});
+
+function renderGradingPanel() {
+  const panel = document.getElementById("grading-panel");
+  if (gradingQueue.length === 0) { panel.innerHTML = `<div class="empty-state">✅ Bu sual üzrə yoxlanılası cavab yoxdur (hamısı yoxlanılıb və ya heç kim cavab verməyib)</div>`; return; }
+  if (gradingIndex >= gradingQueue.length) { panel.innerHTML = `<div class="empty-state">✅ Bütün cavablar yoxlanıldı!</div>`; return; }
+  const item = gradingQueue[gradingIndex];
+  panel.innerHTML = `
+    <div class="muted-note" style="margin-bottom:10px;">Yoxlanılır: ${gradingIndex + 1} / ${gradingQueue.length} (şagird adı gizlidir)</div>
+    ${item.text ? `<div class="field"><label>Yazdığı cavab</label><div style="padding:10px; background:var(--color-light-gray); border-radius:8px; font-size:14px;">${esc(item.text)}</div></div>` : ""}
+    ${item.photo ? `<img src="${item.photo}" style="max-width:100%; border-radius:10px; margin-top:10px; border:1px solid var(--color-gray); cursor:pointer;" onclick="openImageLightbox(this.src)" />` : (!item.text ? `<div class="empty-state">Cavab göndərilməyib</div>` : "")}
+    <div style="display:flex; gap:8px; margin-top:16px;">
+      <button class="btn-small" style="flex:1; background:var(--color-danger);" onclick="gradeCurrentAnswer(0)">0 bal</button>
+      <button class="btn-small" style="flex:1; background:#d99a2b;" onclick="gradeCurrentAnswer(0.5)">0,5 bal</button>
+      <button class="btn-small" style="flex:1; background:#2e9e6b;" onclick="gradeCurrentAnswer(1)">1 bal</button>
+    </div>
+  `;
+}
+
+window.gradeCurrentAnswer = async (points) => {
+  const item = gradingQueue[gradingIndex];
+  if (!item) return;
+  try {
+    const ref = db.collection("examAttempts").doc(item.attemptId);
+    const doc = await ref.get();
+    if (!doc.exists) { toast("Nəticə tapılmadı"); gradingIndex++; renderGradingPanel(); return; }
+    const a = doc.data();
+    const perQuestion = (a.perQuestion || []).slice();
+    if (!perQuestion[gradingQIndex]) { toast("Sual məlumatı tapılmadı"); gradingIndex++; renderGradingPanel(); return; }
+    perQuestion[gradingQIndex] = { ...perQuestion[gradingQIndex], points };
+
+    let detailedGradedCount = 0, detailedPoints = 0;
+    perQuestion.forEach(pq => {
+      if (pq && pq.type === "detailed" && pq.points !== null && pq.points !== undefined) {
+        detailedGradedCount++; detailedPoints += pq.points;
+      }
+    });
+    const maxPoints = (a.totalCount || 0) + (a.detailedCount || 0);
+    const earnedPoints = (a.correctCount || 0) + detailedPoints;
+    const score = maxPoints > 0 ? Math.round((earnedPoints / maxPoints) * 100) : 0;
+    const pendingGrading = detailedGradedCount < (a.detailedCount || 0);
+
+    await ref.update({ perQuestion, score, detailedGradedCount, pendingGrading });
+    db.collection("detailedAnswers").doc(`${item.attemptId}_${gradingQIndex}`).update({ points, gradedAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(() => {});
+
+    gradingIndex++;
+    renderGradingPanel();
+    toast("Bal yadda saxlandı");
+  } catch (err) {
+    console.error(err);
+    toast("Xəta: " + err.message);
+  }
+};
 
 window._studentAnalyticsCache = {};
 
