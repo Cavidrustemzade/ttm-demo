@@ -2730,8 +2730,13 @@ window.toggleAttemptDetail = async (attemptId) => {
   if (attempt.detailedCount > 0) {
     box.innerHTML = `<div class="empty-state">Yüklənir...</div>`;
     box.style.display = "block";
-    const photoSnap = await db.collection("detailedAnswers").where("attemptId", "==", attemptId).get();
-    photoSnap.forEach(d => { const dd = d.data(); photoMap[dd.questionIndex] = dd.photoBase64; });
+    try {
+      const photoSnap = await db.collection("detailedAnswers").where("attemptId", "==", attemptId).get();
+      photoSnap.forEach(d => { const dd = d.data(); photoMap[dd.questionIndex] = dd.photoBase64; });
+    } catch (e) {
+      console.error("Ətraflı sual şəkilləri oxuna bilmədi:", e);
+      toast("⚠️ Şəkillər yüklənə bilmədi (icazə xətası ola bilər)");
+    }
   }
 
   box.innerHTML = questions.map((q, i) => {
@@ -2857,8 +2862,13 @@ window.toggleStudentAttemptDetail = async (attemptId) => {
 
   let photoMap = {};
   if (attempt.detailedCount > 0) {
-    const photoSnap = await db.collection("detailedAnswers").where("attemptId", "==", attemptId).get();
-    photoSnap.forEach(d => { const dd = d.data(); photoMap[dd.questionIndex] = dd.photoBase64; });
+    try {
+      const photoSnap = await db.collection("detailedAnswers").where("attemptId", "==", attemptId).get();
+      photoSnap.forEach(d => { const dd = d.data(); photoMap[dd.questionIndex] = dd.photoBase64; });
+    } catch (e) {
+      console.error("Ətraflı sual şəkilləri oxuna bilmədi:", e);
+      toast("⚠️ Şəkillər yüklənə bilmədi (icazə xətası ola bilər)");
+    }
   }
 
   box.innerHTML = questions.map((q, i) => {
@@ -3439,8 +3449,12 @@ window.viewPastResult = async (attemptId) => {
   const ex = { ...exMeta, questions: qSnap.docs.map(d => d.data()) };
   let photoMap = {};
   if (a.detailedCount > 0) {
-    const photoSnap = await db.collection("detailedAnswers").where("attemptId", "==", attemptId).get();
-    photoSnap.forEach(d => { const dd = d.data(); photoMap[dd.questionIndex] = dd.photoBase64; });
+    try {
+      const photoSnap = await db.collection("detailedAnswers").where("attemptId", "==", attemptId).get();
+      photoSnap.forEach(d => { const dd = d.data(); photoMap[dd.questionIndex] = dd.photoBase64; });
+    } catch (e) {
+      console.error("Ətraflı sual şəkilləri oxuna bilmədi:", e);
+    }
   }
   document.getElementById("exam-view-list").style.display = "none";
   renderExamResult(ex, a, photoMap);
