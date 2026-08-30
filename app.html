@@ -191,8 +191,8 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .exam-flag-btn.active { background:rgba(217,154,43,.20); color:#a9700a; }
 .exam-timer { background:var(--color-primary); color:#fff; text-align:center; padding:10px; border-radius:var(--radius-sm); font-weight:800; font-size:16px; }
 .exam-timer.warning { background:var(--color-danger); }
-.exam-opt-row { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:10px; }
-.exam-opt-btn { width:58px; height:58px; border-radius:14px; font-weight:800; font-size:19px; }
+.exam-opt-row { display:flex; gap:9px; flex-wrap:wrap; justify-content:center; margin-top:10px; }
+.exam-opt-btn { width:46px; height:46px; border-radius:11px; font-weight:700; font-size:15.5px; }
 
 @media (min-width: 900px) {
   .exam-taking-layout {
@@ -208,7 +208,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
   .exam-text-panel.open { max-height:74vh; overflow-y:auto; }
   .exam-question-area { min-width:0; }
   #exam-question-box img { max-height:46vh; width:auto; max-width:100%; object-fit:contain; }
-  .exam-opt-btn { width:72px; height:72px; font-size:24px; border-radius:16px; }
+  .exam-opt-btn { width:50px; height:50px; font-size:16.5px; border-radius:12px; }
 }
 
 /* Planşet enində mətn açılanda sıxlaşmasın deyə sualın ÜSTÜNDƏ tam enli göstərilir */
@@ -243,6 +243,14 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .exam-result-badge { width:100px; height:100px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-direction:column; margin:0 auto 18px; position:relative; }
 .exam-result-badge::after { content:""; position:absolute; inset:8px; background:#fff; border-radius:50%; }
 .exam-result-badge span { position:relative; z-index:1; font-weight:800; font-size:24px; color:var(--color-primary); }
+.exam-result-hero { text-align:center; }
+.exam-result-title { color:var(--color-primary); font-size:21px; margin:6px 0 4px; }
+.exam-stat-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:16px; }
+@media (min-width: 700px) { .exam-stat-grid { grid-template-columns:repeat(4,1fr); } }
+.exam-result-row { border-left:4px solid var(--color-gray); border-radius:10px; margin-bottom:8px; }
+.exam-result-row.correct { border-left-color:#2e9e6b; }
+.exam-result-row.wrong { border-left-color:var(--color-danger); }
+.exam-result-row.blank { border-left-color:#94a3b8; }
 .race-stage { position:relative; height:280px; background:linear-gradient(180deg,#e0f2fe 0%,#e0f2fe 60%,#38bdf8 60%,#0284c7 100%); border-radius:var(--radius-md); overflow:hidden; margin-bottom:16px; }
 .race-rope { position:absolute; left:50%; top:0; width:3px; height:60%; background:repeating-linear-gradient(180deg,#a16207 0,#a16207 6px,#78350f 6px,#78350f 10px); transform:translateX(-50%); }
 .race-char { position:absolute; left:50%; font-size:34px; transform:translate(-50%,-50%); transition:bottom .5s cubic-bezier(.34,1.56,.64,1); filter:drop-shadow(0 4px 6px rgba(0,0,0,.2)); }
@@ -831,12 +839,14 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
       </div>
 
       <div id="exam-view-result" style="display:none;">
-        <div class="card">
+        <div class="card exam-result-hero">
           <div class="exam-result-badge" id="exam-result-badge"><span id="exam-result-pct">0%</span></div>
-          <div style="text-align:center;" class="muted-note" id="exam-result-summary"></div>
+          <h2 class="exam-result-title">Sınaq tamamlandı!</h2>
+          <div class="muted-note" id="exam-result-summary"></div>
         </div>
+        <div class="exam-stat-grid" id="exam-stat-grid"></div>
         <div class="card">
-          <h3>Sual-cavab təhlili</h3>
+          <h3>Sualların icmalı</h3>
           <div id="exam-result-detail"></div>
         </div>
         <div class="card" id="exam-result-video-card" style="display:none;">
@@ -3806,13 +3816,49 @@ function renderExamResult(ex, attempt, photoMap) {
   badge.style.background = `conic-gradient(${color} ${attempt.score * 3.6}deg, var(--color-gray) 0deg)`;
   document.getElementById("exam-result-summary").textContent = `${ex.title} — ${attempt.correctCount}/${attempt.totalCount} sual düzgün` + (attempt.pendingGrading ? ` · ${attempt.detailedCount} ətraflı sual müəllim yoxlamasını gözləyir` : "");
 
+  // Statistika kartları — mövcud attempt/perQuestion datasından hesablanır, hesablama məntiqinə toxunulmur
+  let wrongCount = 0, unansweredCount = 0;
+  ex.questions.forEach((q, i) => {
+    const pq = attempt.perQuestion[i];
+    if (!pq || q.type === "detailed") return;
+    const blank = pq.selected === null || pq.selected === undefined || pq.selected === "";
+    if (blank) unansweredCount++;
+    else if (!pq.isCorrect) wrongCount++;
+  });
+  const statGrid = document.getElementById("exam-stat-grid");
+  if (statGrid) {
+    statGrid.innerHTML = `
+      <div class="stat-icon-card" style="background:linear-gradient(135deg,#ecfdf5,#ffffff);">
+        <div class="stat-icon-badge grad-green">✅</div>
+        <div class="list-item-sub">Düz cavablar</div>
+        <div class="list-item-title" style="font-size:20px;">${attempt.correctCount}</div>
+      </div>
+      <div class="stat-icon-card" style="background:linear-gradient(135deg,#fef2f2,#ffffff);">
+        <div class="stat-icon-badge" style="background:linear-gradient(135deg,#f87171,#d94c4c);">❌</div>
+        <div class="list-item-sub">Səhv cavablar</div>
+        <div class="list-item-title" style="font-size:20px;">${wrongCount}</div>
+      </div>
+      <div class="stat-icon-card" style="background:linear-gradient(135deg,#f4f6f8,#ffffff);">
+        <div class="stat-icon-badge" style="background:linear-gradient(135deg,#94a3b8,#64748b);">➖</div>
+        <div class="list-item-sub">Cavablandırılmayıb</div>
+        <div class="list-item-title" style="font-size:20px;">${unansweredCount}</div>
+      </div>
+      <div class="stat-icon-card" style="background:linear-gradient(135deg,#eff6ff,#ffffff);">
+        <div class="stat-icon-badge grad-blue">⏱</div>
+        <div class="list-item-sub">Ayrılmış vaxt</div>
+        <div class="list-item-title" style="font-size:20px;">${ex.timeLimitMinutes} dəq</div>
+      </div>
+    `;
+  }
+
   document.getElementById("exam-result-detail").innerHTML = ex.questions.map((q, i) => {
     const pq = attempt.perQuestion[i];
     const imgHtml = q.imageBase64 ? `<img src="${q.imageBase64}" style="max-width:100%; border-radius:8px; margin:6px 0;" />` : "";
+    const rowClass = q.type === "detailed" ? "" : (pq.selected === null || pq.selected === undefined || pq.selected === "") ? "blank" : (pq.isCorrect ? "correct" : "wrong");
     if (q.type === "detailed") {
       const graded = pq.points !== null && pq.points !== undefined;
       const photo = photoMap[i] || null;
-      return `<div class="list-item" style="flex-direction:column; align-items:flex-start; gap:6px;">
+      return `<div class="list-item exam-result-row" style="flex-direction:column; align-items:flex-start; gap:6px;">
         <div class="list-item-title">${i + 1}. ${esc(q.text || "Ətraflı sual")} ${graded ? `— ${pq.points} / ${pq.maxPoints ?? 1} bal` : "⏳ Yoxlanılır"}</div>
         ${imgHtml}
         ${pq.selected ? `<div class="muted-note">Yazdığınız cavab: <b>${esc(pq.selected)}</b></div>` : ""}
@@ -3820,14 +3866,14 @@ function renderExamResult(ex, attempt, photoMap) {
       </div>`;
     }
     if (q.type === "open") {
-      return `<div class="list-item" style="flex-direction:column; align-items:flex-start; gap:6px;">
+      return `<div class="list-item exam-result-row ${rowClass}" style="flex-direction:column; align-items:flex-start; gap:6px;">
         <div class="list-item-title">${i + 1}. ${esc(q.text)} ${pq.isCorrect ? "✅" : "❌"}</div>
         ${imgHtml}
         <div class="option-btn ${pq.isCorrect ? "correct" : "wrong"}" style="pointer-events:none; font-size:13px;">Sizin cavabınız: ${esc(pq.selected || "(boş)")}</div>
         ${!pq.isCorrect ? `<div class="option-btn correct" style="pointer-events:none; font-size:13px;">Düzgün cavab: ${esc(q.correctAnswer)}</div>` : ""}
       </div>`;
     }
-    return `<div class="list-item" style="flex-direction:column; align-items:flex-start; gap:6px;">
+    return `<div class="list-item exam-result-row ${rowClass}" style="flex-direction:column; align-items:flex-start; gap:6px;">
       <div class="list-item-title">${i + 1}. ${esc(q.text)} ${pq.isCorrect ? "✅" : "❌"}</div>
       ${imgHtml}
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
