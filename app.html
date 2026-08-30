@@ -158,24 +158,62 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .q-opt-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
 .q-opt-row input[type="radio"] { width:18px; height:18px; flex-shrink:0; }
 .q-opt-row input[type="text"] { flex:1; padding:8px 10px; border:1.5px solid var(--color-gray); border-radius:6px; font-size:13px; background:var(--color-white); }
-.exam-nav-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:16px; }
+.exam-nav-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
 .exam-text-toggle-btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:999px; background:var(--color-primary); color:#fff; font-weight:700; font-size:12.5px; margin-bottom:14px; }
 .exam-text-toggle-btn.active { background:var(--color-danger); }
-.exam-text-panel { display:none; }
-.exam-text-panel.open { display:block; margin-bottom:14px; padding:16px; border-radius:16px; background:#fff; border:2px solid var(--color-primary); max-height:300px; overflow-y:auto; box-shadow:var(--shadow-sm); }
+.exam-text-panel { display:none; grid-area:text; }
+.exam-text-panel.open { display:block; padding:16px; border-radius:16px; background:#fff; border:2px solid var(--color-primary); max-height:300px; overflow-y:auto; box-shadow:var(--shadow-sm); }
 .exam-text-panel-title { font-weight:800; color:var(--color-primary); margin-bottom:8px; font-size:14px; display:flex; justify-content:space-between; align-items:center; gap:10px; }
 .exam-text-panel-body { font-size:13.5px; line-height:1.75; color:var(--color-text); }
 .exam-text-panel-body img { max-width:100%; border-radius:10px; margin-top:8px; }
-@media (min-width: 1080px) {
-  .exam-taking-layout.has-text { display:flex; gap:18px; align-items:flex-start; }
-  .exam-taking-layout.has-text .exam-text-panel { flex:0 0 320px; margin-bottom:0; position:sticky; top:76px; }
-  .exam-taking-layout.has-text .exam-question-col { flex:1; min-width:0; }
+
+/* SINAQ İŞLƏMƏ EKRANI: telefonda tək sütun, taymer+naviqasiya yuxarıda sabit (sticky) */
+.exam-taking-layout {
+  display:grid;
+  grid-template-areas: "timer" "nav" "text" "question" "finish";
+  grid-template-columns: 1fr;
+  gap:12px;
 }
-.exam-nav-btn { aspect-ratio:1; border-radius:8px; background:var(--color-light-gray); color:var(--color-text); font-weight:700; font-size:13px; border:2px solid transparent; }
+.exam-timer-area { grid-area:timer; position:sticky; top:60px; z-index:17; }
+.exam-nav-area { grid-area:nav; position:sticky; top:114px; z-index:16; background:var(--color-white); border-radius:var(--radius-md); padding:12px 14px; box-shadow:var(--shadow-sm); }
+.exam-question-area { grid-area:question; }
+.exam-finish-area { grid-area:finish; }
+.exam-nav-btn { aspect-ratio:1; border-radius:8px; background:var(--color-light-gray); color:var(--color-text); font-weight:700; font-size:12.5px; border:2px solid transparent; }
 .exam-nav-btn.answered { background:rgba(46,158,107,.15); color:#2e9e6b; }
+.exam-nav-btn.flagged { background:rgba(217,154,43,.20); color:#a9700a; }
+.exam-nav-btn.flagged.answered { background:linear-gradient(135deg, rgba(46,158,107,.20), rgba(217,154,43,.28)); color:#3d7a52; }
 .exam-nav-btn.current { border-color:var(--color-primary); }
-.exam-timer { position:sticky; top:66px; z-index:15; background:var(--color-primary); color:#fff; text-align:center; padding:10px; border-radius:var(--radius-sm); font-weight:800; font-size:16px; margin-bottom:14px; }
+.exam-nav-legend { display:flex; flex-wrap:wrap; gap:10px 14px; margin-top:10px; font-size:10px; color:var(--color-text-muted); }
+.exam-legend-dot { display:inline-block; width:9px; height:9px; border-radius:3px; margin-right:4px; vertical-align:middle; background:var(--color-gray); }
+.exam-legend-dot.answered { background:#2e9e6b; }
+.exam-legend-dot.flagged { background:#d99a2b; }
+.exam-flag-btn { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:999px; background:var(--color-light-gray); color:var(--color-text-muted); font-weight:700; font-size:12px; margin-bottom:12px; }
+.exam-flag-btn.active { background:rgba(217,154,43,.20); color:#a9700a; }
+.exam-timer { background:var(--color-primary); color:#fff; text-align:center; padding:10px; border-radius:var(--radius-sm); font-weight:800; font-size:16px; }
 .exam-timer.warning { background:var(--color-danger); }
+
+@media (min-width: 900px) {
+  .exam-taking-layout {
+    grid-template-areas:
+      "nav question timer"
+      "nav question finish";
+    grid-template-columns: 190px 1fr 210px;
+    align-items:start;
+  }
+  .exam-taking-layout.has-text {
+    grid-template-areas:
+      "nav question text timer"
+      "nav question text finish";
+    grid-template-columns: 190px 1fr 280px 210px;
+  }
+  .exam-nav-area { position:sticky; top:76px; }
+  .exam-timer-area { position:sticky; top:76px; }
+  .exam-finish-area { position:sticky; top:170px; }
+  .exam-text-panel { max-height:74vh; overflow-y:auto; }
+  .exam-text-panel.open { position:sticky; top:76px; }
+  .exam-question-area { min-width:0; }
+}
+
 .option-btn { display:block; width:100%; text-align:left; padding:14px 16px; border-radius:var(--radius-sm); border:2px solid var(--color-gray); background:var(--color-white); margin-bottom:10px; font-size:14.5px; transition:var(--transition); transform:scale(1); }
 .option-btn:active { transform:scale(0.97); }
 .option-btn.selected { border-color:var(--color-primary); background:rgba(11,60,93,.06); font-weight:600; }
@@ -744,18 +782,29 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
       </div>
 
       <div id="exam-view-taking" style="display:none;">
-        <div class="exam-timer" id="exam-timer-box">00:00</div>
         <div class="exam-taking-layout" id="exam-taking-layout">
-          <div class="exam-text-panel" id="exam-text-panel"></div>
-          <div class="card exam-question-col">
-            <div id="exam-text-toolbar" style="display:none; flex-wrap:wrap; gap:8px; margin-bottom:12px;"></div>
+          <div class="exam-timer-area">
+            <div class="exam-timer" id="exam-timer-box">00:00</div>
+          </div>
+          <div class="exam-nav-area">
+            <div id="exam-text-toolbar" style="display:none; flex-wrap:wrap; gap:8px; margin-bottom:10px;"></div>
             <div class="exam-nav-grid" id="exam-nav-grid"></div>
+            <div class="exam-nav-legend">
+              <span><i class="exam-legend-dot answered"></i>Cavablandırılıb</span>
+              <span><i class="exam-legend-dot flagged"></i>Sonra baxacam</span>
+            </div>
+          </div>
+          <div class="exam-text-panel" id="exam-text-panel"></div>
+          <div class="card exam-question-area">
+            <button type="button" class="exam-flag-btn" id="exam-flag-btn" onclick="toggleFlagCurrentQuestion()">🔖 Sonra baxacam</button>
             <div id="exam-question-box"></div>
             <div style="display:flex; gap:8px; margin-top:14px;">
               <button class="btn-outline" id="exam-prev-btn">← Əvvəlki</button>
               <button class="btn-outline" id="exam-next-btn">Növbəti →</button>
             </div>
-            <button class="btn-small" id="exam-finish-btn" style="width:100%; margin-top:14px; background:var(--color-danger);">Sınağı bitir</button>
+          </div>
+          <div class="exam-finish-area">
+            <button class="btn-small" id="exam-finish-btn" style="width:100%; background:var(--color-danger);">Sınağı bitir</button>
           </div>
         </div>
       </div>
@@ -3138,6 +3187,7 @@ let currentExamIndex = 0;
 let examTimerInterval = null;
 let examEndTime = null;
 let openTextId = null;
+let flaggedQuestions = new Set();
 
 function loadStudentExams(uid, groupId) {
   if (!groupId) return;
@@ -3295,6 +3345,7 @@ window.startExam = async (examId) => {
   currentExamAnswers = new Array(questions.length).fill(null);
   currentExamIndex = 0;
   openTextId = null;
+  flaggedQuestions = new Set();
   examEndTime = Date.now() + ex.timeLimitMinutes * 60000;
 
   document.getElementById("exam-view-list").style.display = "none";
@@ -3329,8 +3380,23 @@ function isAnswered(i) {
 function renderExamNavGrid() {
   const grid = document.getElementById("exam-nav-grid");
   grid.innerHTML = currentExam.questions.map((_, i) => `
-    <button class="exam-nav-btn ${isAnswered(i) ? "answered" : ""} ${i === currentExamIndex ? "current" : ""}" onclick="goToExamQuestion(${i})">${i + 1}</button>
+    <button class="exam-nav-btn ${isAnswered(i) ? "answered" : ""} ${flaggedQuestions.has(i) ? "flagged" : ""} ${i === currentExamIndex ? "current" : ""}" onclick="goToExamQuestion(${i})">${i + 1}</button>
   `).join("");
+}
+
+window.toggleFlagCurrentQuestion = () => {
+  if (flaggedQuestions.has(currentExamIndex)) flaggedQuestions.delete(currentExamIndex);
+  else flaggedQuestions.add(currentExamIndex);
+  renderExamNavGrid();
+  updateFlagBtnState();
+};
+
+function updateFlagBtnState() {
+  const btn = document.getElementById("exam-flag-btn");
+  if (!btn) return;
+  const active = flaggedQuestions.has(currentExamIndex);
+  btn.classList.toggle("active", active);
+  btn.textContent = active ? "🔖 İşarəni sil" : "🔖 Sonra baxacam";
 }
 
 window.goToExamQuestion = (i) => {
@@ -3464,6 +3530,7 @@ function renderExamQuestion() {
   }
   renderTextPanel();
   renderExamTextToolbar();
+  updateFlagBtnState();
 }
 
 window.removeDetailedPhoto = () => {
