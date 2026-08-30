@@ -191,27 +191,48 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .exam-flag-btn.active { background:rgba(217,154,43,.20); color:#a9700a; }
 .exam-timer { background:var(--color-primary); color:#fff; text-align:center; padding:10px; border-radius:var(--radius-sm); font-weight:800; font-size:16px; }
 .exam-timer.warning { background:var(--color-danger); }
+.exam-opt-row { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:10px; }
+.exam-opt-btn { width:58px; height:58px; border-radius:14px; font-weight:800; font-size:19px; }
 
 @media (min-width: 900px) {
   .exam-taking-layout {
     grid-template-areas:
       "nav question timer"
       "nav question finish";
-    grid-template-columns: 190px 1fr 210px;
+    grid-template-columns: 180px 1fr 200px;
     align-items:start;
-  }
-  .exam-taking-layout.has-text {
-    grid-template-areas:
-      "nav question text timer"
-      "nav question text finish";
-    grid-template-columns: 190px 1fr 280px 210px;
   }
   .exam-nav-area { position:sticky; top:76px; }
   .exam-timer-area { position:sticky; top:76px; }
   .exam-finish-area { position:sticky; top:170px; }
-  .exam-text-panel { max-height:74vh; overflow-y:auto; }
-  .exam-text-panel.open { position:sticky; top:76px; }
+  .exam-text-panel.open { max-height:74vh; overflow-y:auto; }
   .exam-question-area { min-width:0; }
+  #exam-question-box img { max-height:46vh; width:auto; max-width:100%; object-fit:contain; }
+  .exam-opt-btn { width:72px; height:72px; font-size:24px; border-radius:16px; }
+}
+
+/* Planşet enində mətn açılanda sıxlaşmasın deyə sualın ÜSTÜNDƏ tam enli göstərilir */
+@media (min-width: 900px) and (max-width: 1199px) {
+  .exam-taking-layout.has-text {
+    grid-template-areas:
+      "nav timer timer"
+      "nav text text"
+      "nav question question"
+      "nav finish finish";
+    grid-template-columns: 180px 1fr 1fr;
+  }
+  .exam-taking-layout.has-text .exam-text-panel.open { position:static; max-height:50vh; }
+}
+
+/* Geniş kompüter ekranında mətn solda, böyük və rahat oxunan şəkildə açılır */
+@media (min-width: 1200px) {
+  .exam-taking-layout.has-text {
+    grid-template-areas:
+      "nav text question timer"
+      "nav text question finish";
+    grid-template-columns: 180px 420px 1fr 200px;
+  }
+  .exam-taking-layout.has-text .exam-text-panel.open { position:sticky; top:76px; max-height:78vh; }
 }
 
 .option-btn { display:block; width:100%; text-align:left; padding:14px 16px; border-radius:var(--radius-sm); border:2px solid var(--color-gray); background:var(--color-white); margin-bottom:10px; font-size:14.5px; transition:var(--transition); transform:scale(1); }
@@ -962,7 +983,16 @@ form.addEventListener("submit", async (e) => {
 });
 
 document.getElementById("logout-btn-admin").addEventListener("click", () => auth.signOut());
-document.getElementById("logout-btn-student").addEventListener("click", () => auth.signOut());
+document.getElementById("logout-btn-student").addEventListener("click", () => {
+  if (typeof examExitGuardActive !== "undefined" && examExitGuardActive) {
+    const leave = confirm("İmtahandan çıxmaq istədiyinizə əminsiniz? Çıxsanız sınaq indiki cavablarla bitəcək.");
+    if (!leave) return;
+    exitExamMode();
+    finishExam(false).then(() => auth.signOut());
+    return;
+  }
+  auth.signOut();
+});
 
 // =========================================================================
 // ADMIN PANELİ MƏNTİQİ
@@ -3086,10 +3116,13 @@ window.toggleStudentAttemptDetail = async (attemptId) => {
 // =========================================================================
 
 async function initStudentPanel(uid) {
+  currentStudentUid = uid;
   const sDoc = await db.collection("students").doc(uid).get();
   if (!sDoc.exists) return;
   const s = sDoc.data();
+  currentStudentGroupId = s.groupId;
   document.getElementById("s-welcome-name").textContent = "Xoş gəldin, " + s.fullName + "! 👋";
+  resumeExamIfAny();
 
   let groupNameText = "—";
   if (s.groupId) {
@@ -3331,6 +3364,108 @@ function renderExamWeakTopics() {
   }).join("") + (rows.some(r => r.pct < 60) ? `<div class="muted-note">💪 Zəif mövzulara əlavə vaxt ayırmaq tövsiyə olunur.</div>` : "");
 }
 
+// ---- Sınaq davamlılığı: səhifə bağlansa/təsadüfən çıxılsa belə qaldığı yerdən davam etsin ----
+function examProgressKey() {
+  return "ttm_exam_progress_" + currentStudentUid;
+}
+function saveExamProgress() {
+  if (!currentExam || !currentStudentUid) return;
+  try {
+    localStorage.setItem(examProgressKey(), JSON.stringify({
+      examId: currentExam.id,
+      answers: currentExamAnswers,
+      currentExamIndex,
+      examEndTime,
+      flagged: Array.from(flaggedQuestions)
+    }));
+  } catch (e) { /* yaddaş dolu ola bilər, kritik deyil */ }
+}
+function clearExamProgress() {
+  try { localStorage.removeItem(examProgressKey()); } catch (e) {}
+}
+
+let examExitGuardActive = false;
+function handleExamBeforeUnload(e) {
+  if (!examExitGuardActive) return;
+  e.preventDefault();
+  e.returnValue = "";
+}
+function handleExamPopState() {
+  if (!examExitGuardActive) return;
+  const leave = confirm("İmtahandan çıxmaq istədiyinizə əminsiniz? Çıxsanız sınaq indiki cavablarla bitəcək.");
+  if (leave) {
+    exitExamMode();
+    finishExam(false);
+  } else {
+    history.pushState({ ttmExam: true }, "", location.href);
+  }
+}
+function enterExamMode() {
+  const tabs = document.querySelector("#view-student .tabs");
+  if (tabs) tabs.style.display = "none";
+  examExitGuardActive = true;
+  history.pushState({ ttmExam: true }, "", location.href);
+  window.addEventListener("popstate", handleExamPopState);
+  window.addEventListener("beforeunload", handleExamBeforeUnload);
+}
+function exitExamMode() {
+  const tabs = document.querySelector("#view-student .tabs");
+  if (tabs) tabs.style.display = "";
+  examExitGuardActive = false;
+  window.removeEventListener("popstate", handleExamPopState);
+  window.removeEventListener("beforeunload", handleExamBeforeUnload);
+}
+
+async function resumeExamIfAny() {
+  let saved;
+  try {
+    const raw = localStorage.getItem(examProgressKey());
+    if (!raw) return;
+    saved = JSON.parse(raw);
+  } catch (e) { return; }
+  if (!saved || !saved.examId) return;
+
+  try {
+    const exDoc = await db.collection("exams").doc(saved.examId).get();
+    if (!exDoc.exists) { clearExamProgress(); return; }
+    const qSnap = await db.collection("exams").doc(saved.examId).collection("questions").orderBy("order").get();
+    const questions = qSnap.docs.map(d => d.data());
+    if (questions.length === 0) { clearExamProgress(); return; }
+
+    currentExam = { id: exDoc.id, ...exDoc.data(), questions };
+    currentExamAnswers = saved.answers || new Array(questions.length).fill(null);
+    currentExamIndex = saved.currentExamIndex || 0;
+    examEndTime = saved.examEndTime;
+    flaggedQuestions = new Set(saved.flagged || []);
+    openTextId = null;
+
+    if (Date.now() >= examEndTime) {
+      await finishExam(true);
+      return;
+    }
+
+    const stabBtn = document.querySelector('.tab-btn[data-stab="stab-exams"]');
+    if (stabBtn) {
+      document.querySelectorAll(".tab-btn[data-stab]").forEach(b => b.classList.remove("active"));
+      stabBtn.classList.add("active");
+      document.querySelectorAll("#view-student .tab-panel").forEach(p => p.classList.remove("active"));
+      document.getElementById("stab-exams").classList.add("active");
+    }
+
+    document.getElementById("exam-view-list").style.display = "none";
+    document.getElementById("exam-view-result").style.display = "none";
+    document.getElementById("exam-view-taking").style.display = "block";
+
+    renderExamNavGrid();
+    renderExamQuestion();
+    startExamTimer();
+    enterExamMode();
+    toast("Yarımçıq qalmış sınağınıza qayıdıldı");
+  } catch (e) {
+    console.error("Sınağa qayıtma xətası:", e);
+  }
+}
+
 window.startExam = async (examId) => {
   const ex = studentExamsCache.find(e => e.id === examId);
   if (!ex) return;
@@ -3355,6 +3490,7 @@ window.startExam = async (examId) => {
   renderExamNavGrid();
   renderExamQuestion();
   startExamTimer();
+  enterExamMode();
 };
 
 function startExamTimer() {
@@ -3382,6 +3518,7 @@ function renderExamNavGrid() {
   grid.innerHTML = currentExam.questions.map((_, i) => `
     <button class="exam-nav-btn ${isAnswered(i) ? "answered" : ""} ${flaggedQuestions.has(i) ? "flagged" : ""} ${i === currentExamIndex ? "current" : ""}" onclick="goToExamQuestion(${i})">${i + 1}</button>
   `).join("");
+  saveExamProgress();
 }
 
 window.toggleFlagCurrentQuestion = () => {
@@ -3519,10 +3656,10 @@ function renderExamQuestion() {
     });
   } else {
     box.innerHTML = `${textHtml}${imgHtml}
-      <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:10px;">
+      <div class="exam-opt-row">
         ${q.options.map((opt, oi) => `
-          <button onclick="selectExamOption(${oi})"
-            style="width:58px; height:58px; border-radius:14px; font-weight:800; font-size:19px; border:2px solid ${currentExamAnswers[currentExamIndex] === oi ? "var(--color-primary)" : "var(--color-gray)"}; background:${currentExamAnswers[currentExamIndex] === oi ? "var(--color-primary)" : "var(--color-white)"}; color:${currentExamAnswers[currentExamIndex] === oi ? "#fff" : "var(--color-text)"};">
+          <button class="exam-opt-btn" onclick="selectExamOption(${oi})"
+            style="border:2px solid ${currentExamAnswers[currentExamIndex] === oi ? "var(--color-primary)" : "var(--color-gray)"}; background:${currentExamAnswers[currentExamIndex] === oi ? "var(--color-primary)" : "var(--color-white)"}; color:${currentExamAnswers[currentExamIndex] === oi ? "#fff" : "var(--color-text)"};">
             ${OPTION_LETTERS[oi]}
           </button>
         `).join("")}
@@ -3634,6 +3771,8 @@ async function finishExam(autoSubmit) {
   const localPhotoMap = {};
   detailedPhotos.forEach(({ index, photo }) => { localPhotoMap[index] = photo; });
 
+  clearExamProgress();
+  exitExamMode();
   document.getElementById("exam-view-taking").style.display = "none";
   renderExamResult(ex, { ...attemptData, id: ref.id }, localPhotoMap);
 }
