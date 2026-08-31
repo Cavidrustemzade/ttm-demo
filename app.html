@@ -251,6 +251,11 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .exam-result-row.correct { border-left-color:#2e9e6b; }
 .exam-result-row.wrong { border-left-color:var(--color-danger); }
 .exam-result-row.blank { border-left-color:#94a3b8; }
+.exam-result-row-flash { animation: examResultFlash 1.3s ease; }
+@keyframes examResultFlash {
+  0% { background: rgba(11,60,93,.14); }
+  100% { background: transparent; }
+}
 .race-stage { position:relative; height:280px; background:linear-gradient(180deg,#e0f2fe 0%,#e0f2fe 60%,#38bdf8 60%,#0284c7 100%); border-radius:var(--radius-md); overflow:hidden; margin-bottom:16px; }
 .race-rope { position:absolute; left:50%; top:0; width:3px; height:60%; background:repeating-linear-gradient(180deg,#a16207 0,#a16207 6px,#78350f 6px,#78350f 10px); transform:translateX(-50%); }
 .race-char { position:absolute; left:50%; font-size:34px; transform:translate(-50%,-50%); transition:bottom .5s cubic-bezier(.34,1.56,.64,1); filter:drop-shadow(0 4px 6px rgba(0,0,0,.2)); }
@@ -285,6 +290,481 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .group-check-pill { display:flex; align-items:center; gap:6px; background:var(--color-light-gray); border:1.5px solid var(--color-gray); border-radius:999px; padding:7px 12px; font-size:12.5px; cursor:pointer; transition:var(--transition); }
 .group-check-pill input { width:15px; height:15px; }
 .group-check-pill.checked { background:rgba(11,60,93,.08); border-color:var(--color-primary); color:var(--color-primary); font-weight:600; }
+
+/* ================================================================
+   TTM SINAQ UI — DESKTOP / PLANŞET REDESIGN
+   Yalnız #exam-view-list / #exam-view-taking / #exam-view-result
+   görünüşünə təsir edir. Mövcud JS funksiyalarına toxunmur.
+   ================================================================ */
+#stab-exams {
+  width: 100%;
+  min-width: 0;
+}
+
+#exam-view-list,
+#exam-view-taking,
+#exam-view-result {
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+  min-width: 0;
+}
+
+/* Sınaq siyahısı */
+#exam-view-list .card {
+  border: 1px solid rgba(11,60,93,.08);
+  box-shadow: 0 10px 28px rgba(11,60,93,.055);
+}
+#exam-view-list .list-item {
+  background: #fff;
+  border: 1px solid var(--color-gray);
+  transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease;
+}
+#exam-view-list .list-item:hover {
+  border-color: rgba(11,60,93,.25);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(11,60,93,.06);
+}
+
+/* ====================== SINAQ İŞLƏMƏ EKRANI ====================== */
+#exam-view-taking {
+  padding-bottom: 12px;
+  overflow: visible;
+}
+
+#exam-taking-layout {
+  display: grid;
+  grid-template-areas: "nav question timer" "nav question finish";
+  grid-template-columns: 196px minmax(0, 1fr) 218px;
+  gap: 16px;
+  align-items: start;
+  width: 100%;
+}
+
+#exam-taking-layout .exam-nav-area {
+  grid-area: nav;
+  position: sticky !important;
+  top: 76px !important;
+  height: auto;
+  max-height: calc(100vh - 94px);
+  overflow-y: auto;
+  background: var(--color-white);
+  border: 1px solid rgba(11,60,93,.08);
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 10px 28px rgba(11,60,93,.06);
+  z-index: 16;
+}
+
+#exam-taking-layout .exam-nav-area::before {
+  content: "Suallar";
+  display: block;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--color-primary);
+  margin: 2px 0 11px;
+}
+
+#exam-taking-layout .exam-nav-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+#exam-taking-layout .exam-nav-btn {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  min-height: 36px;
+  border-radius: 10px;
+  border: 1px solid #dbe3ea;
+  background: #fff;
+  color: var(--color-text);
+  font-weight: 800;
+  font-size: 13px;
+  box-shadow: none;
+  transition: .18s ease;
+}
+
+#exam-taking-layout .exam-nav-btn:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+#exam-taking-layout .exam-nav-btn.current {
+  border: 2px solid var(--color-primary);
+  color: var(--color-primary);
+  background: rgba(11,60,93,.05);
+}
+
+#exam-taking-layout .exam-nav-btn.answered {
+  background: #dff4e6;
+  border-color: #b7e4c5;
+  color: #278957;
+}
+
+#exam-taking-layout .exam-nav-btn.current.answered {
+  border-color: var(--color-primary);
+}
+
+#exam-taking-layout .exam-nav-btn.flagged {
+  background: #fff6dc;
+  border-color: #f0d17c;
+  color: #9b7005;
+}
+
+#exam-taking-layout .exam-nav-btn.flagged.answered {
+  background: linear-gradient(135deg, #e2f3e7 0 55%, #fff4cf 55% 100%);
+}
+
+#exam-taking-layout .exam-nav-legend {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 7px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #edf1f4;
+  font-size: 10.5px;
+}
+
+#exam-taking-layout .exam-question-area {
+  grid-area: question;
+  min-width: 0;
+  background: var(--color-white);
+  border-radius: 16px;
+  border: 1px solid rgba(11,60,93,.09);
+  padding: 22px;
+  box-shadow: 0 12px 32px rgba(11,60,93,.06);
+}
+
+#exam-taking-layout .exam-flag-btn {
+  margin-bottom: 14px;
+  background: #f4f6f8;
+  color: #66727f;
+  border: 1px solid #e0e6eb;
+  padding: 8px 12px;
+  font-size: 11.5px;
+}
+
+#exam-question-box {
+  min-width: 0;
+}
+
+#exam-question-box > div:first-child {
+  font-size: 19px !important;
+  line-height: 1.45;
+  color: var(--color-text);
+  font-weight: 700 !important;
+  margin-bottom: 14px !important;
+}
+
+#exam-question-box > img {
+  display: block;
+  width: auto !important;
+  max-width: 100% !important;
+  max-height: 40vh !important;
+  object-fit: contain;
+  margin: 0 auto 14px !important;
+  border-radius: 10px !important;
+}
+
+#exam-taking-layout .exam-opt-row {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+#exam-taking-layout .exam-opt-btn {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  border-radius: 11px;
+  font-size: 16px;
+  font-weight: 800;
+  border-width: 2px !important;
+}
+
+#exam-taking-layout .exam-question-area > div:last-child {
+  margin-top: 18px !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+}
+
+#exam-taking-layout #exam-prev-btn,
+#exam-taking-layout #exam-next-btn {
+  min-height: 42px;
+  padding: 10px 16px;
+  border-radius: 10px;
+}
+
+#exam-taking-layout .exam-timer-area {
+  grid-area: timer;
+  position: sticky !important;
+  top: 76px !important;
+  z-index: 17;
+}
+
+#exam-taking-layout .exam-timer-area::before {
+  content: "Qalan vaxt";
+  display: block;
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 800;
+  margin: 0 0 8px 2px;
+}
+
+#exam-taking-layout .exam-timer {
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 25px;
+  border-radius: 15px;
+  box-shadow: 0 10px 24px rgba(11,60,93,.15);
+  letter-spacing: .5px;
+}
+
+#exam-taking-layout .exam-finish-area {
+  grid-area: finish;
+  position: sticky;
+  top: 178px;
+  z-index: 15;
+  background: transparent;
+}
+
+#exam-taking-layout #exam-finish-btn {
+  min-height: 46px;
+  border-radius: 11px;
+  box-shadow: 0 8px 20px rgba(217,76,76,.18);
+}
+
+/* Mətn paneli: layout dəyişmir, sadəcə səliqəli card olur */
+#exam-taking-layout .exam-text-panel.open {
+  grid-area: text;
+  min-width: 0;
+  max-height: calc(100vh - 100px);
+  position: sticky;
+  top: 76px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #dfe6eb;
+  border-radius: 16px;
+  box-shadow: 0 12px 28px rgba(11,60,93,.08);
+}
+
+#exam-taking-layout.has-text {
+  grid-template-areas: "nav text question timer" "nav text question finish";
+  grid-template-columns: 196px minmax(300px, 0.95fr) minmax(380px, 1.35fr) 218px;
+}
+
+#exam-taking-layout.has-text .exam-question-area {
+  grid-area: question;
+}
+
+/* ====================== NƏTİCƏ PANELİ ====================== */
+#exam-view-result {
+  display: grid;
+  grid-template-columns: minmax(210px, 232px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+#exam-view-result > .card.exam-result-hero,
+#exam-view-result > .exam-stat-grid,
+#exam-view-result > .card:not(.exam-result-hero):not(#exam-result-video-card),
+#exam-view-result > #exam-result-video-card,
+#exam-view-result > #exam-back-to-list-btn {
+  grid-column: 2;
+}
+
+/* Nəticə ekranına ayrıca sol vizual panel */
+#exam-view-result::before {
+  content: "";
+  grid-column: 1;
+  grid-row: 1 / span 5;
+  align-self: stretch;
+  min-height: 640px;
+  background:
+    linear-gradient(#fff,#fff) padding-box,
+    linear-gradient(180deg, rgba(11,60,93,.08), rgba(11,60,93,.02)) border-box;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  box-shadow: 0 10px 28px rgba(11,60,93,.055);
+}
+
+#exam-view-result .exam-result-hero {
+  padding: 26px 24px;
+  border: 1px solid rgba(11,60,93,.08);
+  box-shadow: 0 10px 28px rgba(11,60,93,.055);
+}
+
+#exam-view-result .exam-result-badge {
+  width: 104px;
+  height: 104px;
+  margin-bottom: 14px;
+}
+
+#exam-view-result .exam-result-title {
+  font-size: 24px;
+  margin-bottom: 6px;
+}
+
+#exam-view-result .exam-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+#exam-view-result .stat-icon-card {
+  min-height: 120px;
+  background: #fff !important;
+  border: 1px solid #e2e8ed;
+  box-shadow: 0 8px 22px rgba(11,60,93,.045);
+  justify-content: center;
+}
+
+#exam-view-result .exam-result-row {
+  background: #fff;
+  border: 1px solid #e2e7ec;
+  border-left-width: 4px;
+}
+
+#exam-view-result #exam-result-video-card {
+  display: none;
+}
+
+#exam-view-result #exam-back-to-list-btn {
+  width: auto;
+  justify-self: start;
+  margin-top: 0;
+}
+
+/* Result sidebar: real, klik edilə bilən sual nömrələri (əvvəlki dekorativ mətn əvəzinə) */
+@media (min-width: 700px) {
+  #exam-view-result {
+    position: relative;
+  }
+  #exam-view-result::after { content: none; }
+  .exam-result-nav-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    position: absolute;
+    left: 28px;
+    top: 72px;
+    width: 172px;
+    padding: 16px 8px;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0, transparent 38px,
+      rgba(11,60,93,.035) 38px, rgba(11,60,93,.035) 39px
+    );
+    border-radius: 12px;
+    z-index: 2;
+  }
+  .exam-result-nav-btn {
+    aspect-ratio: 1 / 1;
+    border-radius: 9px;
+    border: 1px solid #dbe3ea;
+    background: #fff;
+    color: var(--color-text);
+    font-weight: 800;
+    font-size: 12px;
+    cursor: pointer;
+    transition: .15s ease;
+  }
+  .exam-result-nav-btn:hover { border-color: var(--color-primary); transform: translateY(-1px); }
+  .exam-result-nav-btn.correct { background:#dff4e6; border-color:#b7e4c5; color:#278957; }
+  .exam-result-nav-btn.wrong { background:#fdeaea; border-color:#f3b9b9; color:#c53030; }
+}
+
+/* Planşet */
+@media (min-width: 700px) and (max-width: 1199px) {
+  #exam-taking-layout {
+    grid-template-columns: 168px minmax(0,1fr) 170px;
+    gap: 12px;
+  }
+  #exam-taking-layout.has-text {
+    grid-template-areas:
+      "nav timer timer"
+      "nav text text"
+      "nav question question"
+      "nav finish finish";
+    grid-template-columns: 168px minmax(0,1fr) 170px;
+  }
+  #exam-view-result {
+    grid-template-columns: 170px minmax(0,1fr);
+  }
+  #exam-view-result::after { content: none; }
+  .exam-result-nav-grid {
+    left: 18px;
+    width: 134px;
+  }
+  .exam-result-nav-btn { font-size: 11px; }
+}
+
+/* Telefonda sual-nömrə paneli göstərilmir (mövcud siyahı normal scroll ilə görünür) */
+@media (max-width: 699px) {
+  .exam-result-nav-grid { display: none !important; }
+}
+
+/* Telefon */
+@media (max-width: 699px) {
+  #exam-taking-layout {
+    grid-template-areas: "timer" "nav" "text" "question" "finish";
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  #exam-taking-layout .exam-nav-area,
+  #exam-taking-layout .exam-timer-area,
+  #exam-taking-layout .exam-finish-area {
+    position: sticky !important;
+  }
+  #exam-taking-layout .exam-nav-area {
+    top: 110px !important;
+    max-height: none;
+  }
+  #exam-taking-layout .exam-nav-grid {
+    grid-template-columns: repeat(5, minmax(0,1fr));
+  }
+  #exam-taking-layout .exam-question-area {
+    padding: 16px;
+  }
+  #exam-question-box > div:first-child {
+    font-size: 17px !important;
+  }
+  #exam-question-box > img {
+    max-height: 34vh !important;
+  }
+  #exam-taking-layout .exam-timer-area {
+    top: 60px !important;
+  }
+  #exam-taking-layout .exam-finish-area {
+    top: auto;
+    position: static !important;
+  }
+  #exam-taking-layout.has-text {
+    grid-template-areas: "timer" "nav" "text" "question" "finish";
+    grid-template-columns: 1fr;
+  }
+  #exam-view-result {
+    display: block;
+  }
+  #exam-view-result::before,
+  #exam-view-result::after {
+    display: none;
+  }
+  #exam-view-result > * {
+    margin-bottom: 12px;
+  }
+  #exam-view-result .exam-stat-grid {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+}
+
 </style>
 </head>
 <body>
@@ -839,6 +1319,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
       </div>
 
       <div id="exam-view-result" style="display:none;">
+        <div class="exam-result-nav-grid" id="exam-result-nav-grid"></div>
         <div class="card exam-result-hero">
           <div class="exam-result-badge" id="exam-result-badge"><span id="exam-result-pct">0%</span></div>
           <h2 class="exam-result-title">Sınaq tamamlandı!</h2>
@@ -3807,6 +4288,15 @@ window.viewPastResult = async (attemptId) => {
   renderExamResult(ex, a, photoMap);
 };
 
+window.scrollToResultQuestion = (i) => {
+  const rows = document.querySelectorAll("#exam-result-detail .exam-result-row");
+  const row = rows[i];
+  if (!row) return;
+  row.scrollIntoView({ behavior: "smooth", block: "center" });
+  row.classList.add("exam-result-row-flash");
+  setTimeout(() => row.classList.remove("exam-result-row-flash"), 1300);
+};
+
 function renderExamResult(ex, attempt, photoMap) {
   photoMap = photoMap || {};
   document.getElementById("exam-view-result").style.display = "block";
@@ -3818,13 +4308,22 @@ function renderExamResult(ex, attempt, photoMap) {
 
   // Statistika kartları — mövcud attempt/perQuestion datasından hesablanır, hesablama məntiqinə toxunulmur
   let wrongCount = 0, unansweredCount = 0;
+  const resultRowStatus = [];
   ex.questions.forEach((q, i) => {
     const pq = attempt.perQuestion[i];
-    if (!pq || q.type === "detailed") return;
+    if (!pq || q.type === "detailed") { resultRowStatus.push(""); return; }
     const blank = pq.selected === null || pq.selected === undefined || pq.selected === "";
-    if (blank) unansweredCount++;
-    else if (!pq.isCorrect) wrongCount++;
+    if (blank) { unansweredCount++; resultRowStatus.push(""); }
+    else if (!pq.isCorrect) { wrongCount++; resultRowStatus.push("wrong"); }
+    else { resultRowStatus.push("correct"); }
   });
+
+  const resultNavGrid = document.getElementById("exam-result-nav-grid");
+  if (resultNavGrid) {
+    resultNavGrid.innerHTML = ex.questions.map((q, i) => `
+      <button type="button" class="exam-result-nav-btn ${resultRowStatus[i]}" onclick="scrollToResultQuestion(${i})">${i + 1}</button>
+    `).join("");
+  }
   const statGrid = document.getElementById("exam-stat-grid");
   if (statGrid) {
     statGrid.innerHTML = `
