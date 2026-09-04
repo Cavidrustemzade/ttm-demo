@@ -3146,12 +3146,22 @@ window.editExam = async (id) => {
   document.getElementById("exam-form-title").textContent = "Sınaqı redaktə et: " + ex.title;
   document.getElementById("exam-cancel-btn").style.display = "inline-block";
   toast("Suallar və mətnlər yüklənir...");
-  const [qSnap, tSnap] = await Promise.all([
-    db.collection("exams").doc(id).collection("questions").orderBy("order").get(),
-    db.collection("exams").doc(id).collection("texts").get()
-  ]);
-  examQuestions = qSnap.docs.map(d => d.data());
-  examTexts = tSnap.docs.length > 0 ? tSnap.docs.map(d => d.data()) : (ex.texts || []); // köhnə formatlı sınaqlarla geriyə uyğunluq
+  try {
+    const qSnap = await db.collection("exams").doc(id).collection("questions").orderBy("order").get();
+    examQuestions = qSnap.docs.map(d => d.data());
+  } catch (err) {
+    console.error("Suallar yüklənmədi:", err);
+    toast("Xəta: suallar yüklənmədi (" + (err.code || err.message) + ")");
+    return;
+  }
+  try {
+    const tSnap = await db.collection("exams").doc(id).collection("texts").get();
+    examTexts = tSnap.docs.length > 0 ? tSnap.docs.map(d => d.data()) : (ex.texts || []); // köhnə formatlı sınaqlarla geriyə uyğunluq
+  } catch (err) {
+    console.error("Mətnlər yüklənmədi (icazə xətası ola bilər):", err);
+    toast("⚠️ Mətnlər yüklənmədi (icazə xətası). Suallar yükləndi, davam edə bilərsiniz.");
+    examTexts = ex.texts || [];
+  }
   renderTextsBuilder();
   window.scrollTo({ top: 0, behavior: "smooth" });
 };
@@ -4021,14 +4031,15 @@ async function resumeExamIfAny() {
   try {
     const exDoc = await db.collection("exams").doc(saved.examId).get();
     if (!exDoc.exists) { clearExamProgress(); return; }
-    const [qSnap, tSnap] = await Promise.all([
-      db.collection("exams").doc(saved.examId).collection("questions").orderBy("order").get(),
-      db.collection("exams").doc(saved.examId).collection("texts").get()
-    ]);
+    const qSnap = await db.collection("exams").doc(saved.examId).collection("questions").orderBy("order").get();
     const questions = qSnap.docs.map(d => d.data());
     if (questions.length === 0) { clearExamProgress(); return; }
     const exData = exDoc.data();
-    const texts = tSnap.docs.length > 0 ? tSnap.docs.map(d => d.data()) : (exData.texts || []);
+    let texts = exData.texts || [];
+    try {
+      const tSnap = await db.collection("exams").doc(saved.examId).collection("texts").get();
+      if (tSnap.docs.length > 0) texts = tSnap.docs.map(d => d.data());
+    } catch (e) { console.error("Mətnlər yüklənmədi (davam edilir):", e); }
 
     currentExam = { id: exDoc.id, ...exData, questions, texts };
     currentExamAnswers = saved.answers || new Array(questions.length).fill(null);
@@ -4070,13 +4081,14 @@ window.startExam = async (examId) => {
   if (!confirm(`"${ex.title}" sınağına başlayırsınız. ${ex.timeLimitMinutes} dəqiqəniz var. Davam edilsin?`)) return;
 
   toast("Suallar yüklənir...");
-  const [qSnap, tSnap] = await Promise.all([
-    db.collection("exams").doc(examId).collection("questions").orderBy("order").get(),
-    db.collection("exams").doc(examId).collection("texts").get()
-  ]);
+  const qSnap = await db.collection("exams").doc(examId).collection("questions").orderBy("order").get();
   const questions = qSnap.docs.map(d => d.data());
   if (questions.length === 0) { toast("Bu sınaqda hələ sual yoxdur"); return; }
-  const texts = tSnap.docs.length > 0 ? tSnap.docs.map(d => d.data()) : (ex.texts || []);
+  let texts = ex.texts || [];
+  try {
+    const tSnap = await db.collection("exams").doc(examId).collection("texts").get();
+    if (tSnap.docs.length > 0) texts = tSnap.docs.map(d => d.data());
+  } catch (e) { console.error("Mətnlər yüklənmədi (davam edilir):", e); }
 
   currentExam = { ...ex, questions, texts };
   currentExamAnswers = new Array(questions.length).fill(null);
