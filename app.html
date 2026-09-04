@@ -256,6 +256,16 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
   0% { background: rgba(11,60,93,.14); }
   100% { background: transparent; }
 }
+.exam-result-mini-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:6px; margin-bottom:14px; }
+.exam-result-mini-btn { aspect-ratio:1/1; border-radius:8px; border:1.5px solid var(--color-gray); background:var(--color-light-gray); color:var(--color-text); font-weight:700; font-size:12px; }
+.exam-result-mini-btn.correct { background:rgba(46,158,107,.14); border-color:#2e9e6b; color:#1f7a4d; }
+.exam-result-mini-btn.wrong { background:rgba(217,76,76,.12); border-color:var(--color-danger); color:var(--color-danger); }
+.exam-result-mini-btn.blank { background:var(--color-light-gray); border-color:var(--color-gray); color:var(--color-text-muted); }
+.exam-result-mini-btn.pending { background:rgba(217,154,43,.16); border-color:#d99a2b; color:#a9700a; }
+.exam-result-mini-btn.active { outline:2px solid var(--color-primary); outline-offset:1px; }
+#exam-result-question-detail:empty { display:none; }
+@media (min-width:480px) { .exam-result-mini-grid { grid-template-columns:repeat(8,1fr); } }
+@media (min-width:900px) { .exam-result-mini-grid { grid-template-columns:repeat(10,1fr); } }
 .race-stage { position:relative; height:280px; background:linear-gradient(180deg,#e0f2fe 0%,#e0f2fe 60%,#38bdf8 60%,#0284c7 100%); border-radius:var(--radius-md); overflow:hidden; margin-bottom:16px; }
 .race-rope { position:absolute; left:50%; top:0; width:3px; height:60%; background:repeating-linear-gradient(180deg,#a16207 0,#a16207 6px,#78350f 6px,#78350f 10px); transform:translateX(-50%); }
 .race-char { position:absolute; left:50%; font-size:34px; transform:translate(-50%,-50%); transition:bottom .5s cubic-bezier(.34,1.56,.64,1); filter:drop-shadow(0 4px 6px rgba(0,0,0,.2)); }
@@ -679,6 +689,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
   .exam-result-nav-btn:hover { border-color: var(--color-primary); transform: translateY(-1px); }
   .exam-result-nav-btn.correct { background:#dff4e6; border-color:#b7e4c5; color:#278957; }
   .exam-result-nav-btn.wrong { background:#fdeaea; border-color:#f3b9b9; color:#c53030; }
+  .exam-result-nav-btn.active { outline:2px solid var(--color-primary); outline-offset:1px; }
 }
 
 /* Planşet */
@@ -2227,7 +2238,9 @@ window.setQuestionTextId = (qi, val) => { examQuestions[qi].textId = val; render
 function renderTextsBuilder() {
   const el = document.getElementById("exam-texts-builder");
   if (examTexts.length === 0) { el.innerHTML = `<div class="empty-state">Hələ mətn əlavə edilməyib</div>`; renderQuestionBuilder(); return; }
-  el.innerHTML = examTexts.map((t, ti) => `
+  el.innerHTML = examTexts.map((t, ti) => {
+    const images = t.images || (t.imageBase64 ? [t.imageBase64] : []);
+    return `
     <div class="q-builder-item">
       <button class="btn-danger" onclick="removeExamText(${ti})">Sil</button>
       <div class="field" style="margin-bottom:8px;">
@@ -2239,13 +2252,21 @@ function renderTextsBuilder() {
         <textarea oninput="updateExamText(${ti},'content',this.value)" placeholder="Mətni bura yazın">${esc(t.content || "")}</textarea>
       </div>
       <div class="field">
-        <label>Mətnin şəkli (istəyə görə, məs: skan edilmiş mətn)</label>
-        <input type="file" accept="image/*" onchange="uploadExamTextImage(${ti}, this)" />
-        ${t.imageBase64 ? `<img src="${t.imageBase64}" style="max-width:100%; margin-top:8px; border-radius:8px; border:1px solid var(--color-gray);" />
-          <button class="btn-outline" style="margin-top:6px;" onclick="removeExamTextImage(${ti})">Şəkli sil</button>` : ""}
+        <label>Mətnin şəkilləri (istəyə görə, məs: skan edilmiş səhifələr — bir neçə şəkil əlavə edə bilərsiniz, ardıcıllıqla birləşdirilir)</label>
+        ${images.map((img, ii) => `
+          <div style="position:relative; display:inline-block; margin:6px 6px 0 0;">
+            <img src="${img}" style="max-width:140px; max-height:140px; border-radius:8px; border:1px solid var(--color-gray);" />
+            <button type="button" onclick="removeExamTextImage(${ti}, ${ii})" style="position:absolute; top:-6px; right:-6px; width:22px; height:22px; border-radius:50%; background:var(--color-danger); color:#fff; font-size:12px; line-height:1;">✕</button>
+          </div>
+        `).join("")}
+        <div style="margin-top:8px;">
+          <input type="file" accept="image/*" onchange="uploadExamTextImage(${ti}, this)" />
+          <div class="muted-note">${images.length > 0 ? images.length + " şəkil əlavə edilib. Növbəti hissəni əlavə etmək üçün yenə fayl seçin." : "Fayl seçin — istəsəniz sonra daha da əlavə edə bilərsiniz."}</div>
+        </div>
       </div>
     </div>
-  `).join("");
+  `;
+  }).join("");
   renderQuestionBuilder();
 }
 window.removeExamText = (ti) => {
@@ -2261,7 +2282,9 @@ window.uploadExamTextImage = async (ti, inputEl) => {
   toast("Şəkil yüklənir...");
   try {
     const base64 = await compressImageToBase64(file, 1400, 0.85);
-    examTexts[ti].imageBase64 = base64;
+    if (!examTexts[ti].images) examTexts[ti].images = examTexts[ti].imageBase64 ? [examTexts[ti].imageBase64] : [];
+    examTexts[ti].images.push(base64);
+    examTexts[ti].imageBase64 = ""; // köhnə tək-şəkil sahəsi artıq images massivinə keçdi
     renderTextsBuilder();
     toast("Şəkil əlavə edildi");
   } catch (e) {
@@ -2269,7 +2292,12 @@ window.uploadExamTextImage = async (ti, inputEl) => {
     toast("Şəkil yüklənərkən xəta baş verdi");
   }
 };
-window.removeExamTextImage = (ti) => { examTexts[ti].imageBase64 = ""; renderTextsBuilder(); };
+window.removeExamTextImage = (ti, ii) => {
+  if (!examTexts[ti].images) examTexts[ti].images = examTexts[ti].imageBase64 ? [examTexts[ti].imageBase64] : [];
+  examTexts[ti].images.splice(ii, 1);
+  examTexts[ti].imageBase64 = "";
+  renderTextsBuilder();
+};
 
 window.removeQuestion = (qi) => { examQuestions.splice(qi, 1); renderQuestionBuilder(); };
 window.updateQuestionText = (qi, val) => { examQuestions[qi].text = val; };
@@ -2294,7 +2322,7 @@ window.uploadQuestionImage = async (qi, inputEl) => {
 };
 
 document.getElementById("exam-add-text-btn").addEventListener("click", () => {
-  examTexts.push({ id: "t" + Date.now() + Math.floor(Math.random() * 1000), title: "Mətn " + (examTexts.length + 1), content: "", imageBase64: "" });
+  examTexts.push({ id: "t" + Date.now() + Math.floor(Math.random() * 1000), title: "Mətn " + (examTexts.length + 1), content: "", images: [] });
   renderTextsBuilder();
 });
 
@@ -2821,9 +2849,10 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
         cursorY += 3;
       }
 
-      if (textObj.imageBase64) {
+      const textImages = textObj.images || (textObj.imageBase64 ? [textObj.imageBase64] : []);
+      for (const imgSrc of textImages) {
         try {
-          const imgEl = await loadImageElement(textObj.imageBase64);
+          const imgEl = await loadImageElement(imgSrc);
           const naturalW = imgEl.naturalWidth || imgEl.width;
           const naturalH = imgEl.naturalHeight || imgEl.height;
           const scale = colWidth / naturalW;
@@ -3004,11 +3033,12 @@ document.getElementById("exam-save-btn").addEventListener("click", async () => {
   if (videoUrl && !/^https?:\/\//i.test(videoUrl)) { toast("Video linki http:// və ya https:// ilə başlamalıdır"); return; }
 
   const activationAt = new Date(activationInput).toISOString();
-  const meta = { title, groupIds, topic, timeLimitMinutes, activationAt, videoUrl, questionCount: examQuestions.length, texts: examTexts };
+  const meta = { title, groupIds, topic, timeLimitMinutes, activationAt, videoUrl, questionCount: examQuestions.length };
 
   const badMetaPath = findInvalidNesting(meta);
   const badQPath = !badMetaPath && examQuestions.map((q, i) => findInvalidNesting(q, "sual" + (i + 1))).find(Boolean);
-  const badPath = badMetaPath || badQPath;
+  const badTPath = !badMetaPath && !badQPath && examTexts.map((t, i) => findInvalidNesting(t, "mətn" + (i + 1))).find(Boolean);
+  const badPath = badMetaPath || badQPath || badTPath;
   if (badPath) {
     console.error("Uyğunsuz massiv strukturu:", badPath);
     toast("Xəta: " + badPath + " sahəsində problem var. Skrinşot atın.");
@@ -3020,11 +3050,15 @@ document.getElementById("exam-save-btn").addEventListener("click", async () => {
     let examId = editId;
     if (editId) {
       await db.collection("exams").doc(editId).update(meta);
-      // Köhnə sualları silib yenidən yazırıq (sadə və etibarlı yol)
-      const oldQs = await db.collection("exams").doc(editId).collection("questions").get();
-      const batch = db.batch();
-      oldQs.forEach(d => batch.delete(d.ref));
-      await batch.commit();
+      // Köhnə sualları və mətnləri silib yenidən yazırıq (sadə və etibarlı yol)
+      const [oldQs, oldTs] = await Promise.all([
+        db.collection("exams").doc(editId).collection("questions").get(),
+        db.collection("exams").doc(editId).collection("texts").get()
+      ]);
+      const delBatch = db.batch();
+      oldQs.forEach(d => delBatch.delete(d.ref));
+      oldTs.forEach(d => delBatch.delete(d.ref));
+      await delBatch.commit();
     } else {
       meta.createdAt = firebase.firestore.FieldValue.serverTimestamp();
       const ref = await db.collection("exams").add(meta);
@@ -3034,6 +3068,12 @@ document.getElementById("exam-save-btn").addEventListener("click", async () => {
     examQuestions.forEach((q, i) => {
       const qRef = db.collection("exams").doc(examId).collection("questions").doc(String(i));
       writeBatch.set(qRef, { ...q, order: i });
+    });
+    // Mətnlər ayrıca alt-kolleksiyada saxlanılır ki, əsas sınaq sənədi şəkillərdən ağırlaşıb limitə çarpmasın
+    examTexts.forEach((t) => {
+      const tRef = db.collection("exams").doc(examId).collection("texts").doc(t.id);
+      const images = t.images || (t.imageBase64 ? [t.imageBase64] : []);
+      writeBatch.set(tRef, { id: t.id, title: t.title, content: t.content || "", images });
     });
     await writeBatch.commit();
     if (editId) {
@@ -3105,10 +3145,13 @@ window.editExam = async (id) => {
   document.getElementById("exam-video").value = ex.videoUrl || "";
   document.getElementById("exam-form-title").textContent = "Sınaqı redaktə et: " + ex.title;
   document.getElementById("exam-cancel-btn").style.display = "inline-block";
-  examTexts = ex.texts || [];
-  toast("Suallar yüklənir...");
-  const qSnap = await db.collection("exams").doc(id).collection("questions").orderBy("order").get();
+  toast("Suallar və mətnlər yüklənir...");
+  const [qSnap, tSnap] = await Promise.all([
+    db.collection("exams").doc(id).collection("questions").orderBy("order").get(),
+    db.collection("exams").doc(id).collection("texts").get()
+  ]);
   examQuestions = qSnap.docs.map(d => d.data());
+  examTexts = tSnap.docs.length > 0 ? tSnap.docs.map(d => d.data()) : (ex.texts || []); // köhnə formatlı sınaqlarla geriyə uyğunluq
   renderTextsBuilder();
   window.scrollTo({ top: 0, behavior: "smooth" });
 };
@@ -3978,11 +4021,16 @@ async function resumeExamIfAny() {
   try {
     const exDoc = await db.collection("exams").doc(saved.examId).get();
     if (!exDoc.exists) { clearExamProgress(); return; }
-    const qSnap = await db.collection("exams").doc(saved.examId).collection("questions").orderBy("order").get();
+    const [qSnap, tSnap] = await Promise.all([
+      db.collection("exams").doc(saved.examId).collection("questions").orderBy("order").get(),
+      db.collection("exams").doc(saved.examId).collection("texts").get()
+    ]);
     const questions = qSnap.docs.map(d => d.data());
     if (questions.length === 0) { clearExamProgress(); return; }
+    const exData = exDoc.data();
+    const texts = tSnap.docs.length > 0 ? tSnap.docs.map(d => d.data()) : (exData.texts || []);
 
-    currentExam = { id: exDoc.id, ...exDoc.data(), questions };
+    currentExam = { id: exDoc.id, ...exData, questions, texts };
     currentExamAnswers = saved.answers || new Array(questions.length).fill(null);
     currentExamIndex = saved.currentExamIndex || 0;
     examEndTime = saved.examEndTime;
@@ -4022,11 +4070,15 @@ window.startExam = async (examId) => {
   if (!confirm(`"${ex.title}" sınağına başlayırsınız. ${ex.timeLimitMinutes} dəqiqəniz var. Davam edilsin?`)) return;
 
   toast("Suallar yüklənir...");
-  const qSnap = await db.collection("exams").doc(examId).collection("questions").orderBy("order").get();
+  const [qSnap, tSnap] = await Promise.all([
+    db.collection("exams").doc(examId).collection("questions").orderBy("order").get(),
+    db.collection("exams").doc(examId).collection("texts").get()
+  ]);
   const questions = qSnap.docs.map(d => d.data());
   if (questions.length === 0) { toast("Bu sınaqda hələ sual yoxdur"); return; }
+  const texts = tSnap.docs.length > 0 ? tSnap.docs.map(d => d.data()) : (ex.texts || []);
 
-  currentExam = { ...ex, questions };
+  currentExam = { ...ex, questions, texts };
   currentExamAnswers = new Array(questions.length).fill(null);
   currentExamIndex = 0;
   openTextId = null;
@@ -4130,6 +4182,7 @@ function renderTextPanel() {
   }
   layout.classList.add("has-text");
   panel.classList.add("open");
+  const textImages = text.images || (text.imageBase64 ? [text.imageBase64] : []);
   panel.innerHTML = `
     <div class="exam-text-panel-title">
       <span>📖 ${esc(text.title)}</span>
@@ -4137,7 +4190,7 @@ function renderTextPanel() {
     </div>
     <div class="exam-text-panel-body">
       ${text.content ? esc(text.content).replace(/\n/g, "<br>") : ""}
-      ${text.imageBase64 ? `<img src="${text.imageBase64}" />` : ""}
+      ${textImages.map(img => `<img src="${img}" style="margin-top:8px;" />`).join("")}
     </div>
   `;
 }
@@ -4347,13 +4400,33 @@ window.viewPastResult = async (attemptId) => {
   renderExamResult(ex, a, photoMap);
 };
 
+function openResultQuestionDetail(i) {
+  const box = document.getElementById("exam-result-question-detail");
+  if (!box || !window._resultDetailHtml) return;
+  window._resultExpandedIndex = i;
+  box.innerHTML = window._resultDetailHtml[i] || "";
+  document.querySelectorAll(".exam-result-mini-btn").forEach((b) => b.classList.toggle("active", Number(b.dataset.idx) === i));
+  document.querySelectorAll(".exam-result-nav-btn").forEach((b, idx) => b.classList.toggle("active", idx === i));
+}
+
+window.toggleResultQuestionDetail = (i) => {
+  const box = document.getElementById("exam-result-question-detail");
+  if (!box) return;
+  if (window._resultExpandedIndex === i) {
+    box.innerHTML = "";
+    window._resultExpandedIndex = null;
+    document.querySelectorAll(".exam-result-mini-btn, .exam-result-nav-btn").forEach(b => b.classList.remove("active"));
+    return;
+  }
+  openResultQuestionDetail(i);
+  box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+};
+
 window.scrollToResultQuestion = (i) => {
-  const rows = document.querySelectorAll("#exam-result-detail .exam-result-row");
-  const row = rows[i];
-  if (!row) return;
-  row.scrollIntoView({ behavior: "smooth", block: "center" });
-  row.classList.add("exam-result-row-flash");
-  setTimeout(() => row.classList.remove("exam-result-row-flash"), 1300);
+  const detailSection = document.getElementById("exam-result-detail");
+  if (!detailSection) return;
+  openResultQuestionDetail(i);
+  detailSection.scrollIntoView({ behavior: "smooth", block: "start" });
 };
 
 function renderExamResult(ex, attempt, photoMap) {
@@ -4409,7 +4482,7 @@ function renderExamResult(ex, attempt, photoMap) {
     `;
   }
 
-  document.getElementById("exam-result-detail").innerHTML = ex.questions.map((q, i) => {
+  const resultDetailHtml = ex.questions.map((q, i) => {
     const pq = attempt.perQuestion[i];
     const imgHtml = q.imageBase64 ? `<img src="${q.imageBase64}" style="max-width:100%; border-radius:8px; margin:6px 0;" />` : "";
     const rowClass = q.type === "detailed" ? "" : (pq.selected === null || pq.selected === undefined || pq.selected === "") ? "blank" : (pq.isCorrect ? "correct" : "wrong");
@@ -4444,7 +4517,21 @@ function renderExamResult(ex, attempt, photoMap) {
       </div>
       <div class="list-item-sub">🟢 Düzgün: ${OPTION_LETTERS[q.correctIndex]}${!pq.isCorrect && pq.selected !== null ? ` · 🔴 Sizin cavabınız: ${OPTION_LETTERS[pq.selected]}` : ""}</div>
     </div>`;
+  });
+  window._resultDetailHtml = resultDetailHtml;
+  window._resultExpandedIndex = null;
+
+  const miniGridHtml = ex.questions.map((q, i) => {
+    const cls = q.type === "detailed"
+      ? ((attempt.perQuestion[i].points !== null && attempt.perQuestion[i].points !== undefined) ? "correct" : "pending")
+      : resultRowStatus[i] || "blank";
+    return `<button type="button" class="exam-result-mini-btn ${cls}" data-idx="${i}" onclick="toggleResultQuestionDetail(${i})">${i + 1}</button>`;
   }).join("");
+
+  document.getElementById("exam-result-detail").innerHTML = `
+    <div class="exam-result-mini-grid" id="exam-result-mini-grid">${miniGridHtml}</div>
+    <div id="exam-result-question-detail"></div>
+  `;
 
   const videoCard = document.getElementById("exam-result-video-card");
   if (ex.videoUrl) {
