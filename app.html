@@ -3358,23 +3358,31 @@ function openImageLightbox(src) {
   document.body.appendChild(overlay);
 }
 
+let analyticsAttemptsUnsub = null;
+
 document.getElementById("analytics-exam-select").addEventListener("change", async (e) => {
   const examId = e.target.value;
   const el = document.getElementById("analytics-exam-result");
+  if (analyticsAttemptsUnsub) { analyticsAttemptsUnsub(); analyticsAttemptsUnsub = null; }
   if (!examId) { el.innerHTML = `<div class="empty-state">Sınaq seçin ki, təhlil görünsün</div>`; return; }
   el.innerHTML = `<div class="empty-state">Yüklənir...</div>`;
 
-  const ex = examsCache.find(x => x.id === examId);
-  const [attemptsSnap, questionsSnap] = await Promise.all([
-    db.collection("examAttempts").where("examId", "==", examId).get(),
-    db.collection("exams").doc(examId).collection("questions").orderBy("order").get()
-  ]);
-  const attempts = attemptsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const questionsSnap = await db.collection("exams").doc(examId).collection("questions").orderBy("order").get();
   const questions = questionsSnap.docs.map(d => d.data());
-
   window._analyticsQuestions = questions;
-  window._analyticsAttempts = attempts;
 
+  analyticsAttemptsUnsub = db.collection("examAttempts").where("examId", "==", examId).onSnapshot(attemptsSnap => {
+    const attempts = attemptsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    window._analyticsAttempts = attempts;
+    renderAnalyticsExamResult(questions, attempts);
+  }, err => {
+    console.error(err);
+    el.innerHTML = `<div class="empty-state">Xəta: ${esc(err.message)}</div>`;
+  });
+});
+
+function renderAnalyticsExamResult(questions, attempts) {
+  const el = document.getElementById("analytics-exam-result");
   if (attempts.length === 0) { el.innerHTML = `<div class="empty-state">Bu sınağı hələ heç kim işləməyib</div>`; return; }
 
   const avgScore = Math.round(attempts.reduce((s, a) => s + a.score, 0) / attempts.length);
@@ -3396,7 +3404,7 @@ document.getElementById("analytics-exam-select").addEventListener("change", asyn
         <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleAttemptDetail('${a.id}')">
           <div class="list-item-info">
             <div class="list-item-title">${s ? esc(s.fullName) : "Naməlum"}</div>
-            <div class="list-item-sub">✅ ${a.correctCount} düzgün · ❌ ${a.totalCount - a.correctCount} səhv (${a.totalCount} sualdan)</div>
+            <div class="list-item-sub">✅ ${a.correctCount} düzgün · ❌ ${a.totalCount - a.correctCount} səhv (${a.totalCount} sualdan)${a.pendingGrading ? ` · ⏳ ${a.detailedCount - (a.detailedGradedCount || 0)} ətraflı gözləyir` : ""}</div>
           </div>
           <div style="font-weight:800; color:var(--color-primary);">${a.score}% <span style="font-size:11px; color:var(--color-text-muted);">▾</span></div>
         </div>
@@ -3422,7 +3430,7 @@ document.getElementById("analytics-exam-select").addEventListener("change", asyn
     <h3 style="font-size:14px; margin:14px 0 10px;">Şagird nəticələri (üzərinə toxunun — hansı sualları səhv etdiyini görün)</h3>
     ${studentRows}
   `;
-});
+}
 
 window.toggleAttemptDetail = async (attemptId) => {
   const box = document.getElementById(`attempt-detail-${attemptId}`);
@@ -3607,14 +3615,25 @@ window.gradeCurrentAnswer = async (points) => {
 
 window._studentAnalyticsCache = {};
 
-async function loadStudentAnalytics(studentId) {
+let studentAnalyticsUnsub = null;
+
+function loadStudentAnalytics(studentId) {
   const el = document.getElementById("analytics-student-result");
+  if (studentAnalyticsUnsub) { studentAnalyticsUnsub(); studentAnalyticsUnsub = null; }
   if (!studentId) { el.innerHTML = `<div class="empty-state">Şagird seçin ki, təhlil görünsün</div>`; return; }
   el.innerHTML = `<div class="empty-state">Yüklənir...</div>`;
 
-  const snap = await db.collection("examAttempts").where("studentId", "==", studentId).get();
-  const attempts = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.submittedAt ? a.submittedAt.toMillis() : 0) - (b.submittedAt ? b.submittedAt.toMillis() : 0));
+  studentAnalyticsUnsub = db.collection("examAttempts").where("studentId", "==", studentId).onSnapshot(snap => {
+    const attempts = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.submittedAt ? a.submittedAt.toMillis() : 0) - (b.submittedAt ? b.submittedAt.toMillis() : 0));
+    renderStudentAnalyticsResult(attempts);
+  }, err => {
+    console.error(err);
+    el.innerHTML = `<div class="empty-state">Xəta: ${esc(err.message)}</div>`;
+  });
+}
 
+function renderStudentAnalyticsResult(attempts) {
+  const el = document.getElementById("analytics-student-result");
   if (attempts.length === 0) { el.innerHTML = `<div class="empty-state">Bu şagird hələ sınaq işləməyib</div>`; return; }
 
   window._studentAnalyticsCache = {};
