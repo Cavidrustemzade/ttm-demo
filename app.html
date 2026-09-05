@@ -3098,30 +3098,37 @@ async function recalcExamAttempts(examId, questions) {
     const snap = await db.collection("examAttempts").where("examId", "==", examId).get();
     if (snap.empty) return;
     const batch = db.batch();
+    const totalCount = questions.length; // bütün suallar (ətraflı daxil)
     snap.docs.forEach(d => {
       const a = d.data();
       const answers = a.answers || [];
       const oldPerQuestion = a.perQuestion || [];
-      let correctCount = 0, totalCount = 0, detailedCount = 0, detailedGradedCount = 0, detailedPoints = 0;
+      let correctCount = 0, detailedCount = 0, detailedGradedCount = 0;
       const perQuestion = questions.map((q, i) => {
         const given = answers[i] !== undefined ? answers[i] : null;
         if (q.type === "detailed") {
           detailedCount++;
           const oldEntry = oldPerQuestion[i] || {};
           const points = (oldEntry.points !== undefined && oldEntry.points !== null) ? oldEntry.points : null;
-          if (points !== null) { detailedGradedCount++; detailedPoints += points; }
-          return { selected: given, correct: null, isCorrect: null, type: q.type, points, maxPoints: 1 };
+          const maxP = oldEntry.maxPoints ?? 1;
+          if (points !== null) {
+            detailedGradedCount++;
+            if (points >= maxP) correctCount++; // tam bal verilibsə "düz" sayılır
+          }
+          return { selected: given, correct: null, isCorrect: null, type: q.type, points, maxPoints: maxP };
         }
-        totalCount++;
         let isCorrect;
         if (q.type === "open") isCorrect = checkOpenAnswer(given, q.correctAnswer);
         else isCorrect = given === q.correctIndex;
         if (isCorrect) correctCount++;
         return { selected: given, correct: q.type === "open" ? q.correctAnswer : q.correctIndex, isCorrect, type: q.type, points: isCorrect ? 1 : 0, maxPoints: 1 };
       });
-      const maxPoints = totalCount + detailedCount;
-      const earnedPoints = correctCount + detailedPoints;
-      const score = maxPoints > 0 ? Math.round((earnedPoints / maxPoints) * 100) : 0;
+      // Faiz üçün: ətraflı sualların qismən (0.5) balları da nəzərə alınsın
+      let detailedPointsSum = 0;
+      perQuestion.forEach(pq => { if (pq.type === "detailed" && pq.points !== null && pq.points !== undefined) detailedPointsSum += pq.points; });
+      const autoCorrectCount = perQuestion.filter(pq => pq.type !== "detailed" && pq.isCorrect).length;
+      const earnedPoints = autoCorrectCount + detailedPointsSum;
+      const score = totalCount > 0 ? Math.round((earnedPoints / totalCount) * 100) : 0;
       const pendingGrading = detailedGradedCount < detailedCount;
       batch.update(d.ref, { perQuestion, correctCount, totalCount, score, detailedCount, detailedGradedCount, pendingGrading });
     });
@@ -3563,20 +3570,30 @@ window.gradeCurrentAnswer = async (points) => {
     const a = doc.data();
     const perQuestion = (a.perQuestion || []).slice();
     if (!perQuestion[gradingQIndex]) { toast("Sual məlumatı tapılmadı"); gradingIndex++; renderGradingPanel(); return; }
-    perQuestion[gradingQIndex] = { ...perQuestion[gradingQIndex], points };
+    const maxP = perQuestion[gradingQIndex].maxPoints ?? 1;
+    perQuestion[gradingQIndex] = { ...perQuestion[gradingQIndex], points, maxPoints: maxP };
 
-    let detailedGradedCount = 0, detailedPoints = 0;
+    // Hər şeyi perQuestion massivindən YENİDƏN hesablayırıq (sənəddə köhnə/əskik sahə olsa belə düzgün nəticə versin)
+    let correctCount = 0, detailedCount = 0, detailedGradedCount = 0, detailedPointsSum = 0, autoCorrectCount = 0;
+    const totalCount = perQuestion.length;
     perQuestion.forEach(pq => {
-      if (pq && pq.type === "detailed" && pq.points !== null && pq.points !== undefined) {
-        detailedGradedCount++; detailedPoints += pq.points;
+      if (!pq) return;
+      if (pq.type === "detailed") {
+        detailedCount++;
+        if (pq.points !== null && pq.points !== undefined) {
+          detailedGradedCount++;
+          detailedPointsSum += pq.points;
+          if (pq.points >= (pq.maxPoints ?? 1)) correctCount++;
+        }
+      } else {
+        if (pq.isCorrect) { correctCount++; autoCorrectCount++; }
       }
     });
-    const maxPoints = (a.totalCount || 0) + (a.detailedCount || 0);
-    const earnedPoints = (a.correctCount || 0) + detailedPoints;
-    const score = maxPoints > 0 ? Math.round((earnedPoints / maxPoints) * 100) : 0;
-    const pendingGrading = detailedGradedCount < (a.detailedCount || 0);
+    const earnedPoints = autoCorrectCount + detailedPointsSum;
+    const score = totalCount > 0 ? Math.round((earnedPoints / totalCount) * 100) : 0;
+    const pendingGrading = detailedGradedCount < detailedCount;
 
-    await ref.update({ perQuestion, score, detailedGradedCount, pendingGrading });
+    await ref.update({ perQuestion, score, correctCount, totalCount, detailedCount, detailedGradedCount, pendingGrading });
     db.collection("detailedAnswers").doc(`${item.attemptId}_${gradingQIndex}`).update({ points, gradedAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(() => {});
 
     gradingIndex++;
@@ -4325,7 +4342,8 @@ async function finishExam(autoSubmit) {
   clearInterval(examTimerInterval);
   saveOpenAnswerFromInput();
   const ex = currentExam;
-  let correctCount = 0, totalCount = 0, detailedCount = 0;
+  let correctCount = 0, detailedCount = 0;
+  const totalCount = ex.questions.length; // bütün suallar (ətraflı daxil) — bal veriləndə "düz" sayı buna görə artacaq
   const detailedPhotos = []; // { index, photo } — böyük şəkillər ayrıca kolleksiyaya gedir
   const lightAnswers = [];
   const perQuestion = ex.questions.map((q, i) => {
@@ -4336,7 +4354,6 @@ async function finishExam(autoSubmit) {
       lightAnswers.push(ans.text || null);
       return { selected: ans.text || null, correct: null, isCorrect: null, type: q.type, points: null, maxPoints: 1, hasPhoto: !!ans.photo };
     }
-    totalCount++;
     let isCorrect;
     if (q.type === "open") isCorrect = checkOpenAnswer(currentExamAnswers[i], q.correctAnswer);
     else isCorrect = currentExamAnswers[i] === q.correctIndex;
@@ -4344,7 +4361,7 @@ async function finishExam(autoSubmit) {
     lightAnswers.push(currentExamAnswers[i]);
     return { selected: currentExamAnswers[i], correct: q.type === "open" ? q.correctAnswer : q.correctIndex, isCorrect, type: q.type, points: isCorrect ? 1 : 0, maxPoints: 1 };
   });
-  const maxPoints = totalCount + detailedCount;
+  const maxPoints = totalCount; // hər sual maksimum 1 bal (ətraflı daxil)
   const scorePct = maxPoints > 0 ? Math.round((correctCount / maxPoints) * 100) : 0;
   const pendingGrading = detailedCount > 0;
 
