@@ -251,6 +251,8 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .exam-result-row.correct { border-left-color:#2e9e6b; }
 .exam-result-row.wrong { border-left-color:var(--color-danger); }
 .exam-result-row.blank { border-left-color:#94a3b8; }
+.exam-result-row.partial { border-left-color:#d99a2b; }
+.exam-result-row.pending { border-left-color:#94a3b8; }
 .exam-result-row-flash { animation: examResultFlash 1.3s ease; }
 @keyframes examResultFlash {
   0% { background: rgba(11,60,93,.14); }
@@ -261,7 +263,8 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .exam-result-mini-btn.correct { background:rgba(46,158,107,.14); border-color:#2e9e6b; color:#1f7a4d; }
 .exam-result-mini-btn.wrong { background:rgba(217,76,76,.12); border-color:var(--color-danger); color:var(--color-danger); }
 .exam-result-mini-btn.blank { background:var(--color-light-gray); border-color:var(--color-gray); color:var(--color-text-muted); }
-.exam-result-mini-btn.pending { background:rgba(217,154,43,.16); border-color:#d99a2b; color:#a9700a; }
+.exam-result-mini-btn.partial { background:rgba(217,154,43,.16); border-color:#d99a2b; color:#a9700a; }
+.exam-result-mini-btn.pending { background:rgba(148,163,184,.16); border-color:#94a3b8; color:#475569; }
 .exam-result-mini-btn.active { outline:2px solid var(--color-primary); outline-offset:1px; }
 #exam-result-question-detail:empty { display:none; }
 @media (min-width:480px) { .exam-result-mini-grid { grid-template-columns:repeat(8,1fr); } }
@@ -689,6 +692,8 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
   .exam-result-nav-btn:hover { border-color: var(--color-primary); transform: translateY(-1px); }
   .exam-result-nav-btn.correct { background:#dff4e6; border-color:#b7e4c5; color:#278957; }
   .exam-result-nav-btn.wrong { background:#fdeaea; border-color:#f3b9b9; color:#c53030; }
+  .exam-result-nav-btn.partial { background:#fdf3e0; border-color:#f0d49a; color:#a9700a; }
+  .exam-result-nav-btn.pending { background:#eef1f5; border-color:#cbd5e1; color:#475569; }
   .exam-result-nav-btn.active { outline:2px solid var(--color-primary); outline-offset:1px; }
 }
 
@@ -1615,6 +1620,40 @@ function esc(str) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+// Sınaq nəticəsinin bütün rəqəmlərini HƏMİŞƏ perQuestion-dan TƏZƏDƏN hesablayır —
+// sənəddə saxlanmış köhnə/unudulmuş sahələrə (correctCount, totalCount və s.) etibar etmir.
+// Beləliklə admin və şagird ekranlarının heç biri köhnəlmiş rəqəm göstərə bilməz.
+function computeAttemptStats(perQuestion) {
+  let correctCount = 0, totalCount = 0, detailedCount = 0, detailedGradedCount = 0, detailedPointsSum = 0, autoCorrectCount = 0;
+  (perQuestion || []).forEach(pq => {
+    if (!pq) return;
+    totalCount++;
+    if (pq.type === "detailed") {
+      detailedCount++;
+      if (pq.points !== null && pq.points !== undefined) {
+        detailedGradedCount++;
+        detailedPointsSum += pq.points;
+        if (pq.points >= (pq.maxPoints ?? 1)) correctCount++;
+      }
+    } else if (pq.isCorrect) {
+      correctCount++; autoCorrectCount++;
+    }
+  });
+  const earnedPoints = autoCorrectCount + detailedPointsSum;
+  const score = totalCount > 0 ? Math.round((earnedPoints / totalCount) * 100) : 0;
+  const pendingGrading = detailedGradedCount < detailedCount;
+  return { correctCount, totalCount, score, detailedCount, detailedGradedCount, pendingGrading };
+}
+
+// Ətraflı sualın rənglənməsi: tam bal = yaşıl, yarım bal = narıncı, 0 bal = qırmızı, hələ yoxlanılmayıb = boz
+function detailedPointClass(points, maxPoints) {
+  const mp = maxPoints ?? 1;
+  if (points === null || points === undefined) return "pending";
+  if (points >= mp) return "correct";
+  if (points > 0) return "partial";
+  return "wrong";
 }
 
 // ---- TAB NAVİGASİYASI ----
@@ -3385,7 +3424,10 @@ function renderAnalyticsExamResult(questions, attempts) {
   const el = document.getElementById("analytics-exam-result");
   if (attempts.length === 0) { el.innerHTML = `<div class="empty-state">Bu sınağı hələ heç kim işləməyib</div>`; return; }
 
-  const avgScore = Math.round(attempts.reduce((s, a) => s + a.score, 0) / attempts.length);
+  const statsById = {};
+  attempts.forEach(a => { statsById[a.id] = computeAttemptStats(a.perQuestion); });
+
+  const avgScore = Math.round(attempts.reduce((s, a) => s + statsById[a.id].score, 0) / attempts.length);
 
   // Sual üzrə səhv faizi
   const wrongCounts = new Array(questions.length).fill(0);
@@ -3397,16 +3439,17 @@ function renderAnalyticsExamResult(questions, attempts) {
     wrongPct: Math.round((wrongCounts[i] / attempts.length) * 100)
   })).sort((a, b) => b.wrongPct - a.wrongPct);
 
-  const studentRows = attempts.slice().sort((a, b) => b.score - a.score).map(a => {
+  const studentRows = attempts.slice().sort((a, b) => statsById[b.id].score - statsById[a.id].score).map(a => {
     const s = studentsCache.find(s => s.id === a.studentId);
+    const st = statsById[a.id];
     return `
       <div class="list-item" style="flex-direction:column; align-items:stretch;">
         <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleAttemptDetail('${a.id}')">
           <div class="list-item-info">
             <div class="list-item-title">${s ? esc(s.fullName) : "Naməlum"}</div>
-            <div class="list-item-sub">✅ ${a.correctCount} düzgün · ❌ ${a.totalCount - a.correctCount} səhv (${a.totalCount} sualdan)${a.pendingGrading ? ` · ⏳ ${a.detailedCount - (a.detailedGradedCount || 0)} ətraflı gözləyir` : ""}</div>
+            <div class="list-item-sub">✅ ${st.correctCount} düzgün · ❌ ${st.totalCount - st.correctCount - (st.detailedCount - st.detailedGradedCount)} səhv (${st.totalCount} sualdan)${st.pendingGrading ? ` · ⏳ ${st.detailedCount - st.detailedGradedCount} ətraflı gözləyir` : ""}</div>
           </div>
-          <div style="font-weight:800; color:var(--color-primary);">${a.score}% <span style="font-size:11px; color:var(--color-text-muted);">▾</span></div>
+          <div style="font-weight:800; color:var(--color-primary);">${st.score}% <span style="font-size:11px; color:var(--color-text-muted);">▾</span></div>
         </div>
         <div id="attempt-detail-${a.id}" style="display:none; margin-top:10px;"></div>
       </div>`;
@@ -3441,7 +3484,8 @@ window.toggleAttemptDetail = async (attemptId) => {
   if (!attempt) return;
 
   let photoMap = {};
-  if (attempt.detailedCount > 0) {
+  const hasDetailed = (attempt.perQuestion || []).some(pq => pq && pq.type === "detailed");
+  if (hasDetailed) {
     box.innerHTML = `<div class="empty-state">Yüklənir...</div>`;
     box.style.display = "block";
     try {
@@ -3460,8 +3504,10 @@ window.toggleAttemptDetail = async (attemptId) => {
     const OPT = ["A","B","C","D","E"];
     if (q.type === "detailed") {
       const graded = pq.points !== null && pq.points !== undefined;
+      const cls = detailedPointClass(pq.points, pq.maxPoints);
+      const bg = { correct: "rgba(46,158,107,.10)", partial: "rgba(217,154,43,.14)", wrong: "rgba(217,76,76,.10)", pending: "rgba(148,163,184,.14)" }[cls];
       const photo = photoMap[i] || null;
-      return `<div style="padding:8px 10px; border-radius:8px; margin-bottom:6px; background:${graded ? "rgba(11,60,93,.06)" : "rgba(217,154,43,.10)"};">
+      return `<div style="padding:8px 10px; border-radius:8px; margin-bottom:6px; background:${bg};">
         <div style="font-size:12.5px; font-weight:600;">${i + 1}. ${qText} ${graded ? `— ${pq.points}/${pq.maxPoints ?? 1} bal` : "⏳ Yoxlanılır"}</div>
         ${pq.selected ? `<div style="font-size:11.5px; margin-top:3px;">Yazdığı cavab: <b>${esc(pq.selected)}</b></div>` : ""}
         ${photo ? `<img src="${photo}" style="max-width:110px; max-height:110px; border-radius:6px; margin-top:6px; border:1px solid var(--color-gray); cursor:pointer;" onclick="openImageLightbox(this.src)" />` : `<div style="font-size:11.5px; color:var(--color-text-muted); margin-top:3px;">Şəkil göndərilməyib</div>`}
@@ -3638,26 +3684,29 @@ function renderStudentAnalyticsResult(attempts) {
 
   window._studentAnalyticsCache = {};
   attempts.forEach(a => { window._studentAnalyticsCache[a.id] = { attempt: a, questions: null }; });
+  const statsById = {};
+  attempts.forEach(a => { statsById[a.id] = computeAttemptStats(a.perQuestion); });
 
   const byTopic = {};
   attempts.forEach(a => {
     const t = a.topic || "Digər";
     if (!byTopic[t]) byTopic[t] = { correct: 0, total: 0 };
-    byTopic[t].correct += a.correctCount;
-    byTopic[t].total += a.totalCount;
+    byTopic[t].correct += statsById[a.id].correctCount;
+    byTopic[t].total += statsById[a.id].totalCount;
   });
   const topicRows = Object.keys(byTopic).map(t => ({ topic: t, pct: Math.round((byTopic[t].correct / byTopic[t].total) * 100) })).sort((a, b) => a.pct - b.pct);
 
   const attemptRows = attempts.slice().reverse().map(a => {
     const ex = examsCache.find(x => x.id === a.examId);
+    const st = statsById[a.id];
     return `
       <div class="list-item" style="flex-direction:column; align-items:stretch;">
         <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleStudentAttemptDetail('${a.id}')">
           <div class="list-item-info">
             <div class="list-item-title">${ex ? esc(ex.title) : "Sınaq"}</div>
-            <div class="list-item-sub">✅ ${a.correctCount} düzgün · ❌ ${a.totalCount - a.correctCount} səhv (${a.totalCount} sualdan)</div>
+            <div class="list-item-sub">✅ ${st.correctCount} düzgün · ❌ ${st.totalCount - st.correctCount - (st.detailedCount - st.detailedGradedCount)} səhv (${st.totalCount} sualdan)</div>
           </div>
-          <div style="font-weight:800; color:var(--color-primary);">${a.score}% <span style="font-size:11px; color:var(--color-text-muted);">▾</span></div>
+          <div style="font-weight:800; color:var(--color-primary);">${st.score}% <span style="font-size:11px; color:var(--color-text-muted);">▾</span></div>
         </div>
         <div id="student-attempt-detail-${a.id}" style="display:none; margin-top:10px;"></div>
       </div>`;
@@ -3668,9 +3717,10 @@ function renderStudentAnalyticsResult(attempts) {
     <div style="display:flex; align-items:flex-end; gap:6px; height:100px; padding-top:10px; overflow-x:auto; margin-bottom:16px;">
       ${attempts.map(a => {
         const ex = examsCache.find(x => x.id === a.examId);
+        const sc = statsById[a.id].score;
         return `<div style="display:flex; flex-direction:column; align-items:center; gap:4px; min-width:34px;">
-          <div style="font-size:9px; color:var(--color-text-muted);">${a.score}%</div>
-          <div style="width:20px; height:${Math.max(4, a.score)}px; background:linear-gradient(180deg,#3b82f6,#0B3C5D); border-radius:5px;"></div>
+          <div style="font-size:9px; color:var(--color-text-muted);">${sc}%</div>
+          <div style="width:20px; height:${Math.max(4, sc)}px; background:linear-gradient(180deg,#3b82f6,#0B3C5D); border-radius:5px;"></div>
           <div style="font-size:8px; color:var(--color-text-muted); text-align:center;">${ex ? esc(ex.title).slice(0, 8) : "?"}</div>
         </div>`;
       }).join("")}
@@ -3708,9 +3758,10 @@ window.toggleStudentAttemptDetail = async (attemptId) => {
   }
   const questions = cacheEntry.questions;
   const OPT = ["A","B","C","D","E"];
+  const hasDetailed = (attempt.perQuestion || []).some(pq => pq && pq.type === "detailed");
 
   let photoMap = {};
-  if (attempt.detailedCount > 0) {
+  if (hasDetailed) {
     try {
       const photoSnap = await db.collection("detailedAnswers").where("attemptId", "==", attemptId).get();
       photoSnap.forEach(d => { const dd = d.data(); photoMap[dd.questionIndex] = dd.photoBase64; });
@@ -3727,8 +3778,10 @@ window.toggleStudentAttemptDetail = async (attemptId) => {
     const imgHtml = q.imageBase64 ? `<img src="${q.imageBase64}" style="max-width:110px; max-height:110px; border-radius:6px; margin-top:6px; border:1px solid var(--color-gray); cursor:pointer;" onclick="openImageLightbox(this.src)" />` : "";
     if (q.type === "detailed") {
       const graded = pq.points !== null && pq.points !== undefined;
+      const cls = detailedPointClass(pq.points, pq.maxPoints);
+      const bg = { correct: "rgba(46,158,107,.10)", partial: "rgba(217,154,43,.14)", wrong: "rgba(217,76,76,.10)", pending: "rgba(148,163,184,.14)" }[cls];
       const photo = photoMap[i] || null;
-      return `<div style="padding:8px 10px; border-radius:8px; margin-bottom:6px; background:${graded ? "rgba(11,60,93,.06)" : "rgba(217,154,43,.10)"};">
+      return `<div style="padding:8px 10px; border-radius:8px; margin-bottom:6px; background:${bg};">
         <div style="font-size:12.5px; font-weight:600;">${i + 1}. ${qText} ${graded ? `— ${pq.points}/${pq.maxPoints ?? 1} bal` : "⏳ Yoxlanılır"}</div>
         ${imgHtml}
         ${pq.selected ? `<div style="font-size:11.5px; margin-top:3px;">Yazdığı cavab: <b>${esc(pq.selected)}</b></div>` : ""}
@@ -3912,10 +3965,11 @@ function renderStudentExamList() {
     const sorted = studentAttemptsCache.slice().sort((a, b) => (b.submittedAt ? b.submittedAt.toMillis() : 0) - (a.submittedAt ? a.submittedAt.toMillis() : 0));
     histEl.innerHTML = sorted.map(a => {
       const ex = studentExamsCache.find(e => e.id === a.examId);
+      const st = computeAttemptStats(a.perQuestion);
       return `<div class="list-item">
         <div class="list-item-info">
           <div class="list-item-title">${ex ? esc(ex.title) : "Sınaq"}</div>
-          <div class="list-item-sub">${a.correctCount}/${a.totalCount} düzgün</div>
+          <div class="list-item-sub">${st.correctCount}/${st.totalCount} düzgün</div>
         </div>
         <div class="list-item-actions"><button class="btn-outline" onclick="viewPastResult('${a.id}')">Bax</button></div>
       </div>`;
@@ -3938,22 +3992,26 @@ function renderExamResultsInScoresTab() {
   if (!el) return;
   if (studentAttemptsCache.length === 0) { el.innerHTML = `<div class="empty-state">Hələ sınaq işləməmisiniz</div>`; return; }
   const sorted = studentAttemptsCache.slice().sort((a, b) => (a.submittedAt ? a.submittedAt.toMillis() : 0) - (b.submittedAt ? b.submittedAt.toMillis() : 0));
+  const statsById = {};
+  sorted.forEach(a => { statsById[a.id] = computeAttemptStats(a.perQuestion); });
 
   // Xronoloji sırada gedərək hər cəhdin trend fərqini əvvəlcədən hesablayırıq
   const seenTopics = {};
   const trendById = {};
   sorted.forEach(a => {
     const topic = a.topic || "";
+    const sc = statsById[a.id].score;
     if (seenTopics[topic] !== undefined) {
-      trendById[a.id] = a.score - seenTopics[topic];
+      trendById[a.id] = sc - seenTopics[topic];
     }
-    seenTopics[topic] = a.score;
+    seenTopics[topic] = sc;
   });
 
   el.innerHTML = sorted.slice().reverse().map(a => {
     const ex = studentExamsCache.find(e => e.id === a.examId);
     const topic = a.topic || (ex ? ex.topic : "");
-    const tag = motivationalTag(a.score);
+    const st = statsById[a.id];
+    const tag = motivationalTag(st.score);
     let trendHtml = "";
     const diff = trendById[a.id];
     if (diff !== undefined && diff !== 0) {
@@ -3962,9 +4020,9 @@ function renderExamResultsInScoresTab() {
     return `<div class="list-item">
       <div class="list-item-info">
         <div class="list-item-title">${ex ? esc(ex.title) : "Sınaq"} ${trendHtml}</div>
-        <div class="list-item-sub"><span class="badge">${esc(topic)}</span> ${a.correctCount}/${a.totalCount} düzgün · <span style="color:${tag.color}; font-weight:700;">${tag.text}</span></div>
+        <div class="list-item-sub"><span class="badge">${esc(topic)}</span> ${st.correctCount}/${st.totalCount} düzgün${st.pendingGrading ? ` · ⏳ ${st.detailedCount - st.detailedGradedCount} yoxlanılır` : ""} · <span style="color:${tag.color}; font-weight:700;">${tag.text}</span></div>
       </div>
-      <div style="font-weight:800; font-size:16px; color:var(--color-primary);">${a.score}%</div>
+      <div style="font-weight:800; font-size:16px; color:var(--color-primary);">${st.score}%</div>
     </div>`;
   }).join("");
 }
@@ -3976,10 +4034,11 @@ function renderExamWeakTopics() {
 
   const byTopic = {};
   studentAttemptsCache.forEach(a => {
+    const st = computeAttemptStats(a.perQuestion);
     const topic = a.topic || "Digər";
     if (!byTopic[topic]) byTopic[topic] = { correct: 0, total: 0 };
-    byTopic[topic].correct += a.correctCount;
-    byTopic[topic].total += a.totalCount;
+    byTopic[topic].correct += st.correctCount;
+    byTopic[topic].total += st.totalCount;
   });
 
   const rows = Object.keys(byTopic).map(topic => {
@@ -4436,7 +4495,8 @@ window.viewPastResult = async (attemptId) => {
   const qSnap = await db.collection("exams").doc(a.examId).collection("questions").orderBy("order").get();
   const ex = { ...exMeta, questions: qSnap.docs.map(d => d.data()) };
   let photoMap = {};
-  if (a.detailedCount > 0) {
+  const hasDetailed = (a.perQuestion || []).some(pq => pq && pq.type === "detailed");
+  if (hasDetailed) {
     try {
       const photoSnap = await db.collection("detailedAnswers").where("attemptId", "==", attemptId).get();
       photoSnap.forEach(d => { const dd = d.data(); photoMap[dd.questionIndex] = dd.photoBase64; });
@@ -4479,14 +4539,15 @@ window.scrollToResultQuestion = (i) => {
 
 function renderExamResult(ex, attempt, photoMap) {
   photoMap = photoMap || {};
+  const st = computeAttemptStats(attempt.perQuestion);
   document.getElementById("exam-view-result").style.display = "block";
-  document.getElementById("exam-result-pct").textContent = attempt.score + "%";
+  document.getElementById("exam-result-pct").textContent = st.score + "%";
   const badge = document.getElementById("exam-result-badge");
-  const color = attempt.score >= 75 ? "#2e9e6b" : attempt.score >= 50 ? "#d99a2b" : "#d94c4c";
-  badge.style.background = `conic-gradient(${color} ${attempt.score * 3.6}deg, var(--color-gray) 0deg)`;
-  document.getElementById("exam-result-summary").textContent = `${ex.title} — ${attempt.correctCount}/${attempt.totalCount} sual düzgün` + (attempt.pendingGrading ? ` · ${attempt.detailedCount} ətraflı sual müəllim yoxlamasını gözləyir` : "");
+  const color = st.score >= 75 ? "#2e9e6b" : st.score >= 50 ? "#d99a2b" : "#d94c4c";
+  badge.style.background = `conic-gradient(${color} ${st.score * 3.6}deg, var(--color-gray) 0deg)`;
+  document.getElementById("exam-result-summary").textContent = `${ex.title} — ${st.correctCount}/${st.totalCount} sual düzgün` + (st.pendingGrading ? ` · ${st.detailedCount - st.detailedGradedCount} ətraflı sual müəllim yoxlamasını gözləyir` : "");
 
-  // Statistika kartları — mövcud attempt/perQuestion datasından hesablanır, hesablama məntiqinə toxunulmur
+  // Statistika kartları — perQuestion-dan hər dəfə təzədən hesablanır
   let wrongCount = 0, unansweredCount = 0;
   const resultRowStatus = [];
   ex.questions.forEach((q, i) => {
@@ -4500,9 +4561,11 @@ function renderExamResult(ex, attempt, photoMap) {
 
   const resultNavGrid = document.getElementById("exam-result-nav-grid");
   if (resultNavGrid) {
-    resultNavGrid.innerHTML = ex.questions.map((q, i) => `
-      <button type="button" class="exam-result-nav-btn ${resultRowStatus[i]}" onclick="scrollToResultQuestion(${i})">${i + 1}</button>
-    `).join("");
+    resultNavGrid.innerHTML = ex.questions.map((q, i) => {
+      const pq = attempt.perQuestion[i];
+      const cls = q.type === "detailed" ? detailedPointClass(pq.points, pq.maxPoints) : (resultRowStatus[i] || "blank");
+      return `<button type="button" class="exam-result-nav-btn ${cls}" onclick="scrollToResultQuestion(${i})">${i + 1}</button>`;
+    }).join("");
   }
   const statGrid = document.getElementById("exam-stat-grid");
   if (statGrid) {
@@ -4510,7 +4573,7 @@ function renderExamResult(ex, attempt, photoMap) {
       <div class="stat-icon-card" style="background:linear-gradient(135deg,#ecfdf5,#ffffff);">
         <div class="stat-icon-badge grad-green">✅</div>
         <div class="list-item-sub">Düz cavablar</div>
-        <div class="list-item-title" style="font-size:20px;">${attempt.correctCount}</div>
+        <div class="list-item-title" style="font-size:20px;">${st.correctCount}</div>
       </div>
       <div class="stat-icon-card" style="background:linear-gradient(135deg,#fef2f2,#ffffff);">
         <div class="stat-icon-badge" style="background:linear-gradient(135deg,#f87171,#d94c4c);">❌</div>
@@ -4537,7 +4600,7 @@ function renderExamResult(ex, attempt, photoMap) {
     if (q.type === "detailed") {
       const graded = pq.points !== null && pq.points !== undefined;
       const photo = photoMap[i] || null;
-      return `<div class="list-item exam-result-row" style="flex-direction:column; align-items:flex-start; gap:6px;">
+      return `<div class="list-item exam-result-row ${detailedPointClass(pq.points, pq.maxPoints)}" style="flex-direction:column; align-items:flex-start; gap:6px;">
         <div class="list-item-title">${i + 1}. ${esc(q.text || "Ətraflı sual")} ${graded ? `— ${pq.points} / ${pq.maxPoints ?? 1} bal` : "⏳ Yoxlanılır"}</div>
         ${imgHtml}
         ${pq.selected ? `<div class="muted-note">Yazdığınız cavab: <b>${esc(pq.selected)}</b></div>` : ""}
@@ -4570,9 +4633,8 @@ function renderExamResult(ex, attempt, photoMap) {
   window._resultExpandedIndex = null;
 
   const miniGridHtml = ex.questions.map((q, i) => {
-    const cls = q.type === "detailed"
-      ? ((attempt.perQuestion[i].points !== null && attempt.perQuestion[i].points !== undefined) ? "correct" : "pending")
-      : resultRowStatus[i] || "blank";
+    const pq = attempt.perQuestion[i];
+    const cls = q.type === "detailed" ? detailedPointClass(pq.points, pq.maxPoints) : (resultRowStatus[i] || "blank");
     return `<button type="button" class="exam-result-mini-btn ${cls}" data-idx="${i}" onclick="toggleResultQuestionDetail(${i})">${i + 1}</button>`;
   }).join("");
 
