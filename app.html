@@ -891,6 +891,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
       <button class="tab-btn" data-tab="tab-schedule">Cədvəl</button>
       <button class="tab-btn" data-tab="tab-topics">Mövzular</button>
       <button class="tab-btn" data-tab="tab-exams">Sınaqlar</button>
+      <button class="tab-btn" data-tab="tab-payments">Ödənişlər</button>
       <button class="tab-btn" data-tab="tab-sitesettings">Sayt Ayarları</button>
     </div>
 
@@ -1189,6 +1190,30 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
       <div class="card">
         <h3>Sınaq siyahısı</h3>
         <div id="exams-list"><div class="empty-state">Yüklənir...</div></div>
+      </div>
+    </div>
+
+    <!-- ÖDƏNİŞLƏR -->
+    <div class="tab-panel" id="tab-payments">
+      <div class="card" id="payments-gate">
+        <h3>🔒 Ödənişlər — qorunur</h3>
+        <p class="muted-note" style="margin-bottom:14px;">Bu bölmə şifrə ilə qorunur. Davam etmək üçün kodu daxil edin.</p>
+        <div class="field-row">
+          <div class="field"><input type="password" id="payments-pin-input" placeholder="Kod" /></div>
+        </div>
+        <button class="btn-small" id="payments-unlock-btn">Aç</button>
+      </div>
+      <div id="payments-content" style="display:none;">
+        <div class="card">
+          <h3>💳 Aylıq ödəniş izləməsi</h3>
+          <div class="field-row">
+            <div class="field"><label>Ay seçin</label><input type="month" id="payment-month-input" /></div>
+          </div>
+          <div id="payment-summary" class="muted-note" style="margin-top:4px;"></div>
+        </div>
+        <div class="card">
+          <div id="payments-list"><div class="empty-state">Yüklənir...</div></div>
+        </div>
       </div>
     </div>
 
@@ -1688,7 +1713,109 @@ function initAdminPanel() {
   loadExams();
   document.getElementById("daily-date").value = new Date().toISOString().slice(0, 10);
   document.getElementById("score-date").value = new Date().toISOString().slice(0, 10);
+  initPaymentsGate();
 }
+
+// ---- ÖDƏNİŞLƏR ----
+// Diqqət: bu, əsl təhlükəsizlik deyil (hamı eyni admin girişini paylaşır),
+// sadəcə başqa müəllimin təsadüfən bu bölməyə girməsinin qarşısını alır.
+// Kodu dəyişmək üçün aşağıdakı sətri redaktə edin:
+const PAYMENTS_PIN = "2580";
+let paymentsUnlocked = false;
+let paymentsCache = {};
+let paymentsUnsub = null;
+let currentPaymentMonth = null;
+
+function initPaymentsGate() {
+  const btn = document.getElementById("payments-unlock-btn");
+  const input = document.getElementById("payments-pin-input");
+  if (!btn) return;
+  const tryUnlock = () => {
+    if (input.value === PAYMENTS_PIN) {
+      paymentsUnlocked = true;
+      document.getElementById("payments-gate").style.display = "none";
+      document.getElementById("payments-content").style.display = "block";
+      initPaymentsPanel();
+    } else {
+      toast("Kod yanlışdır");
+      input.value = "";
+    }
+  };
+  btn.addEventListener("click", tryUnlock);
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter") tryUnlock(); });
+}
+
+function currentMonthKey() {
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+}
+
+function initPaymentsPanel() {
+  const input = document.getElementById("payment-month-input");
+  if (!input) return;
+  input.value = currentMonthKey();
+  currentPaymentMonth = input.value;
+  loadPayments(currentPaymentMonth);
+  input.addEventListener("change", () => {
+    currentPaymentMonth = input.value;
+    loadPayments(currentPaymentMonth);
+  });
+}
+
+function loadPayments(monthKey) {
+  if (paymentsUnsub) { paymentsUnsub(); paymentsUnsub = null; }
+  const el = document.getElementById("payments-list");
+  el.innerHTML = `<div class="empty-state">Yüklənir...</div>`;
+  paymentsUnsub = db.collection("payments").where("monthKey", "==", monthKey).onSnapshot(snap => {
+    paymentsCache = {};
+    snap.forEach(d => { paymentsCache[d.data().studentId] = d.data(); });
+    renderPaymentsList();
+  }, err => {
+    console.error(err);
+    el.innerHTML = `<div class="empty-state">Xəta: ${esc(err.message)}</div>`;
+  });
+}
+
+function renderPaymentsList() {
+  const el = document.getElementById("payments-list");
+  const summaryEl = document.getElementById("payment-summary");
+  const active = studentsCache.filter(s => s.active !== false);
+  if (active.length === 0) { el.innerHTML = `<div class="empty-state">Hələ şagird yoxdur</div>`; summaryEl.textContent = ""; return; }
+
+  const sorted = active.slice().sort((a, b) => a.fullName.localeCompare(b.fullName, "az"));
+  const paidCount = sorted.filter(s => paymentsCache[s.id] && paymentsCache[s.id].paid).length;
+  summaryEl.textContent = `✅ ${paidCount} ödəyib · ❌ ${sorted.length - paidCount} ödəməyib (cəmi ${sorted.length} şagird)`;
+
+  el.innerHTML = sorted.map(s => {
+    const p = paymentsCache[s.id];
+    const paid = !!(p && p.paid);
+    return `<div class="list-item">
+      <div class="list-item-info">
+        <div class="list-item-title">${esc(s.fullName)}</div>
+        <div class="list-item-sub"><span class="badge">${groupName(s.groupId)}</span></div>
+      </div>
+      <div class="list-item-actions">
+        <button class="btn-small" style="background:${paid ? "#2e9e6b" : "var(--color-danger)"};" onclick="togglePayment('${s.id}')">${paid ? "✅ Ödədi" : "❌ Ödəmədi"}</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+window.togglePayment = async (studentId) => {
+  const monthKey = currentPaymentMonth;
+  const existing = paymentsCache[studentId];
+  const newPaid = !(existing && existing.paid);
+  try {
+    await db.collection("payments").doc(`${studentId}_${monthKey}`).set({
+      studentId, monthKey, paid: newPaid,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    toast(newPaid ? "Ödənilib kimi qeyd olundu" : "Ödənilməyib kimi qeyd olundu");
+  } catch (err) {
+    console.error(err);
+    toast("Xəta: " + err.message);
+  }
+};
 
 // ---- QRUPLAR ----
 function fillGroupSelects() {
@@ -1818,6 +1945,7 @@ async function loadStudents() {
     studentsCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     fillStudentSelects();
     renderStudentsList();
+    if (document.getElementById("payments-list")) renderPaymentsList();
   });
 }
 
