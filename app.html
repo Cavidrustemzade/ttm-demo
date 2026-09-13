@@ -1208,6 +1208,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
           <h3>💳 Aylıq ödəniş izləməsi</h3>
           <div class="field-row">
             <div class="field"><label>Ay seçin</label><input type="month" id="payment-month-input" /></div>
+            <div class="field"><label>Qrup</label><select id="payment-group-filter"><option value="">— Hamısı —</option></select></div>
           </div>
           <div id="payment-summary" class="muted-note" style="margin-top:4px;"></div>
         </div>
@@ -1750,6 +1751,8 @@ function currentMonthKey() {
   return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
 }
 
+let currentPaymentGroupFilter = "";
+
 function initPaymentsPanel() {
   const input = document.getElementById("payment-month-input");
   if (!input) return;
@@ -1760,6 +1763,21 @@ function initPaymentsPanel() {
     currentPaymentMonth = input.value;
     loadPayments(currentPaymentMonth);
   });
+  const groupFilter = document.getElementById("payment-group-filter");
+  if (groupFilter) {
+    groupFilter.addEventListener("change", () => {
+      currentPaymentGroupFilter = groupFilter.value;
+      renderPaymentsList();
+    });
+  }
+}
+
+function fillPaymentGroupFilter() {
+  const sel = document.getElementById("payment-group-filter");
+  if (!sel) return;
+  const current = sel.value;
+  sel.innerHTML = `<option value="">— Hamısı —</option>` + groupsCache.map(g => `<option value="${g.id}">${esc(g.name)}</option>`).join("");
+  if (current) sel.value = current;
 }
 
 function loadPayments(monthKey) {
@@ -1776,30 +1794,58 @@ function loadPayments(monthKey) {
   });
 }
 
+// Şagirdin ödəniş günü keçib/yaxınlaşırsa xəbərdarlıq nişanı qaytarır (hələ ödəməyibsə)
+function paymentDueBadge(student) {
+  if (!student.paymentDay) return "";
+  const today = new Date();
+  const diff = student.paymentDay - today.getDate();
+  if (diff < 0) return `<span class="badge" style="background:rgba(217,76,76,.14); color:var(--color-danger);">⚠️ Gecikib (${student.paymentDay})</span>`;
+  if (diff <= 3) return `<span class="badge" style="background:rgba(217,154,43,.16); color:#a9700a;">🔜 Yaxınlaşır (${student.paymentDay})</span>`;
+  return `<span class="badge">Ödəniş günü: ${student.paymentDay}</span>`;
+}
+
 function renderPaymentsList() {
   const el = document.getElementById("payments-list");
   const summaryEl = document.getElementById("payment-summary");
-  const active = studentsCache.filter(s => s.active !== false);
-  if (active.length === 0) { el.innerHTML = `<div class="empty-state">Hələ şagird yoxdur</div>`; summaryEl.textContent = ""; return; }
+  fillPaymentGroupFilter();
+  let active = studentsCache.filter(s => s.active !== false);
+  if (currentPaymentGroupFilter) active = active.filter(s => s.groupId === currentPaymentGroupFilter);
+  if (active.length === 0) { el.innerHTML = `<div class="empty-state">Bu seçimə uyğun şagird yoxdur</div>`; summaryEl.textContent = ""; return; }
 
   const sorted = active.slice().sort((a, b) => a.fullName.localeCompare(b.fullName, "az"));
   const paidCount = sorted.filter(s => paymentsCache[s.id] && paymentsCache[s.id].paid).length;
-  summaryEl.textContent = `✅ ${paidCount} ödəyib · ❌ ${sorted.length - paidCount} ödəməyib (cəmi ${sorted.length} şagird)`;
+  const groupLabel = currentPaymentGroupFilter ? ` — ${groupName(currentPaymentGroupFilter)}` : "";
+  summaryEl.textContent = `✅ ${paidCount} ödəyib · ❌ ${sorted.length - paidCount} ödəməyib (cəmi ${sorted.length} şagird${groupLabel})`;
 
   el.innerHTML = sorted.map(s => {
     const p = paymentsCache[s.id];
     const paid = !!(p && p.paid);
-    return `<div class="list-item">
+    return `<div class="list-item" style="flex-wrap:wrap;">
       <div class="list-item-info">
         <div class="list-item-title">${esc(s.fullName)}</div>
-        <div class="list-item-sub"><span class="badge">${groupName(s.groupId)}</span></div>
+        <div class="list-item-sub" style="display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-top:4px;">
+          <span class="badge">${groupName(s.groupId)}</span>
+          ${!paid ? paymentDueBadge(s) : ""}
+        </div>
       </div>
-      <div class="list-item-actions">
+      <div class="list-item-actions" style="display:flex; align-items:center; gap:8px;">
+        <input type="number" min="1" max="31" value="${s.paymentDay || ""}" placeholder="Gün" title="Ödəniş günü (ayın neçəsi)" style="width:56px; padding:6px; border:1.5px solid var(--color-gray); border-radius:8px; font-size:12px;" onchange="updatePaymentDay('${s.id}', this.value)" />
         <button class="btn-small" style="background:${paid ? "#2e9e6b" : "var(--color-danger)"};" onclick="togglePayment('${s.id}')">${paid ? "✅ Ödədi" : "❌ Ödəmədi"}</button>
       </div>
     </div>`;
   }).join("");
 }
+
+window.updatePaymentDay = async (studentId, val) => {
+  const day = Number(val);
+  try {
+    await db.collection("students").doc(studentId).update({ paymentDay: (day >= 1 && day <= 31) ? day : firebase.firestore.FieldValue.delete() });
+    toast("Ödəniş günü yadda saxlandı");
+  } catch (err) {
+    console.error(err);
+    toast("Xəta: " + err.message);
+  }
+};
 
 window.togglePayment = async (studentId) => {
   const monthKey = currentPaymentMonth;
@@ -1827,6 +1873,7 @@ function fillGroupSelects() {
   });
   renderExamGroupsChecklist();
   fillStudentSelects();
+  fillPaymentGroupFilter();
 }
 
 function renderExamGroupsChecklist() {
