@@ -1208,9 +1208,18 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
           <h3>💳 Aylıq ödəniş izləməsi</h3>
           <div class="field-row">
             <div class="field"><label>Ay seçin</label><input type="month" id="payment-month-input" /></div>
-            <div class="field"><label>Qrup</label><select id="payment-group-filter"><option value="">— Hamısı —</option></select></div>
           </div>
-          <div id="payment-summary" class="muted-note" style="margin-top:4px;"></div>
+          <div class="field" style="margin-bottom:12px;">
+            <label>Qruplar (birdən çox seçə bilərsiniz, heç biri seçilməsə — hamısı)</label>
+            <div id="payment-groups-checklist" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;">
+              <div class="empty-state">Əvvəlcə qrup yaradın</div>
+            </div>
+          </div>
+          <div id="payment-summary" class="muted-note"></div>
+        </div>
+        <div class="card" id="payment-finance-card">
+          <h3>📊 Maliyyə hesabatı (bu ay, seçilmiş qruplar üzrə)</h3>
+          <div id="payment-finance-grid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px;"></div>
         </div>
         <div class="card">
           <div id="payments-list"><div class="empty-state">Yüklənir...</div></div>
@@ -1751,7 +1760,10 @@ function currentMonthKey() {
   return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
 }
 
-let currentPaymentGroupFilter = "";
+let currentPaymentGroupFilters = new Set();
+let currentPaymentYear = null;
+let yearPaymentsCache = {}; // "studentId-MM" -> paid bool
+let yearPaymentsUnsub = null;
 
 function initPaymentsPanel() {
   const input = document.getElementById("payment-month-input");
@@ -1759,26 +1771,33 @@ function initPaymentsPanel() {
   input.value = currentMonthKey();
   currentPaymentMonth = input.value;
   loadPayments(currentPaymentMonth);
+  loadYearPayments(currentPaymentMonth.split("-")[0]);
   input.addEventListener("change", () => {
     currentPaymentMonth = input.value;
+    const year = currentPaymentMonth.split("-")[0];
+    if (year !== currentPaymentYear) loadYearPayments(year);
     loadPayments(currentPaymentMonth);
   });
-  const groupFilter = document.getElementById("payment-group-filter");
-  if (groupFilter) {
-    groupFilter.addEventListener("change", () => {
-      currentPaymentGroupFilter = groupFilter.value;
-      renderPaymentsList();
-    });
-  }
 }
 
 function fillPaymentGroupFilter() {
-  const sel = document.getElementById("payment-group-filter");
-  if (!sel) return;
-  const current = sel.value;
-  sel.innerHTML = `<option value="">— Hamısı —</option>` + groupsCache.map(g => `<option value="${g.id}">${esc(g.name)}</option>`).join("");
-  if (current) sel.value = current;
+  const el = document.getElementById("payment-groups-checklist");
+  if (!el) return;
+  if (groupsCache.length === 0) { el.innerHTML = `<div class="empty-state">Əvvəlcə qrup yaradın</div>`; return; }
+  el.innerHTML = groupsCache.map(g => `
+    <label class="group-check-pill ${currentPaymentGroupFilters.has(g.id) ? "checked" : ""}">
+      <input type="checkbox" value="${g.id}" ${currentPaymentGroupFilters.has(g.id) ? "checked" : ""} onchange="togglePaymentGroupFilter('${g.id}', this.checked, this)" />
+      ${esc(g.name)}
+    </label>
+  `).join("");
 }
+
+window.togglePaymentGroupFilter = (groupId, checked, inputEl) => {
+  if (checked) currentPaymentGroupFilters.add(groupId);
+  else currentPaymentGroupFilters.delete(groupId);
+  inputEl.closest(".group-check-pill").classList.toggle("checked", checked);
+  renderPaymentsList();
+};
 
 function loadPayments(monthKey) {
   if (paymentsUnsub) { paymentsUnsub(); paymentsUnsub = null; }
@@ -1794,6 +1813,24 @@ function loadPayments(monthKey) {
   });
 }
 
+// İl boyu (12 ay) ödəniş vəziyyətini bir dəfəyə çəkir — kiçik illik zolaq üçün
+function loadYearPayments(year) {
+  currentPaymentYear = year;
+  if (yearPaymentsUnsub) { yearPaymentsUnsub(); yearPaymentsUnsub = null; }
+  yearPaymentsUnsub = db.collection("payments")
+    .where("monthKey", ">=", year + "-01")
+    .where("monthKey", "<=", year + "-12")
+    .onSnapshot(snap => {
+      yearPaymentsCache = {};
+      snap.forEach(d => {
+        const dd = d.data();
+        const mm = dd.monthKey.split("-")[1];
+        yearPaymentsCache[dd.studentId + "-" + mm] = !!dd.paid;
+      });
+      renderPaymentsList();
+    }, err => console.error("İllik ödəniş məlumatı yüklənmədi:", err));
+}
+
 // Şagirdin ödəniş günü keçib/yaxınlaşırsa xəbərdarlıq nişanı qaytarır (hələ ödəməyibsə)
 function paymentDueBadge(student) {
   if (!student.paymentDay) return "";
@@ -1804,36 +1841,83 @@ function paymentDueBadge(student) {
   return `<span class="badge">Ödəniş günü: ${student.paymentDay}</span>`;
 }
 
+const MONTH_ABBR = ["Y","F","M","A","M","İ","İ","A","S","O","N","D"];
+
+function renderYearStrip(studentId) {
+  let cells = "";
+  for (let m = 1; m <= 12; m++) {
+    const mm = String(m).padStart(2, "0");
+    const paid = yearPaymentsCache[studentId + "-" + mm];
+    const isCurrent = currentPaymentMonth && currentPaymentMonth.endsWith("-" + mm);
+    cells += `<span title="${m}-ci ay" style="width:16px; height:16px; border-radius:4px; display:inline-flex; align-items:center; justify-content:center; font-size:8px; font-weight:800; background:${paid ? "#2e9e6b" : "var(--color-gray)"}; color:${paid ? "#fff" : "var(--color-text-muted)"}; ${isCurrent ? "outline:1.5px solid var(--color-primary); outline-offset:1px;" : ""}">${MONTH_ABBR[m - 1]}</span>`;
+  }
+  return `<div style="display:flex; gap:3px; margin-top:6px;">${cells}</div>`;
+}
+
 function renderPaymentsList() {
   const el = document.getElementById("payments-list");
   const summaryEl = document.getElementById("payment-summary");
   fillPaymentGroupFilter();
   let active = studentsCache.filter(s => s.active !== false);
-  if (currentPaymentGroupFilter) active = active.filter(s => s.groupId === currentPaymentGroupFilter);
-  if (active.length === 0) { el.innerHTML = `<div class="empty-state">Bu seçimə uyğun şagird yoxdur</div>`; summaryEl.textContent = ""; return; }
+  if (currentPaymentGroupFilters.size > 0) active = active.filter(s => currentPaymentGroupFilters.has(s.groupId));
+  if (active.length === 0) { el.innerHTML = `<div class="empty-state">Bu seçimə uyğun şagird yoxdur</div>`; summaryEl.textContent = ""; renderPaymentFinance([]); return; }
 
   const sorted = active.slice().sort((a, b) => a.fullName.localeCompare(b.fullName, "az"));
   const paidCount = sorted.filter(s => paymentsCache[s.id] && paymentsCache[s.id].paid).length;
-  const groupLabel = currentPaymentGroupFilter ? ` — ${groupName(currentPaymentGroupFilter)}` : "";
+  const groupLabel = currentPaymentGroupFilters.size > 0 ? ` — ${Array.from(currentPaymentGroupFilters).map(groupName).join(", ")}` : "";
   summaryEl.textContent = `✅ ${paidCount} ödəyib · ❌ ${sorted.length - paidCount} ödəməyib (cəmi ${sorted.length} şagird${groupLabel})`;
+
+  renderPaymentFinance(sorted);
 
   el.innerHTML = sorted.map(s => {
     const p = paymentsCache[s.id];
     const paid = !!(p && p.paid);
     return `<div class="list-item" style="flex-wrap:wrap;">
-      <div class="list-item-info">
+      <div class="list-item-info" style="flex:1 1 100%;">
         <div class="list-item-title">${esc(s.fullName)}</div>
         <div class="list-item-sub" style="display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-top:4px;">
           <span class="badge">${groupName(s.groupId)}</span>
           ${!paid ? paymentDueBadge(s) : ""}
         </div>
+        ${renderYearStrip(s.id)}
       </div>
-      <div class="list-item-actions" style="display:flex; align-items:center; gap:8px;">
-        <input type="number" min="1" max="31" value="${s.paymentDay || ""}" placeholder="Gün" title="Ödəniş günü (ayın neçəsi)" style="width:56px; padding:6px; border:1.5px solid var(--color-gray); border-radius:8px; font-size:12px;" onchange="updatePaymentDay('${s.id}', this.value)" />
+      <div class="list-item-actions" style="display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap;">
+        <input type="number" min="1" max="31" value="${s.paymentDay || ""}" placeholder="Gün" title="Ödəniş günü (ayın neçəsi)" style="width:52px; padding:6px; border:1.5px solid var(--color-gray); border-radius:8px; font-size:12px;" onchange="updatePaymentDay('${s.id}', this.value)" />
+        <input type="number" min="0" value="${s.monthlyFee || ""}" placeholder="AZN" title="Aylıq ödəniş məbləği" style="width:64px; padding:6px; border:1.5px solid var(--color-gray); border-radius:8px; font-size:12px;" onchange="updateMonthlyFee('${s.id}', this.value)" />
         <button class="btn-small" style="background:${paid ? "#2e9e6b" : "var(--color-danger)"};" onclick="togglePayment('${s.id}')">${paid ? "✅ Ödədi" : "❌ Ödəmədi"}</button>
       </div>
     </div>`;
   }).join("");
+}
+
+function renderPaymentFinance(students) {
+  const grid = document.getElementById("payment-finance-grid");
+  if (!grid) return;
+  let expected = 0, collected = 0, withFee = 0;
+  students.forEach(s => {
+    const fee = Number(s.monthlyFee) || 0;
+    if (fee > 0) { expected += fee; withFee++; }
+    const paid = paymentsCache[s.id] && paymentsCache[s.id].paid;
+    if (paid) collected += fee;
+  });
+  const missing = expected - collected;
+  grid.innerHTML = `
+    <div class="stat-icon-card" style="background:linear-gradient(135deg,#eff6ff,#ffffff);">
+      <div class="stat-icon-badge grad-blue">🎯</div>
+      <div class="list-item-sub">Gözlənilən</div>
+      <div class="list-item-title" style="font-size:18px;">${expected} ₼</div>
+    </div>
+    <div class="stat-icon-card" style="background:linear-gradient(135deg,#ecfdf5,#ffffff);">
+      <div class="stat-icon-badge grad-green">💰</div>
+      <div class="list-item-sub">Toplanan</div>
+      <div class="list-item-title" style="font-size:18px;">${collected} ₼</div>
+    </div>
+    <div class="stat-icon-card" style="background:linear-gradient(135deg,#fef2f2,#ffffff);">
+      <div class="stat-icon-badge" style="background:linear-gradient(135deg,#f87171,#d94c4c);">⏳</div>
+      <div class="list-item-sub">Çatışmayan</div>
+      <div class="list-item-title" style="font-size:18px;">${missing} ₼</div>
+    </div>
+  `;
 }
 
 window.updatePaymentDay = async (studentId, val) => {
@@ -1841,6 +1925,17 @@ window.updatePaymentDay = async (studentId, val) => {
   try {
     await db.collection("students").doc(studentId).update({ paymentDay: (day >= 1 && day <= 31) ? day : firebase.firestore.FieldValue.delete() });
     toast("Ödəniş günü yadda saxlandı");
+  } catch (err) {
+    console.error(err);
+    toast("Xəta: " + err.message);
+  }
+};
+
+window.updateMonthlyFee = async (studentId, val) => {
+  const fee = Number(val);
+  try {
+    await db.collection("students").doc(studentId).update({ monthlyFee: (fee > 0) ? fee : firebase.firestore.FieldValue.delete() });
+    toast("Məbləğ yadda saxlandı");
   } catch (err) {
     console.error(err);
     toast("Xəta: " + err.message);
