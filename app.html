@@ -57,6 +57,9 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .form-group input:focus { border-color: var(--color-primary); background: var(--color-white); box-shadow: 0 0 0 3px rgba(11,60,93,0.10); }
 .error-box { display: none; background: rgba(217,76,76,0.08); color: var(--color-danger); border: 1px solid rgba(217,76,76,0.25); padding: 10px 12px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 16px; }
 .error-box.show { display: block; animation: fadeUp 0.25s ease; }
+.info-box { display: none; background: rgba(11,60,93,0.08); color: var(--color-primary); border: 1px solid rgba(11,60,93,0.25); padding: 12px 14px; border-radius: var(--radius-sm); font-size: 13px; line-height:1.6; margin-bottom: 16px; }
+.info-box.show { display: block; animation: fadeUp 0.25s ease; }
+.auth-switch-link { display:block; text-align:center; margin-top:14px; font-size:12.5px; color: var(--color-primary); font-weight:600; cursor:pointer; }
 .btn-primary { width: 100%; background: var(--color-primary); color: var(--color-white); padding: 13px; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background var(--transition), transform var(--transition); }
 .btn-primary:hover { background: var(--color-primary-light); }
 .btn-primary:active { transform: scale(0.98); }
@@ -854,9 +857,10 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
     <div class="login-header">
       <div class="login-logo">TTM</div>
       <h1>TTM Tədris Mərkəzi</h1>
-      <p>Şagird və Valideyn Portalı — TEST rejimi</p>
+      <p id="login-subtitle">Şagird və Valideyn Portalı — TEST rejimi</p>
     </div>
     <div class="error-box" id="error-box"></div>
+    <div class="info-box" id="info-box"></div>
     <form id="login-form" autocomplete="off">
       <div class="form-group">
         <label for="username">İstifadəçi adı</label>
@@ -871,6 +875,36 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
         <span class="spinner" id="btn-spinner"></span>
       </button>
     </form>
+
+    <form id="teacher-register-form" autocomplete="off" style="display:none;">
+      <div class="form-group">
+        <label for="tr-fullname">Ad Soyad</label>
+        <input type="text" id="tr-fullname" placeholder="Ad və Soyadınız" required />
+      </div>
+      <div class="form-group">
+        <label for="tr-phone">Telefon</label>
+        <input type="text" id="tr-phone" placeholder="Məs: 0501234567" required />
+      </div>
+      <div class="form-group">
+        <label for="tr-subject">Fənn</label>
+        <input type="text" id="tr-subject" placeholder="Məs: Riyaziyyat" required />
+      </div>
+      <div class="form-group">
+        <label for="tr-username">İstifadəçi adı</label>
+        <input type="text" id="tr-username" placeholder="Giriş üçün istifadəçi adı seçin" required />
+      </div>
+      <div class="form-group">
+        <label for="tr-password">Şifrə</label>
+        <input type="password" id="tr-password" placeholder="Ən azı 6 simvol" required />
+      </div>
+      <button type="submit" class="btn-primary" id="teacher-register-btn">
+        <span id="tr-btn-text">Qeydiyyatdan keç</span>
+        <span class="spinner" id="tr-btn-spinner"></span>
+      </button>
+    </form>
+
+    <span class="auth-switch-link" id="auth-switch-link">Müəllimsiniz? Qeydiyyatdan keçin</span>
+
     <div class="login-footer">© 2026 TTM Tədris Mərkəzi — Demo test səhifəsi</div>
     <button id="pwa-install-btn" style="display:none; width:100%; margin-top:14px; background:var(--color-light-gray); color:var(--color-primary); padding:11px; border-radius:var(--radius-sm); font-size:13.5px; font-weight:600;">📲 Tətbiqi Yüklə</button>
   </div>
@@ -1534,6 +1568,28 @@ auth.onAuthStateChanged(async (user) => {
     const data = snap.data();
   if (data.role === "admin") {
     document.getElementById("admin-name").textContent = data.fullName || "Admin";
+    document.querySelectorAll('.tab-btn[data-tab="tab-sitesettings"]').forEach(b => b.style.display = "");
+    showView("view-admin");
+    if (!window._adminInited) { window._adminInited = true; initAdminPanel(user.uid); }
+  } else if (data.role === "teacher") {
+    const tSnap = await db.collection("teachers").doc(user.uid).get();
+    const t = tSnap.exists ? tSnap.data() : null;
+    const expired = t && t.expiresAt && new Date(t.expiresAt) < new Date();
+    const active = t && t.status === "active" && !expired;
+    if (!active) {
+      showView("view-login");
+      if (!t || t.status === "pending") {
+        showInfo("Qeydiyyatınız qəbul edildi. Ödəniş təsdiqləndikdən sonra girişiniz aktivləşəcək — admin sizinlə əlaqə saxlayacaq.");
+      } else if (expired) {
+        showInfo("İllik aboneməntinizin müddəti bitib. Yenilədikdən sonra girişiniz bərpa olunacaq.");
+      } else {
+        showInfo("Hesabınız hazırda aktiv deyil. Admin ilə əlaqə saxlayın.");
+      }
+      await auth.signOut();
+      return;
+    }
+    document.getElementById("admin-name").textContent = data.fullName || "Müəllim";
+    document.querySelectorAll('.tab-btn[data-tab="tab-sitesettings"]').forEach(b => b.style.display = "none");
     showView("view-admin");
     if (!window._adminInited) { window._adminInited = true; initAdminPanel(user.uid); }
   } else if (data.role === "student") {
@@ -1557,13 +1613,17 @@ const loginBtn = document.getElementById("login-btn");
 const btnText = document.getElementById("btn-text");
 const btnSpinner = document.getElementById("btn-spinner");
 
+const infoBox = document.getElementById("info-box");
 function showError(msg) { errorBox.textContent = msg; errorBox.classList.add("show"); }
 function hideError() { errorBox.classList.remove("show"); errorBox.textContent = ""; }
+function showInfo(msg) { infoBox.textContent = msg; infoBox.classList.add("show"); }
+function hideInfo() { infoBox.classList.remove("show"); infoBox.textContent = ""; }
 function setLoading(v) { loginBtn.disabled = v; btnText.style.display = v ? "none" : "inline"; btnSpinner.style.display = v ? "inline-block" : "none"; }
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   hideError();
+  hideInfo();
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value;
   if (!username || !password) { showError("Zəhmət olmasa istifadəçi adı və şifrəni daxil edin."); return; }
@@ -1583,16 +1643,75 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
-document.getElementById("logout-btn-admin").addEventListener("click", () => auth.signOut());
+// ---- MÜƏLLİM QEYDİYYATI (özünəxidmət) ----
+const authSwitchLink = document.getElementById("auth-switch-link");
+const teacherRegisterForm = document.getElementById("teacher-register-form");
+let showingTeacherRegister = false;
+
+authSwitchLink.addEventListener("click", () => {
+  showingTeacherRegister = !showingTeacherRegister;
+  hideError(); hideInfo();
+  form.style.display = showingTeacherRegister ? "none" : "block";
+  teacherRegisterForm.style.display = showingTeacherRegister ? "block" : "none";
+  document.getElementById("login-subtitle").textContent = showingTeacherRegister
+    ? "Müəllim qeydiyyatı"
+    : "Şagird və Valideyn Portalı — TEST rejimi";
+  authSwitchLink.textContent = showingTeacherRegister ? "Girişə qayıt" : "Müəllimsiniz? Qeydiyyatdan keçin";
+});
+
+const trBtn = document.getElementById("teacher-register-btn");
+const trBtnText = document.getElementById("tr-btn-text");
+const trBtnSpinner = document.getElementById("tr-btn-spinner");
+function setTeacherRegisterLoading(v) { trBtn.disabled = v; trBtnText.style.display = v ? "none" : "inline"; trBtnSpinner.style.display = v ? "inline-block" : "none"; }
+
+teacherRegisterForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  hideError(); hideInfo();
+  const fullName = document.getElementById("tr-fullname").value.trim();
+  const phone = document.getElementById("tr-phone").value.trim();
+  const subject = document.getElementById("tr-subject").value.trim();
+  const username = document.getElementById("tr-username").value.trim().toLowerCase();
+  const password = document.getElementById("tr-password").value;
+  if (!fullName || !phone || !subject || !username || !password) { showError("Bütün sahələri doldurun."); return; }
+  if (password.length < 6) { showError("Şifrə ən azı 6 simvol olmalıdır."); return; }
+
+  setTeacherRegisterLoading(true);
+  try {
+    const email = username + USERNAME_DOMAIN;
+    const cred = await auth.createUserWithEmailAndPassword(email, password);
+    const uid = cred.user.uid;
+    await db.collection("users").doc(uid).set({ role: "teacher", fullName, username });
+    await db.collection("teachers").doc(uid).set({
+      fullName, phone, subject, username, status: "pending",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await auth.signOut();
+
+    teacherRegisterForm.reset();
+    authSwitchLink.click(); // giriş formasına qayıt
+    showInfo("Qeydiyyatınız qəbul edildi! Ödənişi (illik 50 AZN) təsdiqlədikdən sonra admin girişinizi aktivləşdirəcək.");
+  } catch (err) {
+    console.error(err);
+    if (err.code === "auth/email-already-in-use") {
+      showError("Bu istifadəçi adı artıq istifadə olunub, başqasını seçin.");
+    } else {
+      showError(err.message || "Qeydiyyat zamanı xəta baş verdi.");
+    }
+  } finally {
+    setTeacherRegisterLoading(false);
+  }
+});
+
+document.getElementById("logout-btn-admin").addEventListener("click", () => auth.signOut().then(() => window.location.reload()));
 document.getElementById("logout-btn-student").addEventListener("click", () => {
   if (typeof examExitGuardActive !== "undefined" && examExitGuardActive) {
     const leave = confirm("İmtahandan çıxmaq istədiyinizə əminsiniz? Çıxsanız sınaq indiki cavablarla bitəcək.");
     if (!leave) return;
     exitExamMode();
-    finishExam(false).then(() => auth.signOut());
+    finishExam(false).then(() => auth.signOut()).then(() => window.location.reload());
     return;
   }
-  auth.signOut();
+  auth.signOut().then(() => window.location.reload());
 });
 
 // =========================================================================
