@@ -1535,7 +1535,7 @@ auth.onAuthStateChanged(async (user) => {
   if (data.role === "admin") {
     document.getElementById("admin-name").textContent = data.fullName || "Admin";
     showView("view-admin");
-    if (!window._adminInited) { window._adminInited = true; initAdminPanel(); }
+    if (!window._adminInited) { window._adminInited = true; initAdminPanel(user.uid); }
   } else if (data.role === "student") {
     document.getElementById("student-name").textContent = data.fullName || "Şagird";
     showView("view-student");
@@ -1603,6 +1603,7 @@ document.getElementById("logout-btn-student").addEventListener("click", () => {
 const secondaryApp = firebase.initializeApp(firebaseConfig, "Secondary");
 const secondaryAuth = secondaryApp.auth();
 
+let currentTeacherId = null; // Bu admin/müəllimin öz məlumatlarını ayırmaq üçün UID
 let groupsCache = [];
 let studentsCache = [];
 
@@ -1713,7 +1714,34 @@ document.querySelectorAll(".tab-btn[data-stab]").forEach(btn => {
   });
 });
 
-function initAdminPanel() {
+// Köhnə (teacherId sahəsi olmayan) sənədləri bir dəfəlik bu adminin öz UID-inə bağlayır.
+// Çox-müəllimli sistemə keçidin ilk addımı: hər sənəd artıq hansı müəllimə aid olduğunu bilməlidir.
+async function migrateLegacyDataIfNeeded(uid) {
+  try {
+    const flagRef = db.collection("meta").doc("legacyMigration");
+    const flagSnap = await flagRef.get();
+    if (flagSnap.exists) return; // artıq köçürülüb, təkrar lazım deyil
+
+    const collections = ["groups", "students", "dailyReports", "quizResults", "examResults", "materials", "topics", "exams"];
+    for (const coll of collections) {
+      const snap = await db.collection(coll).get();
+      const missing = snap.docs.filter(d => !d.data().teacherId);
+      for (let i = 0; i < missing.length; i += 450) {
+        const chunk = missing.slice(i, i + 450);
+        const batch = db.batch();
+        chunk.forEach(d => batch.update(d.ref, { teacherId: uid }));
+        await batch.commit();
+      }
+    }
+    await flagRef.set({ migratedAt: firebase.firestore.FieldValue.serverTimestamp(), migratedBy: uid });
+  } catch (e) {
+    console.error("Köhnə məlumatların köçürülməsi zamanı xəta:", e);
+  }
+}
+
+async function initAdminPanel(uid) {
+  currentTeacherId = uid;
+  await migrateLegacyDataIfNeeded(uid);
   loadGroups();
   loadStudents();
   loadDailyReports();
@@ -2011,8 +2039,8 @@ function fillStudentSelects() {
 }
 
 async function loadGroups() {
-  db.collection("groups").orderBy("name").onSnapshot(snap => {
-    groupsCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  db.collection("groups").where("teacherId", "==", currentTeacherId).onSnapshot(snap => {
+    groupsCache = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.name || "").localeCompare(b.name || ""));
     fillGroupSelects();
     renderGroupsList();
   });
@@ -2070,7 +2098,7 @@ window.showGroupStudents = (groupId) => {
 document.getElementById("group-save-btn").addEventListener("click", async () => {
   const name = document.getElementById("group-name").value.trim();
   if (!name) { toast("Qrup adını yazın"); return; }
-  await db.collection("groups").add({ name, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  await db.collection("groups").add({ name, teacherId: currentTeacherId, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
   document.getElementById("group-name").value = "";
   toast("Qrup yaradıldı");
 });
@@ -2083,8 +2111,8 @@ window.deleteGroup = async (id) => {
 
 // ---- ŞAGİRDLƏR ----
 async function loadStudents() {
-  db.collection("students").orderBy("fullName").onSnapshot(snap => {
-    studentsCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  db.collection("students").where("teacherId", "==", currentTeacherId).onSnapshot(snap => {
+    studentsCache = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.fullName || "").localeCompare(b.fullName || ""));
     fillStudentSelects();
     renderStudentsList();
     if (document.getElementById("payments-list")) renderPaymentsList();
@@ -2171,7 +2199,7 @@ document.getElementById("student-save-btn").addEventListener("click", async () =
 
     await db.collection("users").doc(uid).set({ role: "student", fullName, username });
     await db.collection("students").doc(uid).set({
-      fullName, username, groupId, active: true,
+      fullName, username, groupId, teacherId: currentTeacherId, active: true,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
@@ -2202,7 +2230,7 @@ document.getElementById("daily-save-btn").addEventListener("click", async () => 
   const date = document.getElementById("daily-date").value;
   if (!studentId || !date) { toast("Şagird və tarix seçin"); return; }
   await db.collection("dailyReports").add({
-    studentId, date,
+    studentId, date, teacherId: currentTeacherId,
     attended: document.getElementById("daily-attended").checked,
     homeworkDone: document.getElementById("daily-homework").checked,
     prepPercentage: Number(document.getElementById("daily-prep").value) || 0,
@@ -2217,10 +2245,15 @@ document.getElementById("daily-save-btn").addEventListener("click", async () => 
 });
 
 function loadDailyReports() {
-  db.collection("dailyReports").orderBy("createdAt", "desc").limit(15).onSnapshot(snap => {
+  db.collection("dailyReports").where("teacherId", "==", currentTeacherId).onSnapshot(snap => {
     const el = document.getElementById("daily-list");
     if (snap.empty) { el.innerHTML = `<div class="empty-state">Hələ hesabat yoxdur</div>`; return; }
-    el.innerHTML = snap.docs.map(d => {
+    const docs = snap.docs.slice().sort((a, b) => {
+      const ta = a.data().createdAt ? a.data().createdAt.toMillis() : 0;
+      const tb = b.data().createdAt ? b.data().createdAt.toMillis() : 0;
+      return tb - ta;
+    }).slice(0, 15);
+    el.innerHTML = docs.map(d => {
       const r = d.data();
       const s = studentsCache.find(s => s.id === r.studentId);
       return `<div class="list-item">
@@ -2243,7 +2276,7 @@ document.getElementById("score-save-btn").addEventListener("click", async () => 
   const date = document.getElementById("score-date").value;
   if (!studentId || !subject || !date) { toast("Bütün sahələri doldurun"); return; }
   const coll = type === "quiz" ? "quizResults" : "examResults";
-  await db.collection(coll).add({ studentId, subject, score: value, date, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  await db.collection(coll).add({ studentId, subject, score: value, date, teacherId: currentTeacherId, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
   document.getElementById("score-subject").value = "";
   document.getElementById("score-value").value = "";
   toast("Nəticə əlavə edildi");
@@ -2267,11 +2300,11 @@ function loadScores() {
       </div>`;
     }).join("");
   };
-  db.collection("quizResults").orderBy("createdAt", "desc").limit(15).onSnapshot(snap => {
+  db.collection("quizResults").where("teacherId", "==", currentTeacherId).onSnapshot(snap => {
     quizData = snap.docs.map(d => ({ id: d.id, ...d.data(), _type: "quiz", _coll: "quizResults", _ts: d.data().createdAt ? d.data().createdAt.toMillis() : 0 }));
     render();
   });
-  db.collection("examResults").orderBy("createdAt", "desc").limit(15).onSnapshot(snap => {
+  db.collection("examResults").where("teacherId", "==", currentTeacherId).onSnapshot(snap => {
     examData = snap.docs.map(d => ({ id: d.id, ...d.data(), _type: "exam", _coll: "examResults", _ts: d.data().createdAt ? d.data().createdAt.toMillis() : 0 }));
     render();
   });
@@ -2285,17 +2318,22 @@ document.getElementById("material-save-btn").addEventListener("click", async () 
   const url = document.getElementById("material-url").value.trim();
   if (!groupId || !title || !url) { toast("Bütün sahələri doldurun"); return; }
   if (!/^https?:\/\//i.test(url)) { toast("Link http:// və ya https:// ilə başlamalıdır"); return; }
-  await db.collection("materials").add({ groupId, type, title, url, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  await db.collection("materials").add({ groupId, type, title, url, teacherId: currentTeacherId, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
   document.getElementById("material-title").value = "";
   document.getElementById("material-url").value = "";
   toast("Fayl əlavə edildi");
 });
 
 function loadMaterials() {
-  db.collection("materials").orderBy("createdAt", "desc").limit(20).onSnapshot(snap => {
+  db.collection("materials").where("teacherId", "==", currentTeacherId).onSnapshot(snap => {
     const el = document.getElementById("materials-list");
     if (snap.empty) { el.innerHTML = `<div class="empty-state">Hələ fayl əlavə edilməyib</div>`; return; }
-    el.innerHTML = snap.docs.map(d => {
+    const docs = snap.docs.slice().sort((a, b) => {
+      const ta = a.data().createdAt ? a.data().createdAt.toMillis() : 0;
+      const tb = b.data().createdAt ? b.data().createdAt.toMillis() : 0;
+      return tb - ta;
+    }).slice(0, 20);
+    el.innerHTML = docs.map(d => {
       const m = d.data();
       return `<div class="list-item">
         <div class="list-item-info">
@@ -2329,16 +2367,21 @@ document.getElementById("topic-save-btn").addEventListener("click", async () => 
   const groupId = document.getElementById("topic-group").value;
   const name = document.getElementById("topic-name").value.trim();
   if (!groupId || !name) { toast("Qrup və mövzu adını daxil edin"); return; }
-  await db.collection("topics").add({ groupId, name, completed: false, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  await db.collection("topics").add({ groupId, name, teacherId: currentTeacherId, completed: false, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
   document.getElementById("topic-name").value = "";
   toast("Mövzu əlavə edildi");
 });
 
 function loadTopics() {
-  db.collection("topics").orderBy("createdAt", "desc").limit(30).onSnapshot(snap => {
+  db.collection("topics").where("teacherId", "==", currentTeacherId).onSnapshot(snap => {
     const el = document.getElementById("topics-list");
     if (snap.empty) { el.innerHTML = `<div class="empty-state">Hələ mövzu yoxdur</div>`; return; }
-    el.innerHTML = snap.docs.map(d => {
+    const docs = snap.docs.slice().sort((a, b) => {
+      const ta = a.data().createdAt ? a.data().createdAt.toMillis() : 0;
+      const tb = b.data().createdAt ? b.data().createdAt.toMillis() : 0;
+      return tb - ta;
+    }).slice(0, 30);
+    el.innerHTML = docs.map(d => {
       const t = d.data();
       return `<div class="list-item">
         <div class="list-item-info">
@@ -3369,6 +3412,7 @@ document.getElementById("exam-save-btn").addEventListener("click", async () => {
       oldTs.forEach(d => delBatch.delete(d.ref));
       await delBatch.commit();
     } else {
+      meta.teacherId = currentTeacherId;
       meta.createdAt = firebase.firestore.FieldValue.serverTimestamp();
       const ref = await db.collection("exams").add(meta);
       examId = ref.id;
@@ -3493,8 +3537,12 @@ window.deleteExam = async (id) => {
 };
 
 function loadExams() {
-  db.collection("exams").orderBy("createdAt", "desc").onSnapshot(snap => {
-    examsCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  db.collection("exams").where("teacherId", "==", currentTeacherId).onSnapshot(snap => {
+    examsCache = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => {
+      const ta = a.createdAt ? a.createdAt.toMillis() : 0;
+      const tb = b.createdAt ? b.createdAt.toMillis() : 0;
+      return tb - ta;
+    });
 
     const analyticsSel = document.getElementById("analytics-exam-select");
     if (analyticsSel) {
