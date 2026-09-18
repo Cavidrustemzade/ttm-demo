@@ -1591,7 +1591,7 @@ auth.onAuthStateChanged(async (user) => {
     document.querySelectorAll('.tab-btn[data-tab="tab-sitesettings"]').forEach(b => b.style.display = "");
     document.getElementById("tab-btn-teacherreqs").style.display = "";
     showView("view-admin");
-    if (!window._adminInited) { window._adminInited = true; initAdminPanel(user.uid); }
+    if (!window._adminInited) { window._adminInited = true; initAdminPanel(user.uid, true); }
     loadTeacherRequests();
   } else if (data.role === "teacher") {
     const tSnap = await db.collection("teachers").doc(user.uid).get();
@@ -1614,7 +1614,7 @@ auth.onAuthStateChanged(async (user) => {
     document.querySelectorAll('.tab-btn[data-tab="tab-sitesettings"]').forEach(b => b.style.display = "none");
     document.getElementById("tab-btn-teacherreqs").style.display = "none";
     showView("view-admin");
-    if (!window._adminInited) { window._adminInited = true; initAdminPanel(user.uid); }
+    if (!window._adminInited) { window._adminInited = true; initAdminPanel(user.uid, false); }
   } else if (data.role === "student") {
     document.getElementById("student-name").textContent = data.fullName || "Şagird";
     showView("view-student");
@@ -1859,14 +1859,12 @@ document.querySelectorAll(".tab-btn[data-stab]").forEach(btn => {
   });
 });
 
-// Köhnə (teacherId sahəsi olmayan) sənədləri bir dəfəlik bu adminin öz UID-inə bağlayır.
-// Çox-müəllimli sistemə keçidin ilk addımı: hər sənəd artıq hansı müəllimə aid olduğunu bilməlidir.
+// Köhnə/"sahibsiz" (teacherId sahəsi olmayan) sənədləri superadminin öz UID-inə bağlayır.
+// Bir dəfəlik bayraqla məhdudlaşdırılmır ki, saytın yenilənməsi zamanı köhnə keşlənmiş
+// versiya ilə yaranan sənədlər də sonradan tapılıb düzəlsin. Yalnız superadmin üçün işə düşür —
+// əks halda bir müəllimin girişi başqasının "sahibsiz" sənədini öz üstünə keçirə bilərdi.
 async function migrateLegacyDataIfNeeded(uid) {
   try {
-    const flagRef = db.collection("meta").doc("legacyMigration");
-    const flagSnap = await flagRef.get();
-    if (flagSnap.exists) return; // artıq köçürülüb, təkrar lazım deyil
-
     const collections = ["groups", "students", "dailyReports", "quizResults", "examResults", "materials", "topics", "exams"];
     for (const coll of collections) {
       const snap = await db.collection(coll).get();
@@ -1878,15 +1876,14 @@ async function migrateLegacyDataIfNeeded(uid) {
         await batch.commit();
       }
     }
-    await flagRef.set({ migratedAt: firebase.firestore.FieldValue.serverTimestamp(), migratedBy: uid });
   } catch (e) {
-    console.error("Köhnə məlumatların köçürülməsi zamanı xəta:", e);
+    console.error("Sahibsiz məlumatların köçürülməsi zamanı xəta:", e);
   }
 }
 
-async function initAdminPanel(uid) {
+async function initAdminPanel(uid, isSuperAdmin) {
   currentTeacherId = uid;
-  await migrateLegacyDataIfNeeded(uid);
+  if (isSuperAdmin) await migrateLegacyDataIfNeeded(uid);
   loadGroups();
   loadStudents();
   loadDailyReports();
