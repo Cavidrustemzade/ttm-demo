@@ -927,6 +927,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
       <button class="tab-btn" data-tab="tab-exams">Sınaqlar</button>
       <button class="tab-btn" data-tab="tab-payments">Ödənişlər</button>
       <button class="tab-btn" data-tab="tab-sitesettings">Sayt Ayarları</button>
+      <button class="tab-btn" data-tab="tab-teacherreqs" id="tab-btn-teacherreqs">Müəllim sorğuları</button>
     </div>
 
     <!-- ŞAGİRDLƏR -->
@@ -1291,6 +1292,22 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 
       <button class="btn-small" id="ss-save-btn" style="width:100%;">💾 Sayt Ayarlarını Yadda Saxla</button>
     </div>
+
+    <!-- MÜƏLLİM SORĞULARI (yalnız super admin) -->
+    <div class="tab-panel" id="tab-teacherreqs">
+      <div class="card">
+        <h3>⏳ Gözləyən qeydiyyatlar</h3>
+        <div id="teacherreqs-pending-list"><div class="empty-state">Yüklənir...</div></div>
+      </div>
+      <div class="card">
+        <h3>✅ Aktiv müəllimlər</h3>
+        <div id="teacherreqs-active-list"><div class="empty-state">Yüklənir...</div></div>
+      </div>
+      <div class="card">
+        <h3>🚫 Rədd edilmiş / deaktiv</h3>
+        <div id="teacherreqs-other-list"><div class="empty-state">Yüklənir...</div></div>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -1555,7 +1572,10 @@ function showView(id) {
   });
 }
 
+let suppressAuthRouting = false; // müəllim qeydiyyatı zamanı avtomatik giriş auth router-i ilə yarışmasın deyə
+
 auth.onAuthStateChanged(async (user) => {
+  if (suppressAuthRouting) return;
   if (!user) { showView("view-login"); return; }
   try {
     const snap = await db.collection("users").doc(user.uid).get();
@@ -1569,12 +1589,14 @@ auth.onAuthStateChanged(async (user) => {
   if (data.role === "admin") {
     document.getElementById("admin-name").textContent = data.fullName || "Admin";
     document.querySelectorAll('.tab-btn[data-tab="tab-sitesettings"]').forEach(b => b.style.display = "");
+    document.getElementById("tab-btn-teacherreqs").style.display = "";
     showView("view-admin");
     if (!window._adminInited) { window._adminInited = true; initAdminPanel(user.uid); }
+    loadTeacherRequests();
   } else if (data.role === "teacher") {
     const tSnap = await db.collection("teachers").doc(user.uid).get();
     const t = tSnap.exists ? tSnap.data() : null;
-    const expired = t && t.expiresAt && new Date(t.expiresAt) < new Date();
+    const expired = t && t.expiresAt && t.expiresAt.toDate() < new Date();
     const active = t && t.status === "active" && !expired;
     if (!active) {
       showView("view-login");
@@ -1590,6 +1612,7 @@ auth.onAuthStateChanged(async (user) => {
     }
     document.getElementById("admin-name").textContent = data.fullName || "Müəllim";
     document.querySelectorAll('.tab-btn[data-tab="tab-sitesettings"]').forEach(b => b.style.display = "none");
+    document.getElementById("tab-btn-teacherreqs").style.display = "none";
     showView("view-admin");
     if (!window._adminInited) { window._adminInited = true; initAdminPanel(user.uid); }
   } else if (data.role === "student") {
@@ -1676,6 +1699,7 @@ teacherRegisterForm.addEventListener("submit", async (e) => {
   if (password.length < 6) { showError("Şifrə ən azı 6 simvol olmalıdır."); return; }
 
   setTeacherRegisterLoading(true);
+  suppressAuthRouting = true;
   try {
     const email = username + USERNAME_DOMAIN;
     const cred = await auth.createUserWithEmailAndPassword(email, password);
@@ -1697,8 +1721,10 @@ teacherRegisterForm.addEventListener("submit", async (e) => {
     } else {
       showError(err.message || "Qeydiyyat zamanı xəta baş verdi.");
     }
+    if (auth.currentUser) { try { await auth.signOut(); } catch (e2) { /* etinasız */ } }
   } finally {
     setTeacherRegisterLoading(false);
+    suppressAuthRouting = false;
   }
 });
 
@@ -3824,6 +3850,92 @@ let ssLoaded = false;
 document.querySelectorAll('.tab-btn[data-tab="tab-sitesettings"]').forEach(btn => {
   btn.addEventListener("click", () => { if (!ssLoaded) { ssLoaded = true; loadSiteSettings(); } });
 });
+
+// =========================================================================
+// MÜƏLLİM SORĞULARI (yalnız super admin) — özünəqeydiyyatdan keçən müəllimləri
+// təsdiqləmək/rədd etmək/uzatmaq/deaktiv etmək üçün.
+// =========================================================================
+const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
+
+function formatDate(ts) {
+  if (!ts) return "—";
+  try { return ts.toDate().toLocaleDateString("az-AZ"); } catch (e) { return "—"; }
+}
+
+function loadTeacherRequests() {
+  db.collection("teachers").onSnapshot(snap => {
+    const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const pending = all.filter(t => t.status === "pending");
+    const active = all.filter(t => t.status === "active");
+    const other = all.filter(t => t.status !== "pending" && t.status !== "active");
+
+    const pendingEl = document.getElementById("teacherreqs-pending-list");
+    pendingEl.innerHTML = pending.length === 0 ? `<div class="empty-state">Gözləyən qeydiyyat yoxdur</div>` : pending.map(t => `
+      <div class="list-item">
+        <div class="list-item-info">
+          <div class="list-item-title">${esc(t.fullName)} — ${esc(t.subject || "")}</div>
+          <div class="list-item-sub">@${esc(t.username)} · ${esc(t.phone || "")} · ${formatDate(t.createdAt)}</div>
+        </div>
+        <div class="list-item-actions">
+          <button class="btn-small" onclick="approveTeacher('${t.id}')">Təsdiqlə</button>
+          <button class="btn-danger" onclick="rejectTeacher('${t.id}')">Rədd et</button>
+        </div>
+      </div>`).join("");
+
+    const activeEl = document.getElementById("teacherreqs-active-list");
+    activeEl.innerHTML = active.length === 0 ? `<div class="empty-state">Aktiv müəllim yoxdur</div>` : active.map(t => {
+      const expiringSoon = t.expiresAt && (t.expiresAt.toDate() - new Date()) < (30 * 24 * 60 * 60 * 1000);
+      return `<div class="list-item">
+        <div class="list-item-info">
+          <div class="list-item-title">${esc(t.fullName)} — ${esc(t.subject || "")}</div>
+          <div class="list-item-sub">@${esc(t.username)} · ${esc(t.phone || "")} · Bitmə tarixi: <span style="${expiringSoon ? "color:var(--color-danger); font-weight:700;" : ""}">${formatDate(t.expiresAt)}</span></div>
+        </div>
+        <div class="list-item-actions">
+          <button class="btn-outline" onclick="extendTeacher('${t.id}')">+1 il uzat</button>
+          <button class="btn-danger" onclick="deactivateTeacher('${t.id}')">Deaktiv et</button>
+        </div>
+      </div>`;
+    }).join("");
+
+    const otherEl = document.getElementById("teacherreqs-other-list");
+    otherEl.innerHTML = other.length === 0 ? `<div class="empty-state">Yoxdur</div>` : other.map(t => `
+      <div class="list-item">
+        <div class="list-item-info">
+          <div class="list-item-title">${esc(t.fullName)} — ${esc(t.subject || "")}</div>
+          <div class="list-item-sub">@${esc(t.username)} · <span class="badge">${t.status === "rejected" ? "Rədd edilib" : "Deaktiv"}</span></div>
+        </div>
+        <div class="list-item-actions"><button class="btn-small" onclick="approveTeacher('${t.id}')">Aktivləşdir</button></div>
+      </div>`).join("");
+  }, err => console.error("teachers xətası:", err));
+}
+
+window.approveTeacher = async (uid) => {
+  if (!confirm("Ödənişi aldığınızı təsdiqləyirsiniz? Bu, 1 illik giriş açacaq.")) return;
+  const expiresAt = firebase.firestore.Timestamp.fromDate(new Date(Date.now() + ONE_YEAR_MS));
+  await db.collection("teachers").doc(uid).update({ status: "active", expiresAt, approvedAt: firebase.firestore.FieldValue.serverTimestamp() });
+  toast("Müəllim təsdiqləndi");
+};
+
+window.rejectTeacher = async (uid) => {
+  if (!confirm("Bu qeydiyyatı rədd etmək istədiyinizə əminsiniz?")) return;
+  await db.collection("teachers").doc(uid).update({ status: "rejected" });
+  toast("Rədd edildi");
+};
+
+window.extendTeacher = async (uid) => {
+  const tSnap = await db.collection("teachers").doc(uid).get();
+  const t = tSnap.data();
+  const base = (t.expiresAt && t.expiresAt.toDate() > new Date()) ? t.expiresAt.toDate() : new Date();
+  const expiresAt = firebase.firestore.Timestamp.fromDate(new Date(base.getTime() + ONE_YEAR_MS));
+  await db.collection("teachers").doc(uid).update({ status: "active", expiresAt });
+  toast("1 il uzadıldı");
+};
+
+window.deactivateTeacher = async (uid) => {
+  if (!confirm("Bu müəllimin girişini deaktiv etmək istədiyinizə əminsiniz?")) return;
+  await db.collection("teachers").doc(uid).update({ status: "inactive" });
+  toast("Deaktiv edildi");
+};
 
 
 function openImageLightbox(src) {
