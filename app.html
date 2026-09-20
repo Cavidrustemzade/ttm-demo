@@ -5555,5 +5555,259 @@ if (pwaBtn) {
   if (isIOS && !isStandalone) pwaBtn.style.display = "block";
 }
 </script>
+<script>
+/* TTM əlavə funksiyalar: (1) Sınaq şablonunu .db faylına saxla/yüklə  (2) Qrup üzrə nəticələr + PDF/Excel + 1-ci yer */
+(function () {
+  const $ = id => document.getElementById(id);
+
+  function dl(blob, name) {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+  }
+  // Telefonda birbaşa WhatsApp və s. paylaşma; alınmasa yükləyir
+  async function shareOrDl(blob, name, type) {
+    try {
+      const f = new File([blob], name, { type });
+      if (navigator.canShare && navigator.canShare({ files: [f] })) {
+        await navigator.share({ files: [f], title: name });
+        return;
+      }
+    } catch (e) { if (e && e.name === "AbortError") return; }
+    dl(blob, name);
+  }
+  const safeName = s => (s || "").replace(/[^\wƏəıİĞğÜüŞşÖöÇç -]/g, "").trim() || "fayl";
+
+  // ================= 1) SINAQ FAYLI (.db) =================
+  const box = document.createElement("div");
+  box.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px";
+  box.innerHTML =
+    `<button type="button" class="btn-outline" id="ex-export">💾 Fayla saxla (.db)</button>` +
+    `<label class="btn-outline" style="cursor:pointer;display:inline-block">📂 Fayldan yüklə<input type="file" id="ex-import" style="display:none"></label>`;
+  $("exam-form-title").after(box);
+
+  $("ex-export").addEventListener("click", () => {
+    if (!examQuestions.length) { toast("Əvvəlcə sual əlavə edin"); return; }
+    const data = {
+      format: "ttm-exam", version: 1,
+      title: $("exam-title").value.trim(),
+      topic: $("exam-topic").value.trim(),
+      timeLimitMinutes: Number($("exam-timelimit").value) || 30,
+      videoUrl: $("exam-video").value.trim(),
+      texts: examTexts,
+      questions: examQuestions
+    };
+    dl(new Blob([JSON.stringify(data)], { type: "application/octet-stream" }), safeName(data.title || "sinaq") + ".db");
+    toast("✅ Fayl yadda saxlandı (.db)");
+  });
+
+  $("ex-import").addEventListener("change", async (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    try {
+      const d = JSON.parse(await f.text());
+      if (d.format !== "ttm-exam" || !Array.isArray(d.questions)) throw new Error("format");
+      if (examQuestions.length && !confirm("Hazırkı suallar silinib faylın sualları yüklənəcək. Davam edilsin?")) { e.target.value = ""; return; }
+      examTexts = d.texts || [];
+      examQuestions = d.questions.map(q => Object.assign(
+        { type: "mcq", text: "", imageBase64: "", options: ["A", "B", "C", "D", "E"], correctIndex: 0, correctAnswer: "", textId: "" }, q));
+      if (d.title) $("exam-title").value = d.title;
+      if (d.topic) $("exam-topic").value = d.topic;
+      if (d.timeLimitMinutes) $("exam-timelimit").value = d.timeLimitMinutes;
+      $("exam-video").value = d.videoUrl || "";
+      renderTextsBuilder();
+      toast(`✅ ${examQuestions.length} sual yükləndi. Qrupu və tarixi seçib yadda saxlayın`);
+    } catch (err) {
+      console.error(err);
+      toast("❌ Bu fayl düzgün sınaq faylı deyil");
+    }
+    e.target.value = "";
+  });
+
+  // ================= 2) QRUP ÜZRƏ NƏTİCƏLƏR =================
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML =
+    `<h3>🏫 Qrup üzrə nəticələr</h3>` +
+    `<div class="field-row">` +
+    `<div class="field"><label>Qrup</label><select id="gr-group"></select></div>` +
+    `<div class="field"><label>Sınaq</label><select id="gr-exam"></select></div></div>` +
+    `<div id="gr-out"><div class="empty-state">Qrup və sınaq seçin</div></div>` +
+    `<div id="gr-actions" style="display:none;gap:8px;margin-top:12px;flex-wrap:wrap">` +
+    `<button class="btn-small" id="gr-pdf">📄 PDF (paylaş)</button>` +
+    `<button class="btn-outline" id="gr-csv">📊 Excel</button></div>`;
+  const scoresTab = $("tab-scores");
+  scoresTab.insertBefore(card, scoresTab.firstChild);
+
+  let rows = [], meta = {}, lastSig = "";
+
+  function examsOfGroup(gid) {
+    return examsCache.filter(e => (e.groupIds || (e.groupId ? [e.groupId] : [])).includes(gid));
+  }
+
+  function fillSelects() {
+    const sig = groupsCache.map(g => g.id + g.name).join("|") + "#" + examsCache.map(e => e.id + e.title).join("|");
+    if (sig === lastSig) return;
+    lastSig = sig;
+    const gSel = $("gr-group"), eSel = $("gr-exam");
+    const g0 = gSel.value, e0 = eSel.value;
+    gSel.innerHTML = `<option value="">— Seçin —</option>` + groupsCache.map(g => `<option value="${g.id}">${esc(g.name)}</option>`).join("");
+    if (g0) gSel.value = g0;
+    const list = gSel.value ? examsOfGroup(gSel.value) : [];
+    eSel.innerHTML = `<option value="">— Seçin —</option>` + list.map(x => `<option value="${x.id}">${esc(x.title)}</option>`).join("");
+    if (e0) eSel.value = e0;
+  }
+  setInterval(fillSelects, 1500);
+
+  $("gr-group").addEventListener("change", () => {
+    const list = examsOfGroup($("gr-group").value);
+    $("gr-exam").innerHTML = `<option value="">— Seçin —</option>` + list.map(x => `<option value="${x.id}">${esc(x.title)}</option>`).join("");
+    loadResults();
+  });
+  $("gr-exam").addEventListener("change", loadResults);
+
+  async function loadResults() {
+    const gid = $("gr-group").value, eid = $("gr-exam").value, out = $("gr-out");
+    rows = [];
+    $("gr-actions").style.display = "none";
+    if (!gid || !eid) { out.innerHTML = `<div class="empty-state">Qrup və sınaq seçin</div>`; return; }
+    out.innerHTML = `<div class="empty-state">Yüklənir...</div>`;
+    try {
+      const snap = await db.collection("examAttempts").where("examId", "==", eid).get();
+      const att = {};
+      snap.forEach(d => { const a = d.data(); att[a.studentId] = a; });
+      rows = studentsCache.filter(s => s.active !== false && s.groupId === gid).map(s => {
+        const a = att[s.id];
+        if (!a) return { name: s.fullName, done: false };
+        const st = computeAttemptStats(a.perQuestion);
+        return { name: s.fullName, done: true, correct: st.correctCount, total: st.totalCount, score: st.score, pending: st.pendingGrading };
+      });
+      rows.sort((a, b) => (b.done - a.done) || ((b.score || 0) - (a.score || 0)) || a.name.localeCompare(b.name, "az"));
+      const done = rows.filter(r => r.done);
+      done.forEach(r => { r.rank = 1 + done.filter(x => x.score > r.score).length; });
+      const tops = done.filter(r => r.rank === 1);
+      const avg = done.length ? Math.round(done.reduce((s, r) => s + r.score, 0) / done.length) : 0;
+      const g = groupsCache.find(x => x.id === gid), ex = examsCache.find(x => x.id === eid);
+      meta = {
+        group: g ? g.name : "", exam: ex ? ex.title : "", avg, n: done.length,
+        top: tops.map(r => r.name).join(", "), topScore: tops.length ? tops[0].score : 0,
+        pending: done.some(r => r.pending)
+      };
+      render();
+    } catch (err) {
+      console.error(err);
+      out.innerHTML = `<div class="empty-state">Xəta: ${esc(err.message)}</div>`;
+    }
+  }
+
+  function render() {
+    const out = $("gr-out");
+    if (!rows.length) { out.innerHTML = `<div class="empty-state">Bu qrupda şagird yoxdur</div>`; return; }
+    const medal = r => r === 1 ? "🥇" : r === 2 ? "🥈" : r === 3 ? "🥉" : r + ".";
+    out.innerHTML =
+      (meta.n ? `<div style="background:linear-gradient(135deg,#fef3c7,#fffbeb);border:1px solid #f0d17c;border-radius:14px;padding:14px;text-align:center;margin-bottom:12px">
+        <div style="font-size:30px">🏆</div>
+        <div style="font-weight:800;color:#a9700a;font-size:15px">Təbriklər! 1-ci yer: ${esc(meta.top)}</div>
+        <div class="list-item-sub">${meta.topScore}% nəticə ilə əla iş! 🎉</div></div>` : "") +
+      `<div class="muted-note" style="margin-bottom:10px">Qrup ortalaması: <b>${meta.avg}%</b> · İşləyən: ${meta.n}/${rows.length}${meta.pending ? " · ⏳ ətraflı suallar hələ yoxlanılmayıb" : ""}</div>` +
+      rows.map(r => `<div class="list-item">
+        <div class="list-item-info">
+          <div class="list-item-title">${r.done ? medal(r.rank) : "—"} ${esc(r.name)}</div>
+          <div class="list-item-sub">${r.done ? `✅ ${r.correct}/${r.total} düzgün` : "İşləməyib"}</div>
+        </div>
+        <div style="font-weight:800;color:var(--color-primary)">${r.done ? r.score + "%" : ""}</div>
+      </div>`).join("");
+    $("gr-actions").style.display = "flex";
+  }
+
+  // ---- Excel (CSV, UTF-8) ----
+  $("gr-csv").addEventListener("click", () => {
+    const q = v => `"${String(v).replace(/"/g, '""')}"`;
+    const lines = [
+      [q(meta.group), q(meta.exam)].join(";"),
+      [q("Qrup ortalaması"), q(meta.avg + "%")].join(";"),
+      [q("1-ci yer"), q(meta.top + " (" + meta.topScore + "%)")].join(";"),
+      "",
+      ["№", "Ad Soyad", "Düzgün", "Cəmi", "Bal %"].map(q).join(";")
+    ];
+    rows.forEach(r => lines.push(r.done
+      ? [r.rank, q(r.name), r.correct, r.total, r.score].join(";")
+      : ["", q(r.name), "", "", q("işləməyib")].join(";")));
+    const blob = new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+    shareOrDl(blob, safeName(meta.group + " " + meta.exam) + ".csv", "text/csv");
+  });
+
+  // ---- PDF ----
+  $("gr-pdf").addEventListener("click", async () => {
+    const btn = $("gr-pdf");
+    btn.disabled = true;
+    toast("PDF hazırlanır...");
+    try {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
+      await ensurePdfFont(doc);
+      const W = 210;
+      doc.setFillColor(11, 60, 93);
+      doc.rect(0, 0, W, 24, "F");
+      doc.setTextColor(255, 255, 255);
+      setPdfFont(doc);
+      doc.setFontSize(15);
+      boldText(doc, "TTM Tədris Mərkəzi", W / 2, 15, { align: "center" });
+
+      let y = 34;
+      doc.setTextColor(11, 60, 93);
+      doc.setFontSize(12);
+      const tl = doc.splitTextToSize(`${meta.group} — ${meta.exam}`, W - 28);
+      boldText(doc, tl, 14, y);
+      y += tl.length * 6 + 2;
+      doc.setFontSize(10);
+      doc.setTextColor(60, 60, 60);
+      doc.text(`Qrup ortalaması: ${meta.avg}%   |   İşləyən: ${meta.n}/${rows.length}`, 14, y);
+      y += 8;
+      if (meta.n) {
+        doc.setTextColor(180, 120, 0);
+        doc.setFontSize(12);
+        const tp = doc.splitTextToSize(`Təbriklər! 1-ci yer: ${meta.top} (${meta.topScore}%)`, W - 28);
+        boldText(doc, tp, 14, y);
+        y += tp.length * 6 + 4;
+      }
+
+      const head = () => {
+        doc.setFillColor(11, 60, 93);
+        doc.rect(14, y, W - 28, 8, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(10);
+        doc.text("№", 17, y + 5.5);
+        doc.text("Ad Soyad", 28, y + 5.5);
+        doc.text("Düzgün", 142, y + 5.5);
+        doc.text("Bal", 176, y + 5.5);
+        y += 8;
+      };
+      head();
+      rows.forEach((r, i) => {
+        if (y > 280) { doc.addPage(); y = 15; head(); }
+        if (i % 2 === 0) { doc.setFillColor(240, 244, 248); doc.rect(14, y, W - 28, 8, "F"); }
+        doc.setTextColor(30, 30, 30);
+        doc.setFontSize(10);
+        doc.text(r.done ? String(r.rank) : "-", 17, y + 5.5);
+        doc.text(doc.splitTextToSize(r.name, 108)[0], 28, y + 5.5);
+        doc.text(r.done ? `${r.correct}/${r.total}` : "işləməyib", 142, y + 5.5);
+        doc.text(r.done ? r.score + "%" : "", 176, y + 5.5);
+        y += 8;
+      });
+      await shareOrDl(doc.output("blob"), safeName(meta.group + " " + meta.exam) + ".pdf", "application/pdf");
+    } catch (err) {
+      console.error(err);
+      toast("PDF xətası: " + err.message);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+})();
+
+</script>
 </body>
 </html>
