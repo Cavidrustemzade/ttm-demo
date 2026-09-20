@@ -1883,7 +1883,7 @@ async function migrateLegacyDataIfNeeded(uid) {
 
 async function initAdminPanel(uid, isSuperAdmin) {
   currentTeacherId = uid;
-  if (isSuperAdmin) await migrateLegacyDataIfNeeded(uid);
+  if (isSuperAdmin) migrateLegacyDataIfNeeded(uid);
   loadGroups();
   loadStudents();
   loadDailyReports();
