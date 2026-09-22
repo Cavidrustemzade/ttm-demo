@@ -5070,6 +5070,81 @@ window.aiAnalyze = async (i, btn) => {
   btn.disabled = false;
 };
 
+window.generatePractice = async (i, btn) => {
+  const ctx = window._resultCtx;
+  if (!ctx) return;
+  const { ex, attempt } = ctx;
+  const q = ex.questions[i];
+  const box = document.getElementById("practice-" + i);
+  btn.disabled = true;
+  box.innerHTML = `<div class="muted-note">🧠 Yeni sual hazırlanır...</div>`;
+  try {
+    const token = await auth.currentUser.getIdToken();
+    const r = await fetch(AI_WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+      body: JSON.stringify({ mode: "practice", image: q.imageBase64 || "", text: q.text || "", type: q.type })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || r.status);
+    let clean = d.answer.trim().replace(/^```json\s*/i, "").replace(/```\s*$/i, "");
+    const pr = JSON.parse(clean);
+    window._practiceCache[i] = pr;
+    renderPracticeBox(i);
+  } catch (e) {
+    box.innerHTML = `<div class="muted-note">Xəta: ${esc(e.message)} — yenidən cəhd edin.</div>`;
+  }
+  btn.disabled = false;
+};
+
+function renderPracticeBox(i) {
+  const pr = window._practiceCache[i];
+  const box = document.getElementById("practice-" + i);
+  if (!pr || !box) return;
+  const answered = window._practiceAnswered && window._practiceAnswered[i] !== undefined;
+  let html = `<div class="card" style="background:var(--color-light-gray); margin-top:10px;">
+    <div style="font-weight:700; margin-bottom:10px;">🧠 Bənzər sual: ${esc(pr.question)}</div>`;
+  if (pr.type === "open") {
+    html += `<div class="field"><input type="text" id="practice-input-${i}" placeholder="Cavabınızı yazın" ${answered ? "disabled" : ""} value="${answered ? esc(String(window._practiceAnswered[i])) : ""}" /></div>
+      ${!answered ? `<button class="btn-small" onclick="checkPractice(${i})">Yoxla</button>` : ""}`;
+  } else {
+    html += `<div style="display:flex; gap:8px; flex-wrap:wrap;">${(pr.options || []).map((opt, oi) => `
+      <button type="button" onclick="checkPractice(${i}, ${oi})" ${answered ? "disabled" : ""}
+        style="min-width:44px; padding:10px; border-radius:10px; font-weight:800; border:2px solid var(--color-gray); background:${answered && oi === pr.correctIndex ? "rgba(46,158,107,.15)" : answered && oi === window._practiceAnswered[i] ? "rgba(217,76,76,.12)" : "var(--color-white)"};">
+        ${OPTION_LETTERS[oi]}
+      </button>`).join("")}</div>`;
+  }
+  html += `<div id="practice-result-${i}" style="margin-top:10px;"></div></div>`;
+  box.innerHTML = html;
+  if (answered) showPracticeResult(i);
+}
+
+window.checkPractice = (i, selectedIndex) => {
+  const pr = window._practiceCache[i];
+  if (!window._practiceAnswered) window._practiceAnswered = {};
+  let given, isCorrect;
+  if (pr.type === "open") {
+    given = (document.getElementById("practice-input-" + i) || {}).value || "";
+    isCorrect = String(given).trim().toLowerCase() === String(pr.correctAnswer || "").trim().toLowerCase();
+  } else {
+    given = selectedIndex;
+    isCorrect = selectedIndex === pr.correctIndex;
+  }
+  window._practiceAnswered[i] = given;
+  window._practiceCorrect = window._practiceCorrect || {};
+  window._practiceCorrect[i] = isCorrect;
+  renderPracticeBox(i);
+};
+
+function showPracticeResult(i) {
+  const pr = window._practiceCache[i];
+  const isCorrect = window._practiceCorrect && window._practiceCorrect[i];
+  const el = document.getElementById("practice-result-" + i);
+  if (!el) return;
+  el.innerHTML = `<div style="font-weight:700; color:${isCorrect ? "#2e9e6b" : "var(--color-danger)"};">${isCorrect ? "✅ Düzgün!" : "❌ Səhv."}</div>
+    <div class="muted-note" style="margin-top:6px;">${esc(pr.explanation || "")}</div>`;
+}
+
 window.viewPastResult = async (attemptId) => {
   const a = studentAttemptsCache.find(x => x.id === attemptId);
   const exMeta = studentExamsCache.find(e => e.id === a.examId);
@@ -5098,6 +5173,7 @@ function openResultQuestionDetail(i) {
   box.innerHTML = window._resultDetailHtml[i] || "";
   const _c = window._aiCache && window._aiCache[i], _o = document.getElementById("ai-out-" + i);
   if (_c && _o) _o.innerHTML = esc(_c).replace(/\n/g, "<br>");
+  if (window._practiceCache && window._practiceCache[i]) renderPracticeBox(i);
   document.querySelectorAll(".exam-result-mini-btn").forEach((b) => b.classList.toggle("active", Number(b.dataset.idx) === i));
   document.querySelectorAll(".exam-result-nav-btn").forEach((b, idx) => b.classList.toggle("active", idx === i));
 }
@@ -5198,7 +5274,7 @@ function renderExamResult(ex, attempt, photoMap) {
         ${imgHtml}
         <div class="option-btn ${pq.isCorrect ? "correct" : "wrong"}" style="pointer-events:none; font-size:13px;">Sizin cavabınız: ${esc(pq.selected || "(boş)")}</div>
         ${!pq.isCorrect ? `<div class="option-btn correct" style="pointer-events:none; font-size:13px;">Düzgün cavab: ${esc(q.correctAnswer)}</div>` : ""}
-        ${!pq.isCorrect ? `<button class="btn-outline" onclick="aiAnalyze(${i}, this)">🤖 AI ilə analiz et</button><div id="ai-out-${i}" class="muted-note" style="color:var(--color-text)"></div>` : ""}
+        ${!pq.isCorrect ? `<button class="btn-outline" onclick="aiAnalyze(${i}, this)">🤖 AI ilə analiz et</button><div id="ai-out-${i}" class="muted-note" style="color:var(--color-text)"></div><button class="btn-outline" style="margin-top:8px;" onclick="generatePractice(${i}, this)">🧠 Bənzər sual həll et</button><div id="practice-${i}"></div>` : ""}
       </div>`;
     }
     return `<div class="list-item exam-result-row ${rowClass}" style="flex-direction:column; align-items:flex-start; gap:6px;">
@@ -5213,13 +5289,16 @@ function renderExamResult(ex, attempt, photoMap) {
         }).join("")}
       </div>
       <div class="list-item-sub">🟢 Düzgün: ${OPTION_LETTERS[q.correctIndex]}${!pq.isCorrect && pq.selected !== null ? ` · 🔴 Sizin cavabınız: ${OPTION_LETTERS[pq.selected]}` : ""}</div>
-      ${!pq.isCorrect ? `<button class="btn-outline" onclick="aiAnalyze(${i}, this)">🤖 AI ilə analiz et</button><div id="ai-out-${i}" class="muted-note" style="color:var(--color-text)"></div>` : ""}
+      ${!pq.isCorrect ? `<button class="btn-outline" onclick="aiAnalyze(${i}, this)">🤖 AI ilə analiz et</button><div id="ai-out-${i}" class="muted-note" style="color:var(--color-text)"></div><button class="btn-outline" style="margin-top:8px;" onclick="generatePractice(${i}, this)">🧠 Bənzər sual həll et</button><div id="practice-${i}"></div>` : ""}
     </div>`;
   });
   window._resultDetailHtml = resultDetailHtml;
   window._resultExpandedIndex = null;
   window._resultCtx = { ex, attempt };
   window._aiCache = {};
+  window._practiceCache = {};
+  window._practiceAnswered = {};
+  window._practiceCorrect = {};
 
   const miniGridHtml = ex.questions.map((q, i) => {
     const pq = attempt.perQuestion[i];
