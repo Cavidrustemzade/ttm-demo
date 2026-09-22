@@ -5113,8 +5113,8 @@ function renderPracticeBox(i) {
   } else {
     html += `<div style="display:flex; gap:8px; flex-wrap:wrap;">${(pr.options || []).map((opt, oi) => `
       <button type="button" onclick="checkPractice(${i}, ${oi})" ${answered ? "disabled" : ""}
-        style="min-width:44px; padding:10px; border-radius:10px; font-weight:800; border:2px solid var(--color-gray); background:${answered && oi === pr.correctIndex ? "rgba(46,158,107,.15)" : answered && oi === window._practiceAnswered[i] ? "rgba(217,76,76,.12)" : "var(--color-white)"};">
-        ${OPTION_LETTERS[oi]}
+        style="padding:10px 14px; border-radius:10px; font-weight:700; font-size:13px; border:2px solid var(--color-gray); background:${answered && oi === pr.correctIndex ? "rgba(46,158,107,.15)" : answered && oi === window._practiceAnswered[i] ? "rgba(217,76,76,.12)" : "var(--color-white)"};">
+        ${OPTION_LETTERS[oi]}) ${esc(opt)}
       </button>`).join("")}</div>`;
   }
   html += `<div id="practice-result-${i}" style="margin-top:10px;"></div></div>`;
