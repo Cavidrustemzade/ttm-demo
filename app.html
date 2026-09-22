@@ -5033,6 +5033,43 @@ async function finishExam(autoSubmit) {
   renderExamResult(ex, { ...attemptData, id: ref.id }, localPhotoMap);
 }
 
+// ===== AI ANALİZ (Cloudflare Worker vasitəsilə) =====
+// Bunu app.html-də  window.viewPastResult = ...  sətrindən ƏVVƏL yapışdır.
+const AI_WORKER_URL = "https://ttm-ai.tamtedrismerkezi.workers.dev"; // <-- öz Worker linkin
+
+window.aiAnalyze = async (i, btn) => {
+  const ctx = window._resultCtx;
+  if (!ctx) return;
+  const { ex, attempt } = ctx;
+  const q = ex.questions[i];
+  const pq = attempt.perQuestion[i];
+  const out = document.getElementById("ai-out-" + i);
+  btn.disabled = true;
+  out.textContent = "🤖 AI analiz edir...";
+  try {
+    const token = await auth.currentUser.getIdToken();
+    const isOpen = q.type === "open";
+    const r = await fetch(AI_WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+      body: JSON.stringify({
+        image: q.imageBase64 || "",
+        text: q.text || "",
+        type: q.type,
+        selected: isOpen ? (pq.selected || "") : (pq.selected != null ? OPTION_LETTERS[pq.selected] : ""),
+        correct: isOpen ? q.correctAnswer : OPTION_LETTERS[q.correctIndex]
+      })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || r.status);
+    window._aiCache[i] = d.answer;
+    out.innerHTML = esc(d.answer).replace(/\n/g, "<br>");
+  } catch (e) {
+    out.textContent = "Xəta: " + e.message;
+  }
+  btn.disabled = false;
+};
+
 window.viewPastResult = async (attemptId) => {
   const a = studentAttemptsCache.find(x => x.id === attemptId);
   const exMeta = studentExamsCache.find(e => e.id === a.examId);
@@ -5059,6 +5096,8 @@ function openResultQuestionDetail(i) {
   if (!box || !window._resultDetailHtml) return;
   window._resultExpandedIndex = i;
   box.innerHTML = window._resultDetailHtml[i] || "";
+  const _c = window._aiCache && window._aiCache[i], _o = document.getElementById("ai-out-" + i);
+  if (_c && _o) _o.innerHTML = esc(_c).replace(/\n/g, "<br>");
   document.querySelectorAll(".exam-result-mini-btn").forEach((b) => b.classList.toggle("active", Number(b.dataset.idx) === i));
   document.querySelectorAll(".exam-result-nav-btn").forEach((b, idx) => b.classList.toggle("active", idx === i));
 }
@@ -5159,6 +5198,7 @@ function renderExamResult(ex, attempt, photoMap) {
         ${imgHtml}
         <div class="option-btn ${pq.isCorrect ? "correct" : "wrong"}" style="pointer-events:none; font-size:13px;">Sizin cavabınız: ${esc(pq.selected || "(boş)")}</div>
         ${!pq.isCorrect ? `<div class="option-btn correct" style="pointer-events:none; font-size:13px;">Düzgün cavab: ${esc(q.correctAnswer)}</div>` : ""}
+        ${!pq.isCorrect ? `<button class="btn-outline" onclick="aiAnalyze(${i}, this)">🤖 AI ilə analiz et</button><div id="ai-out-${i}" class="muted-note" style="color:var(--color-text)"></div>` : ""}
       </div>`;
     }
     return `<div class="list-item exam-result-row ${rowClass}" style="flex-direction:column; align-items:flex-start; gap:6px;">
@@ -5173,10 +5213,13 @@ function renderExamResult(ex, attempt, photoMap) {
         }).join("")}
       </div>
       <div class="list-item-sub">🟢 Düzgün: ${OPTION_LETTERS[q.correctIndex]}${!pq.isCorrect && pq.selected !== null ? ` · 🔴 Sizin cavabınız: ${OPTION_LETTERS[pq.selected]}` : ""}</div>
+      ${!pq.isCorrect ? `<button class="btn-outline" onclick="aiAnalyze(${i}, this)">🤖 AI ilə analiz et</button><div id="ai-out-${i}" class="muted-note" style="color:var(--color-text)"></div>` : ""}
     </div>`;
   });
   window._resultDetailHtml = resultDetailHtml;
   window._resultExpandedIndex = null;
+  window._resultCtx = { ex, attempt };
+  window._aiCache = {};
 
   const miniGridHtml = ex.questions.map((q, i) => {
     const pq = attempt.perQuestion[i];
