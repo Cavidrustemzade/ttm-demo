@@ -2,7 +2,7 @@
 // Sadə "cache-first, sonra şəbəkə" strategiyası: sayt bir dəfə açılandan sonra
 // zəif internetdə də sürətli açılır, tam offline halda əsas səhifə yenə görünür.
 
-const CACHE_NAME = "ttm-cache-v2";
+const CACHE_NAME = "ttm-cache-v3";
 const APP_SHELL = [
   "./index.html",
   "./app.html",
