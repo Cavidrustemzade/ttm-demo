@@ -5088,6 +5088,9 @@ window.generatePractice = async (i, btn) => {
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || r.status);
     let clean = d.answer.trim().replace(/^```json\s*/i, "").replace(/```\s*$/i, "");
+    const s0 = clean.indexOf("{"), e0 = clean.lastIndexOf("}");
+    if (s0 >= 0 && e0 > s0) clean = clean.slice(s0, e0 + 1);
+    clean = clean.replace(/[\r\n\t]+/g, " ");
     const pr = JSON.parse(clean);
     window._practiceCache[i] = pr;
     renderPracticeBox(i);
