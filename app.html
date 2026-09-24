@@ -1345,6 +1345,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
       <button class="tab-btn" data-stab="stab-schedule">Cədvəl</button>
       <button class="tab-btn" data-stab="stab-topics">Mövzular</button>
       <button class="tab-btn" data-stab="stab-exams">Sınaqlar</button>
+      <button class="tab-btn" data-stab="stab-roadmap">🎯 Yol Xəritəm</button>
       <button class="tab-btn" data-stab="stab-race">🏆 Yarış</button>
     </div>
 
@@ -1500,6 +1501,15 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
         </div>
         <button class="btn-small" id="exam-back-to-list-btn">Sınaqlara qayıt</button>
       </div>
+    </div>
+
+    <!-- YOL XƏRİTƏM -->
+    <div class="tab-panel" id="stab-roadmap">
+      <div class="card">
+        <h3>🎯 Mənim Yol Xəritəm</h3>
+        <p class="muted-note">Bütün sınaqlarındakı nəticələrinə əsasən hazırlanmış fərdi tövsiyələr.</p>
+      </div>
+      <div id="roadmap-content"><div class="empty-state">Yüklənir...</div></div>
     </div>
 
     <!-- YARIŞ -->
@@ -1859,6 +1869,7 @@ document.querySelectorAll(".tab-btn[data-stab]").forEach(btn => {
     document.querySelectorAll("#view-student .tab-panel").forEach(p => p.classList.remove("active"));
     btn.classList.add("active");
     document.getElementById(btn.dataset.stab).classList.add("active");
+    if (btn.dataset.stab === "stab-roadmap") loadRoadmap();
   });
 });
 
@@ -5062,12 +5073,15 @@ window.aiAnalyze = async (i, btn) => {
   const pq = attempt.perQuestion[i];
   const out = document.getElementById("ai-out-" + i);
   btn.disabled = true;
-  out.textContent = "🤖 AI analiz edir...";
+  out.textContent = "🤖 AI analiz edir... (bir neçə saniyə çəkə bilər)";
   try {
     const token = await auth.currentUser.getIdToken();
     const isOpen = q.type === "open";
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 45000);
     const r = await fetch(AI_WORKER_URL, {
       method: "POST",
+      signal: ctrl.signal,
       headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
       body: JSON.stringify({
         image: q.imageBase64 || "",
@@ -5077,16 +5091,132 @@ window.aiAnalyze = async (i, btn) => {
         correct: isOpen ? q.correctAnswer : OPTION_LETTERS[q.correctIndex]
       })
     });
+    clearTimeout(timer);
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || r.status);
     window._aiCache[i] = d.answer;
     out.innerHTML = esc(d.answer).replace(/\n/g, "<br>");
     renderMath("ai-out-" + i);
   } catch (e) {
-    out.textContent = "Xəta: " + e.message;
+    out.textContent = e.name === "AbortError" ? "AI cavab vermədi (vaxt bitdi), yenidən cəhd edin." : "Xəta: " + e.message;
   }
   btn.disabled = false;
 };
+
+window.generateTopicPractice = async (key, topicName, btn) => {
+  window._practiceCache = window._practiceCache || {};
+  window._practiceAnswered = window._practiceAnswered || {};
+  window._practiceCorrect = window._practiceCorrect || {};
+  const box = document.getElementById("practice-" + key);
+  btn.disabled = true;
+  box.innerHTML = `<div class="muted-note">🧠 Yeni sual hazırlanır... (adətən 10-20 saniyə çəkir)</div>`;
+  try {
+    const token = await auth.currentUser.getIdToken();
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 45000);
+    const r = await fetch(AI_WORKER_URL, {
+      method: "POST",
+      signal: ctrl.signal,
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+      body: JSON.stringify({ mode: "practice", topic: topicName })
+    });
+    clearTimeout(timer);
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || r.status);
+    window._practiceCache[key] = d.data;
+    renderPracticeBox(key);
+  } catch (e) {
+    const msg = e.name === "AbortError" ? "AI cavab vermədi (vaxt bitdi)" : e.message;
+    box.innerHTML = `<div class="muted-note">Xəta: ${esc(msg)} — yenidən cəhd edin.</div>`;
+  }
+  btn.disabled = false;
+};
+
+async function loadRoadmap() {
+  const el = document.getElementById("roadmap-content");
+  el.innerHTML = `<div class="empty-state">Yüklənir...</div>`;
+  try {
+    const doc = await db.collection("students").doc(currentStudentUid).get();
+    const rm = doc.exists ? doc.data().roadmap : null;
+    if (rm) {
+      renderRoadmapContent(rm);
+    } else {
+      el.innerHTML = `<div class="empty-state">Hələ yol xəritən yoxdur. Bir neçə sınaq işlədikdən sonra hazırlaya bilərsən.</div>
+        <button class="btn-small" style="width:100%; margin-top:10px;" onclick="generateRoadmap(this)">🎯 Yol xəritəmi hazırla</button>`;
+    }
+  } catch (e) {
+    el.innerHTML = `<div class="empty-state">Xəta: ${esc(e.message)}</div>`;
+  }
+}
+
+window.generateRoadmap = async (btn) => {
+  if (!studentAttemptsCache || studentAttemptsCache.length === 0) {
+    toast("Əvvəlcə ən azı 1 sınaq işləməlisən");
+    return;
+  }
+  btn.disabled = true;
+  const el = document.getElementById("roadmap-content");
+  el.innerHTML = `<div class="empty-state">🎯 Yol xəritən hazırlanır... (10-20 saniyə çəkə bilər)</div>`;
+
+  const byTopic = {};
+  studentAttemptsCache.forEach(a => {
+    const st = computeAttemptStats(a.perQuestion);
+    const topic = a.topic || "Digər";
+    if (!byTopic[topic]) byTopic[topic] = { correct: 0, total: 0, attempts: 0 };
+    byTopic[topic].correct += st.correctCount;
+    byTopic[topic].total += st.totalCount;
+    byTopic[topic].attempts += 1;
+  });
+  const topics = Object.keys(byTopic).map(t => ({
+    topic: t, correct: byTopic[t].correct, total: byTopic[t].total, attempts: byTopic[t].attempts
+  }));
+
+  try {
+    const token = await auth.currentUser.getIdToken();
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 45000);
+    const r = await fetch(AI_WORKER_URL, {
+      method: "POST",
+      signal: ctrl.signal,
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+      body: JSON.stringify({ mode: "roadmap", topics })
+    });
+    clearTimeout(timer);
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || r.status);
+    const roadmap = { ...d.data, attemptCount: studentAttemptsCache.length, generatedAt: Date.now() };
+    await db.collection("students").doc(currentStudentUid).update({ roadmap });
+    renderRoadmapContent(roadmap);
+  } catch (e) {
+    const msg = e.name === "AbortError" ? "AI cavab vermədi (vaxt bitdi), yenidən cəhd edin." : e.message;
+    el.innerHTML = `<div class="empty-state">Xəta: ${esc(msg)}</div>
+      <button class="btn-small" style="width:100%; margin-top:10px;" onclick="generateRoadmap(this)">Yenidən cəhd et</button>`;
+  }
+  btn.disabled = false;
+};
+
+function renderRoadmapContent(rm) {
+  const el = document.getElementById("roadmap-content");
+  const stale = studentAttemptsCache && rm.attemptCount !== studentAttemptsCache.length;
+  let html = `<div class="card"><div style="font-size:14px; color:var(--color-text); line-height:1.7;">${esc(rm.overall || "")}</div></div>`;
+  if (stale) {
+    html += `<div class="muted-note" style="margin-bottom:10px;">Yeni sınaq işləmisən — yeniləmək istəyirsənsə aşağıdan bas.</div>`;
+  }
+  (rm.weakTopics || []).forEach((wt, idx) => {
+    const key = "topic" + idx;
+    html += `<div class="card">
+      <h3>${esc(wt.topic)}</h3>
+      <div class="muted-note" style="margin-bottom:10px; font-size:13px; line-height:1.6;">${esc(wt.summary)}</div>
+      <button class="btn-outline" onclick="generateTopicPractice('${key}', ${JSON.stringify(wt.topic)}, this)">🧠 Bu mövzudan sual həll et</button>
+      <div id="practice-${key}"></div>
+    </div>`;
+  });
+  if (!rm.weakTopics || rm.weakTopics.length === 0) {
+    html += `<div class="card"><div class="muted-note">Hazırda zəif tərəfin görünmür — belə davam et! 🎉</div></div>`;
+  }
+  html += `<button class="btn-small" onclick="generateRoadmap(this)" style="width:100%;">🔄 Yol xəritəmi yenilə</button>`;
+  el.innerHTML = html;
+}
 
 window.generatePractice = async (i, btn) => {
   const ctx = window._resultCtx;
@@ -5095,20 +5225,25 @@ window.generatePractice = async (i, btn) => {
   const q = ex.questions[i];
   const box = document.getElementById("practice-" + i);
   btn.disabled = true;
-  box.innerHTML = `<div class="muted-note">🧠 Yeni sual hazırlanır...</div>`;
+  box.innerHTML = `<div class="muted-note">🧠 Yeni sual hazırlanır... (adətən 10-20 saniyə çəkir)</div>`;
   try {
     const token = await auth.currentUser.getIdToken();
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 45000);
     const r = await fetch(AI_WORKER_URL, {
       method: "POST",
+      signal: ctrl.signal,
       headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
       body: JSON.stringify({ mode: "practice", image: q.imageBase64 || "", text: q.text || "", type: q.type })
     });
+    clearTimeout(timer);
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || r.status);
     window._practiceCache[i] = d.data;
     renderPracticeBox(i);
   } catch (e) {
-    box.innerHTML = `<div class="muted-note">Xəta: ${esc(e.message)} — yenidən cəhd edin.</div>`;
+    const msg = e.name === "AbortError" ? "AI cavab vermədi (vaxt bitdi)" : e.message;
+    box.innerHTML = `<div class="muted-note">Xəta: ${esc(msg)} — yenidən cəhd edin.</div>`;
   }
   btn.disabled = false;
 };
