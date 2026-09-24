@@ -5136,16 +5136,20 @@ async function loadRoadmap() {
   const el = document.getElementById("roadmap-content");
   el.innerHTML = `<div class="empty-state">Yüklənir...</div>`;
   try {
-    const doc = await db.collection("students").doc(currentStudentUid).get();
-    const rm = doc.exists ? doc.data().roadmap : null;
-    if (rm) {
-      renderRoadmapContent(rm);
+    const snap = await db.collection("studentRoadmaps")
+      .where("studentId", "==", currentStudentUid)
+      .orderBy("generatedAt", "desc")
+      .limit(1)
+      .get();
+    if (!snap.empty) {
+      renderRoadmapContent(snap.docs[0].data());
     } else {
       el.innerHTML = `<div class="empty-state">Hələ yol xəritən yoxdur. Bir neçə sınaq işlədikdən sonra hazırlaya bilərsən.</div>
         <button class="btn-small" style="width:100%; margin-top:10px;" onclick="generateRoadmap(this)">🎯 Yol xəritəmi hazırla</button>`;
     }
   } catch (e) {
-    el.innerHTML = `<div class="empty-state">Xəta: ${esc(e.message)}</div>`;
+    el.innerHTML = `<div class="empty-state">Xəta: ${esc(e.message)}</div>
+      <button class="btn-small" style="width:100%; margin-top:10px;" onclick="generateRoadmap(this)">🎯 Yol xəritəmi hazırla</button>`;
   }
 }
 
@@ -5184,8 +5188,8 @@ window.generateRoadmap = async (btn) => {
     clearTimeout(timer);
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || r.status);
-    const roadmap = { ...d.data, attemptCount: studentAttemptsCache.length, generatedAt: Date.now() };
-    await db.collection("students").doc(currentStudentUid).update({ roadmap });
+    const roadmap = { studentId: currentStudentUid, overall: d.data.overall, weakTopics: d.data.weakTopics, attemptCount: studentAttemptsCache.length };
+    await db.collection("studentRoadmaps").add({ ...roadmap, generatedAt: firebase.firestore.FieldValue.serverTimestamp() });
     renderRoadmapContent(roadmap);
   } catch (e) {
     const msg = e.name === "AbortError" ? "AI cavab vermədi (vaxt bitdi), yenidən cəhd edin." : e.message;
