@@ -1879,7 +1879,7 @@ document.querySelectorAll(".tab-btn[data-stab]").forEach(btn => {
 // əks halda bir müəllimin girişi başqasının "sahibsiz" sənədini öz üstünə keçirə bilərdi.
 async function migrateLegacyDataIfNeeded(uid) {
   try {
-    const collections = ["groups", "students", "dailyReports", "quizResults", "examResults", "materials", "topics", "exams"];
+    const collections = ["groups", "students", "dailyReports", "quizResults", "examResults", "materials", "topics", "exams", "examAttempts", "detailedAnswers"];
     for (const coll of collections) {
       const snap = await db.collection(coll).get();
       const missing = snap.docs.filter(d => !d.data().teacherId);
@@ -5005,6 +5005,7 @@ async function finishExam(autoSubmit) {
 
   const attemptData = {
     examId: ex.id, studentId: currentStudentUid, groupId: currentStudentGroupId, topic: ex.topic,
+    teacherId: ex.teacherId || null,
     answers: lightAnswers, perQuestion, correctCount, totalCount, score: scorePct,
     detailedCount, detailedGradedCount: 0, pendingGrading,
     autoSubmitted: !!autoSubmit, submittedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -5027,6 +5028,7 @@ async function finishExam(autoSubmit) {
         const docRef = db.collection("detailedAnswers").doc(`${ref.id}_${index}`);
         batch.set(docRef, {
           attemptId: ref.id, examId: ex.id, studentId: currentStudentUid, groupId: currentStudentGroupId,
+          teacherId: ex.teacherId || null,
           questionIndex: index, photoBase64: photo, points: null, maxPoints: 1,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
