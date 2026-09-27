@@ -1563,6 +1563,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check-compat.js"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyDk9JWyY8V3T_GRIP32WOF59qKgztHPE9M",
@@ -1574,6 +1575,13 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
+
+// App Check - saytdan kənar bot/skriptlərin Firebase-ə birbaşa sorğu atmasının qarşısını alır
+firebase.appCheck().activate(
+  new firebase.appCheck.ReCaptchaEnterpriseProvider('6LfOddEtAAAAAKZt7Drh801FzKxcRbk558fepwcI'),
+  true
+);
+
 const auth = firebase.auth();
 const db = firebase.firestore();
 const storage = firebase.storage();
