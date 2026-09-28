@@ -1936,7 +1936,7 @@ document.querySelectorAll(".tab-btn[data-stab]").forEach(btn => {
 // əks halda bir müəllimin girişi başqasının "sahibsiz" sənədini öz üstünə keçirə bilərdi.
 async function migrateLegacyDataIfNeeded(uid) {
   try {
-    const collections = ["groups", "students", "dailyReports", "dailyStatus", "quizResults", "examResults", "materials", "topics", "exams", "examAttempts", "detailedAnswers"];
+    const collections = ["groups", "students", "dailyReports", "quizResults", "examResults", "materials", "topics", "exams", "examAttempts", "detailedAnswers"];
     for (const coll of collections) {
       const snap = await db.collection(coll).get();
       const missing = snap.docs.filter(d => !d.data().teacherId);
@@ -1954,7 +1954,16 @@ async function migrateLegacyDataIfNeeded(uid) {
 
 async function initAdminPanel(uid, isSuperAdmin) {
   currentTeacherId = uid;
-  if (isSuperAdmin) migrateLegacyDataIfNeeded(uid);
+  // Köhnə məlumat köçürməsi: arxa planda, gecikmə ilə, ən çoxu həftədə bir dəfə (əvvəl hər girişdə bütün kolleksiyaları yükləyib səhifəni yavaşladırdı)
+  if (isSuperAdmin) {
+    try {
+      const last = Number(localStorage.getItem("ttm_migrate_ts") || 0);
+      if (Date.now() - last > 7 * 24 * 3600 * 1000) {
+        localStorage.setItem("ttm_migrate_ts", String(Date.now()));
+        setTimeout(() => migrateLegacyDataIfNeeded(uid), 20000);
+      }
+    } catch (e) {}
+  }
   loadGroups();
   loadStudents();
   loadDailyReports();
@@ -1962,7 +1971,6 @@ async function initAdminPanel(uid, isSuperAdmin) {
   loadMaterials();
   loadTopics();
   loadExams();
-  document.getElementById("daily-date").value = new Date().toISOString().slice(0, 10);
   document.getElementById("score-date").value = new Date().toISOString().slice(0, 10);
   initPaymentsGate();
 }
@@ -2240,7 +2248,7 @@ function setSelectedExamGroupIds(ids) {
 }
 
 function fillStudentSelects() {
-  ["daily-student", "score-student"].forEach(id => {
+  ["score-student"].forEach(id => {
     const sel = document.getElementById(id);
     const current = sel.value;
     sel.innerHTML = studentsCache.filter(s => s.active !== false).map(s => `<option value="${s.id}">${esc(s.fullName)}</option>`).join("") || `<option value="">Əvvəlcə şagird əlavə edin</option>`;
