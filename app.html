@@ -843,6 +843,49 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
   #exam-taking-layout .exam-text-panel-body { font-size: 12.5px; line-height: 1.55; }
 }
 
+/* ================= GÜNDƏLİK HESABAT: QAPILAR + ŞAGİRD KARTLARI ================= */
+.daily-topbar, .daily-students-topbar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:18px; }
+.daily-students-topbar { background:var(--color-white); padding:12px 16px; border-radius:var(--radius-md); box-shadow:var(--shadow-sm); }
+.daily-group-title { text-align:center; flex:1; }
+.daily-topbar input[type="date"], .daily-students-topbar input[type="date"] { padding:10px 12px; border:1.5px solid var(--color-gray); border-radius:10px; background:var(--color-white); font-size:13px; font-weight:600; color:var(--color-primary); }
+
+.door-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(148px,1fr)); gap:16px; }
+.door-card { position:relative; aspect-ratio:3/4; border-radius:18px 18px 6px 6px; cursor:pointer; overflow:hidden; box-shadow:0 10px 22px rgba(0,0,0,.18), inset 0 0 0 1px rgba(255,255,255,.15); transition:transform .2s ease, box-shadow .2s ease; }
+.door-card:active { transform:scale(0.95); }
+.door-card::before { content:""; position:absolute; inset:10px; border:2px solid rgba(255,255,255,.35); border-radius:12px 12px 4px 4px; pointer-events:none; }
+.door-badge { position:absolute; top:8px; right:8px; background:rgba(255,255,255,.92); color:#222; font-size:10.5px; font-weight:800; padding:4px 9px; border-radius:999px; display:flex; align-items:center; gap:4px; box-shadow:0 3px 8px rgba(0,0,0,.15); z-index:2; }
+.door-plaque { position:absolute; left:50%; top:44%; transform:translate(-50%,-50%); background:#f5f0e6; color:#2b2b2b; padding:8px 14px; border-radius:6px; font-weight:800; font-size:14px; box-shadow:0 3px 6px rgba(0,0,0,.25); white-space:nowrap; }
+.door-handle { position:absolute; right:14px; top:58%; width:9px; height:9px; border-radius:50%; background:rgba(255,255,255,.85); box-shadow:0 1px 3px rgba(0,0,0,.4); }
+
+.daily-cards-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:14px; margin-bottom:18px; }
+.daily-card { border-radius:18px; padding:16px; box-shadow:0 6px 18px rgba(0,0,0,.05); border:1.5px solid transparent; transition:background .25s, border-color .25s; }
+.daily-card.mood-good { background:#eafaf0; border-color:#bfe9cf; }
+.daily-card.mood-normal { background:#fff8e6; border-color:#f3e2ab; }
+.daily-card.mood-bad { background:#fdecec; border-color:#f3c1c1; }
+.daily-card.mood-none { background:var(--color-white); border-color:var(--color-gray); }
+.daily-card-head { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.daily-avatar { width:44px; height:44px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; font-size:15px; }
+.daily-card-name { font-weight:700; font-size:14.5px; flex:1; }
+.daily-note-btn { width:28px; height:28px; border-radius:9px; background:rgba(0,0,0,.06); color:var(--color-text-muted); font-size:13px; flex-shrink:0; position:relative; }
+.daily-note-btn.has-note { background:var(--color-primary); color:#fff; }
+.daily-row { margin-bottom:9px; }
+.daily-row-label { font-size:11px; color:var(--color-text-muted); font-weight:600; margin-bottom:5px; }
+.status-btn-row { display:flex; gap:6px; }
+.status-btn { flex:1; height:32px; border-radius:9px; border:1.5px solid var(--color-gray); background:var(--color-white); font-size:14px; font-weight:700; color:#94a3b8; transition:.15s; }
+.status-btn.on-good { background:#2e9e6b; border-color:#2e9e6b; color:#fff; }
+.status-btn.on-mid { background:#d99a2b; border-color:#d99a2b; color:#fff; }
+.status-btn.on-bad { background:var(--color-danger); border-color:var(--color-danger); color:#fff; }
+.daily-note-area { display:none; margin-top:8px; }
+.daily-note-area.open { display:block; }
+.daily-note-area textarea { width:100%; min-height:52px; padding:8px; border:1.5px solid var(--color-gray); border-radius:8px; font-size:12.5px; background:var(--color-white); }
+
+.daily-stats-bar { display:flex; align-items:center; gap:14px; flex-wrap:wrap; background:var(--color-white); padding:14px 16px; border-radius:14px; box-shadow:var(--shadow-sm); margin-bottom:14px; }
+.daily-stat-pill { display:flex; align-items:center; gap:8px; }
+.daily-stat-pill .circle { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px; }
+.daily-stat-pill .num { font-weight:800; font-size:15px; }
+.daily-stat-pill .lbl { font-size:10.5px; color:var(--color-text-muted); }
+.daily-actions-bar { display:flex; gap:10px; flex-wrap:wrap; }
+.daily-actions-bar button { flex:1; min-width:120px; }
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
@@ -975,25 +1018,30 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 
     <!-- GÜNDƏLİK HESABAT -->
     <div class="tab-panel" id="tab-daily">
-      <div class="card">
-        <h3>Gündəlik hesabat yaz</h3>
-        <div class="field-row">
-          <div class="field"><label>Şagird</label><select id="daily-student"></select></div>
-          <div class="field"><label>Tarix</label><input type="date" id="daily-date" /></div>
+      <div id="daily-view-doors">
+        <div class="daily-topbar">
+          <div><h3 style="margin-bottom:2px;">Gündəlik hesabat</h3><div class="muted-note">Qrupu seçin</div></div>
+          <input type="date" id="daily-date-doors" />
         </div>
-        <div class="checkbox-row"><input type="checkbox" id="daily-attended" /><label for="daily-attended">Dərsdə iştirak etdi</label></div>
-        <div class="checkbox-row"><input type="checkbox" id="daily-homework" /><label for="daily-homework">Ev tapşırığını etdi</label></div>
-        <div class="field-row">
-          <div class="field"><label>Hazırlıq faizi (%)</label><input type="number" id="daily-prep" min="0" max="100" placeholder="0-100" /></div>
-        </div>
-        <div class="field-row">
-          <div class="field"><label>Müəllim qeydi</label><textarea id="daily-note" placeholder="Qeyd yazın..."></textarea></div>
-        </div>
-        <button class="btn-small" id="daily-save-btn">Yadda saxla</button>
+        <div class="door-grid" id="daily-door-grid"><div class="empty-state">Yüklənir...</div></div>
       </div>
-      <div class="card">
-        <h3>Son hesabatlar</h3>
-        <div id="daily-list"><div class="empty-state">Yüklənir...</div></div>
+
+      <div id="daily-view-students" style="display:none;">
+        <div class="daily-students-topbar">
+          <button class="btn-outline" id="daily-back-btn">← Geri</button>
+          <div class="daily-group-title">
+            <div id="daily-group-name" style="font-weight:800; color:var(--color-primary);">Qrup</div>
+            <div id="daily-group-count" class="muted-note"></div>
+          </div>
+          <input type="date" id="daily-date-students" />
+        </div>
+        <div class="daily-cards-grid" id="daily-cards-grid"></div>
+        <div class="daily-stats-bar" id="daily-stats-bar"></div>
+        <div class="daily-actions-bar">
+          <button class="btn-outline" id="daily-filter-btn">▾ Filtrlə</button>
+          <button class="btn-small" id="daily-pdf-btn" style="background:var(--color-danger);">📄 PDF çıxar</button>
+          <button class="btn-small" id="daily-excel-btn" style="background:#1f9d55;">📊 Excel çıxar</button>
+        </div>
       </div>
     </div>
 
@@ -1558,6 +1606,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -1887,7 +1936,7 @@ document.querySelectorAll(".tab-btn[data-stab]").forEach(btn => {
 // əks halda bir müəllimin girişi başqasının "sahibsiz" sənədini öz üstünə keçirə bilərdi.
 async function migrateLegacyDataIfNeeded(uid) {
   try {
-    const collections = ["groups", "students", "dailyReports", "quizResults", "examResults", "materials", "topics", "exams", "examAttempts", "detailedAnswers"];
+    const collections = ["groups", "students", "dailyReports", "dailyStatus", "quizResults", "examResults", "materials", "topics", "exams", "examAttempts", "detailedAnswers"];
     for (const coll of collections) {
       const snap = await db.collection(coll).get();
       const missing = snap.docs.filter(d => !d.data().teacherId);
@@ -2161,6 +2210,7 @@ function fillGroupSelects() {
   renderExamGroupsChecklist();
   fillStudentSelects();
   fillPaymentGroupFilter();
+  if (typeof renderDailyDoors === "function") renderDailyDoors();
 }
 
 function renderExamGroupsChecklist() {
@@ -2280,6 +2330,8 @@ async function loadStudents() {
     fillStudentSelects();
     renderStudentsList();
     if (document.getElementById("payments-list")) renderPaymentsList();
+    if (typeof renderDailyDoors === "function") renderDailyDoors();
+    if (typeof renderDailyCards === "function" && dailyCurrentGroupId && document.getElementById("daily-view-students").style.display !== "none") renderDailyCards();
   });
 }
 
@@ -2388,47 +2440,227 @@ window.deleteStudent = async (id) => {
   toast("Şagird silindi");
 };
 
-// ---- GÜNDƏLİK HESABAT ----
-document.getElementById("daily-save-btn").addEventListener("click", async () => {
-  const studentId = document.getElementById("daily-student").value;
-  const date = document.getElementById("daily-date").value;
-  if (!studentId || !date) { toast("Şagird və tarix seçin"); return; }
-  await db.collection("dailyReports").add({
-    studentId, date, teacherId: currentTeacherId,
-    attended: document.getElementById("daily-attended").checked,
-    homeworkDone: document.getElementById("daily-homework").checked,
-    prepPercentage: Number(document.getElementById("daily-prep").value) || 0,
-    note: document.getElementById("daily-note").value.trim(),
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+// ---- GÜNDƏLİK HESABAT: QAPILAR + ŞAGİRD KARTLARI ----
+// Data: "dailyStatus" kolleksiyası, sənəd id-si `${studentId}_${date}`.
+// Sahələr: studentId, groupId, teacherId, date, homework:'done'|'not'|'copied', qa:'good'|'normal'|'bad', repeat:'done'|'not'|'copied', note
+const DOOR_COLORS = ["#e08a2e", "#3b82f6", "#2e9e6b", "#e0524a", "#8b5cf6", "#d9a92b", "#14b8a6", "#e0568f", "#0B3C5D", "#a78bfa", "#64748b", "#c0392b"];
+const DAILY_LBL = { done: "Edib", not: "Etməyib", copied: "Köçürüb", good: "Yaxşı", normal: "Normal", bad: "Pis" };
+let dailyCurrentDate = new Date().toISOString().slice(0, 10);
+let dailyCurrentGroupId = null;
+let dailyStatusCache = {};
+let dailyStatusUnsub = null;
+let dailyFilterMood = "all";
+
+// Üç sahədən (ev tapşırığı / sual-cavab / təkrar) 0-100 arası ümumi hazırlıq faizi çıxarır.
+// Fərziyyə: edib/yaxşı=100, etməyib/normal=50, köçürüb/pis=0 — yalnız doldurulmuş sahələr üzrə orta.
+function dailyScoreOf(st) {
+  if (!st) return null;
+  const map = { homework: { done: 100, not: 0, copied: 0 }, repeat: { done: 100, not: 0, copied: 0 }, qa: { good: 100, normal: 50, bad: 0 } };
+  let sum = 0, count = 0;
+  ["homework", "repeat", "qa"].forEach(k => { if (st[k] && map[k][st[k]] !== undefined) { sum += map[k][st[k]]; count++; } });
+  return count > 0 ? Math.round(sum / count) : null;
+}
+function dailyMoodClass(score) {
+  if (score === null) return "mood-none";
+  if (score >= 75) return "mood-good";
+  if (score >= 40) return "mood-normal";
+  return "mood-bad";
+}
+function initials(name) { return (name || "?").trim().split(/\s+/).map(w => w[0]).slice(0, 2).join("").toUpperCase(); }
+function avatarColor(name) { let h = 0; for (const c of (name || "")) h = (h * 31 + c.charCodeAt(0)) % 360; return `hsl(${h},55%,50%)`; }
+
+function renderDailyDoors() {
+  const grid = document.getElementById("daily-door-grid");
+  if (!grid) return;
+  if (groupsCache.length === 0) { grid.innerHTML = `<div class="empty-state">Əvvəlcə qrup yaradın</div>`; return; }
+  grid.innerHTML = groupsCache.map((g, i) => {
+    const count = studentsCache.filter(s => s.active !== false && s.groupId === g.id).length;
+    const color = DOOR_COLORS[i % DOOR_COLORS.length];
+    return `<div class="door-card" style="background:linear-gradient(160deg, ${color}, ${color}bb);" onclick="openDailyGroup('${g.id}')">
+      <div class="door-badge">👥 ${count}</div>
+      <div class="door-plaque">${esc(g.name)}</div>
+      <div class="door-handle"></div>
+    </div>`;
+  }).join("");
+}
+
+window.openDailyGroup = (groupId) => {
+  dailyCurrentGroupId = groupId;
+  const g = groupsCache.find(x => x.id === groupId);
+  document.getElementById("daily-group-name").textContent = (g ? g.name : "Qrup") + " qrupu";
+  document.getElementById("daily-group-count").textContent = studentsCache.filter(s => s.active !== false && s.groupId === groupId).length + " şagird";
+  document.getElementById("daily-view-doors").style.display = "none";
+  document.getElementById("daily-view-students").style.display = "block";
+  document.getElementById("daily-date-students").value = dailyCurrentDate;
+  loadDailyStatusForGroup();
+};
+
+document.getElementById("daily-back-btn").addEventListener("click", () => {
+  if (dailyStatusUnsub) { dailyStatusUnsub(); dailyStatusUnsub = null; }
+  dailyCurrentGroupId = null;
+  document.getElementById("daily-view-students").style.display = "none";
+  document.getElementById("daily-view-doors").style.display = "block";
+});
+
+function loadDailyStatusForGroup() {
+  if (dailyStatusUnsub) { dailyStatusUnsub(); dailyStatusUnsub = null; }
+  dailyStatusUnsub = db.collection("dailyStatus").where("groupId", "==", dailyCurrentGroupId).where("date", "==", dailyCurrentDate)
+    .onSnapshot(snap => {
+      dailyStatusCache = {};
+      snap.forEach(d => { dailyStatusCache[d.data().studentId] = d.data(); });
+      renderDailyCards();
+    }, err => { console.error(err); toast("Xəta: " + err.message); });
+}
+
+function renderDailyCards() {
+  const grid = document.getElementById("daily-cards-grid");
+  if (!grid) return;
+  let list = studentsCache.filter(s => s.active !== false && s.groupId === dailyCurrentGroupId).sort((a, b) => a.fullName.localeCompare(b.fullName, "az"));
+  if (dailyFilterMood !== "all") list = list.filter(s => dailyMoodClass(dailyScoreOf(dailyStatusCache[s.id])) === dailyFilterMood);
+  if (list.length === 0) { grid.innerHTML = `<div class="empty-state">Bu qrupda şagird yoxdur</div>`; renderDailyStatsBar([]); return; }
+  grid.innerHTML = list.map(s => {
+    const st = dailyStatusCache[s.id] || {};
+    const cls = dailyMoodClass(dailyScoreOf(st));
+    const hasNote = !!(st.note && st.note.trim());
+    return `<div class="daily-card ${cls}">
+      <div class="daily-card-head">
+        <div class="daily-avatar" style="background:${avatarColor(s.fullName)};">${initials(s.fullName)}</div>
+        <div class="daily-card-name">${esc(s.fullName)}</div>
+        <button class="daily-note-btn ${hasNote ? "has-note" : ""}" onclick="toggleDailyNote('${s.id}')">📝</button>
+      </div>
+      <div class="daily-row">
+        <div class="daily-row-label">Ev tapşırığı</div>
+        <div class="status-btn-row">
+          <button class="status-btn ${st.homework === "done" ? "on-good" : ""}" onclick="setDailyStatus('${s.id}','homework','done')">✓</button>
+          <button class="status-btn ${st.homework === "not" ? "on-mid" : ""}" onclick="setDailyStatus('${s.id}','homework','not')">–</button>
+          <button class="status-btn ${st.homework === "copied" ? "on-bad" : ""}" onclick="setDailyStatus('${s.id}','homework','copied')">📄</button>
+        </div>
+      </div>
+      <div class="daily-row">
+        <div class="daily-row-label">Gündəlik sual-cavab</div>
+        <div class="status-btn-row">
+          <button class="status-btn ${st.qa === "good" ? "on-good" : ""}" onclick="setDailyStatus('${s.id}','qa','good')">🙂</button>
+          <button class="status-btn ${st.qa === "normal" ? "on-mid" : ""}" onclick="setDailyStatus('${s.id}','qa','normal')">😐</button>
+          <button class="status-btn ${st.qa === "bad" ? "on-bad" : ""}" onclick="setDailyStatus('${s.id}','qa','bad')">🙁</button>
+        </div>
+      </div>
+      <div class="daily-row">
+        <div class="daily-row-label">Təkrar</div>
+        <div class="status-btn-row">
+          <button class="status-btn ${st.repeat === "done" ? "on-good" : ""}" onclick="setDailyStatus('${s.id}','repeat','done')">✓</button>
+          <button class="status-btn ${st.repeat === "not" ? "on-mid" : ""}" onclick="setDailyStatus('${s.id}','repeat','not')">–</button>
+          <button class="status-btn ${st.repeat === "copied" ? "on-bad" : ""}" onclick="setDailyStatus('${s.id}','repeat','copied')">📄</button>
+        </div>
+      </div>
+      <div class="daily-note-area ${hasNote ? "open" : ""}" id="daily-note-area-${s.id}">
+        <textarea placeholder="Qeyd yazın..." onchange="saveDailyNote('${s.id}', this.value)">${esc(st.note || "")}</textarea>
+      </div>
+    </div>`;
+  }).join("");
+  renderDailyStatsBar(list);
+}
+
+window.toggleDailyNote = (studentId) => { const el = document.getElementById(`daily-note-area-${studentId}`); if (el) el.classList.toggle("open"); };
+
+window.setDailyStatus = async (studentId, field, value) => {
+  const current = dailyStatusCache[studentId] || {};
+  const newVal = current[field] === value ? null : value;
+  try {
+    await db.collection("dailyStatus").doc(`${studentId}_${dailyCurrentDate}`).set({
+      studentId, groupId: dailyCurrentGroupId, teacherId: currentTeacherId, date: dailyCurrentDate,
+      [field]: newVal, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  } catch (err) { console.error(err); toast("Xəta: " + err.message); }
+};
+
+window.saveDailyNote = async (studentId, note) => {
+  try {
+    await db.collection("dailyStatus").doc(`${studentId}_${dailyCurrentDate}`).set({
+      studentId, groupId: dailyCurrentGroupId, teacherId: currentTeacherId, date: dailyCurrentDate,
+      note: note.trim(), updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    toast("Qeyd saxlandı");
+  } catch (err) { console.error(err); toast("Xəta: " + err.message); }
+};
+
+function renderDailyStatsBar(list) {
+  const bar = document.getElementById("daily-stats-bar");
+  if (!bar) return;
+  let good = 0, mid = 0, bad = 0;
+  list.forEach(s => {
+    const cls = dailyMoodClass(dailyScoreOf(dailyStatusCache[s.id]));
+    if (cls === "mood-good") good++; else if (cls === "mood-normal") mid++; else if (cls === "mood-bad") bad++;
   });
-  document.getElementById("daily-note").value = "";
-  document.getElementById("daily-prep").value = "";
-  document.getElementById("daily-attended").checked = false;
-  document.getElementById("daily-homework").checked = false;
-  toast("Hesabat yadda saxlandı");
+  bar.innerHTML = `
+    <div class="daily-stat-pill"><div class="circle" style="background:#2e9e6b;">✓</div><div><div class="num">${good}</div><div class="lbl">Yaxşı</div></div></div>
+    <div class="daily-stat-pill"><div class="circle" style="background:#d99a2b;">–</div><div><div class="num">${mid}</div><div class="lbl">Orta</div></div></div>
+    <div class="daily-stat-pill"><div class="circle" style="background:var(--color-danger);">✕</div><div><div class="num">${bad}</div><div class="lbl">Zəif</div></div></div>
+  `;
+}
+
+document.getElementById("daily-date-doors").addEventListener("change", (e) => {
+  dailyCurrentDate = e.target.value || dailyCurrentDate;
+  document.getElementById("daily-date-students").value = dailyCurrentDate;
+  if (dailyCurrentGroupId) loadDailyStatusForGroup();
+});
+document.getElementById("daily-date-students").addEventListener("change", (e) => {
+  dailyCurrentDate = e.target.value || dailyCurrentDate;
+  document.getElementById("daily-date-doors").value = dailyCurrentDate;
+  loadDailyStatusForGroup();
+});
+
+document.getElementById("daily-filter-btn").addEventListener("click", () => {
+  const order = ["all", "mood-good", "mood-normal", "mood-bad"];
+  const labels = { all: "▾ Filtrlə", "mood-good": "🟢 Yaxşı", "mood-normal": "🟡 Orta", "mood-bad": "🔴 Zəif" };
+  dailyFilterMood = order[(order.indexOf(dailyFilterMood) + 1) % order.length];
+  document.getElementById("daily-filter-btn").textContent = labels[dailyFilterMood];
+  renderDailyCards();
+});
+
+document.getElementById("daily-pdf-btn").addEventListener("click", () => {
+  const g = groupsCache.find(x => x.id === dailyCurrentGroupId);
+  const list = studentsCache.filter(s => s.active !== false && s.groupId === dailyCurrentGroupId).sort((a, b) => a.fullName.localeCompare(b.fullName, "az"));
+  if (list.length === 0) { toast("Şagird yoxdur"); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  doc.setFontSize(14);
+  doc.text(`${g ? g.name : ""} qrupu — Gündəlik hesabat (${dailyCurrentDate})`, 12, 16);
+  doc.setFontSize(9);
+  let y = 26;
+  list.forEach((s, i) => {
+    const st = dailyStatusCache[s.id] || {};
+    if (y > 280) { doc.addPage(); y = 16; }
+    doc.text(`${i + 1}. ${s.fullName}`, 12, y);
+    doc.text(`Ev tapş: ${DAILY_LBL[st.homework] || "-"}   Sual-cavab: ${DAILY_LBL[st.qa] || "-"}   Təkrar: ${DAILY_LBL[st.repeat] || "-"}`, 12, y + 5);
+    y += st.note ? 15 : 11;
+    if (st.note) { doc.text(`Qeyd: ${st.note}`, 12, y - 5); }
+  });
+  doc.save(`${(g ? g.name : "qrup").replace(/[^\w -]/g, "")}_${dailyCurrentDate}.pdf`);
+});
+
+document.getElementById("daily-excel-btn").addEventListener("click", () => {
+  const g = groupsCache.find(x => x.id === dailyCurrentGroupId);
+  const list = studentsCache.filter(s => s.active !== false && s.groupId === dailyCurrentGroupId).sort((a, b) => a.fullName.localeCompare(b.fullName, "az"));
+  const rows = [["Ad Soyad", "Ev tapşırığı", "Sual-cavab", "Təkrar", "Qeyd"]];
+  list.forEach(s => { const st = dailyStatusCache[s.id] || {}; rows.push([s.fullName, DAILY_LBL[st.homework] || "", DAILY_LBL[st.qa] || "", DAILY_LBL[st.repeat] || "", st.note || ""]); });
+  if (window.XLSX) {
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Hesabat");
+    XLSX.writeFile(wb, `${(g ? g.name : "qrup").replace(/[^\w -]/g, "")}_${dailyCurrentDate}.xlsx`);
+  } else {
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${(g ? g.name : "qrup").replace(/[^\w -]/g, "")}_${dailyCurrentDate}.csv`;
+    a.click();
+  }
 });
 
 function loadDailyReports() {
-  db.collection("dailyReports").where("teacherId", "==", currentTeacherId).onSnapshot(snap => {
-    const el = document.getElementById("daily-list");
-    if (snap.empty) { el.innerHTML = `<div class="empty-state">Hələ hesabat yoxdur</div>`; return; }
-    const docs = snap.docs.slice().sort((a, b) => {
-      const ta = a.data().createdAt ? a.data().createdAt.toMillis() : 0;
-      const tb = b.data().createdAt ? b.data().createdAt.toMillis() : 0;
-      return tb - ta;
-    }).slice(0, 15);
-    el.innerHTML = docs.map(d => {
-      const r = d.data();
-      const s = studentsCache.find(s => s.id === r.studentId);
-      return `<div class="list-item">
-        <div class="list-item-info">
-          <div class="list-item-title">${s ? s.fullName : "Naməlum"} — ${r.date}</div>
-          <div class="list-item-sub">${r.attended ? "✓ İştirak" : "✗ Yoxdur"} · ${r.homeworkDone ? "✓ Tapşırıq" : "✗ Tapşırıq yox"} · Hazırlıq: ${r.prepPercentage}%</div>
-        </div>
-        <div class="list-item-actions"><button class="btn-danger" onclick="deleteDoc('dailyReports','${d.id}')">Sil</button></div>
-      </div>`;
-    }).join("");
-  });
+  document.getElementById("daily-date-doors").value = dailyCurrentDate;
+  renderDailyDoors();
 }
 
 // ---- QUIZ / SINAQ NƏTİCƏLƏRİ ----
@@ -4391,12 +4623,12 @@ async function initStudentPanel(uid) {
   }
   document.getElementById("s-group-badge").innerHTML = `<span class="badge">${esc(groupNameText)}</span>`;
 
-  // Gündəlik hesabatlar
-  db.collection("dailyReports").where("studentId", "==", uid).onSnapshot(snap => {
-    const reports = snap.docs.map(d => d.data()).sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 30);
+  // Gündəlik hesabatlar (yeni sistem: dailyStatus kolleksiyası)
+  db.collection("dailyStatus").where("studentId", "==", uid).onSnapshot(snap => {
+    const reports = snap.docs.map(d => ({ ...d.data(), attended: true })).sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 30);
     renderStudentDaily(reports);
     updateStudentStats(reports);
-  }, err => console.error("dailyReports xətası:", err));
+  }, err => console.error("dailyStatus xətası:", err));
 
   // Quiz nəticələri
   let quizData = [], examData = [];
@@ -5656,15 +5888,16 @@ document.getElementById("race-again-btn").addEventListener("click", () => {
 function renderStudentDaily(reports) {
   const el = document.getElementById("s-daily-list");
   if (reports.length === 0) { el.innerHTML = `<div class="empty-state">Hələ hesabat yoxdur</div>`; return; }
-  el.innerHTML = reports.map(r => `
-    <div class="list-item">
+  el.innerHTML = reports.map(r => {
+    const score = dailyScoreOf(r);
+    return `<div class="list-item">
       <div class="list-item-info">
-        <div class="list-item-title">${r.date}</div>
-        <div class="list-item-sub">${r.attended ? "✓ İştirak etdi" : "✗ İştirak etmədi"} · ${r.homeworkDone ? "✓ Tapşırıq edildi" : "✗ Tapşırıq edilmədi"} · Hazırlıq: ${r.prepPercentage}%</div>
+        <div class="list-item-title">${r.date} ${score !== null ? `— ${score}%` : ""}</div>
+        <div class="list-item-sub">Ev tapşırığı: ${DAILY_LBL[r.homework] || "—"} · Sual-cavab: ${DAILY_LBL[r.qa] || "—"} · Təkrar: ${DAILY_LBL[r.repeat] || "—"}</div>
         ${r.note ? `<div class="list-item-sub" style="margin-top:4px;">📝 ${esc(r.note)}</div>` : ""}
       </div>
-    </div>
-  `).join("");
+    </div>`;
+  }).join("");
 }
 
 function renderStudentScores(quizData, examData) {
@@ -5729,7 +5962,8 @@ function updateStudentStats(reports) {
   const attendedCount = reports.filter(r => r.attended).length;
   const attendancePct = Math.round((attendedCount / reports.length) * 100);
   document.getElementById("stat-attendance").textContent = attendancePct + "%";
-  document.getElementById("stat-prep").textContent = (reports[0].prepPercentage || 0) + "%";
+  const latestScore = dailyScoreOf(reports[0]);
+  document.getElementById("stat-prep").textContent = latestScore !== null ? latestScore + "%" : "—";
   renderAttendanceTrend(reports);
 }
 
