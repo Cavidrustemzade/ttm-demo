@@ -2625,25 +2625,184 @@ document.getElementById("daily-filter-btn").addEventListener("click", () => {
   renderDailyCards();
 });
 
-document.getElementById("daily-pdf-btn").addEventListener("click", () => {
+document.getElementById("daily-pdf-btn").addEventListener("click", async () => {
   const g = groupsCache.find(x => x.id === dailyCurrentGroupId);
   const list = studentsCache.filter(s => s.active !== false && s.groupId === dailyCurrentGroupId).sort((a, b) => a.fullName.localeCompare(b.fullName, "az"));
   if (list.length === 0) { toast("Şagird yoxdur"); return; }
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit: "mm", format: "a4" });
-  doc.setFontSize(14);
-  doc.text(`${g ? g.name : ""} qrupu — Gündəlik hesabat (${dailyCurrentDate})`, 12, 16);
-  doc.setFontSize(9);
-  let y = 26;
-  list.forEach((s, i) => {
-    const st = dailyStatusCache[s.id] || {};
-    if (y > 280) { doc.addPage(); y = 16; }
-    doc.text(`${i + 1}. ${s.fullName}`, 12, y);
-    doc.text(`Ev tapş: ${DAILY_LBL[st.homework] || "-"}   Sual-cavab: ${DAILY_LBL[st.qa] || "-"}   Təkrar: ${DAILY_LBL[st.repeat] || "-"}`, 12, y + 5);
-    y += st.note ? 15 : 11;
-    if (st.note) { doc.text(`Qeyd: ${st.note}`, 12, y - 5); }
-  });
-  doc.save(`${(g ? g.name : "qrup").replace(/[^\w -]/g, "")}_${dailyCurrentDate}.pdf`);
+  const btn = document.getElementById("daily-pdf-btn");
+  btn.disabled = true;
+  toast(cachedFontBase64 ? "PDF hazırlanır..." : "Şrift yüklənir, gözləyin...");
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    await ensurePdfFont(doc);
+    const W = 210, H = 297, mx = 12;
+    const cols = [
+      { t: "№", w: 8, a: "center" },
+      { t: "Ad Soyad", w: 50, a: "left" },
+      { t: "Ev tapşırığı", w: 26, a: "center" },
+      { t: "Sual-cavab", w: 26, a: "center" },
+      { t: "Təkrar", w: 26, a: "center" },
+      { t: "Müəllim qeydi", w: 50, a: "left" }
+    ];
+    const NAVY = [11, 60, 93];
+    const STY = {
+      good: { bg: [223, 244, 230], fg: [39, 137, 87] },
+      mid: { bg: [255, 243, 205], fg: [155, 112, 5] },
+      bad: { bg: [253, 234, 234], fg: [197, 48, 48] }
+    };
+    const kindOf = (field, v) => {
+      if (!v) return null;
+      if (field === "qa") return v === "good" ? "good" : v === "normal" ? "mid" : "bad";
+      return v === "done" ? "good" : v === "not" ? "mid" : "bad";
+    };
+    const fmtDate = (d) => { const p = String(d).split("-"); return p.length === 3 ? `${p[2]}.${p[1]}.${p[0]}` : d; };
+
+    // ---- Başlıq banneri ----
+    doc.setFillColor(...NAVY);
+    doc.rect(0, 0, W, 30, "F");
+    doc.setFillColor(90, 169, 214);
+    doc.rect(0, 30, W, 1.6, "F");
+    doc.setTextColor(255, 255, 255);
+    setPdfFont(doc);
+    doc.setFontSize(19);
+    boldText(doc, `${g ? g.name : ""} qrupu`, mx, 14);
+    doc.setFontSize(10.5);
+    doc.text("Gündəlik hesabat", mx, 22);
+    doc.setFontSize(11);
+    boldText(doc, fmtDate(dailyCurrentDate), W - mx, 14, { align: "right" });
+    doc.setFontSize(9);
+    doc.text(`${list.length} şagird`, W - mx, 22, { align: "right" });
+
+    // ---- Statistika ----
+    const cnt = { hw: { good: 0, mid: 0, bad: 0 }, qa: { good: 0, mid: 0, bad: 0 }, rp: { good: 0, mid: 0, bad: 0 } };
+    const mood = { good: 0, mid: 0, bad: 0 };
+    list.forEach(s => {
+      const st = dailyStatusCache[s.id] || {};
+      const a = kindOf("homework", st.homework), b = kindOf("qa", st.qa), c = kindOf("repeat", st.repeat);
+      if (a) cnt.hw[a]++; if (b) cnt.qa[b]++; if (c) cnt.rp[c]++;
+      const mc = dailyMoodClass(dailyScoreOf(st));
+      if (mc === "mood-good") mood.good++; else if (mc === "mood-normal") mood.mid++; else if (mc === "mood-bad") mood.bad++;
+    });
+    let y = 40;
+    doc.setTextColor(...NAVY);
+    doc.setFontSize(11);
+    boldText(doc, "Sinfin ümumi statistikası", mx, y);
+    y += 4;
+    const boxW = (W - mx * 2 - 8) / 3;
+    const boxes = [
+      { t: "Ev tapşırığı", l: ["Edib", "Etməyib", "Köçürüb"], v: cnt.hw },
+      { t: "Sual-cavab", l: ["Yaxşı", "Normal", "Pis"], v: cnt.qa },
+      { t: "Təkrar", l: ["Edib", "Etməyib", "Köçürüb"], v: cnt.rp }
+    ];
+    boxes.forEach((bx, i) => {
+      const x = mx + i * (boxW + 4);
+      doc.setFillColor(244, 247, 250);
+      doc.setDrawColor(220, 228, 236);
+      doc.roundedRect(x, y, boxW, 25, 2.5, 2.5, "FD");
+      doc.setTextColor(...NAVY);
+      doc.setFontSize(9);
+      boldText(doc, bx.t, x + 3, y + 6);
+      ["good", "mid", "bad"].forEach((k, j) => {
+        const cx = x + 3 + j * ((boxW - 6) / 3);
+        const cw = (boxW - 6) / 3 - 1.5;
+        doc.setFillColor(...STY[k].bg);
+        doc.roundedRect(cx, y + 9, cw, 13, 2, 2, "F");
+        doc.setTextColor(...STY[k].fg);
+        doc.setFontSize(12);
+        boldText(doc, String(bx.v[k]), cx + cw / 2, y + 15.5, { align: "center" });
+        doc.setFontSize(6.5);
+        doc.text(bx.l[j], cx + cw / 2, y + 20, { align: "center" });
+      });
+    });
+    y += 30;
+    doc.setFontSize(9);
+    doc.setTextColor(90, 100, 115);
+    doc.text(`Ümumi nəticə:  Yaxşı ${mood.good}   ·   Orta ${mood.mid}   ·   Zəif ${mood.bad}`, mx, y);
+    y += 6;
+
+    // ---- Cədvəl ----
+    const drawHead = () => {
+      doc.setFillColor(...NAVY);
+      doc.rect(mx, y, W - mx * 2, 9, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(9);
+      let x = mx;
+      cols.forEach(c => {
+        const tx = c.a === "center" ? x + c.w / 2 : x + 2.5;
+        boldText(doc, c.t, tx, y + 6, { align: c.a === "center" ? "center" : "left" });
+        x += c.w;
+      });
+      y += 9;
+    };
+    drawHead();
+    list.forEach((s, i) => {
+      const st = dailyStatusCache[s.id] || {};
+      doc.setFontSize(9);
+      const nameLines = doc.splitTextToSize(s.fullName, cols[1].w - 5);
+      doc.setFontSize(8);
+      const noteLines = st.note ? doc.splitTextToSize(st.note, cols[5].w - 5) : [];
+      const rowH = Math.max(11, Math.max(nameLines.length * 4.4, noteLines.length * 3.9) + 5);
+      if (y + rowH > H - 16) { doc.addPage(); y = 14; drawHead(); }
+      if (i % 2 === 1) { doc.setFillColor(249, 251, 253); doc.rect(mx, y, W - mx * 2, rowH, "F"); }
+      doc.setDrawColor(228, 234, 240);
+      doc.setLineWidth(0.2);
+      doc.line(mx, y + rowH, W - mx, y + rowH);
+      let x = mx;
+      // №
+      doc.setTextColor(120, 130, 145);
+      doc.setFontSize(9);
+      doc.text(String(i + 1), x + cols[0].w / 2, y + rowH / 2 + 1.2, { align: "center" });
+      x += cols[0].w;
+      // Ad
+      doc.setTextColor(30, 40, 55);
+      doc.setFontSize(9);
+      doc.text(nameLines, x + 2.5, y + rowH / 2 - (nameLines.length - 1) * 2.2 + 1.2);
+      x += cols[1].w;
+      // statuslar
+      const LBLS = DAILY_LBL;
+      [["homework", st.homework], ["qa", st.qa], ["repeat", st.repeat]].forEach(([f, v], k) => {
+        const c = cols[2 + k];
+        const kind = kindOf(f, v);
+        if (kind) {
+          doc.setFillColor(...STY[kind].bg);
+          doc.roundedRect(x + 1.5, y + rowH / 2 - 4, c.w - 3, 8, 2, 2, "F");
+          doc.setTextColor(...STY[kind].fg);
+          doc.setFontSize(8.5);
+          boldText(doc, LBLS[v], x + c.w / 2, y + rowH / 2 + 1.4, { align: "center" });
+        } else {
+          doc.setTextColor(170, 178, 190);
+          doc.setFontSize(9);
+          doc.text("—", x + c.w / 2, y + rowH / 2 + 1.2, { align: "center" });
+        }
+        x += c.w;
+      });
+      // Qeyd
+      if (noteLines.length) {
+        doc.setTextColor(60, 70, 85);
+        doc.setFontSize(8);
+        doc.text(noteLines, x + 2.5, y + rowH / 2 - (noteLines.length - 1) * 1.95 + 1);
+      }
+      y += rowH;
+    });
+
+    // ---- Altlıq + səhifə nömrəsi ----
+    const total = doc.internal.getNumberOfPages();
+    for (let p = 1; p <= total; p++) {
+      doc.setPage(p);
+      doc.setFontSize(8);
+      doc.setTextColor(150, 158, 170);
+      doc.text("TTM Tədris Mərkəzi · tamtedris.az", mx, H - 8);
+      doc.text(`${p} / ${total}`, W - mx, H - 8, { align: "right" });
+    }
+    doc.save(`${(g ? g.name : "qrup").replace(/[^\wƏəıİĞğÜüŞşÖöÇç -]/g, "")}_${dailyCurrentDate}.pdf`);
+    toast("PDF hazırdır ✅");
+  } catch (err) {
+    console.error(err);
+    toast("PDF xətası: " + err.message);
+  } finally {
+    btn.disabled = false;
+  }
 });
 
 document.getElementById("daily-excel-btn").addEventListener("click", () => {
