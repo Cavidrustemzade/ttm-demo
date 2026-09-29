@@ -974,6 +974,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
       <button class="tab-btn" data-tab="tab-payments">Ödənişlər</button>
       <button class="tab-btn" data-tab="tab-sitesettings">Sayt Ayarları</button>
       <button class="tab-btn" data-tab="tab-teacherreqs" id="tab-btn-teacherreqs">Müəllim sorğuları</button>
+      <button class="tab-btn" data-tab="tab-enrollreqs">Şagird sorğuları</button>
     </div>
 
     <!-- ŞAGİRDLƏR -->
@@ -1359,6 +1360,22 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
         <div id="teacherreqs-other-list"><div class="empty-state">Yüklənir...</div></div>
       </div>
     </div>
+    <div class="tab-panel" id="tab-enrollreqs">
+      <div class="card">
+        <h3>🔑 Mənim müəllim kodum</h3>
+        <div id="my-teacher-code" class="list-item-title" style="font-size:24px; letter-spacing:3px; margin-bottom:8px;">—</div>
+        <div class="muted-note">Bu kodu şagirdə ver, o "Müəllimlər" bölməsində yazıb sorğu göndərsin.</div>
+        <button class="btn-small" id="gen-code-btn" style="margin-top:10px;">Kod yarat</button>
+      </div>
+      <div class="card">
+        <h3>⏳ Gözləyən sorğular</h3>
+        <div id="enroll-pending-list"><div class="empty-state">Yüklənir...</div></div>
+      </div>
+      <div class="card">
+        <h3>✅ Qoşulmuş şagirdlər (qrupu dəyiş)</h3>
+        <div id="enroll-active-list"><div class="empty-state">Yüklənir...</div></div>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -1395,6 +1412,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
       <button class="tab-btn" data-stab="stab-exams">Sınaqlar</button>
       <button class="tab-btn" data-stab="stab-roadmap">🎯 Yol Xəritəm</button>
       <button class="tab-btn" data-stab="stab-race">🏆 Yarış</button>
+      <button class="tab-btn" data-stab="stab-teachers">👩‍🏫 Müəllimlər</button>
     </div>
 
     <!-- ANA SƏHİFƏ -->
@@ -1600,6 +1618,20 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
           <div class="race-score-badge" style="margin-top:14px;">⭐ <span id="race-final-score">0</span> xal</div>
         </div>
         <button class="btn-small" id="race-again-btn" style="width:100%;">Yenidən yarış</button>
+      </div>
+    </div>
+      <div class="tab-panel" id="stab-teachers">
+      <div class="card">
+        <h3>Müəllimə qoşul</h3>
+        <div class="field-row">
+          <div class="field"><label>Müəllim kodu</label><input type="text" id="join-code" placeholder="Məs: K7M2QX" maxlength="10" /></div>
+        </div>
+        <button class="btn-small" id="join-btn">Sorğu göndər</button>
+        <div class="muted-note">Sorğu müəllim təsdiqləyəndən sonra aktivləşir.</div>
+      </div>
+      <div class="card">
+        <h3>Müəllimlərim</h3>
+        <div id="my-enrollments-list"><div class="empty-state">Hələ sorğu yoxdur</div></div>
       </div>
     </div>
   </main>
@@ -1973,6 +2005,7 @@ async function initAdminPanel(uid, isSuperAdmin) {
   loadExams();
   document.getElementById("score-date").value = new Date().toISOString().slice(0, 10);
   initPaymentsGate();
+  initEnrollments();
 }
 
 // ---- ÖDƏNİŞLƏR ----
@@ -4776,6 +4809,7 @@ window.toggleStudentAttemptDetail = async (attemptId) => {
 
 async function initStudentPanel(uid) {
   currentStudentUid = uid;
+  initStudentEnrollments(uid);
   const sDoc = await db.collection("students").doc(uid).get();
   if (!sDoc.exists) return;
   const s = sDoc.data();
@@ -6197,6 +6231,111 @@ function renderSubjectBreakdown(quizData, examData) {
       </div>
     </div>`;
   }).join("") + (rows.some(r => r.avg < 60) ? `<div class="muted-note">⚠️ 60%-dən aşağı fənnlərə əlavə diqqət tövsiyə olunur.</div>` : "");
+}
+</script>
+<script>
+// ===== ÇOX MÜƏLLİMLİ SİSTEM: kod, sorğular, qrup köçürmə =====
+let enrollmentsCache = [];
+
+function initEnrollments() {
+  const codeEl = document.getElementById("my-teacher-code");
+  const genBtn = document.getElementById("gen-code-btn");
+  db.collection("teacherCodes").where("teacherId", "==", currentTeacherId).onSnapshot(s => {
+    codeEl.textContent = s.empty ? "—" : s.docs[0].id;
+    genBtn.style.display = s.empty ? "" : "none";
+  }, err => console.error("teacherCodes xətası:", err));
+  genBtn.onclick = async () => {
+    const ch = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let subject = "";
+    try { const t = await db.collection("teachers").doc(currentTeacherId).get(); if (t.exists) subject = t.data().subject || ""; } catch (e) {}
+    const teacherName = document.getElementById("admin-name").textContent || "Müəllim";
+    for (let i = 0; i < 5; i++) {
+      let c = ""; for (let k = 0; k < 6; k++) c += ch[Math.floor(Math.random() * ch.length)];
+      try {
+        await db.collection("teacherCodes").doc(c).set({ teacherId: currentTeacherId, teacherName, subject });
+        toast("Kod yaradıldı ✅"); return;
+      } catch (e) { if (i === 4) toast("Xəta: " + e.message); }
+    }
+  };
+  db.collection("enrollments").where("teacherId", "==", currentTeacherId).onSnapshot(s => {
+    enrollmentsCache = s.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderEnrollments();
+  }, err => console.error("enrollments xətası:", err));
+  document.querySelector('.tab-btn[data-tab="tab-enrollreqs"]').addEventListener("click", renderEnrollments);
+}
+
+function renderEnrollments() {
+  const opts = (sel) => groupsCache.map(g => `<option value="${g.id}" ${g.id === sel ? "selected" : ""}>${esc(g.name)}</option>`).join("");
+  const pend = enrollmentsCache.filter(e => e.status === "pending");
+  const act = enrollmentsCache.filter(e => e.status === "active");
+  document.getElementById("enroll-pending-list").innerHTML = pend.length === 0
+    ? `<div class="empty-state">Gözləyən sorğu yoxdur</div>`
+    : pend.map(e => `<div class="list-item" style="flex-wrap:wrap;">
+        <div class="list-item-info"><div class="list-item-title">${esc(e.studentName)}</div></div>
+        <div class="list-item-actions" style="flex-wrap:wrap;">
+          <select id="enr-g-${e.id}" style="padding:7px; border-radius:8px; border:1.5px solid var(--color-gray);">${opts("")}</select>
+          <button class="btn-small" onclick="approveEnrollment('${e.id}')">Təsdiqlə</button>
+          <button class="btn-danger" onclick="rejectEnrollment('${e.id}')">Rədd et</button>
+        </div></div>`).join("");
+  document.getElementById("enroll-active-list").innerHTML = act.length === 0
+    ? `<div class="empty-state">Hələ qoşulmuş şagird yoxdur</div>`
+    : act.map(e => `<div class="list-item" style="flex-wrap:wrap;">
+        <div class="list-item-info"><div class="list-item-title">${esc(e.studentName)}</div><div class="list-item-sub"><span class="badge">${groupName(e.groupId)}</span></div></div>
+        <div class="list-item-actions" style="flex-wrap:wrap;">
+          <select id="enr-m-${e.id}" style="padding:7px; border-radius:8px; border:1.5px solid var(--color-gray);">${opts(e.groupId)}</select>
+          <button class="btn-outline" onclick="moveEnrollment('${e.id}')">Köçür</button>
+        </div></div>`).join("");
+}
+
+window.approveEnrollment = async (id) => {
+  const groupId = document.getElementById("enr-g-" + id).value;
+  if (!groupId) { toast("Əvvəlcə qrup seçin (və ya qrup yaradın)"); return; }
+  try {
+    await db.collection("enrollments").doc(id).update({ status: "active", groupId, approvedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    toast("Şagird qrupa əlavə edildi ✅");
+  } catch (e) { toast("Xəta: " + e.message); }
+};
+window.rejectEnrollment = async (id) => {
+  if (!confirm("Sorğunu rədd etmək istəyirsiniz?")) return;
+  try { await db.collection("enrollments").doc(id).delete(); toast("Rədd edildi"); } catch (e) { toast("Xəta: " + e.message); }
+};
+window.moveEnrollment = async (id) => {
+  const groupId = document.getElementById("enr-m-" + id).value;
+  if (!groupId) return;
+  try { await db.collection("enrollments").doc(id).update({ groupId }); toast("Qrup dəyişdirildi ✅"); } catch (e) { toast("Xəta: " + e.message); }
+};
+
+function initStudentEnrollments(uid) {
+  document.getElementById("join-btn").onclick = async () => {
+    const code = document.getElementById("join-code").value.trim().toUpperCase();
+    if (!code) { toast("Kodu yazın"); return; }
+    try {
+      const snap = await db.collection("teacherCodes").doc(code).get();
+      if (!snap.exists) { toast("Kod tapılmadı"); return; }
+      const t = snap.data();
+      await db.collection("enrollments").doc(uid + "_" + t.teacherId).set({
+        studentId: uid,
+        studentName: document.getElementById("student-name").textContent || "Şagird",
+        teacherId: t.teacherId, teacherName: t.teacherName || "", subject: t.subject || "",
+        status: "pending", createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      document.getElementById("join-code").value = "";
+      toast("Sorğu göndərildi ✅");
+    } catch (e) {
+      toast(e.code === "permission-denied" ? "Bu müəllimə artıq sorğu göndərmisiniz" : "Xəta: " + e.message);
+    }
+  };
+  db.collection("enrollments").where("studentId", "==", uid).onSnapshot(s => {
+    const el = document.getElementById("my-enrollments-list");
+    if (s.empty) { el.innerHTML = `<div class="empty-state">Hələ sorğu yoxdur</div>`; return; }
+    el.innerHTML = s.docs.map(d => {
+      const e = d.data();
+      return `<div class="list-item"><div class="list-item-info">
+        <div class="list-item-title">${esc(e.teacherName || "Müəllim")}</div>
+        <div class="list-item-sub">${esc(e.subject || "")} · ${e.status === "active" ? "✅ Aktiv" : "⏳ Təsdiq gözləyir"}</div>
+      </div></div>`;
+    }).join("");
+  }, err => console.error("enrollments xətası:", err));
 }
 </script>
 <script>
