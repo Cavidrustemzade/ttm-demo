@@ -949,7 +949,27 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
       </button>
     </form>
 
+    <form id="student-register-form" autocomplete="off" style="display:none;">
+      <div class="form-group">
+        <label for="sr-fullname">Ad Soyad</label>
+        <input type="text" id="sr-fullname" placeholder="Ad və Soyadınız" required />
+      </div>
+      <div class="form-group">
+        <label for="sr-username">İstifadəçi adı</label>
+        <input type="text" id="sr-username" placeholder="Giriş üçün istifadəçi adı seçin" required />
+      </div>
+      <div class="form-group">
+        <label for="sr-password">Şifrə</label>
+        <input type="password" id="sr-password" placeholder="Ən azı 6 simvol" required />
+      </div>
+      <button type="submit" class="btn-primary" id="student-register-btn">
+        <span id="sr-btn-text">Qeydiyyatdan keç</span>
+        <span class="spinner" id="sr-btn-spinner"></span>
+      </button>
+    </form>
+
     <span class="auth-switch-link" id="auth-switch-link">Müəllimsiniz? Qeydiyyatdan keçin</span>
+    <span class="auth-switch-link" id="student-switch-link">Şagirdsiniz? Qeydiyyatdan keçin</span>
 
     <div class="login-footer">© 2026 TTM Tədris Mərkəzi — Demo test səhifəsi</div>
     <button id="pwa-install-btn" style="display:none; width:100%; margin-top:14px; background:var(--color-light-gray); color:var(--color-primary); padding:11px; border-radius:var(--radius-sm); font-size:13.5px; font-weight:600;">📲 Tətbiqi Yüklə</button>
@@ -6337,6 +6357,53 @@ function initStudentEnrollments(uid) {
     }).join("");
   }, err => console.error("enrollments xətası:", err));
 }
+</script>
+<script>
+// ===== ŞAGİRD ÖZÜNƏQEYDİYYAT =====
+(function () {
+  const link = document.getElementById("student-switch-link");
+  const sForm = document.getElementById("student-register-form");
+  const tLink = document.getElementById("auth-switch-link");
+  let open = false;
+  link.addEventListener("click", () => {
+    open = !open;
+    hideError(); hideInfo();
+    document.getElementById("login-form").style.display = open ? "none" : "block";
+    document.getElementById("teacher-register-form").style.display = "none";
+    sForm.style.display = open ? "block" : "none";
+    tLink.style.display = open ? "none" : "";
+    document.getElementById("login-subtitle").textContent = open ? "Şagird qeydiyyatı" : "Şagird və Valideyn Portalı — TEST rejimi";
+    link.textContent = open ? "Girişə qayıt" : "Şagirdsiniz? Qeydiyyatdan keçin";
+  });
+  const btn = document.getElementById("student-register-btn");
+  const txt = document.getElementById("sr-btn-text");
+  const spin = document.getElementById("sr-btn-spinner");
+  const setLoad = (v) => { btn.disabled = v; txt.style.display = v ? "none" : "inline"; spin.style.display = v ? "inline-block" : "none"; };
+  sForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    hideError(); hideInfo();
+    const fullName = document.getElementById("sr-fullname").value.trim();
+    const username = document.getElementById("sr-username").value.trim().toLowerCase();
+    const password = document.getElementById("sr-password").value;
+    if (!fullName || !username || !password) { showError("Bütün sahələri doldurun."); return; }
+    if (password.length < 6) { showError("Şifrə ən azı 6 simvol olmalıdır."); return; }
+    setLoad(true);
+    suppressAuthRouting = true;
+    try {
+      const cred = await auth.createUserWithEmailAndPassword(username + USERNAME_DOMAIN, password);
+      const uid = cred.user.uid;
+      await db.collection("users").doc(uid).set({ role: "student", fullName, username });
+      await db.collection("students").doc(uid).set({ fullName, username, active: true, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+      window.location.reload(); // artıq daxil olub, səhifə yenilənəndə şagird panelinə düşür
+    } catch (err) {
+      console.error(err);
+      showError(err.code === "auth/email-already-in-use" ? "Bu istifadəçi adı artıq istifadə olunub, başqasını seçin." : (err.message || "Qeydiyyat zamanı xəta baş verdi."));
+      if (auth.currentUser) { try { await auth.currentUser.delete(); } catch (e2) { try { await auth.signOut(); } catch (e3) {} } }
+      setLoad(false);
+      suppressAuthRouting = false;
+    }
+  });
+})();
 </script>
 <script>
 // PWA - Service Worker qeydiyyatı (tətbiq kimi işləməsi və offline dəstək üçün)
