@@ -1442,6 +1442,10 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
         <div id="s-group-badge" class="muted-note"></div>
       </div>
       <div class="card">
+        <h3>📚 Fənlərim</h3>
+        <div id="s-subject-cards" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"><div class="empty-state" style="grid-column:1/-1;">Hələ müəllim qoşulmayıb</div></div>
+      </div>
+      <div class="card">
         <h3>Statistika</h3>
         <div id="stat-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
           <div class="stat-icon-card" style="background:linear-gradient(135deg,#eff6ff,#ffffff);">
@@ -1653,6 +1657,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
         <h3>Müəllimlərim</h3>
         <div id="my-enrollments-list"><div class="empty-state">Hələ sorğu yoxdur</div></div>
       </div>
+      <div id="teacher-detail"></div>
     </div>
   </main>
 </div>
@@ -4917,6 +4922,8 @@ async function initStudentPanel(uid) {
     currentStudentUid = uid;
     currentStudentGroupId = s.groupId;
     loadStudentExams(uid, s.groupId);
+  } else {
+    loadStudentExams(uid, null);
   }
 }
 
@@ -4935,11 +4942,23 @@ let examEndTime = null;
 let openTextId = null;
 let flaggedQuestions = new Set();
 
+let legacyExamsArr = [];
+let enrollExamsByTeacher = {};
+let enrGroupByTeacher = {};
+function recomputeStudentExams() {
+  const m = {};
+  legacyExamsArr.forEach(e => { m[e.id] = e; });
+  Object.keys(enrollExamsByTeacher).forEach(t => enrollExamsByTeacher[t].forEach(e => { m[e.id] = e; }));
+  studentExamsCache = Object.values(m);
+  renderStudentExamList();
+}
+function attemptGroupId(ex) {
+  return enrGroupByTeacher[ex.teacherId] || currentStudentGroupId || null;
+}
 function loadStudentExams(uid, groupId) {
-  if (!groupId) return;
-  db.collection("exams").where("groupIds", "array-contains", groupId).onSnapshot(snap => {
-    studentExamsCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderStudentExamList();
+  if (groupId) db.collection("exams").where("groupIds", "array-contains", groupId).onSnapshot(snap => {
+    legacyExamsArr = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    recomputeStudentExams();
   }, err => console.error("exams xətası:", err));
 
   db.collection("examAttempts").where("studentId", "==", uid).onSnapshot(snap => {
@@ -4963,7 +4982,7 @@ function renderStudentExamList() {
       html += `<div class="list-item">
         <div class="list-item-info">
           <div class="list-item-title">🟢 ${esc(ex.title)}</div>
-          <div class="list-item-sub">${ex.questionCount || 0} sual · ${ex.timeLimitMinutes} dəqiqə · ${esc(ex.topic)}</div>
+          <div class="list-item-sub">${ex.questionCount || 0} sual · ${ex.timeLimitMinutes} dəqiqə · ${esc(ex.topic)}${ex._teacherName ? " · " + esc(ex._teacherName) : ""}</div>
         </div>
         <div class="list-item-actions"><button class="btn-small" onclick="startExam('${ex.id}')">Başla</button></div>
       </div>`;
@@ -5465,7 +5484,7 @@ async function finishExam(autoSubmit) {
   const pendingGrading = detailedCount > 0;
 
   const attemptData = {
-    examId: ex.id, studentId: currentStudentUid, groupId: currentStudentGroupId, topic: ex.topic,
+    examId: ex.id, studentId: currentStudentUid, groupId: attemptGroupId(ex), topic: ex.topic,
     teacherId: ex.teacherId || null,
     answers: lightAnswers, perQuestion, correctCount, totalCount, score: scorePct,
     detailedCount, detailedGradedCount: 0, pendingGrading,
@@ -5488,7 +5507,7 @@ async function finishExam(autoSubmit) {
       detailedPhotos.forEach(({ index, photo }) => {
         const docRef = db.collection("detailedAnswers").doc(`${ref.id}_${index}`);
         batch.set(docRef, {
-          attemptId: ref.id, examId: ex.id, studentId: currentStudentUid, groupId: currentStudentGroupId,
+          attemptId: ref.id, examId: ex.id, studentId: currentStudentUid, groupId: attemptGroupId(ex),
           teacherId: ex.teacherId || null,
           questionIndex: index, photoBase64: photo, points: null, maxPoints: 1,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -6346,17 +6365,102 @@ function initStudentEnrollments(uid) {
     }
   };
   db.collection("enrollments").where("studentId", "==", uid).onSnapshot(s => {
-    const el = document.getElementById("my-enrollments-list");
-    if (s.empty) { el.innerHTML = `<div class="empty-state">Hələ sorğu yoxdur</div>`; return; }
-    el.innerHTML = s.docs.map(d => {
-      const e = d.data();
-      return `<div class="list-item"><div class="list-item-info">
-        <div class="list-item-title">${esc(e.teacherName || "Müəllim")}</div>
-        <div class="list-item-sub">${esc(e.subject || "")} · ${e.status === "active" ? "✅ Aktiv" : "⏳ Təsdiq gözləyir"}</div>
-      </div></div>`;
-    }).join("");
+    myEnrollments = s.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderMyEnrollments();
+    syncEnrollmentExamListeners();
   }, err => console.error("enrollments xətası:", err));
 }
+
+let myEnrollments = [];
+const enrSubs = {};
+
+function syncEnrollmentExamListeners() {
+  const keep = {};
+  const map = {};
+  myEnrollments.filter(e => e.status === "active" && e.groupId).forEach(e => {
+    map[e.teacherId] = e.groupId;
+    const key = e.teacherId + "|" + e.groupId;
+    keep[e.teacherId] = true;
+    if (enrSubs[e.teacherId] && enrSubs[e.teacherId].key === key) return;
+    if (enrSubs[e.teacherId]) enrSubs[e.teacherId].unsub();
+    const unsub = db.collection("exams").where("teacherId", "==", e.teacherId).where("groupIds", "array-contains", e.groupId).onSnapshot(snap => {
+      enrollExamsByTeacher[e.teacherId] = snap.docs.map(d => ({ id: d.id, ...d.data(), _teacherName: e.teacherName || "" }));
+      recomputeStudentExams();
+    }, err => console.error("müəllim sınaqları xətası:", err));
+    enrSubs[e.teacherId] = { key, unsub };
+  });
+  enrGroupByTeacher = map;
+  Object.keys(enrSubs).forEach(t => {
+    if (!keep[t]) { enrSubs[t].unsub(); delete enrSubs[t]; delete enrollExamsByTeacher[t]; recomputeStudentExams(); }
+  });
+}
+
+function renderMyEnrollments() {
+  const el = document.getElementById("my-enrollments-list");
+  const home = document.getElementById("s-subject-cards");
+  if (myEnrollments.length === 0) {
+    el.innerHTML = `<div class="empty-state">Hələ sorğu yoxdur</div>`;
+  } else {
+    el.innerHTML = myEnrollments.map(e => {
+      const active = e.status === "active";
+      return `<div class="list-item" ${active ? `style="cursor:pointer;" onclick="openTeacherDetail('${e.id}')"` : ""}>
+        <div class="list-item-info">
+          <div class="list-item-title">${esc(e.teacherName || "Müəllim")}</div>
+          <div class="list-item-sub">${esc(e.subject || "")} · ${active ? "✅ Aktiv — açmaq üçün toxun" : "⏳ Təsdiq gözləyir"}</div>
+        </div>
+      </div>`;
+    }).join("");
+  }
+  const act = myEnrollments.filter(e => e.status === "active");
+  home.innerHTML = act.length === 0
+    ? `<div class="empty-state" style="grid-column:1/-1;">Hələ müəllim qoşulmayıb. "Müəllimlər" tabından kodla qoşul.</div>`
+    : act.map(e => `<div class="stat-icon-card" style="background:linear-gradient(135deg,#eff6ff,#ffffff); cursor:pointer;" onclick="openTeacherDetail('${e.id}')">
+        <div class="stat-icon-badge grad-blue">📚</div>
+        <div class="list-item-title">${esc(e.subject || e.teacherName || "Fənn")}</div>
+        <div class="list-item-sub">${esc(e.teacherName || "")}</div>
+      </div>`).join("");
+}
+
+window.openTeacherDetail = async (eid) => {
+  const e = myEnrollments.find(x => x.id === eid);
+  if (!e || e.status !== "active") return;
+  document.querySelector('.tab-btn[data-stab="stab-teachers"]').click();
+  const box = document.getElementById("teacher-detail");
+  box.innerHTML = `<div class="card"><div class="empty-state">Yüklənir...</div></div>`;
+  box.scrollIntoView({ behavior: "smooth", block: "start" });
+  try {
+    const t = e.teacherId, g = e.groupId;
+    const [mats, tops, sch, grp] = await Promise.all([
+      db.collection("materials").where("teacherId", "==", t).where("groupId", "==", g).get(),
+      db.collection("topics").where("teacherId", "==", t).where("groupId", "==", g).get(),
+      db.collection("schedule").doc(g).get(),
+      db.collection("groups").doc(g).get()
+    ]);
+    const ts = d => (d.data().createdAt ? d.data().createdAt.toMillis() : 0);
+    const matDocs = mats.docs.slice().sort((a, b) => ts(b) - ts(a));
+    const topDocs = tops.docs.slice().sort((a, b) => ts(b) - ts(a));
+    const schedText = sch.exists && sch.data().text ? sch.data().text : "Hələ cədvəl əlavə edilməyib";
+    box.innerHTML = `
+      <div class="card">
+        <h3>${esc(e.teacherName || "Müəllim")} — ${esc(e.subject || "")}</h3>
+        <div class="muted-note" style="margin-bottom:10px;">${grp.exists ? `<span class="badge">${esc(grp.data().name)}</span>` : ""}</div>
+        <button class="btn-small" onclick="document.querySelector('.tab-btn[data-stab=stab-exams]').click()">📝 Sınaqlara bax</button>
+      </div>
+      <div class="card"><h3>Fayllar</h3>${matDocs.length === 0 ? `<div class="empty-state">Hələ fayl yoxdur</div>` : matDocs.map(d => {
+        const m = d.data(); const isPdf = m.type === "pdf";
+        return `<div class="list-item"><div class="list-item-info"><div class="list-item-title">${esc(m.title)}</div><div class="list-item-sub"><span class="badge">${isPdf ? "PDF" : "Video"}</span></div></div>
+          <div class="list-item-actions"><a href="${esc(m.url)}" target="_blank" rel="noopener noreferrer" class="btn-small" style="text-decoration:none;">Aç</a></div></div>`;
+      }).join("")}</div>
+      <div class="card"><h3>Dərs cədvəli</h3><div class="muted-note" style="white-space:pre-line; font-size:14px; color:var(--color-text);">${esc(schedText)}</div></div>
+      <div class="card"><h3>Mövzular</h3>${topDocs.length === 0 ? `<div class="empty-state">Hələ mövzu yoxdur</div>` : topDocs.map(d => {
+        const tp = d.data();
+        return `<div class="list-item"><div class="list-item-info"><div class="list-item-title">${tp.completed ? "✅" : "⏳"} ${esc(tp.name)}</div></div></div>`;
+      }).join("")}</div>`;
+  } catch (err) {
+    console.error(err);
+    box.innerHTML = `<div class="card"><div class="empty-state">Xəta: ${esc(err.message)}</div></div>`;
+  }
+};
 </script>
 <script>
 // ===== ŞAGİRD ÖZÜNƏQEYDİYYAT =====
