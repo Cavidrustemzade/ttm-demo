@@ -890,6 +890,103 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<style id="v2-style">
+/* ===== v2: şagird paneli dizaynı ===== */
+.v2-welcome{display:flex;align-items:center;justify-content:space-between;gap:12px;background:linear-gradient(135deg,#ffffff,#eef5fb)}
+.v2-welcome h3{font-size:19px;margin-bottom:4px;line-height:1.25}
+.v2-welcome-sub{font-size:13px;color:var(--color-text-muted)}
+.v2-datebox{flex:0 0 auto;min-width:84px;text-align:center;border-radius:16px;padding:10px 12px;background:#fff;border:1px solid var(--color-gray);box-shadow:var(--shadow-sm)}
+.v2-datebox b{display:block;font-size:24px;color:var(--color-primary);line-height:1.1}
+.v2-datebox span{display:block;font-size:11.5px;font-weight:700;color:var(--color-text)}
+.v2-datebox small{display:block;font-size:10.5px;color:var(--color-text-muted)}
+.v2-sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px}
+.v2-sec-head h3{margin:0}
+.v2-sec-head a{font-size:12.5px;font-weight:700;color:#1d6fd6;cursor:pointer;white-space:nowrap}
+.v2-subj-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.v2-subj{border-radius:18px;padding:12px;cursor:pointer;border:1px solid rgba(11,60,93,.08);transition:transform .2s;min-width:0}
+.v2-subj:active{transform:scale(.97)}
+.v2-subj-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.v2-av{width:62px;height:62px;border-radius:16px;object-fit:cover;flex:none;background:#dbe6f0}
+.v2-av-i{display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#fff;background:linear-gradient(135deg,var(--color-primary-light),var(--color-primary))}
+.v2-ico{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px;box-shadow:0 6px 14px rgba(0,0,0,.14);flex:none}
+.v2-subj-name{font-weight:800;font-size:14px;color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v2-subj-sub{font-size:12px;color:var(--color-text-muted);margin:2px 0 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v2-subj-foot{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.v2-chip{display:inline-block;max-width:100%;padding:4px 10px;border-radius:999px;background:#e9eff6;color:#1d5a8e;font-size:11.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v2-chev{color:var(--color-primary);font-weight:800;font-size:18px;flex:none}
+.v2-stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (min-width:900px){.v2-subj-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.v2-stat-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+/* müəllimə qoşul */
+.v2-join-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.v2-join-head h3{margin:0;font-size:18px}
+.v2-join-ico{width:38px;height:38px;border-radius:50%;background:#e6f0fb;color:#1d6fd6;display:flex;align-items:center;justify-content:center;font-size:18px}
+.v2-lbl{font-size:13px;color:var(--color-text-muted);margin-bottom:8px;display:block}
+.v2-input{width:100%;padding:13px 14px;border:1.5px solid var(--color-gray);border-radius:12px;font-size:14.5px;background:var(--color-light-gray);font-family:inherit;margin-bottom:12px}
+.v2-input:focus{border-color:var(--color-primary);background:#fff;outline:none}
+.v2-cta{width:100%;padding:14px;border-radius:12px;background:linear-gradient(135deg,var(--color-primary-light),var(--color-primary-dark));color:#fff;font-weight:800;font-size:14.5px;box-shadow:0 10px 22px rgba(11,60,93,.28);transition:transform .2s}
+.v2-cta:active{transform:scale(.98)}
+.v2-cta:disabled{opacity:.6;box-shadow:none}
+.v2-ghost{flex:1;padding:12px;border-radius:12px;background:#fff;color:var(--color-primary);font-weight:700;font-size:13px;border:1.5px solid var(--color-gray)}
+.v2-or{display:flex;align-items:center;gap:10px;color:var(--color-text-muted);font-size:12.5px;margin:18px 0 14px}
+.v2-or:before,.v2-or:after{content:"";flex:1;height:1px;background:var(--color-gray)}
+.v2-chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:10px;margin-bottom:4px;-webkit-overflow-scrolling:touch}
+.v2-chips::-webkit-scrollbar{display:none}
+.v2-chip-btn{flex:0 0 auto;padding:8px 16px;border-radius:999px;background:#fff;border:1.5px solid var(--color-gray);color:var(--color-text);font-size:12.5px;font-weight:700}
+.v2-chip-btn.active{background:var(--color-primary);border-color:var(--color-primary);color:#fff}
+.v2-trow{display:flex;align-items:center;gap:12px;padding:10px;border-radius:16px;background:#fff;border:1px solid rgba(11,60,93,.08);box-shadow:var(--shadow-sm);margin-bottom:10px;cursor:pointer;min-width:0}
+.v2-trow:active{transform:scale(.99)}
+.v2-trow .v2-av{width:58px;height:58px}
+.v2-trow-info{flex:1;min-width:0}
+.v2-trow-name{font-weight:800;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v2-trow-sub{font-size:12.5px;color:var(--color-text-muted);margin-top:2px}
+.v2-trow-meta{font-size:11.5px;color:var(--color-text-muted);margin-top:4px}
+.v2-tag{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;font-size:10.5px;font-weight:800;background:rgba(46,158,107,.12);color:#2e9e6b}
+.v2-tag.wait{background:rgba(217,154,43,.16);color:#a9700a}
+
+/* müəllim profili */
+.v2-backrow{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.v2-back{width:38px;height:38px;border-radius:12px;background:#fff;box-shadow:var(--shadow-sm);font-size:18px;color:var(--color-primary);font-weight:800}
+.v2-backtitle{font-weight:800;font-size:17px;color:var(--color-primary)}
+.v2-phead{border-radius:20px;padding:16px;background:linear-gradient(135deg,var(--color-primary-light),var(--color-primary-dark));color:#fff;display:flex;gap:14px;align-items:center;margin-bottom:0;position:relative}
+.v2-phead .v2-av{width:84px;height:84px;border-radius:18px;border:2px solid rgba(255,255,255,.6)}
+.v2-pname{font-size:19px;font-weight:800;line-height:1.2}
+.v2-psub{font-size:13.5px;opacity:.9;margin-top:4px}
+.v2-pbody{background:#fff;border-radius:20px;padding:16px;margin-top:-10px;position:relative;box-shadow:var(--shadow-sm)}
+.v2-pstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:14px;text-align:center}
+.v2-pstats div{padding:6px 4px;border-right:1px solid var(--color-gray)}
+.v2-pstats div:last-child{border-right:none}
+.v2-pstats b{display:block;font-size:18px;color:var(--color-primary)}
+.v2-pstats span{font-size:11.5px;color:var(--color-text-muted)}
+.v2-pbtns{display:flex;gap:10px;margin-top:10px}
+.v2-ptitle{font-size:15px;font-weight:800;color:var(--color-primary);margin:18px 0 8px}
+.v2-ptext{font-size:13.5px;line-height:1.7;color:var(--color-text)}
+.v2-pchips{display:flex;flex-wrap:wrap;gap:8px}
+.v2-pchip{padding:7px 12px;border-radius:999px;background:#ecf6f0;color:#1f7a4d;font-size:12.5px;font-weight:700}
+.v2-pchip.blue{background:#e9eff6;color:#1d5a8e}
+.v2-pres{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.v2-pres div{border-radius:14px;padding:14px;text-align:center}
+.v2-pres b{display:block;font-size:22px}
+.v2-pres span{font-size:12px;color:var(--color-text-muted)}
+
+/* fənn səhifəsi */
+.v2-whead{display:flex;gap:14px;align-items:center}
+.v2-wname{font-weight:800;font-size:17px;color:var(--color-text)}
+.v2-wsub{font-size:13px;color:var(--color-text-muted);margin:2px 0 6px}
+.v2-pills{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:12px;-webkit-overflow-scrolling:touch}
+.v2-pills::-webkit-scrollbar{display:none}
+.v2-pill{flex:0 0 auto;padding:9px 15px;border-radius:999px;background:#fff;color:var(--color-text-muted);font-size:13px;font-weight:700;box-shadow:var(--shadow-sm)}
+.v2-pill.active{background:var(--color-primary);color:#fff}
+
+/* aşağı naviqasiya */
+.v2-nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:repeat(5,1fr);background:#fff;border-top:1px solid var(--color-gray);box-shadow:0 -6px 20px rgba(11,60,93,.08);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px))}
+.v2-nav-btn{background:none;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 2px;color:#8a95a5;font-size:10.5px;font-weight:700;min-width:0}
+.v2-nav-btn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.v2-nav-btn span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.v2-nav-btn.active{color:var(--color-primary)}
+@media (min-width:900px){.v2-nav{display:none}}
+@media (max-width:899px){#view-student .panel-main{padding-bottom:92px}.toast{bottom:84px}}
+</style>
 </head>
 <body>
 
@@ -995,6 +1092,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
       <button class="tab-btn" data-tab="tab-sitesettings">Sayt Ayarları</button>
       <button class="tab-btn" data-tab="tab-teacherreqs" id="tab-btn-teacherreqs">Müəllim sorğuları</button>
       <button class="tab-btn" data-tab="tab-enrollreqs">Şagird sorğuları</button>
+      <button class="tab-btn" data-tab="tab-myprofile">Profilim</button>
     </div>
 
     <!-- ŞAGİRDLƏR -->
@@ -1396,6 +1494,38 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
         <div id="enroll-active-list"><div class="empty-state">Yüklənir...</div></div>
       </div>
     </div>
+      <div class="tab-panel" id="tab-myprofile">
+      <div class="card">
+        <h3>🪪 Mənim müəllim profilim</h3>
+        <div class="muted-note" id="mp-status" style="margin-bottom:12px;">Yüklənir...</div>
+        <div style="display:flex; gap:14px; align-items:center; margin-bottom:12px;">
+          <img id="mp-photo-preview" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="" style="width:84px; height:84px; border-radius:20px; object-fit:cover; background:var(--color-gray); flex:none;" />
+          <div class="field" style="flex:1; min-width:0;"><label>Foto (kvadrat kəsilir)</label><input type="file" accept="image/*" id="mp-photo-input" /></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Ad Soyad</label><input type="text" id="mp-name" placeholder="Məs: Cavid Rüstəmzadə" /></div>
+          <div class="field"><label>Fənn</label><input type="text" id="mp-subject" placeholder="Məs: Riyaziyyat" /></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Tədris etdiyi siniflər (vergüllə)</label><input type="text" id="mp-classes" placeholder="Məs: 9-cu, 10-cu, 11-ci sinif" /></div>
+          <div class="field"><label>Təcrübə (il, istəyə görə)</label><input type="number" id="mp-exp" min="0" max="60" placeholder="Məs: 5" /></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Dərs istiqamətləri (vergüllə)</label><input type="text" id="mp-directions" placeholder="Məs: Abituriyent hazırlığı, DİM testləri" /></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Haqqında</label><textarea id="mp-about" maxlength="1500" placeholder="Şagirdlərə özünüzü qısaca təqdim edin"></textarea></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Təqdimat videosu (YouTube linki, istəyə görə)</label><input type="text" id="mp-video" placeholder="https://youtube.com/..." /></div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn-small" id="mp-save-btn">💾 Yadda saxla və yayımla</button>
+          <button class="btn-danger" id="mp-delete-btn">Profili sil</button>
+        </div>
+        <div class="muted-note">Şagird, qrup, sınaq sayları və sınaq ortalaması özü hesablanır, əl ilə yazılmır. Reytinq və rəy sistemi hələ yoxdur, ona görə şagirdə göstərilmir.</div>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -1437,38 +1567,43 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 
     <!-- ANA SƏHİFƏ -->
     <div class="tab-panel active" id="stab-home">
-      <div class="card">
-        <h3 id="s-welcome-name">Xoş gəldin!</h3>
-        <div id="s-group-badge" class="muted-note"></div>
+      <div class="card v2-welcome">
+        <div style="min-width:0;">
+          <h3 id="s-welcome-name">Xoş gəldin!</h3>
+          <div class="v2-welcome-sub">Hədəfinə doğru davam et</div>
+          <div id="s-group-badge" class="muted-note"></div>
+        </div>
+        <div class="v2-datebox"><b id="v2-date-day">--</b><span id="v2-date-month"></span><small id="v2-date-wd"></small></div>
       </div>
       <div class="card">
-        <h3>📚 Fənlərim</h3>
-        <div id="s-subject-cards" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"><div class="empty-state" style="grid-column:1/-1;">Hələ müəllim qoşulmayıb</div></div>
+        <div class="v2-sec-head"><h3>📚 Fənlərim</h3><a onclick="v2Tab('stab-teachers')">Hamısına bax ›</a></div>
+        <div id="s-subject-cards" class="v2-subj-grid"><div class="empty-state" style="grid-column:1/-1;">Hələ müəllim qoşulmayıb</div></div>
       </div>
       <div class="card">
-        <h3>Statistika</h3>
-        <div id="stat-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-          <div class="stat-icon-card" style="background:linear-gradient(135deg,#eff6ff,#ffffff);">
-            <div class="stat-icon-badge grad-blue">📝</div>
-            <div class="list-item-sub">Quiz ortalaması</div>
-            <div class="stat-value-row"><div class="list-item-title" id="stat-quiz-avg" style="font-size:20px;">—</div><span class="stat-trend" id="stat-quiz-trend" style="display:none;"></span></div>
-          </div>
+        <div class="v2-sec-head"><h3>Ümumi statistika</h3></div>
+        <div id="stat-grid" class="v2-stat-grid">
           <div class="stat-icon-card" style="background:linear-gradient(135deg,#f5f3ff,#ffffff);">
             <div class="stat-icon-badge grad-purple">📊</div>
             <div class="list-item-sub">Sınaq ortalaması</div>
-            <div class="stat-value-row"><div class="list-item-title" id="stat-exam-avg" style="font-size:20px;">—</div><span class="stat-trend" id="stat-exam-trend" style="display:none;"></span></div>
+            <div class="stat-value-row"><div class="list-item-title" id="stat-exam-avg" style="font-size:22px;">—</div><span class="stat-trend" id="stat-exam-trend" style="display:none;"></span></div>
           </div>
           <div class="stat-icon-card" style="background:linear-gradient(135deg,#ecfdf5,#ffffff);">
             <div class="stat-icon-badge grad-green">✅</div>
-            <div class="list-item-sub">Davamiyyət faizi</div>
-            <div class="stat-value-row"><div class="list-item-title" id="stat-attendance" style="font-size:20px;">—</div></div>
+            <div class="list-item-sub">Davamiyyət</div>
+            <div class="stat-value-row"><div class="list-item-title" id="stat-attendance" style="font-size:22px;">—</div></div>
           </div>
           <div class="stat-icon-card" style="background:linear-gradient(135deg,#fffbeb,#ffffff);">
             <div class="stat-icon-badge grad-orange">🎯</div>
+            <div class="list-item-sub">Həll olunan sual</div>
+            <div class="list-item-title" id="stat-solved" style="font-size:22px;">—</div>
+          </div>
+          <div class="stat-icon-card" style="background:linear-gradient(135deg,#eff6ff,#ffffff);">
+            <div class="stat-icon-badge grad-blue">📈</div>
             <div class="list-item-sub">Hazırlıq faizi (son)</div>
-            <div class="list-item-title" id="stat-prep" style="font-size:20px;">—</div>
+            <div class="list-item-title" id="stat-prep" style="font-size:22px;">—</div>
           </div>
         </div>
+        <div style="display:none;"><span id="stat-quiz-avg">—</span><span id="stat-quiz-trend"></span></div>
       </div>
       <div class="card">
         <h3>Həftəlik davamiyyət trendi</h3>
@@ -1645,21 +1780,33 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
       </div>
     </div>
       <div class="tab-panel" id="stab-teachers">
-      <div class="card">
-        <h3>Müəllimə qoşul</h3>
-        <div class="field-row">
-          <div class="field"><label>Müəllim kodu</label><input type="text" id="join-code" placeholder="Məs: K7M2QX" maxlength="10" /></div>
+        <div class="card">
+          <div class="v2-join-head"><span class="v2-join-ico">👤</span><h3>Müəllimə qoşul!</h3></div>
+          <label class="v2-lbl" for="join-code">Müəllim adı və ya kodu ilə axtar</label>
+          <input type="text" id="join-code" class="v2-input" placeholder="Məs: Cavid və ya CAVID27" autocomplete="off" />
+          <button class="v2-cta" id="join-btn">Axtar</button>
+          <div id="v2-search-results" style="margin-top:12px;"></div>
+          <div class="v2-or"><span>və ya</span></div>
+          <div class="v2-lbl" style="font-weight:800; color:var(--color-text); font-size:14px;">Müəllimlər siyahısından seç</div>
+          <div id="v2-chips" class="v2-chips"></div>
+          <div id="v2-tlist"><div class="empty-state">Yüklənir...</div></div>
         </div>
-        <button class="btn-small" id="join-btn">Sorğu göndər</button>
-        <div class="muted-note">Sorğu müəllim təsdiqləyəndən sonra aktivləşir.</div>
+        <div class="card">
+          <h3>Sorğularım</h3>
+          <div id="my-enrollments-list"><div class="empty-state">Hələ sorğu göndərməmisiniz</div></div>
+        </div>
       </div>
-      <div class="card">
-        <h3>Müəllimlərim</h3>
-        <div id="my-enrollments-list"><div class="empty-state">Hələ sorğu yoxdur</div></div>
-      </div>
-      <div id="teacher-detail"></div>
-    </div>
+      <div class="tab-panel" id="stab-tprofile"><div id="v2-tprofile"></div></div>
+      <div class="tab-panel" id="stab-subject"><div id="v2-subject"></div></div>
   </main>
+  <nav id="s-bottom-nav" class="v2-nav">
+    <button class="v2-nav-btn active" data-go="stab-home" onclick="v2Tab('stab-home')"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span>Ana səhifə</span></button>
+    <button class="v2-nav-btn" data-go="stab-exams" onclick="v2Tab('stab-exams')"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg><span>Sınaqlar</span></button>
+    <button class="v2-nav-btn" data-go="stab-daily" onclick="v2Tab('stab-daily')"><svg viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4h6v3H9zM9 12h6M9 16h4"/></svg><span>Gündəlik</span></button>
+    <button class="v2-nav-btn" data-go="stab-teachers" onclick="v2Tab('stab-teachers')"><svg viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v14a2 2 0 0 0-2-2H2zM22 4h-7a3 3 0 0 0-3 3v14a2 2 0 0 1 2-2h8z"/></svg><span>Fənlər</span></button>
+    <button class="v2-nav-btn" data-go="stab-scores" onclick="v2Tab('stab-scores')"><svg viewBox="0 0 24 24"><path d="M5 21V10M12 21V3M19 21v-8"/></svg><span>Nəticələr</span></button>
+  </nav>
+
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -1993,7 +2140,7 @@ document.querySelectorAll(".tab-btn[data-stab]").forEach(btn => {
 // əks halda bir müəllimin girişi başqasının "sahibsiz" sənədini öz üstünə keçirə bilərdi.
 async function migrateLegacyDataIfNeeded(uid) {
   try {
-    const collections = ["groups", "students", "dailyReports", "quizResults", "examResults", "materials", "topics", "exams", "examAttempts", "detailedAnswers"];
+    const collections = ["groups", "students", "dailyReports", "quizResults", "examResults", "materials", "topics", "exams", "examAttempts", "detailedAnswers", "payments"];
     for (const coll of collections) {
       const snap = await db.collection(coll).get();
       const missing = snap.docs.filter(d => !d.data().teacherId);
@@ -2106,36 +2253,34 @@ window.togglePaymentGroupFilter = (groupId, checked, inputEl) => {
   renderPaymentsList();
 };
 
-function loadPayments(monthKey) {
-  if (paymentsUnsub) { paymentsUnsub(); paymentsUnsub = null; }
-  const el = document.getElementById("payments-list");
-  el.innerHTML = `<div class="empty-state">Yüklənir...</div>`;
-  paymentsUnsub = db.collection("payments").where("monthKey", "==", monthKey).onSnapshot(snap => {
-    paymentsCache = {};
-    snap.forEach(d => { paymentsCache[d.data().studentId] = d.data(); });
-    renderPaymentsList();
+let allPaymentsArr = [];
+let paymentsListenerOn = false;
+function recomputePaymentCaches() {
+  paymentsCache = {}; yearPaymentsCache = {};
+  allPaymentsArr.forEach(p => {
+    if (!p.monthKey) return;
+    if (p.monthKey === currentPaymentMonth) paymentsCache[p.studentId] = p;
+    if (currentPaymentYear && p.monthKey.startsWith(currentPaymentYear + "-")) yearPaymentsCache[p.studentId + "-" + p.monthKey.split("-")[1]] = !!p.paid;
+  });
+  renderPaymentsList();
+}
+function ensurePaymentsListener() {
+  if (paymentsListenerOn) return;
+  paymentsListenerOn = true;
+  db.collection("payments").where("teacherId", "==", currentTeacherId).onSnapshot(snap => {
+    allPaymentsArr = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+    recomputePaymentCaches();
   }, err => {
     console.error(err);
-    el.innerHTML = `<div class="empty-state">Xəta: ${esc(err.message)}</div>`;
+    paymentsListenerOn = false;
+    document.getElementById("payments-list").innerHTML = `<div class="empty-state">Xəta: ${esc(err.message)}</div>`;
   });
 }
-
-// İl boyu (12 ay) ödəniş vəziyyətini bir dəfəyə çəkir — kiçik illik zolaq üçün
-function loadYearPayments(year) {
-  currentPaymentYear = year;
-  if (yearPaymentsUnsub) { yearPaymentsUnsub(); yearPaymentsUnsub = null; }
-  yearPaymentsUnsub = db.collection("payments")
-    .where("monthKey", ">=", year + "-01")
-    .where("monthKey", "<=", year + "-12")
-    .onSnapshot(snap => {
-      yearPaymentsCache = {};
-      snap.forEach(d => {
-        const dd = d.data();
-        const mm = dd.monthKey.split("-")[1];
-        yearPaymentsCache[dd.studentId + "-" + mm] = !!dd.paid;
-      });
-      renderPaymentsList();
-    }, err => console.error("İllik ödəniş məlumatı yüklənmədi:", err));
+function loadPayments(monthKey) { currentPaymentMonth = monthKey; ensurePaymentsListener(); recomputePaymentCaches(); }
+function loadYearPayments(year) { currentPaymentYear = year; ensurePaymentsListener(); recomputePaymentCaches(); }
+function payDocRef(studentId) {
+  const st = studentsCache.find(x => x.id === studentId);
+  return (st && st._enrolled) ? db.collection("enrollments").doc(st._enrId) : db.collection("students").doc(studentId);
 }
 
 // Şagirdin ödəniş günü keçib/yaxınlaşırsa xəbərdarlıq nişanı qaytarır (hələ ödəməyibsə)
@@ -2230,7 +2375,7 @@ function renderPaymentFinance(students) {
 window.updatePaymentDay = async (studentId, val) => {
   const day = Number(val);
   try {
-    await db.collection("students").doc(studentId).update({ paymentDay: (day >= 1 && day <= 31) ? day : firebase.firestore.FieldValue.delete() });
+    await payDocRef(studentId).update({ paymentDay: (day >= 1 && day <= 31) ? day : firebase.firestore.FieldValue.delete() });
     toast("Ödəniş günü yadda saxlandı");
   } catch (err) {
     console.error(err);
@@ -2241,7 +2386,7 @@ window.updatePaymentDay = async (studentId, val) => {
 window.updateMonthlyFee = async (studentId, val) => {
   const fee = Number(val);
   try {
-    await db.collection("students").doc(studentId).update({ monthlyFee: (fee > 0) ? fee : firebase.firestore.FieldValue.delete() });
+    await payDocRef(studentId).update({ monthlyFee: (fee > 0) ? fee : firebase.firestore.FieldValue.delete() });
     toast("Məbləğ yadda saxlandı");
   } catch (err) {
     console.error(err);
@@ -2254,8 +2399,9 @@ window.togglePayment = async (studentId) => {
   const existing = paymentsCache[studentId];
   const newPaid = !(existing && existing.paid);
   try {
-    await db.collection("payments").doc(`${studentId}_${monthKey}`).set({
-      studentId, monthKey, paid: newPaid,
+    const payDocId = (existing && existing._id) ? existing._id : `${currentTeacherId}_${studentId}_${monthKey}`;
+    await db.collection("payments").doc(payDocId).set({
+      studentId, teacherId: currentTeacherId, monthKey, paid: newPaid,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
     toast(newPaid ? "Ödənilib kimi qeyd olundu" : "Ödənilməyib kimi qeyd olundu");
@@ -2365,7 +2511,7 @@ window.showGroupStudents = (groupId) => {
     students.forEach(s => {
       const item = document.createElement("div");
       item.className = "list-item";
-      item.innerHTML = `<div class="list-item-info"><div class="list-item-title">${esc(s.fullName)}</div><div class="list-item-sub">@${esc(s.username)}</div></div>`;
+      item.innerHTML = `<div class="list-item-info"><div class="list-item-title">${esc(s.fullName)}</div><div class="list-item-sub">${s._enrolled ? "🔗 Qoşulub" : "@" + esc(s.username)}</div></div>`;
       box.appendChild(item);
     });
   }
@@ -2392,13 +2538,16 @@ window.deleteGroup = async (id) => {
 // ---- ŞAGİRDLƏR ----
 async function loadStudents() {
   db.collection("students").where("teacherId", "==", currentTeacherId).onSnapshot(snap => {
-    studentsCache = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.fullName || "").localeCompare(b.fullName || ""));
+    legacyStudentsArr = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    rebuildStudentsCache();
+  });
+}
+function afterStudentsChanged() {
     fillStudentSelects();
     renderStudentsList();
     if (document.getElementById("payments-list")) renderPaymentsList();
     if (typeof renderDailyDoors === "function") renderDailyDoors();
     if (typeof renderDailyCards === "function" && dailyCurrentGroupId && document.getElementById("daily-view-students").style.display !== "none") renderDailyCards();
-  });
 }
 
 function groupName(groupId) {
@@ -2414,11 +2563,13 @@ function renderStudentsList() {
     <div class="list-item">
       <div class="list-item-info">
         <div class="list-item-title">${esc(s.fullName)}</div>
-        <div class="list-item-sub">@${esc(s.username)} · <span class="badge">${groupName(s.groupId)}</span></div>
+        <div class="list-item-sub">${s._enrolled ? "🔗 Qoşulub" : "@" + esc(s.username)} · <span class="badge">${groupName(s.groupId)}</span></div>
       </div>
       <div class="list-item-actions">
-        <button class="btn-outline" onclick="editStudent('${s.id}')">Redaktə</button>
-        <button class="btn-danger" onclick="deleteStudent('${s.id}')">Sil</button>
+        ${s._enrolled
+          ? `<button class="btn-danger" onclick="removeEnrolled('${s._enrId}')">Çıxar</button>`
+          : `<button class="btn-outline" onclick="editStudent('${s.id}')">Redaktə</button>
+        <button class="btn-danger" onclick="deleteStudent('${s.id}')">Sil</button>`}
       </div>
     </div>
   `).join("");
@@ -5141,6 +5292,7 @@ function handleExamPopState() {
 function enterExamMode() {
   const tabs = document.querySelector("#view-student .tabs");
   if (tabs) tabs.style.display = "none";
+  const _nav = document.getElementById("s-bottom-nav"); if (_nav) _nav.style.display = "none";
   examExitGuardActive = true;
   history.pushState({ ttmExam: true }, "", location.href);
   window.addEventListener("popstate", handleExamPopState);
@@ -5149,6 +5301,7 @@ function enterExamMode() {
 function exitExamMode() {
   const tabs = document.querySelector("#view-student .tabs");
   if (tabs) tabs.style.display = "";
+  const _nav = document.getElementById("s-bottom-nav"); if (_nav) _nav.style.display = "";
   examExitGuardActive = false;
   window.removeEventListener("popstate", handleExamPopState);
   window.removeEventListener("beforeunload", handleExamBeforeUnload);
@@ -6172,7 +6325,7 @@ function updateAverages(quizData, examData) {
   const avg = arr => arr.length ? Math.round(arr.reduce((s, r) => s + (r.score || 0), 0) / arr.length) : null;
   const qAvg = avg(quizData), eAvg = avg(examData);
   document.getElementById("stat-quiz-avg").textContent = qAvg !== null ? qAvg + "%" : "—";
-  document.getElementById("stat-exam-avg").textContent = eAvg !== null ? eAvg + "%" : "—";
+  document.getElementById("stat-exam-avg").textContent = eAvg !== null ? eAvg + "%" : (window._attemptAvg != null ? window._attemptAvg + "%" : "—");
   renderTrend("stat-quiz-trend", quizData);
   renderTrend("stat-exam-trend", examData);
 }
@@ -6275,6 +6428,20 @@ function renderSubjectBreakdown(quizData, examData) {
 <script>
 // ===== ÇOX MÜƏLLİMLİ SİSTEM: kod, sorğular, qrup köçürmə =====
 let enrollmentsCache = [];
+let legacyStudentsArr = [];
+function rebuildStudentsCache() {
+  const legacyIds = new Set(legacyStudentsArr.map(x => x.id));
+  const extra = enrollmentsCache.filter(e => e.status === "active" && !legacyIds.has(e.studentId)).map(e => ({
+    id: e.studentId, fullName: e.studentName || "Şagird", username: "", groupId: e.groupId, active: true,
+    _enrolled: true, _enrId: e.id, paymentDay: e.paymentDay, monthlyFee: e.monthlyFee
+  }));
+  studentsCache = legacyStudentsArr.concat(extra).sort((a, b) => (a.fullName || "").localeCompare(b.fullName || ""));
+  afterStudentsChanged();
+}
+window.removeEnrolled = async (enrId) => {
+  if (!confirm("Bu şagirdi sizin siyahıdan çıxarmaq istəyirsiniz? (Şagirdin hesabı və nəticələri silinmir)")) return;
+  try { await db.collection("enrollments").doc(enrId).delete(); toast("Şagird çıxarıldı"); } catch (e) { toast("Xəta: " + e.message); }
+};
 
 function initEnrollments() {
   const codeEl = document.getElementById("my-teacher-code");
@@ -6299,6 +6466,7 @@ function initEnrollments() {
   db.collection("enrollments").where("teacherId", "==", currentTeacherId).onSnapshot(s => {
     enrollmentsCache = s.docs.map(d => ({ id: d.id, ...d.data() }));
     renderEnrollments();
+    rebuildStudentsCache();
   }, err => console.error("enrollments xətası:", err));
   document.querySelector('.tab-btn[data-tab="tab-enrollreqs"]').addEventListener("click", renderEnrollments);
 }
@@ -6344,123 +6512,6 @@ window.moveEnrollment = async (id) => {
   try { await db.collection("enrollments").doc(id).update({ groupId }); toast("Qrup dəyişdirildi ✅"); } catch (e) { toast("Xəta: " + e.message); }
 };
 
-function initStudentEnrollments(uid) {
-  document.getElementById("join-btn").onclick = async () => {
-    const code = document.getElementById("join-code").value.trim().toUpperCase();
-    if (!code) { toast("Kodu yazın"); return; }
-    try {
-      const snap = await db.collection("teacherCodes").doc(code).get();
-      if (!snap.exists) { toast("Kod tapılmadı"); return; }
-      const t = snap.data();
-      await db.collection("enrollments").doc(uid + "_" + t.teacherId).set({
-        studentId: uid,
-        studentName: document.getElementById("student-name").textContent || "Şagird",
-        teacherId: t.teacherId, teacherName: t.teacherName || "", subject: t.subject || "",
-        status: "pending", createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      document.getElementById("join-code").value = "";
-      toast("Sorğu göndərildi ✅");
-    } catch (e) {
-      toast(e.code === "permission-denied" ? "Bu müəllimə artıq sorğu göndərmisiniz" : "Xəta: " + e.message);
-    }
-  };
-  db.collection("enrollments").where("studentId", "==", uid).onSnapshot(s => {
-    myEnrollments = s.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderMyEnrollments();
-    syncEnrollmentExamListeners();
-  }, err => console.error("enrollments xətası:", err));
-}
-
-let myEnrollments = [];
-const enrSubs = {};
-
-function syncEnrollmentExamListeners() {
-  const keep = {};
-  const map = {};
-  myEnrollments.filter(e => e.status === "active" && e.groupId).forEach(e => {
-    map[e.teacherId] = e.groupId;
-    const key = e.teacherId + "|" + e.groupId;
-    keep[e.teacherId] = true;
-    if (enrSubs[e.teacherId] && enrSubs[e.teacherId].key === key) return;
-    if (enrSubs[e.teacherId]) enrSubs[e.teacherId].unsub();
-    const unsub = db.collection("exams").where("teacherId", "==", e.teacherId).where("groupIds", "array-contains", e.groupId).onSnapshot(snap => {
-      enrollExamsByTeacher[e.teacherId] = snap.docs.map(d => ({ id: d.id, ...d.data(), _teacherName: e.teacherName || "" }));
-      recomputeStudentExams();
-    }, err => console.error("müəllim sınaqları xətası:", err));
-    enrSubs[e.teacherId] = { key, unsub };
-  });
-  enrGroupByTeacher = map;
-  Object.keys(enrSubs).forEach(t => {
-    if (!keep[t]) { enrSubs[t].unsub(); delete enrSubs[t]; delete enrollExamsByTeacher[t]; recomputeStudentExams(); }
-  });
-}
-
-function renderMyEnrollments() {
-  const el = document.getElementById("my-enrollments-list");
-  const home = document.getElementById("s-subject-cards");
-  if (myEnrollments.length === 0) {
-    el.innerHTML = `<div class="empty-state">Hələ sorğu yoxdur</div>`;
-  } else {
-    el.innerHTML = myEnrollments.map(e => {
-      const active = e.status === "active";
-      return `<div class="list-item" ${active ? `style="cursor:pointer;" onclick="openTeacherDetail('${e.id}')"` : ""}>
-        <div class="list-item-info">
-          <div class="list-item-title">${esc(e.teacherName || "Müəllim")}</div>
-          <div class="list-item-sub">${esc(e.subject || "")} · ${active ? "✅ Aktiv — açmaq üçün toxun" : "⏳ Təsdiq gözləyir"}</div>
-        </div>
-      </div>`;
-    }).join("");
-  }
-  const act = myEnrollments.filter(e => e.status === "active");
-  home.innerHTML = act.length === 0
-    ? `<div class="empty-state" style="grid-column:1/-1;">Hələ müəllim qoşulmayıb. "Müəllimlər" tabından kodla qoşul.</div>`
-    : act.map(e => `<div class="stat-icon-card" style="background:linear-gradient(135deg,#eff6ff,#ffffff); cursor:pointer;" onclick="openTeacherDetail('${e.id}')">
-        <div class="stat-icon-badge grad-blue">📚</div>
-        <div class="list-item-title">${esc(e.subject || e.teacherName || "Fənn")}</div>
-        <div class="list-item-sub">${esc(e.teacherName || "")}</div>
-      </div>`).join("");
-}
-
-window.openTeacherDetail = async (eid) => {
-  const e = myEnrollments.find(x => x.id === eid);
-  if (!e || e.status !== "active") return;
-  document.querySelector('.tab-btn[data-stab="stab-teachers"]').click();
-  const box = document.getElementById("teacher-detail");
-  box.innerHTML = `<div class="card"><div class="empty-state">Yüklənir...</div></div>`;
-  box.scrollIntoView({ behavior: "smooth", block: "start" });
-  try {
-    const t = e.teacherId, g = e.groupId;
-    const [mats, tops, sch, grp] = await Promise.all([
-      db.collection("materials").where("teacherId", "==", t).where("groupId", "==", g).get(),
-      db.collection("topics").where("teacherId", "==", t).where("groupId", "==", g).get(),
-      db.collection("schedule").doc(g).get(),
-      db.collection("groups").doc(g).get()
-    ]);
-    const ts = d => (d.data().createdAt ? d.data().createdAt.toMillis() : 0);
-    const matDocs = mats.docs.slice().sort((a, b) => ts(b) - ts(a));
-    const topDocs = tops.docs.slice().sort((a, b) => ts(b) - ts(a));
-    const schedText = sch.exists && sch.data().text ? sch.data().text : "Hələ cədvəl əlavə edilməyib";
-    box.innerHTML = `
-      <div class="card">
-        <h3>${esc(e.teacherName || "Müəllim")} — ${esc(e.subject || "")}</h3>
-        <div class="muted-note" style="margin-bottom:10px;">${grp.exists ? `<span class="badge">${esc(grp.data().name)}</span>` : ""}</div>
-        <button class="btn-small" onclick="document.querySelector('.tab-btn[data-stab=stab-exams]').click()">📝 Sınaqlara bax</button>
-      </div>
-      <div class="card"><h3>Fayllar</h3>${matDocs.length === 0 ? `<div class="empty-state">Hələ fayl yoxdur</div>` : matDocs.map(d => {
-        const m = d.data(); const isPdf = m.type === "pdf";
-        return `<div class="list-item"><div class="list-item-info"><div class="list-item-title">${esc(m.title)}</div><div class="list-item-sub"><span class="badge">${isPdf ? "PDF" : "Video"}</span></div></div>
-          <div class="list-item-actions"><a href="${esc(m.url)}" target="_blank" rel="noopener noreferrer" class="btn-small" style="text-decoration:none;">Aç</a></div></div>`;
-      }).join("")}</div>
-      <div class="card"><h3>Dərs cədvəli</h3><div class="muted-note" style="white-space:pre-line; font-size:14px; color:var(--color-text);">${esc(schedText)}</div></div>
-      <div class="card"><h3>Mövzular</h3>${topDocs.length === 0 ? `<div class="empty-state">Hələ mövzu yoxdur</div>` : topDocs.map(d => {
-        const tp = d.data();
-        return `<div class="list-item"><div class="list-item-info"><div class="list-item-title">${tp.completed ? "✅" : "⏳"} ${esc(tp.name)}</div></div></div>`;
-      }).join("")}</div>`;
-  } catch (err) {
-    console.error(err);
-    box.innerHTML = `<div class="card"><div class="empty-state">Xəta: ${esc(err.message)}</div></div>`;
-  }
-};
 </script>
 <script>
 // ===== ŞAGİRD ÖZÜNƏQEYDİYYAT =====
@@ -6508,6 +6559,541 @@ window.openTeacherDetail = async (eid) => {
     }
   });
 })();
+</script>
+<script>
+// ===== v2: ŞAGİRD DİZAYNI + MÜƏLLİM PROFİLLƏRİ =====
+const V2_MONTHS = ["Yanvar","Fevral","Mart","Aprel","May","İyun","İyul","Avqust","Sentyabr","Oktyabr","Noyabr","Dekabr"];
+const V2_DAYS = ["Bazar","Bazar ertəsi","Çərşənbə axşamı","Çərşənbə","Cümə axşamı","Cümə","Şənbə"];
+function v2Norm(x) {
+  return String(x || "").toLowerCase().replace(/ə/g, "e").replace(/ı/g, "i").replace(/ö/g, "o").replace(/ü/g, "u")
+    .replace(/ş/g, "s").replace(/ç/g, "c").replace(/ğ/g, "g").replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ").trim();
+}
+function v2Icon(subject) {
+  const n = v2Norm(subject);
+  const map = [["riyaz","√x","#3b82f6"],["azerbaycan","Aa","#ef4444"],["tarix","🏛","#f59e0b"],["kimya","🧪","#10b981"],["biolog","🌿","#8b5cf6"],["fizika","⚛","#6366f1"],["ingilis","En","#0ea5e9"],["cografiya","🌍","#14b8a6"],["informatika","💻","#64748b"]];
+  for (const m of map) if (n.includes(m[0])) return { t: m[1], bg: m[2] };
+  return { t: "📘", bg: "#0B3C5D" };
+}
+function v2SafePhoto(p) {
+  return (p && typeof p.photo === "string" && /^data:image\/(jpeg|png);base64,[A-Za-z0-9+\/=]+$/.test(p.photo)) ? p.photo : "";
+}
+function v2Avatar(p, name) {
+  const ph = v2SafePhoto(p);
+  if (ph) return `<img class="v2-av" src="${ph}" alt="" />`;
+  const ini = String(name || "?").trim().split(/\s+/).slice(0, 2).map(w => w[0] || "").join("").toUpperCase();
+  return `<div class="v2-av v2-av-i">${esc(ini)}</div>`;
+}
+const v2Ts = x => (x && x.createdAt && x.createdAt.toMillis ? x.createdAt.toMillis() : 0);
+
+// ---------- paneli / naviqasiya ----------
+function v2SyncNav(tabId) { document.querySelectorAll(".v2-nav-btn").forEach(b => b.classList.toggle("active", b.dataset.go === tabId)); }
+function v2ShowPanel(panelId, tabId) {
+  document.querySelectorAll("#view-student .tab-panel").forEach(p => p.classList.remove("active"));
+  document.getElementById(panelId).classList.add("active");
+  document.querySelectorAll(".tab-btn[data-stab]").forEach(b => b.classList.toggle("active", b.dataset.stab === tabId));
+  v2SyncNav(tabId);
+  window.scrollTo({ top: 0, behavior: "auto" });
+}
+window.v2Tab = (id) => { const b = document.querySelector('.tab-btn[data-stab="' + id + '"]'); if (b) b.click(); };
+document.querySelectorAll(".tab-btn[data-stab]").forEach(b => b.addEventListener("click", () => {
+  v2SyncNav(b.dataset.stab);
+  if (b.dataset.stab === "stab-teachers") v2LoadProfiles();
+}));
+
+(function setDate() {
+  const d = new Date();
+  document.getElementById("v2-date-day").textContent = d.getDate();
+  document.getElementById("v2-date-month").textContent = V2_MONTHS[d.getMonth()];
+  document.getElementById("v2-date-wd").textContent = V2_DAYS[d.getDay()];
+})();
+
+// ---------- məlumat ----------
+let myEnrollments = [];
+const enrSubs = {};
+let legacySub = null;
+const v2Profiles = {};
+const v2Fallback = {};
+const v2Groups = {};
+let v2AllProfiles = [];
+let v2ProfilesLoaded = false;
+let v2Filter = "all";
+let v2Current = null;
+let v2Section = "exams";
+const v2Data = {};
+
+function v2Subjects() {
+  const act = myEnrollments.filter(e => e.status === "active" && e.groupId)
+    .map(e => ({ teacherId: e.teacherId, groupId: e.groupId, teacherName: e.teacherName || "", subject: e.subject || "" }));
+  if (legacySub && !act.some(a => a.teacherId === legacySub.teacherId)) act.push(legacySub);
+  return act;
+}
+async function v2GetProfile(tid, force) {
+  if (!force && tid in v2Profiles) return v2Profiles[tid];
+  try {
+    const d = await db.collection("teacherProfiles").doc(tid).get();
+    v2Profiles[tid] = d.exists ? { ...d.data(), uid: d.id } : null;
+  } catch (e) { console.error("profil xətası:", e); if (!(tid in v2Profiles)) v2Profiles[tid] = null; }
+  return v2Profiles[tid];
+}
+async function v2GroupName(gid) {
+  if (!gid || gid in v2Groups) return;
+  try { const g = await db.collection("groups").doc(gid).get(); v2Groups[gid] = g.exists ? (g.data().name || "") : ""; }
+  catch (e) { v2Groups[gid] = ""; }
+}
+async function v2InitLegacy(uid) {
+  try {
+    const s = await db.collection("students").doc(uid).get();
+    const gid = s.exists ? s.data().groupId : null;
+    if (!gid) return;
+    const g = await db.collection("groups").doc(gid).get();
+    if (!g.exists || !g.data().teacherId) return;
+    v2Groups[gid] = g.data().name || "";
+    legacySub = { teacherId: g.data().teacherId, groupId: gid, teacherName: "", subject: "" };
+    v2RenderHome();
+  } catch (e) { console.error("köhnə qrup xətası:", e); }
+}
+
+function syncEnrollmentExamListeners() {
+  const keep = {};
+  const map = {};
+  myEnrollments.filter(e => e.status === "active" && e.groupId).forEach(e => {
+    map[e.teacherId] = e.groupId;
+    const key = e.teacherId + "|" + e.groupId;
+    keep[e.teacherId] = true;
+    if (enrSubs[e.teacherId] && enrSubs[e.teacherId].key === key) return;
+    if (enrSubs[e.teacherId]) enrSubs[e.teacherId].unsub();
+    const unsub = db.collection("exams").where("teacherId", "==", e.teacherId).where("groupIds", "array-contains", e.groupId).onSnapshot(snap => {
+      enrollExamsByTeacher[e.teacherId] = snap.docs.map(d => ({ id: d.id, ...d.data(), _teacherName: e.teacherName || "" }));
+      recomputeStudentExams();
+    }, err => console.error("müəllim sınaqları xətası:", err));
+    enrSubs[e.teacherId] = { key, unsub };
+  });
+  enrGroupByTeacher = map;
+  Object.keys(enrSubs).forEach(t => {
+    if (!keep[t]) { enrSubs[t].unsub(); delete enrSubs[t]; delete enrollExamsByTeacher[t]; recomputeStudentExams(); }
+  });
+}
+
+function initStudentEnrollments(uid) {
+  v2InitLegacy(uid);
+  db.collection("enrollments").where("studentId", "==", uid).onSnapshot(s => {
+    myEnrollments = s.docs.map(d => ({ id: d.id, ...d.data() }));
+    syncEnrollmentExamListeners();
+    v2RenderHome();
+    v2RenderMyEnrollments();
+    if (document.getElementById("v2-tlist") && v2ProfilesLoaded) v2RenderList();
+  }, err => console.error("enrollments xətası:", err));
+}
+
+// ---------- ana səhifə: fənn kartları ----------
+async function v2RenderHome() {
+  const box = document.getElementById("s-subject-cards");
+  if (!box) return;
+  const subs = v2Subjects();
+  if (!subs.length) {
+    box.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">Hələ müəllim qoşulmayıb. «Fənlər» bölməsindən müəllim seç.</div>`;
+    return;
+  }
+  await Promise.all(subs.map(s => Promise.all([v2GetProfile(s.teacherId), v2GroupName(s.groupId)])));
+  const tints = ["linear-gradient(145deg,#e8f2ff,#ffffff)", "linear-gradient(145deg,#fff2e8,#ffffff)", "linear-gradient(145deg,#fdecec,#ffffff)", "linear-gradient(145deg,#e8f8ef,#ffffff)"];
+  box.innerHTML = subs.map((s, i) => {
+    const p = v2Profiles[s.teacherId];
+    const name = (p && p.fullName) || s.teacherName || v2Groups[s.groupId] || "Müəllim";
+    const subject = (p && p.subject) || s.subject || "";
+    const ic = v2Icon(subject);
+    return `<div class="v2-subj" style="background:${tints[i % tints.length]}" onclick="openSubject('${s.teacherId}')">
+      <div class="v2-subj-top">${v2Avatar(p, name)}<span class="v2-ico" style="background:${ic.bg}">${ic.t}</span></div>
+      <div class="v2-subj-name">${esc(name)}</div>
+      <div class="v2-subj-sub">${esc(subject || "Fənn")}</div>
+      <div class="v2-subj-foot"><span class="v2-chip">${esc(v2Groups[s.groupId] || "Qrup")}</span><span class="v2-chev">›</span></div>
+    </div>`;
+  }).join("");
+}
+
+function v2RenderMyEnrollments() {
+  const el = document.getElementById("my-enrollments-list");
+  if (!el) return;
+  if (!myEnrollments.length) { el.innerHTML = `<div class="empty-state">Hələ sorğu göndərməmisiniz</div>`; return; }
+  el.innerHTML = myEnrollments.map(e => {
+    const active = e.status === "active";
+    const fn = active ? `openSubject('${e.teacherId}')` : `openTeacherProfile('${e.teacherId}')`;
+    return `<div class="list-item" style="cursor:pointer;" onclick="${fn}">
+      <div class="list-item-info">
+        <div class="list-item-title">${esc(e.teacherName || "Müəllim")}</div>
+        <div class="list-item-sub">${esc(e.subject || "")} · ${active ? "✅ Aktiv" : "⏳ Təsdiq gözləyir"}</div>
+      </div></div>`;
+  }).join("");
+}
+
+// ---------- müəllimlər siyahısı / axtarış ----------
+function v2RowHtml(p) {
+  const ic = v2Icon(p.subject);
+  const enr = myEnrollments.find(e => e.teacherId === p.uid);
+  const isLegacy = legacySub && legacySub.teacherId === p.uid;
+  const tag = (enr && enr.status === "active") || isLegacy ? `<span class="v2-tag">Qoşulub</span>` : (enr ? `<span class="v2-tag wait">Gözləyir</span>` : "");
+  return `<div class="v2-trow" onclick="openTeacherProfile('${p.uid}')">
+    ${v2Avatar(p, p.fullName)}
+    <div class="v2-trow-info">
+      <div class="v2-trow-name">${esc(p.fullName || "Müəllim")}${tag}</div>
+      <div class="v2-trow-sub">${esc(p.subject || "")}</div>
+      ${p.studentCount ? `<div class="v2-trow-meta">👥 ${Number(p.studentCount)} şagird</div>` : ""}
+    </div>
+    <span class="v2-ico" style="background:${ic.bg}">${ic.t}</span>
+    <span class="v2-chev">›</span>
+  </div>`;
+}
+
+async function v2LoadProfiles() {
+  if (v2ProfilesLoaded) return;
+  v2ProfilesLoaded = true;
+  try {
+    const snap = await db.collection("teacherProfiles").orderBy("nameKey").limit(40).get();
+    v2AllProfiles = snap.docs.map(d => ({ ...d.data(), uid: d.id }));
+    v2AllProfiles.forEach(p => { v2Profiles[p.uid] = p; });
+  } catch (e) {
+    v2ProfilesLoaded = false;
+    console.error(e);
+    document.getElementById("v2-tlist").innerHTML = `<div class="empty-state">Siyahı yüklənmədi: ${esc(e.message)}</div>`;
+    return;
+  }
+  v2RenderList();
+}
+
+function v2RenderList() {
+  const chipsEl = document.getElementById("v2-chips");
+  const listEl = document.getElementById("v2-tlist");
+  const subs = [["all", "Hamısı"]];
+  const seen = new Set();
+  v2AllProfiles.forEach(p => { const n = v2Norm(p.subject); if (n && !seen.has(n)) { seen.add(n); subs.push([n, p.subject]); } });
+  chipsEl.innerHTML = subs.map(x => `<button class="v2-chip-btn ${v2Filter === x[0] ? "active" : ""}" data-k="${esc(x[0])}">${esc(x[1])}</button>`).join("");
+  chipsEl.querySelectorAll("button").forEach(b => { b.onclick = () => { v2Filter = b.dataset.k; v2RenderList(); }; });
+  const list = v2AllProfiles.filter(p => v2Filter === "all" || v2Norm(p.subject) === v2Filter);
+  listEl.innerHTML = list.length ? list.map(v2RowHtml).join("") : `<div class="empty-state">Hələ müəllim profili yoxdur</div>`;
+}
+
+let v2SearchSeq = 0;
+async function v2Search() {
+  const box = document.getElementById("v2-search-results");
+  const raw = document.getElementById("join-code").value.trim();
+  const seq = ++v2SearchSeq;
+  if (raw.length < 2) { box.innerHTML = ""; return; }
+  box.innerHTML = `<div class="empty-state">Axtarılır...</div>`;
+  const q = v2Norm(raw);
+  const found = {};
+  if (!/\s/.test(raw) && /^[A-Za-z0-9]{4,10}$/.test(raw)) {
+    try {
+      const c = await db.collection("teacherCodes").doc(raw.toUpperCase()).get();
+      if (c.exists) {
+        const t = c.data();
+        const p = await v2GetProfile(t.teacherId, true);
+        if (p) found[t.teacherId] = p;
+        else { v2Fallback[t.teacherId] = { fullName: t.teacherName || "Müəllim", subject: t.subject || "" }; found[t.teacherId] = { uid: t.teacherId, ...v2Fallback[t.teacherId] }; }
+      }
+    } catch (e) { console.error(e); }
+  }
+  if (q) {
+    try {
+      const snap = await db.collection("teacherProfiles").orderBy("nameKey").startAt(q).endAt(q + "\uf8ff").limit(20).get();
+      snap.forEach(d => { const p = { ...d.data(), uid: d.id }; v2Profiles[p.uid] = p; found[p.uid] = p; });
+    } catch (e) { console.error(e); }
+    v2AllProfiles.forEach(p => { if (v2Norm(p.fullName).includes(q) || v2Norm(p.subject).includes(q)) found[p.uid] = p; });
+  }
+  if (seq !== v2SearchSeq) return;
+  const list = Object.values(found);
+  box.innerHTML = list.length ? list.map(v2RowHtml).join("") : `<div class="empty-state">Müəllim tapılmadı</div>`;
+}
+(function bindSearch() {
+  const inp = document.getElementById("join-code");
+  let t = null;
+  inp.addEventListener("input", () => { clearTimeout(t); t = setTimeout(v2Search, 350); });
+  inp.addEventListener("keydown", e => { if (e.key === "Enter") { clearTimeout(t); v2Search(); } });
+  document.getElementById("join-btn").addEventListener("click", () => { clearTimeout(t); v2Search(); });
+})();
+
+// ---------- müəllim profil səhifəsi ----------
+window.openTeacherProfile = async (tid) => {
+  v2ShowPanel("stab-tprofile", "stab-teachers");
+  const box = document.getElementById("v2-tprofile");
+  box.innerHTML = `<div class="card"><div class="empty-state">Yüklənir...</div></div>`;
+  let p = await v2GetProfile(tid, true);
+  if (!p && v2Fallback[tid]) p = { uid: tid, ...v2Fallback[tid], _min: true };
+  if (!p) { box.innerHTML = `<div class="v2-backrow"><button class="v2-back" onclick="v2Tab('stab-teachers')">←</button></div><div class="card"><div class="empty-state">Müəllim profili tapılmadı</div></div>`; return; }
+  const enr = myEnrollments.find(e => e.teacherId === tid);
+  const isLegacy = legacySub && legacySub.teacherId === tid;
+  let action;
+  if ((enr && enr.status === "active") || isLegacy) action = `<button class="v2-cta" onclick="openSubject('${tid}')">Fənn panelinə keç</button>`;
+  else if (enr) action = `<button class="v2-cta" disabled>⏳ Sorğu təsdiq gözləyir</button>`;
+  else action = `<button class="v2-cta" id="v2-send-btn" onclick="v2SendRequest('${tid}')">Dərsə yazıl (Sorğu göndər)</button>`;
+  const video = (p.videoUrl && /^https?:\/\//i.test(p.videoUrl))
+    ? `<div class="v2-pbtns"><button class="v2-ghost" onclick="openMaterialVideo('${encodeURIComponent(p.videoUrl)}','Təqdimat videosu')">▶ Təqdimat videosu</button></div>` : "";
+  const exp = Number(p.experienceYears) > 0;
+  const stats = p._min ? "" : `<div class="v2-pstats">
+      <div><b>${Number(p.studentCount) || 0}</b><span>şagird</span></div>
+      <div><b>${Number(p.examCount) || 0}</b><span>sınaq</span></div>
+      <div><b>${exp ? Number(p.experienceYears) + " il" : (Number(p.groupCount) || 0)}</b><span>${exp ? "təcrübə" : "qrup"}</span></div>
+    </div>`;
+  const chips = (arr, cls) => (Array.isArray(arr) ? arr : []).map(x => `<span class="v2-pchip ${cls || ""}">${esc(x)}</span>`).join("");
+  box.innerHTML = `
+    <div class="v2-backrow"><button class="v2-back" onclick="v2Tab('stab-teachers')">←</button><div class="v2-backtitle">Müəllim haqqında</div></div>
+    <div class="v2-phead">${v2Avatar(p, p.fullName)}<div style="min-width:0;"><div class="v2-pname">${esc(p.fullName || "Müəllim")}</div><div class="v2-psub">${esc(p.subject || "")}</div><div class="v2-psub">TTM Tədris Mərkəzi</div></div></div>
+    <div class="v2-pbody">
+      ${stats}
+      ${action}
+      ${video}
+      ${p.about ? `<div class="v2-ptitle">Haqqında</div><div class="v2-ptext">${esc(p.about).replace(/\n/g, "<br>")}</div>` : ""}
+      ${(p.directions && p.directions.length) ? `<div class="v2-ptitle">Dərs istiqamətləri</div><div class="v2-pchips">${chips(p.directions)}</div>` : ""}
+      ${(p.classes && p.classes.length) ? `<div class="v2-ptitle">Tədris etdiyi siniflər</div><div class="v2-pchips">${chips(p.classes, "blue")}</div>` : ""}
+      ${Number(p.attemptCount) > 0 ? `<div class="v2-ptitle">Şagird nəticələri (son sınaqlar)</div>
+        <div class="v2-pres"><div style="background:#ecfdf5;"><b style="color:#2e9e6b;">${Number(p.avgScore) || 0}%</b><span>Sınaq ortalaması</span></div>
+        <div style="background:#eff6ff;"><b style="color:#1d6fd6;">${Number(p.attemptCount)}</b><span>İşlənmiş sınaq</span></div></div>` : ""}
+    </div>`;
+};
+
+window.v2SendRequest = async (tid) => {
+  const p = v2Profiles[tid] || (v2Fallback[tid] ? { uid: tid, ...v2Fallback[tid] } : null);
+  if (!p) { toast("Müəllim tapılmadı"); return; }
+  const btn = document.getElementById("v2-send-btn");
+  if (btn) btn.disabled = true;
+  try {
+    await db.collection("enrollments").doc(currentStudentUid + "_" + tid).set({
+      studentId: currentStudentUid,
+      studentName: document.getElementById("student-name").textContent || "Şagird",
+      teacherId: tid, teacherName: p.fullName || "", subject: p.subject || "",
+      status: "pending", createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    toast("Sorğu göndərildi ✅ Müəllim təsdiqləyəndən sonra fənn panelində görünəcək");
+    window.openTeacherProfile(tid);
+  } catch (e) {
+    console.error(e);
+    toast(e.code === "permission-denied" ? "Bu müəllimə artıq sorğu göndərmisiniz" : "Xəta: " + e.message);
+    if (btn) btn.disabled = false;
+  }
+};
+
+// ---------- fənn (müəllim) səhifəsi ----------
+const V2_SECTIONS = [["exams", "📝 Sınaqlar"], ["results", "📊 Nəticələr"], ["files", "📄 Fayllar"], ["schedule", "🗓 Cədvəl"], ["topics", "📚 Mövzular"], ["daily", "📋 Gündəlik"]];
+
+window.openSubject = async (tid, section) => {
+  const sub = v2Subjects().find(s => s.teacherId === tid);
+  if (!sub) { toast("Bu müəllim üçün giriş hələ aktiv deyil"); return; }
+  v2Current = sub; v2Section = section || "exams"; v2Data[tid] = {};
+  v2ShowPanel("stab-subject", "stab-home");
+  document.getElementById("v2-subject").innerHTML = `<div class="card"><div class="empty-state">Yüklənir...</div></div>`;
+  await Promise.all([v2GetProfile(tid), v2GroupName(sub.groupId)]);
+  v2RenderSubject();
+};
+
+function v2RenderSubject() {
+  if (!v2Current) return;
+  const s = v2Current, p = v2Profiles[s.teacherId];
+  const name = (p && p.fullName) || s.teacherName || v2Groups[s.groupId] || "Müəllim";
+  const subject = (p && p.subject) || s.subject || "";
+  document.getElementById("v2-subject").innerHTML = `
+    <div class="v2-backrow"><button class="v2-back" onclick="v2Tab('stab-home')">←</button><div class="v2-backtitle">${esc(subject || "Fənn")}</div></div>
+    <div class="card v2-whead">${v2Avatar(p, name)}<div style="min-width:0;"><div class="v2-wname">${esc(name)}</div><div class="v2-wsub">${esc(subject)}</div><span class="v2-chip">${esc(v2Groups[s.groupId] || "Qrup")}</span></div></div>
+    <div class="v2-pills">${V2_SECTIONS.map(x => `<button class="v2-pill ${x[0] === v2Section ? "active" : ""}" onclick="v2SetSection('${x[0]}')">${x[1]}</button>`).join("")}</div>
+    <div class="card" id="v2-section-body"><div class="empty-state">Yüklənir...</div></div>`;
+  v2RenderSection();
+}
+window.v2SetSection = (k) => { v2Section = k; v2RenderSubject(); };
+
+function v2ExamsHtml(tid) {
+  const now = new Date();
+  const exs = studentExamsCache.filter(e => e.teacherId === tid);
+  const done = new Set(studentAttemptsCache.map(a => a.examId));
+  const avail = exs.filter(e => new Date(e.activationAt) <= now && !done.has(e.id));
+  const upcoming = exs.filter(e => new Date(e.activationAt) > now);
+  let h = `<h3>Sınaqlar</h3>`;
+  if (!avail.length && !upcoming.length) return h + `<div class="empty-state">Hazırda aktiv sınaq yoxdur</div>`;
+  h += avail.map(ex => `<div class="list-item"><div class="list-item-info"><div class="list-item-title">🟢 ${esc(ex.title)}</div><div class="list-item-sub">${ex.questionCount || 0} sual · ${ex.timeLimitMinutes} dəqiqə · ${esc(ex.topic)}</div></div>
+    <div class="list-item-actions"><button class="btn-small" onclick="v2StartExam('${ex.id}')">Başla</button></div></div>`).join("");
+  h += upcoming.map(ex => `<div class="list-item" style="opacity:.6;"><div class="list-item-info"><div class="list-item-title">⏳ ${esc(ex.title)}</div><div class="list-item-sub">Aktivləşmə: ${new Date(ex.activationAt).toLocaleString("az-AZ")}</div></div></div>`).join("");
+  return h;
+}
+function v2ResultsHtml(tid) {
+  const ids = new Set(studentExamsCache.filter(e => e.teacherId === tid).map(e => e.id));
+  const at = studentAttemptsCache.filter(a => ids.has(a.examId)).sort((a, b) => (b.submittedAt ? b.submittedAt.toMillis() : 0) - (a.submittedAt ? a.submittedAt.toMillis() : 0));
+  let h = `<h3>Nəticələr</h3>`;
+  if (!at.length) return h + `<div class="empty-state">Bu müəllimin sınağını hələ işləməmisiniz</div>`;
+  const stats = at.map(a => computeAttemptStats(a.perQuestion));
+  const avg = Math.round(stats.reduce((s, x) => s + x.score, 0) / stats.length);
+  h += `<div class="muted-note" style="margin-bottom:10px;">Ortalama: <b>${avg}%</b> · ${at.length} sınaq</div>`;
+  h += at.map((a, i) => {
+    const ex = studentExamsCache.find(e => e.id === a.examId);
+    return `<div class="list-item"><div class="list-item-info"><div class="list-item-title">${ex ? esc(ex.title) : "Sınaq"}</div><div class="list-item-sub">${stats[i].correctCount}/${stats[i].totalCount} düzgün</div></div>
+      <div style="font-weight:800; color:var(--color-primary);">${stats[i].score}%</div>
+      <div class="list-item-actions"><button class="btn-outline" onclick="v2ViewResult('${a.id}')">Bax</button></div></div>`;
+  }).join("");
+  return h;
+}
+window.v2StartExam = (id) => { v2Tab("stab-exams"); startExam(id); };
+window.v2ViewResult = (id) => { v2Tab("stab-exams"); viewPastResult(id); };
+
+async function v2RenderSection() {
+  const body = document.getElementById("v2-section-body");
+  if (!body || !v2Current) return;
+  const s = v2Current, tid = s.teacherId, gid = s.groupId, key = v2Section;
+  const ok = () => v2Current === s && v2Section === key && document.getElementById("v2-section-body") === body;
+  try {
+    if (key === "exams") { body.innerHTML = v2ExamsHtml(tid); return; }
+    if (key === "results") { body.innerHTML = v2ResultsHtml(tid); return; }
+    const d = v2Data[tid] = v2Data[tid] || {};
+    if (key === "files") {
+      if (!d.files) d.files = (await db.collection("materials").where("teacherId", "==", tid).where("groupId", "==", gid).get()).docs.map(x => x.data()).sort((a, b) => v2Ts(b) - v2Ts(a));
+      if (!ok()) return;
+      body.innerHTML = `<h3>Fayllar</h3>` + (d.files.length ? d.files.map(m => {
+        const isPdf = m.type === "pdf";
+        return `<div class="list-item"><div class="list-item-info"><div class="list-item-title">${esc(m.title)}</div><div class="list-item-sub"><span class="badge">${isPdf ? "PDF" : "Video"}</span></div></div>
+          <div class="list-item-actions"><a href="${esc(m.url)}" target="_blank" rel="noopener noreferrer" class="btn-small" style="text-decoration:none;">Aç</a></div></div>`;
+      }).join("") : `<div class="empty-state">Hələ fayl yoxdur</div>`);
+    } else if (key === "schedule") {
+      if (d.schedule === undefined) { const x = await db.collection("schedule").doc(gid).get(); d.schedule = x.exists && x.data().text ? x.data().text : ""; }
+      if (!ok()) return;
+      body.innerHTML = `<h3>Dərs cədvəli</h3><div class="muted-note" style="white-space:pre-line; font-size:14px; color:var(--color-text);">${esc(d.schedule || "Hələ cədvəl əlavə edilməyib")}</div>`;
+    } else if (key === "topics") {
+      if (!d.topics) d.topics = (await db.collection("topics").where("teacherId", "==", tid).where("groupId", "==", gid).get()).docs.map(x => x.data()).sort((a, b) => v2Ts(b) - v2Ts(a));
+      if (!ok()) return;
+      body.innerHTML = `<h3>Mövzular</h3>` + (d.topics.length ? d.topics.map(t => `<div class="list-item"><div class="list-item-info"><div class="list-item-title">${t.completed ? "✅" : "⏳"} ${esc(t.name)}</div></div></div>`).join("") : `<div class="empty-state">Hələ mövzu yoxdur</div>`);
+    } else if (key === "daily") {
+      if (!d.daily) d.daily = (await db.collection("dailyReports").where("studentId", "==", currentStudentUid).get()).docs.map(x => x.data()).filter(r => r.teacherId === tid).sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 30);
+      if (!ok()) return;
+      body.innerHTML = `<h3>Gündəlik hesabatlar</h3>` + (d.daily.length ? d.daily.map(r => `<div class="list-item"><div class="list-item-info"><div class="list-item-title">${esc(r.date)}</div>
+        <div class="list-item-sub">${r.attended ? "✓ İştirak etdi" : "✗ İştirak etmədi"} · ${r.homeworkDone ? "✓ Tapşırıq edildi" : "✗ Tapşırıq edilmədi"} · Hazırlıq: ${Number(r.prepPercentage) || 0}%</div>
+        ${r.note ? `<div class="list-item-sub" style="margin-top:4px;">📝 ${esc(r.note)}</div>` : ""}</div></div>`).join("") : `<div class="empty-state">Hələ hesabat yoxdur</div>`);
+    }
+  } catch (e) {
+    console.error(e);
+    if (ok()) body.innerHTML = `<div class="empty-state">Xəta: ${esc(e.message)}</div>`;
+  }
+}
+
+// ---------- statistika: həll olunan sual ----------
+function v2UpdateSolved() {
+  const el = document.getElementById("stat-solved");
+  if (!el) return;
+  let solved = 0, sum = 0, n = 0;
+  studentAttemptsCache.forEach(a => {
+    (a.perQuestion || []).forEach(pq => { if (pq && pq.selected !== null && pq.selected !== undefined && pq.selected !== "") solved++; });
+    sum += computeAttemptStats(a.perQuestion).score; n++;
+  });
+  el.textContent = n ? String(solved) : "—";
+  window._attemptAvg = n ? Math.round(sum / n) : null;
+  const ex = document.getElementById("stat-exam-avg");
+  if (ex && ex.textContent === "—" && window._attemptAvg !== null) ex.textContent = window._attemptAvg + "%";
+}
+(function wrapExamRender() {
+  const orig = window.renderStudentExamList;
+  window.renderStudentExamList = function () {
+    orig.apply(this, arguments);
+    try {
+      v2UpdateSolved();
+      if (v2Current && document.getElementById("stab-subject").classList.contains("active") && (v2Section === "exams" || v2Section === "results")) v2RenderSection();
+    } catch (e) { console.error(e); }
+  };
+})();
+
+// =========================================================================
+// MÜƏLLİM TƏRƏFİ: profil redaktəsi
+// =========================================================================
+let myProfile = null;
+let myPhotoData = "";
+const MP_BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+function mpSplit(t) { return String(t || "").split(/[,;\n]/).map(x => x.trim()).filter(Boolean).slice(0, 12); }
+function mpResize(file, size) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement("canvas"); c.width = c.height = size;
+        const m = Math.min(img.width, img.height);
+        c.getContext("2d").drawImage(img, (img.width - m) / 2, (img.height - m) * 0.2, m, m, 0, 0, size, size);
+        res(c.toDataURL("image/jpeg", 0.72));
+      };
+      img.onerror = rej; img.src = e.target.result;
+    };
+    r.onerror = rej; r.readAsDataURL(file);
+  });
+}
+async function computeProfileStats() {
+  const st = { studentCount: studentsCache.filter(s => s.active !== false).length, groupCount: groupsCache.length, examCount: examsCache.length, avgScore: 0, attemptCount: 0 };
+  let sum = 0, n = 0;
+  for (const ex of examsCache.slice(0, 15)) {
+    try {
+      const snap = await db.collection("examAttempts").where("examId", "==", ex.id).get();
+      snap.forEach(d => { sum += computeAttemptStats(d.data().perQuestion).score; n++; });
+    } catch (e) { console.error(e); }
+  }
+  st.avgScore = n ? Math.round(sum / n) : 0; st.attemptCount = n;
+  return st;
+}
+async function loadMyProfile() {
+  const statusEl = document.getElementById("mp-status");
+  try {
+    const d = await db.collection("teacherProfiles").doc(currentTeacherId).get();
+    myProfile = d.exists ? d.data() : null;
+  } catch (e) { statusEl.textContent = "Profil yüklənmədi: " + e.message; return; }
+  myPhotoData = (myProfile && myProfile.photo) || "";
+  document.getElementById("mp-photo-preview").src = v2SafePhoto(myProfile) || MP_BLANK;
+  document.getElementById("mp-name").value = (myProfile && myProfile.fullName) || document.getElementById("admin-name").textContent || "";
+  document.getElementById("mp-subject").value = (myProfile && myProfile.subject) || "";
+  document.getElementById("mp-classes").value = ((myProfile && myProfile.classes) || []).join(", ");
+  document.getElementById("mp-directions").value = ((myProfile && myProfile.directions) || []).join(", ");
+  document.getElementById("mp-about").value = (myProfile && myProfile.about) || "";
+  document.getElementById("mp-exp").value = (myProfile && myProfile.experienceYears) || "";
+  document.getElementById("mp-video").value = (myProfile && myProfile.videoUrl) || "";
+  statusEl.textContent = myProfile ? "✅ Profil yayımlanıb, şagirdlər sizi siyahıda görür." : "Profil hələ yayımlanmayıb — şagirdlər sizi siyahıda görmür.";
+  if (myProfile) {
+    const st = await computeProfileStats();
+    if (Object.keys(st).some(k => st[k] !== myProfile[k])) {
+      try { await db.collection("teacherProfiles").doc(currentTeacherId).update(st); Object.assign(myProfile, st); } catch (e) { console.error(e); }
+    }
+  }
+}
+document.querySelector('.tab-btn[data-tab="tab-myprofile"]').addEventListener("click", loadMyProfile);
+document.getElementById("mp-photo-input").addEventListener("change", async (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  try { myPhotoData = await mpResize(f, 240); document.getElementById("mp-photo-preview").src = myPhotoData; }
+  catch (err) { console.error(err); toast("Şəkil oxunmadı"); }
+});
+document.getElementById("mp-save-btn").addEventListener("click", async () => {
+  const fullName = document.getElementById("mp-name").value.trim();
+  const subject = document.getElementById("mp-subject").value.trim();
+  const videoUrl = document.getElementById("mp-video").value.trim();
+  if (!fullName || !subject) { toast("Ad Soyad və fənn mütləqdir"); return; }
+  if (videoUrl && !/^https?:\/\//i.test(videoUrl)) { toast("Video linki http:// və ya https:// ilə başlamalıdır"); return; }
+  const btn = document.getElementById("mp-save-btn");
+  btn.disabled = true;
+  try {
+    const stats = await computeProfileStats();
+    const payload = {
+      uid: currentTeacherId, fullName, nameKey: v2Norm(fullName), subject,
+      about: document.getElementById("mp-about").value.trim().slice(0, 1500),
+      classes: mpSplit(document.getElementById("mp-classes").value),
+      directions: mpSplit(document.getElementById("mp-directions").value),
+      experienceYears: Math.max(0, Math.min(60, Number(document.getElementById("mp-exp").value) || 0)),
+      videoUrl, photo: myPhotoData || "", ...stats,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    await db.collection("teacherProfiles").doc(currentTeacherId).set(payload);
+    myProfile = payload;
+    document.getElementById("mp-status").textContent = "✅ Profil yayımlanıb, şagirdlər sizi siyahıda görür.";
+    toast("Profil yadda saxlandı ✅");
+  } catch (e) {
+    console.error(e);
+    toast("Xəta: " + e.message);
+  } finally { btn.disabled = false; }
+});
+document.getElementById("mp-delete-btn").addEventListener("click", async () => {
+  if (!confirm("Profil siyahıdan silinsin? Mövcud şagirdlərin qoşulması pozulmur.")) return;
+  try {
+    await db.collection("teacherProfiles").doc(currentTeacherId).delete();
+    myProfile = null; myPhotoData = "";
+    document.getElementById("mp-status").textContent = "Profil silindi.";
+    toast("Profil silindi");
+  } catch (e) { toast("Xəta: " + e.message); }
+});
 </script>
 <script>
 // PWA - Service Worker qeydiyyatı (tətbiq kimi işləməsi və offline dəstək üçün)
