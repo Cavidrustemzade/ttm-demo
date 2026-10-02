@@ -987,6 +987,32 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 @media (min-width:900px){.v2-nav{display:none}}
 @media (max-width:899px){#view-student .panel-main{padding-bottom:92px}.toast{bottom:84px}}
 </style>
+<style id="v2-style-2">
+/* üstdəki təkrar menyu gizli (düymələr funksiya üçün DOM-da qalır), aşağı naviqasiya əsasdır */
+#view-student .tabs{display:none !important}
+.v2-nav{grid-template-columns:repeat(6,minmax(0,1fr))}
+.v2-nav-btn{font-size:10px}
+.v2-nav-btn svg{width:21px;height:21px}
+@media (min-width:900px){.v2-nav{display:grid;left:50%;right:auto;transform:translateX(-50%);width:min(640px,100%);border-radius:18px 18px 0 0}}
+#view-student .panel-main{padding-bottom:96px}
+.toast{bottom:84px}
+/* fənn kartı */
+.v2-subj-grid{grid-template-columns:1fr}
+@media (min-width:900px){.v2-subj-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.v2-sc{display:grid;grid-template-columns:auto minmax(0,1fr) auto;column-gap:14px;align-items:center;border-radius:20px;padding:14px;cursor:pointer;border:1px solid rgba(11,60,93,.08);transition:transform .2s;min-width:0}
+.v2-sc:active{transform:scale(.98)}
+.v2-sc-ico,.v2-wico{width:62px;height:62px;border-radius:18px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:24px;box-shadow:0 8px 18px rgba(0,0,0,.16);flex:none}
+.v2-sc-title{font-size:21px;font-weight:800;color:var(--color-primary);line-height:1.2;overflow-wrap:anywhere}
+.v2-sc-teacher{font-size:14px;color:var(--color-text-muted);margin-top:3px;overflow-wrap:anywhere}
+.v2-sc-chev{color:var(--color-primary);font-size:28px;font-weight:700;line-height:1}
+.v2-sc-foot{grid-column:1 / -1;margin-top:12px}
+/* daha çox */
+.v2-more-row{display:flex;align-items:center;gap:14px;padding:14px;border-radius:16px;background:#fff;border:1px solid rgba(11,60,93,.08);box-shadow:var(--shadow-sm);margin-bottom:10px;cursor:pointer;min-width:0}
+.v2-more-row:active{transform:scale(.99)}
+.v2-more-ico{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;flex:none}
+.v2-more-t{font-weight:800;font-size:15px;color:var(--color-text)}
+.v2-more-s{font-size:12.5px;color:var(--color-text-muted);margin-top:2px}
+</style>
 </head>
 <body>
 
@@ -1556,10 +1582,8 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
       <button class="tab-btn active" data-stab="stab-home">Ana səhifə</button>
       <button class="tab-btn" data-stab="stab-daily">Gündəlik</button>
       <button class="tab-btn" data-stab="stab-scores">Nəticələr</button>
-      <button class="tab-btn" data-stab="stab-materials">Fayllar</button>
-      <button class="tab-btn" data-stab="stab-schedule">Cədvəl</button>
-      <button class="tab-btn" data-stab="stab-topics">Mövzular</button>
       <button class="tab-btn" data-stab="stab-exams">Sınaqlar</button>
+      <button class="tab-btn" data-stab="stab-more">Daha çox</button>
       <button class="tab-btn" data-stab="stab-roadmap">🎯 Yol Xəritəm</button>
       <button class="tab-btn" data-stab="stab-race">🏆 Yarış</button>
       <button class="tab-btn" data-stab="stab-teachers">👩‍🏫 Müəllimlər</button>
@@ -1620,6 +1644,10 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
       <div class="card">
         <h3>Gündəlik hesabatlar</h3>
         <div id="s-daily-list"><div class="empty-state">Yüklənir...</div></div>
+      </div>
+      <div class="card">
+        <h3>🗓 Dərs cədvəli</h3>
+        <div id="v2-daily-schedule"><div class="empty-state">Yüklənir...</div></div>
       </div>
     </div>
 
@@ -1730,6 +1758,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 
     <!-- YOL XƏRİTƏM -->
     <div class="tab-panel" id="stab-roadmap">
+      <div class="v2-backrow"><button class="v2-back" onclick="v2Tab('stab-more')">←</button><div class="v2-backtitle">Daha çox</div></div>
       <div class="card">
         <h3>🎯 Mənim Yol Xəritəm</h3>
         <p class="muted-note">Bütün sınaqlarındakı nəticələrinə əsasən hazırlanmış fərdi tövsiyələr.</p>
@@ -1739,6 +1768,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 
     <!-- YARIŞ -->
     <div class="tab-panel" id="stab-race">
+      <div class="v2-backrow"><button class="v2-back" onclick="v2Tab('stab-more')">←</button><div class="v2-backtitle">Daha çox</div></div>
       <div id="race-view-setup">
         <div class="card">
           <h3>🏆 Sürətli Təkrar Yarışı</h3>
@@ -1796,6 +1826,13 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
           <div id="my-enrollments-list"><div class="empty-state">Hələ sorğu göndərməmisiniz</div></div>
         </div>
       </div>
+      <div class="tab-panel" id="stab-more">
+        <div class="card">
+          <div class="v2-sec-head"><h3>Daha çox</h3></div>
+          <div class="v2-more-row" onclick="v2Tab('stab-roadmap')"><span class="v2-more-ico" style="background:#6366f1;">🎯</span><div style="flex:1;min-width:0;"><div class="v2-more-t">Yol xəritəm</div><div class="v2-more-s">Nəticələrinə əsasən fərdi tövsiyələr</div></div><span class="v2-chev">›</span></div>
+          <div class="v2-more-row" onclick="v2Tab('stab-race')"><span class="v2-more-ico" style="background:#f59e0b;">🏆</span><div style="flex:1;min-width:0;"><div class="v2-more-t">Yarış</div><div class="v2-more-s">Sürətli təkrar yarışı</div></div><span class="v2-chev">›</span></div>
+        </div>
+      </div>
       <div class="tab-panel" id="stab-tprofile"><div id="v2-tprofile"></div></div>
       <div class="tab-panel" id="stab-subject"><div id="v2-subject"></div></div>
   </main>
@@ -1805,6 +1842,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
     <button class="v2-nav-btn" data-go="stab-daily" onclick="v2Tab('stab-daily')"><svg viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4h6v3H9zM9 12h6M9 16h4"/></svg><span>Gündəlik</span></button>
     <button class="v2-nav-btn" data-go="stab-teachers" onclick="v2Tab('stab-teachers')"><svg viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v14a2 2 0 0 0-2-2H2zM22 4h-7a3 3 0 0 0-3 3v14a2 2 0 0 1 2-2h8z"/></svg><span>Fənlər</span></button>
     <button class="v2-nav-btn" data-go="stab-scores" onclick="v2Tab('stab-scores')"><svg viewBox="0 0 24 24"><path d="M5 21V10M12 21V3M19 21v-8"/></svg><span>Nəticələr</span></button>
+    <button class="v2-nav-btn" data-go="stab-more" onclick="v2Tab('stab-more')"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="19" cy="12" r="1.3" fill="currentColor"/></svg><span>Daha çox</span></button>
   </nav>
 
 </div>
@@ -4998,7 +5036,7 @@ async function initStudentPanel(uid) {
     const gDoc = await db.collection("groups").doc(s.groupId).get();
     if (gDoc.exists) groupNameText = gDoc.data().name;
   }
-  document.getElementById("s-group-badge").innerHTML = `<span class="badge">${esc(groupNameText)}</span>`;
+  document.getElementById("s-group-badge").innerHTML = groupNameText !== "—" ? `<span class="badge">${esc(groupNameText)}</span>` : "";
 
   // Gündəlik hesabatlar (yeni sistem: dailyStatus kolleksiyası)
   db.collection("dailyStatus").where("studentId", "==", uid).onSnapshot(snap => {
@@ -6586,7 +6624,10 @@ function v2Avatar(p, name) {
 const v2Ts = x => (x && x.createdAt && x.createdAt.toMillis ? x.createdAt.toMillis() : 0);
 
 // ---------- paneli / naviqasiya ----------
-function v2SyncNav(tabId) { document.querySelectorAll(".v2-nav-btn").forEach(b => b.classList.toggle("active", b.dataset.go === tabId)); }
+function v2SyncNav(tabId) {
+  const g = (tabId === "stab-race" || tabId === "stab-roadmap") ? "stab-more" : tabId;
+  document.querySelectorAll(".v2-nav-btn").forEach(b => b.classList.toggle("active", b.dataset.go === g));
+}
 function v2ShowPanel(panelId, tabId) {
   document.querySelectorAll("#view-student .tab-panel").forEach(p => p.classList.remove("active"));
   document.getElementById(panelId).classList.add("active");
@@ -6598,6 +6639,7 @@ window.v2Tab = (id) => { const b = document.querySelector('.tab-btn[data-stab="'
 document.querySelectorAll(".tab-btn[data-stab]").forEach(b => b.addEventListener("click", () => {
   v2SyncNav(b.dataset.stab);
   if (b.dataset.stab === "stab-teachers") v2LoadProfiles();
+  if (b.dataset.stab === "stab-daily") { Object.keys(v2Sched).forEach(k => delete v2Sched[k]); v2RenderDailySchedule(); }
 }));
 
 (function setDate() {
@@ -6695,17 +6737,40 @@ async function v2RenderHome() {
     return;
   }
   await Promise.all(subs.map(s => Promise.all([v2GetProfile(s.teacherId), v2GroupName(s.groupId)])));
-  const tints = ["linear-gradient(145deg,#e8f2ff,#ffffff)", "linear-gradient(145deg,#fff2e8,#ffffff)", "linear-gradient(145deg,#fdecec,#ffffff)", "linear-gradient(145deg,#e8f8ef,#ffffff)"];
-  box.innerHTML = subs.map((s, i) => {
+  box.innerHTML = subs.map(s => {
     const p = v2Profiles[s.teacherId];
-    const name = (p && p.fullName) || s.teacherName || v2Groups[s.groupId] || "Müəllim";
-    const subject = (p && p.subject) || s.subject || "";
+    const teacher = (p && p.fullName) || s.teacherName || "Müəllim";
+    const subject = (p && p.subject) || s.subject || "Fənn";
     const ic = v2Icon(subject);
-    return `<div class="v2-subj" style="background:${tints[i % tints.length]}" onclick="openSubject('${s.teacherId}')">
-      <div class="v2-subj-top">${v2Avatar(p, name)}<span class="v2-ico" style="background:${ic.bg}">${ic.t}</span></div>
-      <div class="v2-subj-name">${esc(name)}</div>
-      <div class="v2-subj-sub">${esc(subject || "Fənn")}</div>
-      <div class="v2-subj-foot"><span class="v2-chip">${esc(v2Groups[s.groupId] || "Qrup")}</span><span class="v2-chev">›</span></div>
+    return `<div class="v2-sc" style="background:linear-gradient(135deg,${ic.bg}1f,#ffffff); border-color:${ic.bg}33;" onclick="openSubject('${s.teacherId}')">
+      <div class="v2-sc-ico" style="background:${ic.bg}">${ic.t}</div>
+      <div style="min-width:0;"><div class="v2-sc-title">${esc(subject)}</div><div class="v2-sc-teacher">${esc(teacher)}</div></div>
+      <div class="v2-sc-chev">›</div>
+      <div class="v2-sc-foot"><span class="v2-chip">${esc(v2Groups[s.groupId] || "Qrup")}</span></div>
+    </div>`;
+  }).join("");
+  v2RenderDailySchedule();
+}
+
+const v2Sched = {};
+async function v2RenderDailySchedule() {
+  const el = document.getElementById("v2-daily-schedule");
+  if (!el) return;
+  const subs = v2Subjects();
+  if (!subs.length) { el.innerHTML = `<div class="empty-state">Hələ cədvəl yoxdur</div>`; return; }
+  await Promise.all(subs.map(async s => {
+    await Promise.all([v2GetProfile(s.teacherId), v2GroupName(s.groupId)]);
+    if (!(s.groupId in v2Sched)) {
+      try { const d = await db.collection("schedule").doc(s.groupId).get(); v2Sched[s.groupId] = d.exists && d.data().text ? d.data().text : ""; }
+      catch (e) { v2Sched[s.groupId] = ""; }
+    }
+  }));
+  el.innerHTML = subs.map(s => {
+    const p = v2Profiles[s.teacherId];
+    const subject = (p && p.subject) || s.subject || "Fənn";
+    return `<div class="list-item" style="flex-direction:column; align-items:flex-start; gap:6px;">
+      <div class="list-item-title">${esc(subject)} <span class="v2-chip">${esc(v2Groups[s.groupId] || "Qrup")}</span></div>
+      <div class="muted-note" style="white-space:pre-line; font-size:13.5px; color:var(--color-text);">${esc(v2Sched[s.groupId] || "Hələ cədvəl əlavə edilməyib")}</div>
     </div>`;
   }).join("");
 }
@@ -6821,9 +6886,9 @@ window.openTeacherProfile = async (tid) => {
   const enr = myEnrollments.find(e => e.teacherId === tid);
   const isLegacy = legacySub && legacySub.teacherId === tid;
   let action;
-  if ((enr && enr.status === "active") || isLegacy) action = `<button class="v2-cta" onclick="openSubject('${tid}')">Fənn panelinə keç</button>`;
-  else if (enr) action = `<button class="v2-cta" disabled>⏳ Sorğu təsdiq gözləyir</button>`;
-  else action = `<button class="v2-cta" id="v2-send-btn" onclick="v2SendRequest('${tid}')">Dərsə yazıl (Sorğu göndər)</button>`;
+  if ((enr && enr.status === "active") || isLegacy) action = `<button class="v2-cta" onclick="openSubject('${tid}')">Dərslərimə keç</button>`;
+  else if (enr) action = `<button class="v2-cta" disabled>⏳ Sorğu gözləmədədir</button>`;
+  else action = `<button class="v2-cta" id="v2-send-btn" onclick="v2SendRequest('${tid}')">Dərsə yazıl / Sorğu göndər</button>`;
   const video = (p.videoUrl && /^https?:\/\//i.test(p.videoUrl))
     ? `<div class="v2-pbtns"><button class="v2-ghost" onclick="openMaterialVideo('${encodeURIComponent(p.videoUrl)}','Təqdimat videosu')">▶ Təqdimat videosu</button></div>` : "";
   const exp = Number(p.experienceYears) > 0;
@@ -6871,7 +6936,7 @@ window.v2SendRequest = async (tid) => {
 };
 
 // ---------- fənn (müəllim) səhifəsi ----------
-const V2_SECTIONS = [["exams", "📝 Sınaqlar"], ["results", "📊 Nəticələr"], ["files", "📄 Fayllar"], ["schedule", "🗓 Cədvəl"], ["topics", "📚 Mövzular"], ["daily", "📋 Gündəlik"]];
+const V2_SECTIONS = [["exams", "📝 Sınaqlar"], ["results", "📊 Nəticələr"], ["files", "📄 Fayllar"], ["schedule", "🗓 Cədvəl"], ["daily", "📋 Gündəlik"]];
 
 window.openSubject = async (tid, section) => {
   const sub = v2Subjects().find(s => s.teacherId === tid);
@@ -6886,11 +6951,12 @@ window.openSubject = async (tid, section) => {
 function v2RenderSubject() {
   if (!v2Current) return;
   const s = v2Current, p = v2Profiles[s.teacherId];
-  const name = (p && p.fullName) || s.teacherName || v2Groups[s.groupId] || "Müəllim";
-  const subject = (p && p.subject) || s.subject || "";
+  const name = (p && p.fullName) || s.teacherName || "Müəllim";
+  const subject = (p && p.subject) || s.subject || "Fənn";
+  const ic = v2Icon(subject);
   document.getElementById("v2-subject").innerHTML = `
-    <div class="v2-backrow"><button class="v2-back" onclick="v2Tab('stab-home')">←</button><div class="v2-backtitle">${esc(subject || "Fənn")}</div></div>
-    <div class="card v2-whead">${v2Avatar(p, name)}<div style="min-width:0;"><div class="v2-wname">${esc(name)}</div><div class="v2-wsub">${esc(subject)}</div><span class="v2-chip">${esc(v2Groups[s.groupId] || "Qrup")}</span></div></div>
+    <div class="v2-backrow"><button class="v2-back" onclick="v2Tab('stab-home')">←</button><div class="v2-backtitle">Dərslərim</div></div>
+    <div class="card v2-whead"><div class="v2-wico" style="background:${ic.bg}">${ic.t}</div><div style="min-width:0;"><div class="v2-wname" style="font-size:20px;color:var(--color-primary);">${esc(subject)}</div><div class="v2-wsub">${esc(name)}</div><span class="v2-chip">${esc(v2Groups[s.groupId] || "Qrup")}</span></div></div>
     <div class="v2-pills">${V2_SECTIONS.map(x => `<button class="v2-pill ${x[0] === v2Section ? "active" : ""}" onclick="v2SetSection('${x[0]}')">${x[1]}</button>`).join("")}</div>
     <div class="card" id="v2-section-body"><div class="empty-state">Yüklənir...</div></div>`;
   v2RenderSection();
