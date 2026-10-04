@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "az.tamtedris.app",
+        "sha256_cert_fingerprints": ["17:DA:CB:B0:1C:3D:CD:FE:09:46:50:97:96:88:21:D3:78:A4:9F:FC:62:DC:2E:DD:95:C2:E8:A9:E1:55:48:9F"]
+      }
+    }]
