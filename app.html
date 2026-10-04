@@ -1013,6 +1013,38 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .v2-more-t{font-weight:800;font-size:15px;color:var(--color-text)}
 .v2-more-s{font-size:12.5px;color:var(--color-text-muted);margin-top:2px}
 </style>
+<style id="ttm-extra-css">
+.tv-row{display:flex;align-items:center;gap:12px;padding:10px;border-radius:16px;background:#fff;border:1px solid rgba(11,60,93,.08);box-shadow:var(--shadow-sm);margin-bottom:10px;cursor:pointer}
+.tv-th{position:relative;width:118px;aspect-ratio:16/10;border-radius:12px;overflow:hidden;background:#0B3C5D;flex:none}
+.tv-th img{width:100%;height:100%;object-fit:cover}
+.tv-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+.tv-th b{position:absolute;right:5px;bottom:5px;background:rgba(0,0,0,.7);color:#fff;font-size:10.5px;padding:2px 6px;border-radius:6px}
+.tv-t{font-weight:800;font-size:14px;color:var(--color-primary);line-height:1.3}
+.tv-frame{aspect-ratio:16/9;width:100%;border-radius:16px;overflow:hidden;background:#000;margin-bottom:14px}
+.tv-frame iframe{width:100%;height:100%;border:0}
+.nt-bell{position:relative;width:38px;height:38px;border-radius:12px;background:var(--color-light-gray);color:var(--color-primary);display:flex;align-items:center;justify-content:center}
+.nt-bell svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.nt-bell i{display:none;position:absolute;top:7px;right:8px;width:9px;height:9px;border-radius:50%;background:#ef4444;border:2px solid #fff}
+#nt-modal{display:none;position:fixed;inset:0;z-index:3500;background:rgba(11,60,93,.4);backdrop-filter:blur(4px);align-items:flex-start;justify-content:center;padding:70px 14px}
+#nt-modal .box{background:#fff;border-radius:20px;width:100%;max-width:420px;max-height:75vh;overflow:auto;padding:16px;box-shadow:var(--shadow-lg)}
+.nt-item{padding:11px 12px;border-radius:12px;background:var(--color-light-gray);margin-bottom:8px;cursor:pointer}
+.nt-item.new{background:#e8f1fb;border-left:4px solid #1d6fd6}
+#ttm-intro{position:fixed;inset:0;z-index:5000;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px;color:#fff;background:linear-gradient(160deg,#0a4aa8,#0B3C5D 60%,#072a42)}
+#ttm-intro .lg{width:96px;height:96px;border-radius:26px;background:#0B3C5D;border:2px solid #4aa3ff;box-shadow:0 0 40px rgba(74,163,255,.5);display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:900;margin-bottom:22px}
+#ttm-intro h1{font-size:30px;line-height:1.15}
+#ttm-intro p{opacity:.85;margin-top:8px;font-size:14px}
+#ttm-intro .bar{width:62%;max-width:260px;height:6px;border-radius:9px;background:rgba(255,255,255,.2);margin-top:44px;overflow:hidden}
+#ttm-intro .bar i{display:block;height:100%;width:0;background:#22d3ee;animation:ttmbar 1.7s ease forwards}
+@keyframes ttmbar{to{width:100%}}
+#ttm-intro.sl{background:#fff;color:var(--color-text);justify-content:space-between;padding:22px 24px 30px}
+#ttm-intro .skip{align-self:flex-end;background:none;color:#1d6fd6;font-weight:800;font-size:15px}
+#ttm-intro .em{font-size:96px;margin-bottom:16px}
+#ttm-intro.sl h1{font-size:26px;color:var(--color-primary)}
+#ttm-intro.sl p{color:var(--color-text-muted);font-size:15px;line-height:1.5}
+#ttm-intro .dots{display:flex;gap:8px;justify-content:center;margin-bottom:16px}
+#ttm-intro .dots i{width:9px;height:9px;border-radius:50%;background:#c7d6ea}
+#ttm-intro .dots i.on{background:#1d6fd6;width:24px;border-radius:9px}
+</style>
 </head>
 <body>
 
@@ -1119,6 +1151,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
       <button class="tab-btn" data-tab="tab-teacherreqs" id="tab-btn-teacherreqs">Müəllim sorğuları</button>
       <button class="tab-btn" data-tab="tab-enrollreqs">Şagird sorğuları</button>
       <button class="tab-btn" data-tab="tab-myprofile">Profilim</button>
+      <button class="tab-btn" data-tab="tab-tv">🎓 Təlim videoları</button>
     </div>
 
     <!-- ŞAGİRDLƏR -->
@@ -1486,6 +1519,8 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
         <button class="btn-outline" id="ss-add-teacher-btn">+ Müəllim əlavə et</button>
       </div>
 
+      <div class="card"><h3>🎓 Təlim videoları — ŞAGİRD</h3><div id="tv-b-student"></div><button class="btn-outline" id="tv-add-student">+ Video əlavə et</button></div>
+      <div class="card"><h3>🎓 Təlim videoları — MÜƏLLİM</h3><div id="tv-b-teacher"></div><button class="btn-outline" id="tv-add-teacher">+ Video əlavə et</button></div>
       <button class="btn-small" id="ss-save-btn" style="width:100%;">💾 Sayt Ayarlarını Yadda Saxla</button>
     </div>
 
@@ -1520,6 +1555,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
         <div id="enroll-active-list"><div class="empty-state">Yüklənir...</div></div>
       </div>
     </div>
+      <div class="tab-panel" id="tab-tv"><div class="card"><h3>🎓 Təlim videoları (müəllim)</h3><div id="tv-t-box"></div></div></div>
       <div class="tab-panel" id="tab-myprofile">
       <div class="card">
         <h3>🪪 Mənim müəllim profilim</h3>
@@ -1575,7 +1611,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 <div id="view-student" style="display:none">
   <header class="panel-topbar">
     <div class="panel-brand"><div class="brand-icon">TTM</div><span>Şagird Paneli</span></div>
-    <div class="panel-user"><span id="student-name"></span><button class="logout-btn" id="logout-btn-student">Çıxış</button></div>
+    <div class="panel-user"><button class="nt-bell" id="nt-bell" onclick="ntOpen()" aria-label="Bildiriş"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8M10 21h4"/></svg><i id="nt-dot"></i></button><span id="student-name"></span><button class="logout-btn" id="logout-btn-student">Çıxış</button></div>
   </header>
   <main class="panel-main">
     <div class="tabs">
@@ -1830,9 +1866,11 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
         <div class="card">
           <div class="v2-sec-head"><h3>Daha çox</h3></div>
           <div class="v2-more-row" onclick="v2Tab('stab-roadmap')"><span class="v2-more-ico" style="background:#6366f1;">🎯</span><div style="flex:1;min-width:0;"><div class="v2-more-t">Yol xəritəm</div><div class="v2-more-s">Nəticələrinə əsasən fərdi tövsiyələr</div></div><span class="v2-chev">›</span></div>
+          <div class="v2-more-row" onclick="tvOpen()"><span class="v2-more-ico" style="background:#ef4444;">🎓</span><div style="flex:1;min-width:0;"><div class="v2-more-t">Təlim videoları</div><div class="v2-more-s">Proqramdan istifadə qaydası</div></div><span class="v2-chev">›</span></div>
           <div class="v2-more-row" onclick="v2Tab('stab-race')"><span class="v2-more-ico" style="background:#f59e0b;">🏆</span><div style="flex:1;min-width:0;"><div class="v2-more-t">Yarış</div><div class="v2-more-s">Sürətli təkrar yarışı</div></div><span class="v2-chev">›</span></div>
         </div>
       </div>
+      <div class="tab-panel" id="stab-tv"><div class="v2-backrow"><button class="v2-back" onclick="v2Tab('stab-more')">←</button><div class="v2-backtitle">Təlim videoları</div></div><div class="card"><div id="tv-s-box"></div></div></div>
       <div class="tab-panel" id="stab-tprofile"><div id="v2-tprofile"></div></div>
       <div class="tab-panel" id="stab-subject"><div id="v2-subject"></div></div>
   </main>
@@ -4487,6 +4525,7 @@ async function loadSiteSettings() {
       document.getElementById("ss-material-video").value = d.materialVideo || "";
       ssSlides = d.heroSlides || [];
       ssTeachers = d.teachers || [];
+      tvData = tvNorm(d.trainingVideos);
     }
   } catch (e) { console.error(e); }
   renderSlidesBuilder();
@@ -4499,7 +4538,7 @@ document.getElementById("ss-save-btn").addEventListener("click", async () => {
     analizVideo: document.getElementById("ss-analiz-video").value.trim(),
     materialVideo: document.getElementById("ss-material-video").value.trim(),
     heroSlides: ssSlides,
-    teachers: ssTeachers,
+    teachers: ssTeachers, trainingVideos: tvData,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   };
   try {
@@ -7460,6 +7499,91 @@ if (pwaBtn) {
   });
 })();
 
+</script>
+<script>
+/* ===== TTM: təlim videoları, bildiriş zəngi, splash/onboarding ===== */
+let tvData={student:[],teacher:[]};
+let tvView={student:[],teacher:[]};
+function tvNorm(x){x=x||{};return{student:Array.isArray(x.student)?x.student:[],teacher:Array.isArray(x.teacher)?x.teacher:[]};}
+async function tvFetch(){try{const d=await db.collection("siteSettings").doc("landing").get();return tvNorm(d.exists?d.data().trainingVideos:null);}catch(e){console.error(e);return tvNorm();}}
+const TV_GO=[["","— Düymə yoxdur —"],["stab-exams","Sınaqlara keç"],["stab-roadmap","Yol xəritəmə keç"],["stab-race","Yarışa keç"]];
+const tvBox=r=>document.getElementById(r==="student"?"tv-s-box":"tv-t-box");
+function tvList(role){
+  const box=tvBox(role),list=tvView[role];
+  if(!list.length){box.innerHTML='<div class="empty-state">Hələ video əlavə edilməyib</div>';return;}
+  box.innerHTML=list.map((v,i)=>{const id=extractYouTubeId(v.url);
+    return `<div class="tv-row" onclick="tvPlay('${role}',${i})"><div class="tv-th">${id?`<img src="https://i.ytimg.com/vi/${id}/mqdefault.jpg" alt="">`:""}<span class="tv-play">▶</span>${v.duration?`<b>${esc(v.duration)}</b>`:""}</div><div style="flex:1;min-width:0;"><div class="tv-t">${i+1}. ${esc(v.title)}</div></div><span class="v2-chev">›</span></div>`;}).join("");
+}
+async function tvLoad(role){tvBox(role).innerHTML='<div class="empty-state">Yüklənir...</div>';tvView=await tvFetch();tvList(role);}
+window.tvOpen=async()=>{v2ShowPanel("stab-tv","stab-more");tvLoad("student");};
+window.tvPlay=(role,i)=>{
+  const v=tvView[role][i],id=extractYouTubeId(v.url),goLbl=(TV_GO.find(x=>x[0]===v.go)||[])[1];
+  tvBox(role).innerHTML=`<button class="btn-outline" onclick="tvList('${role}')" style="margin-bottom:12px;">← Siyahı</button>
+  <div class="v2-backtitle" style="margin-bottom:12px;">${esc(v.title)}</div>
+  ${id?`<div class="tv-frame"><iframe src="https://www.youtube-nocookie.com/embed/${id}?rel=0&playsinline=1" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>`:'<div class="empty-state">Video linki düzgün deyil</div>'}
+  ${v.desc?`<div class="card" style="background:var(--color-light-gray);box-shadow:none;"><h3>Video haqqında</h3><div class="muted-note" style="font-size:14px;color:var(--color-text);white-space:pre-line;">${esc(v.desc)}</div></div>`:""}
+  ${role==="student"&&v.go&&goLbl?`<button class="v2-cta" onclick="v2Tab('${v.go}')">${esc(goLbl)} →</button>`:""}`;
+};
+document.querySelector('.tab-btn[data-tab="tab-tv"]').addEventListener("click",()=>tvLoad("teacher"));
+
+/* admin: redaktə */
+function renderTvBuilder(){
+  ["student","teacher"].forEach(role=>{
+    const el=document.getElementById("tv-b-"+role),list=tvData[role];
+    el.innerHTML=list.length?list.map((v,i)=>`<div class="q-builder-item">
+      <button class="btn-danger" onclick="tvDel('${role}',${i})">Sil</button>
+      <div class="field" style="margin-bottom:8px;"><label>Başlıq</label><input type="text" value="${esc(v.title||"")}" oninput="tvSet('${role}',${i},'title',this.value)" placeholder="Məs: Bənzər sual həll et"></div>
+      <div class="field-row"><div class="field"><label>YouTube linki</label><input type="text" value="${esc(v.url||"")}" oninput="tvSet('${role}',${i},'url',this.value)" placeholder="https://youtu.be/..."></div>
+      <div class="field"><label>Müddət</label><input type="text" value="${esc(v.duration||"")}" oninput="tvSet('${role}',${i},'duration',this.value)" placeholder="02:15"></div></div>
+      <div class="field" style="margin-bottom:8px;"><label>Video haqqında</label><textarea oninput="tvSet('${role}',${i},'desc',this.value)">${esc(v.desc||"")}</textarea></div>
+      ${role==="student"?`<div class="field" style="margin-bottom:8px;"><label>Düymə</label><select onchange="tvSet('student',${i},'go',this.value)">${TV_GO.map(g=>`<option value="${g[0]}" ${v.go===g[0]?"selected":""}>${g[1]}</option>`).join("")}</select></div>`:""}
+      <div style="display:flex;gap:6px;"><button class="btn-outline" onclick="tvMove('${role}',${i},-1)">↑</button><button class="btn-outline" onclick="tvMove('${role}',${i},1)">↓</button></div></div>`).join(""):'<div class="empty-state">Hələ video yoxdur</div>';
+  });
+}
+window.tvSet=(r,i,k,v)=>{tvData[r][i][k]=v;};
+window.tvDel=(r,i)=>{tvData[r].splice(i,1);renderTvBuilder();};
+window.tvMove=(r,i,d)=>{const a=tvData[r],j=i+d;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];renderTvBuilder();};
+["student","teacher"].forEach(r=>document.getElementById("tv-add-"+r).addEventListener("click",()=>{tvData[r].push({title:"",url:"",duration:"",desc:"",go:""});renderTvBuilder();}));
+(function(){const o=loadSiteSettings;loadSiteSettings=async function(){await o();renderTvBuilder();};})();
+renderTvBuilder();
+
+/* bildiriş zəngi: yeni sınaqlar */
+const ntKey=()=>"ttm_nt_seen_"+currentStudentUid;
+function ntItems(){return studentExamsCache.filter(e=>e.createdAt&&e.createdAt.toMillis).map(e=>({t:e.createdAt.toMillis(),title:e.title,by:e._teacherName||""})).sort((a,b)=>b.t-a.t).slice(0,20);}
+function ntSeen(items){let s=localStorage.getItem(ntKey());if(s===null){s=String(Math.max(Date.now(),items[0]?items[0].t:0));localStorage.setItem(ntKey(),s);}return Number(s);}
+function ntUpdate(){if(!currentStudentUid)return;const it=ntItems(),seen=ntSeen(it);document.getElementById("nt-dot").style.display=it.some(x=>x.t>seen)?"block":"none";}
+window.ntOpen=()=>{
+  const it=ntItems(),seen=ntSeen(it);
+  let m=document.getElementById("nt-modal");
+  if(!m){m=document.createElement("div");m.id="nt-modal";m.onclick=e=>{if(e.target===m)m.style.display="none";};document.body.appendChild(m);}
+  m.innerHTML='<div class="box"><h3 style="margin-bottom:12px;color:var(--color-primary);">🔔 Bildirişlər</h3>'+(it.length?it.map(x=>`<div class="nt-item ${x.t>seen?"new":""}" onclick="document.getElementById('nt-modal').style.display='none';v2Tab('stab-exams')"><div class="list-item-title">📝 Yeni sınaq: ${esc(x.title)}</div><div class="list-item-sub">${x.by?esc(x.by)+" · ":""}${new Date(x.t).toLocaleDateString("az-AZ")}</div></div>`).join(""):'<div class="empty-state">Hələ bildiriş yoxdur</div>')+'</div>';
+  m.style.display="flex";
+  localStorage.setItem(ntKey(),String(Math.max(Date.now(),it[0]?it[0].t:0)));
+  document.getElementById("nt-dot").style.display="none";
+};
+(function(){const o=window.renderStudentExamList;window.renderStudentExamList=function(){o.apply(this,arguments);try{ntUpdate();}catch(e){}};})();
+
+/* splash + ilk dəfə təqdimat (yalnız tətbiqdə) */
+(function(){
+  const force=/[?&]intro=1/.test(location.search);
+  const app=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true||document.referrer.startsWith("android-app://");
+  if(!app&&!force)return;
+  const first=force||localStorage.getItem("ttm_onboarded")!=="1";
+  const S=[["👋","TTM Tədris Mərkəzinə xoş gəldin","Dərslər, sınaqlar və nəticələr bir yerdə."],["📝","Sınaq işlə, nəticəni gör","Vaxtla sınaq işlə, zəif mövzularını avtomatik tap."],["🧠","Səhvlərini analiz et","AI səhv etdiyin suallara bənzər yeni suallar yaradır."],["🎓","Təlim videoları","«Daha çox» bölməsindən proqramdan istifadə qaydasını öyrən."]];
+  const o=document.createElement("div");o.id="ttm-intro";
+  o.innerHTML='<div class="lg">TTM</div><h1>TƏDRİS<br>MƏRKƏZİ</h1><p>Rəqəmsal təhsil platforması</p><div class="bar"><i></i></div>';
+  document.body.appendChild(o);
+  const end=()=>{localStorage.setItem("ttm_onboarded","1");o.remove();};
+  setTimeout(()=>{
+    if(!first){o.remove();return;}
+    let i=0;o.className="sl";
+    const draw=()=>{const x=S[i],last=i===S.length-1;
+      o.innerHTML=`<button class="skip">Keç</button><div><div class="em">${x[0]}</div><h1>${x[1]}</h1><p>${x[2]}</p></div><div style="width:100%"><div class="dots">${S.map((_,k)=>`<i class="${k===i?"on":""}"></i>`).join("")}</div><button class="v2-cta">${last?"Başla":"Növbəti"} →</button></div>`;
+      o.querySelector(".skip").onclick=end;
+      o.querySelector(".v2-cta").onclick=()=>{if(last)end();else{i++;draw();}};};
+    draw();
+  },1800);
+})();
 </script>
 </body>
 </html>
