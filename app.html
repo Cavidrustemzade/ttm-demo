@@ -1045,6 +1045,26 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 #ttm-intro .dots i{width:9px;height:9px;border-radius:50%;background:#c7d6ea}
 #ttm-intro .dots i.on{background:#1d6fd6;width:24px;border-radius:9px}
 </style>
+<style id="adm-css">
+#view-admin .tabs{display:none!important}
+#view-admin .panel-main{padding-bottom:96px}
+#a-nav{grid-template-columns:repeat(5,minmax(0,1fr))}
+#pdf-fab-btn{bottom:92px!important}
+.door-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.door-card{aspect-ratio:auto;min-height:104px;border-radius:18px}
+.door-plaque{white-space:normal;text-align:center;width:82%;font-size:13.5px}
+@media(min-width:700px){.door-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.a-prof{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#fff,#eef5fb)}
+.a-pn{font-weight:800;font-size:17px;color:var(--color-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.a-ps{font-size:13px;color:var(--color-text-muted);margin:3px 0 6px}
+.a-pl{font-size:13px;font-weight:700;color:#1d6fd6;cursor:pointer}
+.a-qgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.a-qc{border-radius:20px;padding:18px 14px;min-height:170px;cursor:pointer;color:#fff;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 10px 24px rgba(11,60,93,.18);transition:transform .2s}
+.a-qc:active{transform:scale(.97)}
+.a-qc .ic{font-size:34px}
+.a-qc b{display:block;font-size:17px;margin-bottom:4px}
+.a-qc span{font-size:12.5px;opacity:.9;line-height:1.4}
+</style>
 </head>
 <body>
 
@@ -1134,10 +1154,11 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 <div id="view-admin" style="display:none">
   <header class="panel-topbar">
     <div class="panel-brand"><div class="brand-icon">TTM</div><span>Admin Paneli</span></div>
-    <div class="panel-user"><span id="admin-name"></span><button class="logout-btn" id="logout-btn-admin">Çıxış</button></div>
+    <div class="panel-user"><button class="nt-bell" id="a-bell" onclick="adminGo('tab-enrollreqs')" aria-label="Bildiriş"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8M10 21h4"/></svg><i id="a-bell-dot"></i></button><span id="admin-name"></span><button class="logout-btn" id="logout-btn-admin">Çıxış</button></div>
   </header>
   <main class="panel-main">
     <div class="tabs">
+      <button class="tab-btn" data-tab="tab-home">Panel</button><button class="tab-btn" data-tab="tab-more">Daha çox</button><button class="tab-btn" data-tab="tab-settings">Parametrlər</button>
       <button class="tab-btn active" data-tab="tab-students">Şagirdlər</button>
       <button class="tab-btn" data-tab="tab-groups">Qruplar</button>
       <button class="tab-btn" data-tab="tab-daily">Gündəlik hesabat</button>
@@ -1155,6 +1176,23 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
     </div>
 
     <!-- ŞAGİRDLƏR -->
+    <nav id="a-nav" class="v2-nav">
+    <button class="v2-nav-btn active" data-go="tab-home" onclick="adminGo('tab-home')"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span>Panel</span></button>
+    <button class="v2-nav-btn" data-go="tab-students" onclick="adminGo('tab-students')"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.5 2.8-6 6-6s6 2.5 6 6M16 5.5a3 3 0 0 1 0 6M18 14.5c2 .6 3 2.6 3 5.5"/></svg><span>Şagirdlər</span></button>
+    <button class="v2-nav-btn" data-go="tab-groups" onclick="adminGo('tab-groups')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Qruplar</span></button>
+    <button class="v2-nav-btn" data-go="tab-exams" onclick="adminGo('tab-exams')"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg><span>Sınaqlar</span></button>
+    <button class="v2-nav-btn" data-go="tab-more" onclick="adminGo('tab-more')"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="19" cy="12" r="1.3" fill="currentColor"/></svg><span>Daha çox</span></button>
+  </nav>
+    <div class="tab-panel" id="tab-home">
+      <div class="card a-prof"><div id="a-av"></div><div style="flex:1;min-width:0;"><div class="a-pn" id="a-pname">—</div><div class="a-ps" id="a-psub"></div><a class="a-pl" onclick="adminGo('tab-myprofile')">Profilə bax →</a></div></div>
+      <div class="v2-sec-head"><h3 style="color:var(--color-primary);">Tez giriş</h3></div>
+      <div class="a-qgrid">
+        <div class="a-qc" style="background:linear-gradient(135deg,#ef4444,#b91c1c);" onclick="adminPdf()"><div class="ic">📄</div><div><b>PDF hazırla</b><span>Sınaq, test və tapşırıq PDF-i hazırla</span></div></div>
+        <div class="a-qc" style="background:linear-gradient(135deg,#3b82f6,#0B3C5D);" onclick="adminNewExam()"><div class="ic">📝</div><div><b>Sınaq yarat</b><span>Yeni sınaq hazırla və yayımla</span></div></div>
+      </div>
+    </div>
+    <div class="tab-panel" id="tab-more"><div class="card"><div class="v2-sec-head"><h3>Daha çox</h3></div><div id="a-more-list"></div></div></div>
+    <div class="tab-panel" id="tab-settings"><div class="card"><h3>⚙️ Parametrlər</h3><div class="list-item"><div class="list-item-info"><div class="list-item-title" id="a-set-name">—</div><div class="list-item-sub">Hesab</div></div></div><button class="btn-small" id="a-set-logout" style="width:100%;background:var(--color-danger);margin-top:8px;">Çıxış</button><div class="muted-note">Əlavə parametrlər tezliklə.</div></div></div>
     <div class="tab-panel active" id="tab-students">
       <div class="card">
         <h3 id="student-form-title">Yeni şagird əlavə et</h3>
@@ -1189,7 +1227,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
         <button class="btn-small" id="group-save-btn">Yarat</button>
       </div>
       <div class="card">
-        <h3>Qrup siyahısı</h3>
+        <h3>Qrupları idarə et (silmək)</h3>
         <div id="groups-list"><div class="empty-state">Yüklənir...</div></div>
       </div>
     </div>
@@ -1198,7 +1236,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
     <div class="tab-panel" id="tab-daily">
       <div id="daily-view-doors">
         <div class="daily-topbar">
-          <div><h3 style="margin-bottom:2px;">Gündəlik hesabat</h3><div class="muted-note">Qrupu seçin</div></div>
+          <div><h3 style="margin-bottom:2px;">Qruplar</h3><div class="muted-note">Qrupu seçin — gündəlik işlər qrupun içindədir</div></div>
           <input type="date" id="daily-date-doors" />
         </div>
         <div class="door-grid" id="daily-door-grid"><div class="empty-state">Yüklənir...</div></div>
@@ -7583,6 +7621,96 @@ window.ntOpen=()=>{
       o.querySelector(".v2-cta").onclick=()=>{if(last)end();else{i++;draw();}};};
     draw();
   },1800);
+})();
+</script>
+<script>
+/* ===== Müəllim paneli: alt menyu, ana səhifə, Daha çox, qruplar, sınaq siyahı/yarat ===== */
+const A=id=>document.getElementById(id);
+const A_MORE=[["tab-tv","🎥","#ef4444","Təlim videoları","Müəllimin/TTM-nin təlim və izah videoları"],["tab-materials","📄","#f59e0b","PDF / Video","Hazırlanmış PDF və video materiallarının idarəsi"],["tab-schedule","📅","#3b82f6","Cədvəl","Dərs cədvəli və qrup cədvəlləri"],["tab-payments","💳","#10b981","Ödənişlər","Şagird ödənişlərini izləmək"],["tab-scores","📊","#6366f1","Ətraflı nəticələr","Nəticələr, analiz və ətraflı sualların yoxlanışı"],["tab-enrollreqs","💬","#0ea5e9","Sorğular","Şagird sorğuları"],["tab-teacherreqs","🧑‍🏫","#8b5cf6","Müəllim sorğuları","Müəllim qeydiyyatları (yalnız admin)"],["tab-sitesettings","🌐","#14b8a6","Sayt ayarları","Baş səhifə, videolar, müəllimlər (yalnız admin)"],["tab-myprofile","👤","#ec4899","Profilim","Profil, şəkil, bio, təqdimat videosu"],["tab-settings","⚙️","#64748b","Parametrlər","Hesab və tətbiq parametrləri"]];
+const A_MAIN=["tab-home","tab-students","tab-groups","tab-exams","tab-more"];
+let aSetup=false;
+
+function examMode(m){
+  const c=m==="create";
+  A("exam-form-title").closest(".card").style.display=c?"":"none";
+  A("exams-list").closest(".card").style.display=c?"none":"";
+  A("ex-new-btn").style.display=c?"none":"";
+  A("ex-back-btn").style.display=c?"":"none";
+  A("pdf-fab-btn").style.display=c?"flex":"none";
+}
+window.adminGo=(id,mode)=>{
+  const b=document.querySelector('.tab-btn[data-tab="'+id+'"]');
+  if(!b)return;
+  b.click();
+  if(id==="tab-exams")examMode(mode||"list");
+  if(id==="tab-groups"&&A("daily-view-students").style.display!=="none")A("daily-back-btn").click();
+  if(id==="tab-more")moreRender();
+  if(id==="tab-home")homeRender();
+  if(id==="tab-settings")A("a-set-name").textContent=A("admin-name").textContent;
+  const g=A_MAIN.includes(id)?id:"tab-more";
+  document.querySelectorAll("#a-nav .v2-nav-btn").forEach(x=>x.classList.toggle("active",x.dataset.go===g));
+  window.scrollTo(0,0);
+};
+function moreRender(){
+  const vis=id=>{const b=document.querySelector('.tab-btn[data-tab="'+id+'"]');return b&&b.style.display!=="none";};
+  const pend=(typeof enrollmentsCache!=="undefined"?enrollmentsCache:[]).filter(e=>e.status==="pending").length;
+  A("a-more-list").innerHTML=A_MORE.filter(r=>(r[0]!=="tab-teacherreqs"&&r[0]!=="tab-sitesettings")||vis(r[0])).map(r=>`<div class="v2-more-row" onclick="adminGo('${r[0]}')"><span class="v2-more-ico" style="background:${r[2]}">${r[1]}</span><div style="flex:1;min-width:0;"><div class="v2-more-t">${r[3]}${r[0]==="tab-enrollreqs"&&pend?` <span class="v2-tag wait">${pend}</span>`:""}</div><div class="v2-more-s">${r[4]}</div></div><span class="v2-chev">›</span></div>`).join("");
+}
+async function homeRender(){
+  let p=null;
+  try{const d=await db.collection("teacherProfiles").doc(currentTeacherId).get();p=d.exists?d.data():null;}catch(e){console.error(e);}
+  const name=(p&&p.fullName)||A("admin-name").textContent||"Müəllim";
+  A("a-av").innerHTML=v2Avatar(p,name);
+  A("a-pname").textContent=name;
+  const cl=(p&&Array.isArray(p.classes))?p.classes.map(c=>(String(c).match(/\d+/)||[c])[0]).join(", "):"";
+  A("a-psub").textContent=p?([p.subject,cl].filter(Boolean).join(" · ")||"Profil məlumatı əlavə edilməyib"):"Profili tamamla";
+}
+function bellUpdate(){
+  const n=(typeof enrollmentsCache!=="undefined"?enrollmentsCache:[]).filter(e=>e.status==="pending").length;
+  A("a-bell-dot").style.display=n?"block":"none";
+}
+(function(){const o=renderEnrollments;renderEnrollments=function(){o.apply(this,arguments);try{bellUpdate();}catch(e){}};})();
+
+/* sınaq: siyahı / yarat rejimi */
+A("tab-exams").insertAdjacentHTML("afterbegin",'<button class="btn-small" id="ex-new-btn" style="width:100%;margin-bottom:12px;">+ Yeni sınaq yarat</button><button class="btn-outline" id="ex-back-btn" style="margin-bottom:12px;display:none;">← Sınaqlar</button>');
+const origResetExam=resetExamForm;
+A("ex-new-btn").addEventListener("click",()=>{if(A("exam-edit-id").value)origResetExam();examMode("create");window.scrollTo(0,0);});
+A("ex-back-btn").addEventListener("click",()=>{examMode("list");window.scrollTo(0,0);});
+A("exam-cancel-btn").addEventListener("click",()=>examMode("list"));
+resetExamForm=function(){origResetExam();examMode("list");};
+(function(){const oe=window.editExam;window.editExam=function(id){examMode("create");return oe(id);};})();
+window.adminNewExam=()=>{if(A("exam-edit-id").value)origResetExam();adminGo("tab-exams","create");};
+window.adminPdf=()=>{
+  adminNewExam();
+  if(examQuestions.length)A("pdf-fab-btn").click();
+  else toast("Əvvəlcə sualları əlavə et, sonra 📄 düyməsi ilə PDF hazırla");
+};
+
+/* qruplar: qapılar + qrupun daxilində gündəlik (köhnə «Gündəlik» bölməsi buraya köçürüldü) */
+(function(){
+  const g=A("tab-groups"),first=g.querySelector(":scope>.card");
+  first.after(A("daily-view-doors"));
+  A("daily-view-doors").after(A("daily-view-students"));
+})();
+
+A("a-set-logout").addEventListener("click",()=>A("logout-btn-admin").click());
+
+/* başlatma */
+(function(){
+  const o=initAdminPanel;
+  initAdminPanel=async function(uid,sa){
+    await o(uid,sa);
+    if(!aSetup){
+      aSetup=true;
+      document.querySelector("#view-admin .panel-brand span").textContent=sa?"Admin Paneli":"Müəllim Paneli";
+      A_MORE.forEach(r=>{
+        const pn=A(r[0]);
+        if(pn&&!pn.querySelector(".v2-backrow"))pn.insertAdjacentHTML("afterbegin",`<div class="v2-backrow"><button class="v2-back" onclick="adminGo('tab-more')">←</button><div class="v2-backtitle">${r[3]}</div></div>`);
+      });
+    }
+    adminGo("tab-home");
+    bellUpdate();
+  };
 })();
 </script>
 </body>
