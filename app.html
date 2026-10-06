@@ -887,8 +887,27 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .daily-actions-bar { display:flex; gap:10px; flex-wrap:wrap; }
 .daily-actions-bar button { flex:1; min-width:120px; }
 </style>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://securetoken.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://www.google.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" media="print" onload="this.media='all'">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script>
+var TTM_LIBS={jspdf:"https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",xlsx:"https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js",pdfjs:"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"},TTM_LP={};
+function ensureLib(n){
+  if(TTM_LP[n])return TTM_LP[n];
+  TTM_LP[n]=new Promise(function(res,rej){
+    var s=document.createElement("script");s.src=TTM_LIBS[n];
+    s.onload=function(){if(n==="pdfjs"&&window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";res();};
+    s.onerror=function(){TTM_LP[n]=null;rej(new Error("Kitabxana yüklənmədi, interneti yoxlayın"));};
+    document.head.appendChild(s);
+  });
+  return TTM_LP[n];
+}
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
 <style id="v2-style">
 /* ===== v2: şagird paneli dizaynı ===== */
@@ -1066,11 +1085,11 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .a-qc span{font-size:12.5px;opacity:.9;line-height:1.4}
 </style>
 <style id="ann-css">
-.a-q4{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
-.a-q4 .a-qc{min-height:128px;padding:12px 8px;border-radius:16px}
-.a-q4 .a-qc .ic{font-size:26px}
-.a-q4 .a-qc b{font-size:12.5px;line-height:1.2;margin-bottom:3px}
-.a-q4 .a-qc span{font-size:10px}
+.a-q4{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.a-q4 .a-qc{min-height:150px;padding:16px 14px;border-radius:20px}
+.a-q4 .a-qc .ic{font-size:34px}
+.a-q4 .a-qc b{font-size:16px;line-height:1.2;margin-bottom:4px}
+.a-q4 .a-qc span{font-size:12px}
 .a-pn{white-space:normal}
 .a-cnt{flex:none;text-align:center;padding:8px 10px;border-radius:12px;background:#eef5fb;cursor:pointer;min-width:62px}
 .a-cnt b{display:block;font-size:18px;color:var(--color-primary)}
@@ -1206,12 +1225,11 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
       <div id="a-ann"></div>
       <div class="v2-sec-head"><h3 style="color:var(--color-primary);">Tez giriş</h3></div>
       <div class="a-qgrid a-q4">
-        <div class="a-qc" style="background:linear-gradient(135deg,#ef4444,#b91c1c);" onclick="adminPdf()"><div class="ic">📄</div><div><b>PDF hazırla</b><span>Test PDF-i</span></div></div>
+        <div class="a-qc" style="background:linear-gradient(135deg,#ef4444,#b91c1c);" onclick="adminPdf()"><div class="ic">📄</div><div><b>PDF hazırla</b><span>Test və sınaq PDF-i</span></div></div>
         <div class="a-qc" style="background:linear-gradient(135deg,#6366f1,#4338ca);" onclick="adminGo('tab-scores')"><div class="ic">📊</div><div><b>Nəticələr</b><span>Bütün nəticələr</span></div></div>
-        <div class="a-qc" style="background:linear-gradient(135deg,#10b981,#047857);" onclick="adminGo('tab-scores','grading')"><div class="ic">✍️</div><div><b>Ətraflı yoxlanış</b><span>Suallar</span></div></div>
-        <div class="a-qc" style="background:linear-gradient(135deg,#ec4899,#be185d);" onclick="adminGo('tab-announce')"><div class="ic">📣</div><div><b>Elan yerləşdir</b><span>Duyuru</span></div></div>
+        <div class="a-qc" style="background:linear-gradient(135deg,#10b981,#047857);" onclick="adminGo('tab-scores','grading')"><div class="ic">✍️</div><div><b>Ətraflı yoxlanış</b><span>Ətraflı sualları yoxla</span></div></div>
+        <div class="a-qc" style="background:linear-gradient(135deg,#ec4899,#be185d);" onclick="adminGo('tab-announce')"><div class="ic">📣</div><div><b>Elan yerləşdir</b><span>Duyuru və yeni qrup</span></div></div>
       </div>
-      <div id="a-recent"></div>
     </div>
     <div class="tab-panel" id="tab-announce">
       <div class="card">
@@ -1959,9 +1977,6 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -1987,6 +2002,7 @@ firebase.appCheck().activate(
 
 const auth = firebase.auth();
 const db = firebase.firestore();
+db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
 const storage = firebase.storage();
 const USERNAME_DOMAIN = "@ttm.internal";
 
@@ -2002,6 +2018,7 @@ auth.onAuthStateChanged(async (user) => {
   if (suppressAuthRouting) return;
   if (!user) { showView("view-login"); return; }
   try {
+    const tPre = db.collection("teachers").doc(user.uid).get().catch(() => null);
     const snap = await db.collection("users").doc(user.uid).get();
     if (!snap.exists) {
       showView("view-login");
@@ -2018,7 +2035,7 @@ auth.onAuthStateChanged(async (user) => {
     if (!window._adminInited) { window._adminInited = true; initAdminPanel(user.uid, true); }
     loadTeacherRequests();
   } else if (data.role === "teacher") {
-    const tSnap = await db.collection("teachers").doc(user.uid).get();
+    const tSnap = (await tPre) || await db.collection("teachers").doc(user.uid).get();
     const t = tSnap.exists ? tSnap.data() : null;
     const expired = t && t.expiresAt && t.expiresAt.toDate() < new Date();
     const active = t && t.status === "active" && !expired;
@@ -2314,7 +2331,7 @@ async function initAdminPanel(uid, isSuperAdmin) {
       const last = Number(localStorage.getItem("ttm_migrate_ts") || 0);
       if (Date.now() - last > 7 * 24 * 3600 * 1000) {
         localStorage.setItem("ttm_migrate_ts", String(Date.now()));
-        setTimeout(() => migrateLegacyDataIfNeeded(uid), 20000);
+        /* migrateLegacyDataIfNeeded söndürülüb: sürət üçün (bütün kolleksiyaları oxuyurdu) */
       }
     } catch (e) {}
   }
@@ -2992,7 +3009,7 @@ document.getElementById("daily-pdf-btn").addEventListener("click", async () => {
   btn.disabled = true;
   toast(cachedFontBase64 ? "PDF hazırlanır..." : "Şrift yüklənir, gözləyin...");
   try {
-    const { jsPDF } = window.jspdf;
+    await ensureLib("jspdf"); const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: "mm", format: "a4" });
     await ensurePdfFont(doc);
     const W = 210, H = 297, mx = 12;
@@ -3164,7 +3181,8 @@ document.getElementById("daily-pdf-btn").addEventListener("click", async () => {
   }
 });
 
-document.getElementById("daily-excel-btn").addEventListener("click", () => {
+document.getElementById("daily-excel-btn").addEventListener("click", async () => {
+  try { await ensureLib("xlsx"); } catch (e) { /* CSV ilə davam */ }
   const g = groupsCache.find(x => x.id === dailyCurrentGroupId);
   const list = studentsCache.filter(s => s.active !== false && s.groupId === dailyCurrentGroupId).sort((a, b) => a.fullName.localeCompare(b.fullName, "az"));
   const rows = [["Ad Soyad", "Ev tapşırığı", "Sual-cavab", "Təkrar", "Qeyd"]];
@@ -3692,6 +3710,7 @@ document.getElementById("crop-pdf-input").addEventListener("change", async (e) =
   if (!file) return;
   toast("PDF yüklənir...");
   try {
+    await ensureLib("pdfjs");
     const buf = await file.arrayBuffer();
     cropPdfDoc = await pdfjsLib.getDocument({ data: buf }).promise;
     cropTotalPages = cropPdfDoc.numPages;
@@ -3861,7 +3880,7 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
   document.getElementById("pdf-generate-btn").disabled = true;
 
   try {
-    const { jsPDF } = window.jspdf;
+    await ensureLib("jspdf"); const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: "mm", format: "a4" });
     await ensurePdfFont(doc);
     if (!cachedFontBase64) toast("PDF hazırlanır...");
@@ -7257,6 +7276,7 @@ document.getElementById("mp-save-btn").addEventListener("click", async () => {
     };
     await db.collection("teacherProfiles").doc(currentTeacherId).set(payload);
     myProfile = payload;
+    try{localStorage.removeItem("ttm_hp_"+currentTeacherId);}catch(e){}
     document.getElementById("mp-status").textContent = "✅ Profil yayımlanıb, şagirdlər sizi siyahıda görür.";
     toast("Profil yadda saxlandı ✅");
   } catch (e) {
@@ -7269,6 +7289,7 @@ document.getElementById("mp-delete-btn").addEventListener("click", async () => {
   try {
     await db.collection("teacherProfiles").doc(currentTeacherId).delete();
     myProfile = null; myPhotoData = "";
+    try{localStorage.removeItem("ttm_hp_"+currentTeacherId);}catch(e){}
     document.getElementById("mp-status").textContent = "Profil silindi.";
     toast("Profil silindi");
   } catch (e) { toast("Xəta: " + e.message); }
@@ -7511,7 +7532,7 @@ if (pwaBtn) {
     btn.disabled = true;
     toast("PDF hazırlanır...");
     try {
-      const { jsPDF } = window.jspdf;
+      await ensureLib("jspdf"); const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ unit: "mm", format: "a4" });
       await ensurePdfFont(doc);
       const W = 210;
@@ -7656,7 +7677,7 @@ window.ntOpen=()=>{
       o.querySelector(".skip").onclick=end;
       o.querySelector(".v2-cta").onclick=()=>{if(last)end();else{i++;draw();}};};
     draw();
-  },1800);
+  },first?1800:350);
 })();
 </script>
 <script>
@@ -7698,15 +7719,27 @@ function moreRender(){
   const pend=(typeof enrollmentsCache!=="undefined"?enrollmentsCache:[]).filter(e=>e.status==="pending").length;
   A("a-more-list").innerHTML=A_MORE.filter(r=>(r[0]!=="tab-teacherreqs"&&r[0]!=="tab-sitesettings")||vis(r[0])).map(r=>`<div class="v2-more-row" onclick="adminGo('${r[0]}')"><span class="v2-more-ico" style="background:${r[2]}">${r[1]}</span><div style="flex:1;min-width:0;"><div class="v2-more-t">${r[3]}${r[0]==="tab-enrollreqs"&&pend?` <span class="v2-tag wait">${pend}</span>`:""}</div><div class="v2-more-s">${r[4]}</div></div><span class="v2-chev">›</span></div>`).join("");
 }
-async function homeRender(){
-  annLoad("a-ann");homeExtra();
-  let p=null;
-  try{const d=await db.collection("teacherProfiles").doc(currentTeacherId).get();p=d.exists?d.data():null;}catch(e){console.error(e);}
+let homeFetched=false;
+function homePaint(p){
   const name=(p&&p.fullName)||A("admin-name").textContent||"Müəllim";
   A("a-av").innerHTML=v2Avatar(p,name);
   A("a-pname").textContent=name;
   const cl=(p&&Array.isArray(p.classes))?p.classes.map(c=>(String(c).match(/\d+/)||[c])[0]).join(", "):"";
   A("a-psub").textContent=p?([p.subject,cl].filter(Boolean).join(" · ")||"Profil məlumatı əlavə edilməyib"):"Profili tamamla";
+}
+async function homeRender(){
+  annLoad("a-ann");homeExtra();
+  const k="ttm_hp_"+currentTeacherId;
+  let p=(typeof myProfile!=="undefined"&&myProfile)||null;
+  if(!p){try{p=JSON.parse(localStorage.getItem(k)||"null");}catch(e){}}
+  if(p)homePaint(p);else A("a-pname").textContent=A("admin-name").textContent||"Müəllim";
+  if(homeFetched)return;
+  try{
+    const d=await db.collection("teacherProfiles").doc(currentTeacherId).get();
+    p=d.exists?d.data():null;homeFetched=true;
+    try{if(p)localStorage.setItem(k,JSON.stringify(p));else localStorage.removeItem(k);}catch(e){}
+  }catch(e){console.error(e);}
+  homePaint(p);
 }
 function bellUpdate(){
   const n=(typeof enrollmentsCache!=="undefined"?enrollmentsCache:[]).filter(e=>e.status==="pending").length;
@@ -7801,19 +7834,11 @@ A("an-save-btn").addEventListener("click",async()=>{
 function homeExtra(){
   const c=A("a-cnt");
   if(c)c.textContent=studentsCache.filter(s=>s.active!==false).length;
-  const r=A("a-recent");
-  if(!r)return;
-  const l=examsCache.slice(0,3);
-  if(!l.length){r.innerHTML="";return;}
-  r.innerHTML='<div class="v2-sec-head" style="margin-top:18px;"><h3 style="color:var(--color-primary);">Son sınaqlar</h3><a onclick="adminGo(\'tab-exams\')">Hamısına bax ›</a></div>'+l.map(ex=>{
-    const g=(ex.groupIds||(ex.groupId?[ex.groupId]:[])).map(groupName).join(", ");
-    return `<div class="list-item" style="background:#fff;cursor:pointer;" onclick="adminGo('tab-exams')"><div class="list-item-info"><div class="list-item-title">${esc(ex.title)}</div><div class="list-item-sub">${ex.questionCount||0} sual · ${ex.timeLimitMinutes} dəq${g?" · "+g:""}</div></div><span class="v2-chev">›</span></div>`;
-  }).join("");
 }
 (function(){
   let t=0;
   const go=()=>{cancelAnimationFrame(t);t=requestAnimationFrame(()=>{try{homeExtra();}catch(e){}});};
-  ["exams-list","students-list"].forEach(id=>{const e=A(id);if(e)new MutationObserver(go).observe(e,{childList:true});});
+  ["students-list"].forEach(id=>{const e=A(id);if(e)new MutationObserver(go).observe(e,{childList:true});});
 })();
 (function(){const o=initStudentPanel;initStudentPanel=function(){const p=o.apply(this,arguments);try{annLoad("s-ann");}catch(e){}return p;};})();
 
