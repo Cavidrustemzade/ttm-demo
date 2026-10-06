@@ -1102,6 +1102,24 @@ function ensureLib(n){
 .an-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .an-chips span{font-size:11px;font-weight:700;background:#fff;color:#1d5a8e;padding:3px 9px;border-radius:999px;border:1px solid rgba(29,111,214,.15)}
 </style>
+<style id="ex-css">
+#exams-list{display:flex;flex-direction:column;gap:8px}
+.ex-row{background:#fff;border:1px solid rgba(15,23,42,.08);border-radius:14px;padding:10px 10px 10px 14px;box-shadow:0 1px 3px rgba(15,23,42,.04)}
+.ex-top{display:flex;align-items:center;gap:8px}
+.ex-main{flex:1;min-width:0}
+.ex-t{font-weight:800;font-size:14px;line-height:1.25;color:var(--color-primary);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ex-m{font-size:11.5px;color:var(--color-text-muted);margin-top:3px}
+.ex-m a{color:#1d6fd6;font-weight:700;cursor:pointer}
+.ex-ic{flex:none;width:36px;height:36px;border-radius:10px;border:none;background:#eef3f8;font-size:16px;cursor:pointer;padding:0}
+.ex-ic.d{background:#fdecec}
+.ex-grp{display:none;flex-wrap:wrap;gap:5px;margin-top:8px}
+.ex-grp.on{display:flex}
+.gr-mode{display:flex;gap:6px;margin-bottom:12px}
+.gr-mode button{flex:1;padding:9px 6px;border-radius:10px;border:1px solid rgba(15,23,42,.12);background:#fff;font-weight:700;font-size:13px;color:var(--color-primary);cursor:pointer}
+.gr-mode button.on{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}
+.gr-nav{display:flex;gap:8px;margin-top:10px}
+.gr-nav button{flex:1;padding:9px;border-radius:10px;border:1px solid rgba(15,23,42,.12);background:#fff;font-weight:700;font-size:13px;cursor:pointer}
+</style>
 </head>
 <body>
 
@@ -1365,6 +1383,7 @@ function ensureLib(n){
           <div class="field"><label>Sınaq seçin</label><select id="grading-exam-select"><option value="">— Seçin —</option></select></div>
           <div class="field"><label>Sual seçin</label><select id="grading-question-select"><option value="">— Əvvəlcə sınaq seçin —</option></select></div>
         </div>
+        <div class="gr-mode"><button type="button" id="gr-m-pending" class="on">Yoxlanılacaq</button><button type="button" id="gr-m-graded">Yoxlanılmış (düzəliş)</button></div>
         <div id="grading-panel"><div class="empty-state">Sınaq və sual seçin ki, yoxlamaya başlayasınız</div></div>
       </div>
     </div>
@@ -4506,15 +4525,17 @@ function loadExams() {
     if (examsCache.length === 0) { el.innerHTML = `<div class="empty-state">Hələ sınaq yaradılmayıb</div>`; return; }
     el.innerHTML = examsCache.map(ex => {
       const activeNow = new Date(ex.activationAt) <= new Date();
-      return `<div class="list-item">
-        <div class="list-item-info">
-          <div class="list-item-title">${esc(ex.title)}</div>
-          <div class="list-item-sub">${(ex.groupIds || (ex.groupId ? [ex.groupId] : [])).map(gid => `<span class="badge">${groupName(gid)}</span>`).join(" ")} ${ex.questionCount || 0} sual · ${ex.timeLimitMinutes} dəq · ${activeNow ? "🟢 Aktiv" : "⏳ " + new Date(ex.activationAt).toLocaleString("az-AZ")}</div>
+      const gids = ex.groupIds || (ex.groupId ? [ex.groupId] : []);
+      return `<div class="ex-row">
+        <div class="ex-top">
+          <div class="ex-main">
+            <div class="ex-t">${esc(ex.title)}</div>
+            <div class="ex-m">${ex.questionCount || 0} sual · ${ex.timeLimitMinutes} dəq · ${activeNow ? "🟢" : "⏳ " + new Date(ex.activationAt).toLocaleDateString("az-AZ")}${gids.length ? ` · <a onclick="this.closest('.ex-row').querySelector('.ex-grp').classList.toggle('on')">${gids.length} qrup ▾</a>` : ""}</div>
+          </div>
+          <button class="ex-ic" aria-label="Redaktə" onclick="editExam('${ex.id}')">✏️</button>
+          <button class="ex-ic d" aria-label="Sil" onclick="deleteExam('${ex.id}')">🗑️</button>
         </div>
-        <div class="list-item-actions">
-          <button class="btn-outline" onclick="editExam('${ex.id}')">Redaktə</button>
-          <button class="btn-danger" onclick="deleteExam('${ex.id}')">Sil</button>
-        </div>
+        <div class="ex-grp">${gids.map(gid => `<span class="badge">${groupName(gid)}</span>`).join("")}</div>
       </div>`;
     }).join("");
   });
@@ -4889,6 +4910,7 @@ document.getElementById("analytics-student-search").addEventListener("input", (e
 // =========================================================================
 let gradingQueue = [];
 let gradingIndex = 0;
+let gradingMode = "pending";
 let gradingQIndex = null;
 
 document.getElementById("grading-exam-select").addEventListener("change", async (e) => {
@@ -4935,8 +4957,9 @@ document.getElementById("grading-question-select").addEventListener("change", as
       const a = d.data();
       const pq = (a.perQuestion || [])[gradingQIndex];
       if (!pq || pq.type !== "detailed") return;
-      if (pq.points !== null && pq.points !== undefined) return; // artıq yoxlanılıb, keçirik
-      gradingQueue.push({ attemptId: d.id, text: pq.selected || null, photo: photoMap[d.id] || null, lost: !!pq.hasPhoto && !photoMap[d.id] });
+      const done = pq.points !== null && pq.points !== undefined;
+      if (gradingMode === "pending" ? done : !done) return;
+      gradingQueue.push({ attemptId: d.id, text: pq.selected || null, points: pq.points, photo: photoMap[d.id] || null, lost: !!pq.hasPhoto && !photoMap[d.id] });
     });
     gradingIndex = 0;
     renderGradingPanel();
@@ -4948,11 +4971,12 @@ document.getElementById("grading-question-select").addEventListener("change", as
 
 function renderGradingPanel() {
   const panel = document.getElementById("grading-panel");
-  if (gradingQueue.length === 0) { panel.innerHTML = `<div class="empty-state">✅ Bu sual üzrə yoxlanılası cavab yoxdur (hamısı yoxlanılıb və ya heç kim cavab verməyib)</div>`; return; }
-  if (gradingIndex >= gradingQueue.length) { panel.innerHTML = `<div class="empty-state">✅ Bütün cavablar yoxlanıldı!</div>`; return; }
+  const gm = gradingMode === "graded";
+  if (gradingQueue.length === 0) { panel.innerHTML = `<div class="empty-state">${gm ? "Bu sual üzrə hələ yoxlanılmış cavab yoxdur" : "✅ Bu sual üzrə yoxlanılası cavab yoxdur (hamısı yoxlanılıb və ya heç kim cavab verməyib)"}</div>`; return; }
+  if (gradingIndex >= gradingQueue.length) { panel.innerHTML = `<div class="empty-state">✅ ${gm ? "Sonuncu cavab idi" : "Bütün cavablar yoxlanıldı!"}</div>` + (gm ? `<div class="gr-nav"><button onclick="gradingNav(-1)">← Geri</button><button onclick="gradingIndex=0;renderGradingPanel()">Əvvələ qayıt</button></div>` : ""); return; }
   const item = gradingQueue[gradingIndex];
   panel.innerHTML = `
-    <div class="muted-note" style="margin-bottom:10px;">Yoxlanılır: ${gradingIndex + 1} / ${gradingQueue.length} (şagird adı gizlidir)</div>
+    <div class="muted-note" style="margin-bottom:10px;">Yoxlanılır: ${gradingIndex + 1} / ${gradingQueue.length} (şagird adı gizlidir)${gm ? " · cari bal: <b>" + String(item.points).replace(".", ",") + "</b>" : ""}</div>
     ${item.text ? `<div class="field"><label>Yazdığı cavab</label><div style="padding:10px; background:var(--color-light-gray); border-radius:8px; font-size:14px;">${esc(item.text)}</div></div>` : ""}
     ${item.lost ? `<div class="muted-note" style="color:var(--color-danger);font-weight:700;">⚠️ Şagird bu suala şəkil əlavə edib, amma şəkil serverə çatmayıb.</div>` : ""}
     ${item.photo ? `<img src="${item.photo}" style="max-width:100%; border-radius:10px; margin-top:10px; border:1px solid var(--color-gray); cursor:pointer;" onclick="openImageLightbox(this.src)" />` : (!item.text ? `<div class="empty-state">Cavab göndərilməyib</div>` : "")}
@@ -4961,9 +4985,22 @@ function renderGradingPanel() {
       <button class="btn-small" style="flex:1; background:#d99a2b;" onclick="gradeCurrentAnswer(0.5)">0,5 bal</button>
       <button class="btn-small" style="flex:1; background:#2e9e6b;" onclick="gradeCurrentAnswer(1)">1 bal</button>
     </div>
+    ${gm ? `<div class="gr-nav"><button onclick="gradingNav(-1)">← Əvvəlki</button><button onclick="gradingNav(1)">Növbəti →</button></div>` : ""}
   `;
 }
 
+window.gradingNav = (d) => { gradingIndex = Math.max(0, Math.min(gradingQueue.length, gradingIndex + d)); renderGradingPanel(); };
+(function(){
+  const bp = document.getElementById("gr-m-pending"), bg = document.getElementById("gr-m-graded");
+  const set = (m) => {
+    gradingMode = m;
+    bp.classList.toggle("on", m === "pending"); bg.classList.toggle("on", m === "graded");
+    const q = document.getElementById("grading-question-select");
+    if (q.value !== "") q.dispatchEvent(new Event("change"));
+  };
+  bp.addEventListener("click", () => set("pending"));
+  bg.addEventListener("click", () => set("graded"));
+})();
 let gradingBusy = false;
 window.gradeCurrentAnswer = async (points) => {
   if (gradingBusy) return;
@@ -5003,6 +5040,7 @@ window.gradeCurrentAnswer = async (points) => {
     await ref.update({ perQuestion, score, correctCount, totalCount, detailedCount, detailedGradedCount, pendingGrading });
     db.collection("detailedAnswers").doc(`${item.attemptId}_${gradingQIndex}`).update({ points, gradedAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(() => {});
 
+    item.points = points;
     gradingIndex++;
     renderGradingPanel();
     toast("Bal yadda saxlandı");
