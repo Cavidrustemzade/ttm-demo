@@ -4953,13 +4953,19 @@ document.getElementById("grading-question-select").addEventListener("change", as
     photosSnap.forEach(d => { const dd = d.data(); photoMap[dd.attemptId] = dd.photoBase64; });
 
     gradingQueue = [];
+    const dupMap = {};
     attemptsSnap.forEach(d => {
       const a = d.data();
       const pq = (a.perQuestion || [])[gradingQIndex];
       if (!pq || pq.type !== "detailed") return;
       const done = pq.points !== null && pq.points !== undefined;
       if (gradingMode === "pending" ? done : !done) return;
-      gradingQueue.push({ attemptId: d.id, text: pq.selected || null, points: pq.points, photo: photoMap[d.id] || null, lost: !!pq.hasPhoto && !photoMap[d.id] });
+      const ph = photoMap[d.id] || null;
+      const sig = (a.studentId || "") + "|" + (pq.selected || "") + "|" + (ph ? ph.length + ph.slice(-120) : "");
+      if (dupMap[sig]) { dupMap[sig].ids.push(d.id); return; }
+      const it = { attemptId: d.id, ids: [d.id], text: pq.selected || null, points: pq.points, photo: ph, lost: !!pq.hasPhoto && !ph };
+      dupMap[sig] = it;
+      gradingQueue.push(it);
     });
     gradingIndex = 0;
     renderGradingPanel();
@@ -4976,7 +4982,7 @@ function renderGradingPanel() {
   if (gradingIndex >= gradingQueue.length) { panel.innerHTML = `<div class="empty-state">✅ ${gm ? "Sonuncu cavab idi" : "Bütün cavablar yoxlanıldı!"}</div>` + (gm ? `<div class="gr-nav"><button onclick="gradingNav(-1)">← Geri</button><button onclick="gradingIndex=0;renderGradingPanel()">Əvvələ qayıt</button></div>` : ""); return; }
   const item = gradingQueue[gradingIndex];
   panel.innerHTML = `
-    <div class="muted-note" style="margin-bottom:10px;">Yoxlanılır: ${gradingIndex + 1} / ${gradingQueue.length} (şagird adı gizlidir)${gm ? " · cari bal: <b>" + String(item.points).replace(".", ",") + "</b>" : ""}</div>
+    <div class="muted-note" style="margin-bottom:10px;">Yoxlanılır: ${gradingIndex + 1} / ${gradingQueue.length} (şagird adı gizlidir)${item.ids && item.ids.length > 1 ? " · eyni cavab " + item.ids.length + " dəfə göndərilib (birlikdə qiymətlənir)" : ""}${gm ? " · cari bal: <b>" + String(item.points).replace(".", ",") + "</b>" : ""}</div>
     ${item.text ? `<div class="field"><label>Yazdığı cavab</label><div style="padding:10px; background:var(--color-light-gray); border-radius:8px; font-size:14px;">${esc(item.text)}</div></div>` : ""}
     ${item.lost ? `<div class="muted-note" style="color:var(--color-danger);font-weight:700;">⚠️ Şagird bu suala şəkil əlavə edib, amma şəkil serverə çatmayıb.</div>` : ""}
     ${item.photo ? `<img src="${item.photo}" style="max-width:100%; border-radius:10px; margin-top:10px; border:1px solid var(--color-gray); cursor:pointer;" onclick="openImageLightbox(this.src)" />` : (!item.text ? `<div class="empty-state">Cavab göndərilməyib</div>` : "")}
@@ -5002,51 +5008,55 @@ window.gradingNav = (d) => { gradingIndex = Math.max(0, Math.min(gradingQueue.le
   bg.addEventListener("click", () => set("graded"));
 })();
 let gradingBusy = false;
+async function applyGradeTo(attemptId, points) {
+  const ref = db.collection("examAttempts").doc(attemptId);
+  const doc = await ref.get({ source: "server" });
+  if (!doc.exists) return false;
+  const a = doc.data();
+  const perQuestion = (a.perQuestion || []).slice();
+  if (!perQuestion[gradingQIndex]) return false;
+  const maxP = perQuestion[gradingQIndex].maxPoints ?? 1;
+  perQuestion[gradingQIndex] = { ...perQuestion[gradingQIndex], points, maxPoints: maxP };
+  let correctCount = 0, detailedCount = 0, detailedGradedCount = 0, detailedPointsSum = 0, autoCorrectCount = 0;
+  const totalCount = perQuestion.length;
+  perQuestion.forEach(pq => {
+    if (!pq) return;
+    if (pq.type === "detailed") {
+      detailedCount++;
+      if (pq.points !== null && pq.points !== undefined) {
+        detailedGradedCount++;
+        detailedPointsSum += pq.points;
+        if (pq.points >= (pq.maxPoints ?? 1)) correctCount++;
+      }
+    } else {
+      if (pq.isCorrect) { correctCount++; autoCorrectCount++; }
+    }
+  });
+  const earnedPoints = autoCorrectCount + detailedPointsSum;
+  const score = totalCount > 0 ? Math.round((earnedPoints / totalCount) * 100) : 0;
+  const pendingGrading = detailedGradedCount < detailedCount;
+  await ref.update({ perQuestion, score, correctCount, totalCount, detailedCount, detailedGradedCount, pendingGrading });
+  db.collection("detailedAnswers").doc(`${attemptId}_${gradingQIndex}`).update({ points, gradedAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(() => {});
+  return true;
+}
 window.gradeCurrentAnswer = async (points) => {
   if (gradingBusy) return;
   const item = gradingQueue[gradingIndex];
   if (!item) return;
   gradingBusy = true;
+  document.querySelectorAll("#grading-panel button").forEach(b => b.disabled = true);
   try {
-    const ref = db.collection("examAttempts").doc(item.attemptId);
-    const doc = await ref.get();
-    if (!doc.exists) { toast("Nəticə tapılmadı"); gradingIndex++; renderGradingPanel(); return; }
-    const a = doc.data();
-    const perQuestion = (a.perQuestion || []).slice();
-    if (!perQuestion[gradingQIndex]) { toast("Sual məlumatı tapılmadı"); gradingIndex++; renderGradingPanel(); return; }
-    const maxP = perQuestion[gradingQIndex].maxPoints ?? 1;
-    perQuestion[gradingQIndex] = { ...perQuestion[gradingQIndex], points, maxPoints: maxP };
-
-    // Hər şeyi perQuestion massivindən YENİDƏN hesablayırıq (sənəddə köhnə/əskik sahə olsa belə düzgün nəticə versin)
-    let correctCount = 0, detailedCount = 0, detailedGradedCount = 0, detailedPointsSum = 0, autoCorrectCount = 0;
-    const totalCount = perQuestion.length;
-    perQuestion.forEach(pq => {
-      if (!pq) return;
-      if (pq.type === "detailed") {
-        detailedCount++;
-        if (pq.points !== null && pq.points !== undefined) {
-          detailedGradedCount++;
-          detailedPointsSum += pq.points;
-          if (pq.points >= (pq.maxPoints ?? 1)) correctCount++;
-        }
-      } else {
-        if (pq.isCorrect) { correctCount++; autoCorrectCount++; }
-      }
-    });
-    const earnedPoints = autoCorrectCount + detailedPointsSum;
-    const score = totalCount > 0 ? Math.round((earnedPoints / totalCount) * 100) : 0;
-    const pendingGrading = detailedGradedCount < detailedCount;
-
-    await ref.update({ perQuestion, score, correctCount, totalCount, detailedCount, detailedGradedCount, pendingGrading });
-    db.collection("detailedAnswers").doc(`${item.attemptId}_${gradingQIndex}`).update({ points, gradedAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(() => {});
-
+    let ok = 0;
+    for (const id of (item.ids || [item.attemptId])) { if (await applyGradeTo(id, points)) ok++; }
+    if (!ok) toast("Nəticə tapılmadı");
+    else toast("Bal yadda saxlandı" + (item.ids && item.ids.length > 1 ? " (" + item.ids.length + " eyni göndəriş)" : ""));
     item.points = points;
     gradingIndex++;
     renderGradingPanel();
-    toast("Bal yadda saxlandı");
   } catch (err) {
     console.error(err);
     toast("Xəta: " + err.message);
+    renderGradingPanel();
   } finally { gradingBusy = false; }
 };
 
