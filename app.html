@@ -8059,5 +8059,586 @@ function homeExtra(){
 })();
 </script>
 
+<!-- ===== ƏTRAFLI HƏLL YÜKLƏMƏ v2: kamera/qalereya/fayl, kəsmə, sıxma, real təsdiq, offline növbə, təkrar-cəhd qoruması ===== -->
+<style id="dq-css">
+.dq-main{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border-radius:14px;font-weight:800;font-size:14.5px;color:#fff;background:linear-gradient(135deg,var(--color-primary-light),var(--color-primary-dark));box-shadow:0 10px 22px rgba(11,60,93,.25)}
+.dq-main:active{transform:scale(.98)}
+.dq-card{position:relative;display:flex;gap:12px;align-items:center;padding:10px;border-radius:16px;background:#fff;border:1.5px solid var(--color-gray);overflow:hidden;transition:border-color .3s,background .3s}
+.dq-card.st-up{border-color:#bcd6f5;background:#f6faff}
+.dq-card.st-ok{border-color:#b7e4c5;background:#f3fbf6}
+.dq-card.st-err{border-color:#f3b9b9;background:#fff6f6}
+.dq-card.st-wait,.dq-card.st-later{border-color:#f0d17c;background:#fffbef}
+.dq-th{width:64px;height:64px;border-radius:12px;object-fit:cover;flex:none;border:1px solid var(--color-gray);cursor:zoom-in}
+.dq-info{flex:1;min-width:0}
+.dq-t{font-size:13px;font-weight:700;color:var(--color-text);line-height:1.35}
+.dq-bar{height:6px;border-radius:9px;background:#e3ecf6;margin-top:8px;overflow:hidden}
+.dq-bar i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,#3b82f6,#22d3ee);transition:width .25s ease}
+.st-ok .dq-bar i{background:#2e9e6b}
+.dq-act{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.dq-act button{padding:6px 11px;border-radius:9px;font-size:12px;font-weight:700;background:var(--color-light-gray);color:var(--color-primary)}
+.dq-act button.r{background:var(--color-danger);color:#fff}
+.dq-ok{position:absolute;right:10px;top:10px;width:26px;height:26px;border-radius:50%;background:#2e9e6b;color:#fff;font-weight:900;display:none;align-items:center;justify-content:center;font-size:14px}
+.dq-card.pop .dq-ok{display:flex;animation:dqPop .55s cubic-bezier(.2,1.6,.5,1)}
+.dq-card.pop{animation:dqGlow 1.2s ease}
+@keyframes dqPop{0%{transform:scale(0)}100%{transform:scale(1)}}
+@keyframes dqGlow{0%{box-shadow:0 0 0 0 rgba(46,158,107,.45)}100%{box-shadow:0 0 0 14px rgba(46,158,107,0)}}
+#exam-nav-grid .exam-nav-btn{position:relative}
+#exam-nav-grid .exam-nav-btn[class*="dq-"]::after{content:"";position:absolute;top:3px;right:3px;width:7px;height:7px;border-radius:50%}
+#exam-nav-grid .dq-up::after{background:#1d6fd6;animation:dqPulse 1s infinite}
+#exam-nav-grid .dq-err::after{background:var(--color-danger)}
+#exam-nav-grid .dq-wait::after,#exam-nav-grid .dq-later::after{background:#d99a2b}
+@keyframes dqPulse{50%{opacity:.25}}
+#dq-tray{position:fixed;left:12px;bottom:14px;z-index:45;display:none;flex-direction:column;gap:5px;max-width:240px}
+#dq-tray div{background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border:1px solid var(--color-gray);border-radius:12px;padding:7px 11px;font-size:11.5px;font-weight:700;box-shadow:0 6px 16px rgba(11,60,93,.12);animation:fadeUp .25s ease;cursor:pointer}
+#dq-sheet{position:fixed;inset:0;z-index:6500;background:rgba(7,42,66,.45);display:flex;align-items:flex-end;justify-content:center}
+#dq-sheet .sh{background:#fff;width:100%;max-width:480px;border-radius:22px 22px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));animation:dqUp .28s ease}
+@keyframes dqUp{from{transform:translateY(100%)}}
+#dq-sheet .sh-h{font-weight:800;color:var(--color-primary);text-align:center;margin-bottom:12px;font-size:15px}
+#dq-sheet .opt{width:100%;display:flex;align-items:center;gap:12px;padding:13px;border-radius:14px;background:var(--color-light-gray);margin-bottom:8px;text-align:left}
+#dq-sheet .opt i{font-style:normal;font-size:24px;width:42px;height:42px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+#dq-sheet .opt b{display:block;font-size:14px;color:var(--color-text)}
+#dq-sheet .opt span{font-size:11.5px;color:var(--color-text-muted)}
+#dq-sheet .x{width:100%;padding:12px;border-radius:14px;background:#fff;color:var(--color-text-muted);font-weight:700}
+#dq-crop{position:fixed;inset:0;z-index:7000;background:#0b1620;color:#fff;display:flex;flex-direction:column}
+.cr-top{padding:14px 16px 8px;text-align:center}.cr-top b{display:block;font-size:15px}.cr-top span{font-size:12px;opacity:.7}
+.cr-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:8px 16px;position:relative}
+.cr-wrap{position:relative;display:inline-block;touch-action:none;line-height:0}
+.cr-wrap canvas{display:block;max-width:calc(100vw - 32px);max-height:calc(100vh - 210px);max-height:calc(100dvh - 210px)}
+.cr-box{position:absolute;border:2px solid #22d3ee;box-shadow:0 0 0 9999px rgba(0,0,0,.55);cursor:move}
+.cr-box .h{position:absolute;width:34px;height:34px}
+.cr-box .h::after{content:"";position:absolute;left:10px;top:10px;width:14px;height:14px;border-radius:50%;background:#22d3ee;border:2px solid #fff}
+.cr-box .nw{left:-17px;top:-17px}.cr-box .ne{right:-17px;top:-17px}.cr-box .sw{left:-17px;bottom:-17px}.cr-box .se{right:-17px;bottom:-17px}
+.cr-load{position:absolute;font-size:14px;opacity:.8}
+.cr-tools{display:flex;gap:8px;justify-content:center;padding:6px 16px}
+.cr-tools button{padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.12);color:#fff;font-size:12.5px;font-weight:700}
+.cr-bot{display:flex;gap:10px;padding:10px 16px calc(14px + env(safe-area-inset-bottom,0px))}
+.cr-bot button{flex:1;padding:14px;border-radius:14px;font-weight:800;font-size:14.5px;background:rgba(255,255,255,.12);color:#fff}
+.cr-bot .go{background:#22d3ee;color:#072a42}
+.dq-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.dq-chips button{padding:4px 10px;border-radius:999px;background:#fff;border:1px solid #f0d17c;font-weight:800;font-size:12px;color:#a9700a}
+</style>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const race = (p, ms) => Promise.race([p.then(() => "ok"), wait(ms).then(() => "timeout")]);
+  const lock = v => { document.body.style.overflow = v ? "hidden" : ""; };
+  // Azərbaycan dilində sıra şəkilçisi: 21-ci, 23-cü, 26-cı, 29-cu
+  function ord(n) {
+    const D = { 1: "ci", 2: "ci", 3: "cü", 4: "cü", 5: "ci", 6: "cı", 7: "ci", 8: "ci", 9: "cu" };
+    const T = { 1: "cu", 2: "ci", 3: "cu", 4: "cı", 5: "ci", 6: "cı", 7: "ci", 8: "ci", 9: "cı" };
+    return n + "-" + (n % 10 ? D[n % 10] : n % 100 ? T[(n % 100) / 10] : "cü");
+  }
+
+  // ---------- Yerli etibarlı yaddaş (IndexedDB) — şəkil heç vaxt itmir ----------
+  let dbp = null;
+  const idbOpen = () => dbp || (dbp = new Promise((res, rej) => {
+    const r = indexedDB.open("ttm_dq", 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("p", { keyPath: "id" });
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  }));
+  async function idb(mode, fn) {
+    try {
+      const d = await idbOpen();
+      return await new Promise((res, rej) => {
+        const t = d.transaction("p", mode), q = fn(t.objectStore("p"));
+        t.oncomplete = () => res(q && q.result); t.onerror = () => rej(t.error);
+      });
+    } catch (e) { console.error("IDB:", e); return null; }
+  }
+  const recPut = r => idb("readwrite", s => s.put(r));
+  const recDel = id => idb("readwrite", s => s.delete(id));
+  const recAll = async () => (await idb("readonly", s => s.getAll())) || [];
+
+  // ---------- Vəziyyət ----------
+  let st = {}, stEx = null;
+  const aid = () => { if (!currentExam.attemptId) currentExam.attemptId = currentExam.id + "_" + currentStudentUid; return currentExam.attemptId; };
+  const S = i => { if (!currentExam) return null; if (stEx !== currentExam.id) { st = {}; stEx = currentExam.id; } return st[i]; };
+  function setS(i, o) {
+    S(i); st[i] = Object.assign(st[i] || {}, o);
+    paint(i); tray(); navMark(i);
+  }
+  const detIdx = () => currentExam ? currentExam.questions.map((q, i) => q.type === "detailed" ? i : -1).filter(i => i >= 0) : [];
+
+  // Təkrar sınaq qoruması: bu şagird bu sınağı artıq göndəribmi?
+  async function findAttempt(examId) {
+    const c = studentAttemptsCache.find(a => a.examId === examId);
+    if (c) return c;
+    try {
+      const q = db.collection("examAttempts").where("studentId", "==", currentStudentUid).where("examId", "==", examId).limit(1).get({ source: "server" });
+      const s = await Promise.race([q, wait(8000).then(() => null)]);
+      if (s && !s.empty) return { id: s.docs[0].id, ...s.docs[0].data() };
+    } catch (e) { console.warn("attempt yoxlanışı:", e); }
+    return null;
+  }
+
+  // ---------- Şəkil yükləmə (real server təsdiqi ilə) ----------
+  function anim(i, v) {
+    return setInterval(() => {
+      const s = st[i]; if (!s || s.v !== v || s.s !== "up") return;
+      s.p = Math.min(92, s.p + (92 - s.p) * 0.07 + 0.4);
+      const b = $("dq-bar-" + i), t = $("dq-tx-" + i);
+      if (b) b.style.width = s.p + "%";
+      if (t) t.textContent = `📤 ${ord(i + 1)} sualın həlli yüklənir... ${Math.round(s.p)}%`;
+    }, 140);
+  }
+  async function upload(i) {
+    const ex = currentExam, a = currentExamAnswers[i];
+    if (!ex || !a || !a.photo) return "none";
+    const id = aid() + "_" + i, v = ((S(i) || {}).v || 0) + 1, q = ex.questions[i];
+    setS(i, { s: "up", p: 3, v, fresh: false });
+    const data = {
+      attemptId: aid(), examId: ex.id, studentId: currentStudentUid, groupId: attemptGroupId(ex),
+      teacherId: ex.teacherId || null, questionIndex: i, questionId: String(q.order ?? i),
+      photoBase64: a.photo, points: null, maxPoints: 1
+    };
+    await recPut({ id, studentId: currentStudentUid, attemptId: aid(), q: i, ts: Date.now(), done: false, data });
+    const tk = anim(i, v);
+    let w;
+    try { w = db.collection("detailedAnswers").doc(id).set({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() }); }
+    catch (e) { clearInterval(tk); fail(i, v, e, id, a.photo); return "err"; }
+    try {
+      const r = await race(w, navigator.onLine ? 30000 : 1500);
+      clearInterval(tk);
+      if (r === "timeout") {
+        if (st[i].v === v) setS(i, { s: "wait" });
+        w.then(() => done(i, v, id, ex)).catch(e => fail(i, v, e, id, data.photoBase64));
+        return "wait";
+      }
+      await done(i, v, id, ex); return "ok";
+    } catch (e) { clearInterval(tk); return (await fail(i, v, e, id, data.photoBase64)) ? "ok" : "err"; }
+  }
+  async function done(i, v, id, ex) {
+    if (currentExam !== ex || !st[i] || st[i].v !== v) return;
+    await recPut(Object.assign({}, { id, studentId: currentStudentUid, attemptId: aid(), q: i, ts: Date.now(), done: true, data: { photoBase64: currentExamAnswers[i].photo } }));
+    setS(i, { s: "ok", p: 100, fresh: true });
+    setTimeout(() => { if (st[i] && st[i].v === v) setS(i, { fresh: false }); }, 2200);
+  }
+  // Serverdə bu şəkil artıq varmı? (qaydalar şagirdə mövcud sənədi yeniləməyə icazə vermir)
+  async function serverHas(id, photo) {
+    try { const d = await db.collection("detailedAnswers").doc(id).get({ source: "server" }); return !d.exists ? "none" : d.data().photoBase64 === photo ? "same" : "diff"; }
+    catch (e) { return "?"; }
+  }
+  async function fail(i, v, e, id, photo) {
+    console.error("Həll yüklənmədi:", e);
+    if (!st[i] || st[i].v !== v) return false;
+    if (e && e.code === "permission-denied") {
+      const h = await serverHas(id, photo);
+      if (h === "same") { await done(i, v, id, currentExam); return true; }
+      if (h === "diff") { setS(i, { s: "err", lock: true }); return false; }
+    }
+    setS(i, { s: "err", lock: false });
+    return false;
+  }
+
+  // ---------- Sual daxilində görünüş ----------
+  function paint(i) {
+    if (!currentExam || currentExamIndex !== i) return;
+    const slot = $("dq-slot"); if (!slot) return;
+    const a = currentExamAnswers[i] || {}, s = S(i) || {}, n = ord(i + 1);
+    if (!a.photo) { slot.innerHTML = `<button class="dq-main" onclick="dqPick(${i})">📤 Həllini göndər</button>`; return; }
+    const T = {
+      up: `📤 ${n} sualın həlli yüklənir... ${Math.round(s.p || 0)}%`,
+      ok: s.fresh ? `✅ ${n} sualın həlli yükləndi` : `✅ Göndərildi — müəllimə çatdı`,
+      wait: `⏳ Göndərilməyi gözləyir — internet gələndə özü gedəcək`,
+      later: `🕓 Yadda saxlandı — sınaq bitəndə göndəriləcək`,
+      err: s.lock ? `❌ Əvvəlki şəkil artıq göndərilib, dəyişmək olmur` : `❌ ${n} sualın həlli yüklənmədi`
+    };
+    const k = s.s || "wait";
+    slot.innerHTML = `<div class="dq-card st-${k} ${s.fresh ? "pop" : ""}">
+      <img class="dq-th" src="${a.photo}" onclick="openImageLightbox(this.src)" alt="">
+      <div class="dq-info"><div class="dq-t" id="dq-tx-${i}">${T[k]}</div>
+        ${k === "up" || s.fresh ? `<div class="dq-bar"><i id="dq-bar-${i}" style="width:${s.p || 0}%"></i></div>` : ""}
+        <div class="dq-act">
+          ${(k === "err" && !s.lock) || k === "wait" ? `<button class="r" onclick="dqRetry(${i})">🔄 Yenidən cəhd et</button>` : ""}
+          ${k !== "up" ? `<button onclick="dqPick(${i})">Dəyiş</button>` : ""}${k !== "up" && k !== "ok" && !s.lock ? `<button onclick="dqRemove(${i})">Sil</button>` : ""}
+        </div></div><span class="dq-ok">✓</span></div>`;
+  }
+  function tray() {
+    let t = $("dq-tray");
+    if (!t) { t = document.createElement("div"); t.id = "dq-tray"; document.body.appendChild(t); }
+    if (!currentExam || !examExitGuardActive) { t.style.display = "none"; return; }
+    const L = { up: "⏳ Yüklənir...", ok: "🟢 Yükləndi", err: "🔴 Yüklənmədi — toxun", wait: "🟡 Gözləyir", later: "🕓 Bitəndə gedəcək" };
+    const rows = Object.keys(st).map(Number).filter(i => st[i].s && (st[i].s !== "ok" || st[i].fresh) && currentExamIndex !== i);
+    t.innerHTML = rows.map(i => `<div onclick="goToExamQuestion(${i});${st[i].s === "err" ? `dqRetry(${i})` : ""}">${i + 1}-${ord(i + 1).split("-")[1]} sual — ${L[st[i].s]}</div>`).join("");
+    t.style.display = rows.length ? "flex" : "none";
+  }
+  function navMark(i) {
+    const b = document.querySelectorAll("#exam-nav-grid .exam-nav-btn")[i]; if (!b) return;
+    b.classList.remove("dq-up", "dq-err", "dq-wait", "dq-later");
+    const s = S(i); if (s && s.s && s.s !== "ok") b.classList.add("dq-" + s.s);
+  }
+
+  // ---------- Seçim: kamera / qalereya / fayl ----------
+  window.dqPick = (i) => {
+    const sh = document.createElement("div"); sh.id = "dq-sheet";
+    sh.innerHTML = `<div class="sh"><div class="sh-h">Həllini göndər · ${ord(i + 1)} sual</div>
+      <button class="opt" data-k="cam"><i>📷</i><div><b>Kamera ilə çək</b><span>Kağızdakı həlli çək</span></div></button>
+      <button class="opt" data-k="gal"><i>🖼️</i><div><b>Qalereyadan seç</b><span>Çəkilmiş şəkli seç</span></div></button>
+      <button class="opt" data-k="file"><i>📄</i><div><b>Fayl seç</b><span>Şəkil və ya PDF</span></div></button>
+      <button class="x">Ləğv et</button></div>`;
+    document.body.appendChild(sh); lock(true);
+    const close = () => { sh.remove(); lock(false); };
+    sh.onclick = e => { if (e.target === sh || e.target.classList.contains("x")) close(); };
+    sh.querySelectorAll(".opt").forEach(b => b.onclick = () => {
+      const k = b.dataset.k, inp = document.createElement("input");
+      inp.type = "file"; inp.accept = k === "file" ? "image/*,application/pdf" : "image/*";
+      if (k === "cam") inp.setAttribute("capture", "environment");
+      inp.style.display = "none"; document.body.appendChild(inp);
+      inp.onchange = async () => { const f = inp.files[0]; inp.remove(); if (f) await gotFile(i, f); };
+      close(); inp.click();
+    });
+  };
+  async function gotFile(i, f) {
+    const ex = currentExam;
+    const url = await crop(f);
+    if (!url || currentExam !== ex) return;
+    if (!currentExamAnswers[i] || typeof currentExamAnswers[i] !== "object") currentExamAnswers[i] = {};
+    currentExamAnswers[i].photo = url;
+    saveExamProgress(); renderExamNavGrid(); paint(i);
+    upload(i);
+  }
+  window.dqRetry = i => upload(i);
+  window.dqRemove = async (i) => {
+    const s = S(i) || {};
+    if (s.s === "ok") return;
+    currentExamAnswers[i].photo = null;
+    st[i] = { v: (s.v || 0) + 1 };
+    await recDel(aid() + "_" + i);
+    saveExamProgress(); renderExamNavGrid(); paint(i); tray();
+  };
+
+  // ---------- Kəsmə (crop) ekranı + avtomatik kənar tapma ----------
+  async function loadSrc(f) {
+    const c = document.createElement("canvas"), x = c.getContext("2d");
+    if (f.type === "application/pdf" || /\.pdf$/i.test(f.name)) {
+      await ensureLib("pdfjs");
+      const pdf = await pdfjsLib.getDocument({ data: await f.arrayBuffer() }).promise;
+      const n = Math.min(pdf.numPages, 3), pages = [];
+      for (let p = 1; p <= n; p++) {
+        const pg = await pdf.getPage(p), vp0 = pg.getViewport({ scale: 1 }), vp = pg.getViewport({ scale: 1400 / vp0.width });
+        const pc = document.createElement("canvas"); pc.width = vp.width; pc.height = vp.height;
+        await pg.render({ canvasContext: pc.getContext("2d"), viewport: vp }).promise; pages.push(pc);
+      }
+      if (pdf.numPages > 3) toast("PDF-in yalnız ilk 3 səhifəsi götürüldü");
+      c.width = 1400; c.height = pages.reduce((s, p) => s + p.height, 0);
+      x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height);
+      let y = 0; pages.forEach(p => { x.drawImage(p, 0, y); y += p.height; });
+      return c;
+    }
+    const u = URL.createObjectURL(f);
+    try {
+      const img = await new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = u; });
+      const s = Math.min(1, 2400 / Math.max(img.naturalWidth, img.naturalHeight));
+      c.width = Math.round(img.naturalWidth * s); c.height = Math.round(img.naturalHeight * s);
+      x.drawImage(img, 0, 0, c.width, c.height);
+      return c;
+    } catch (e) { throw new Error("Bu şəkil açılmadı (HEIC ola bilər). Kamera ilə çəkin və ya JPG/PNG seçin."); }
+    finally { URL.revokeObjectURL(u); }
+  }
+  function autoBox(c) {
+    const sc = 180 / Math.max(c.width, c.height), w = Math.max(8, Math.round(c.width * sc)), h = Math.max(8, Math.round(c.height * sc));
+    const t = document.createElement("canvas"); t.width = w; t.height = h;
+    const tx = t.getContext("2d"); tx.drawImage(c, 0, 0, w, h);
+    const d = tx.getImageData(0, 0, w, h).data, g = new Uint8Array(w * h), hist = new Array(256).fill(0);
+    for (let i = 0; i < w * h; i++) { g[i] = (d[i * 4] * .3 + d[i * 4 + 1] * .59 + d[i * 4 + 2] * .11) | 0; hist[g[i]]++; }
+    let sum = 0, sB = 0, wB = 0, mx = 0, thr = 128;
+    for (let k = 0; k < 256; k++) sum += k * hist[k];
+    for (let k = 0; k < 256; k++) { wB += hist[k]; if (!wB) continue; const wF = w * h - wB; if (!wF) break; sB += k * hist[k]; const v = wB * wF * (sB / wB - (sum - sB) / wF) ** 2; if (v > mx) { mx = v; thr = k; } }
+    const br = (x0, x1, y0, y1) => { let n = 0; for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (g[y * w + x] > thr) n++; return n / ((x1 - x0 + 1) * (y1 - y0 + 1)); };
+    let T = 0, B = h - 1, Lf = 0, R = w - 1;
+    while (T < B && br(0, w - 1, T, T) < .45) T++; while (B > T && br(0, w - 1, B, B) < .45) B--;
+    while (Lf < R && br(Lf, Lf, T, B) < .45) Lf++; while (R > Lf && br(R, R, T, B) < .45) R--;
+    if (R - Lf < w * .3 || B - T < h * .3) { T = 0; B = h - 1; Lf = 0; R = w - 1; }
+    const ix = Math.round((R - Lf) * .03), iy = Math.round((B - T) * .03), ink = Math.min(thr - 25, thr * .82);
+    let y0 = -1, y1 = -1, x0 = w, x1 = -1;
+    for (let y = T + iy; y <= B - iy; y++) {
+      let n = 0; for (let x = Lf + ix; x <= R - ix; x++) if (g[y * w + x] < ink) { n++; if (x < x0) x0 = x; if (x > x1) x1 = x; }
+      if (n >= 2) { if (y0 < 0) y0 = y; y1 = y; }
+    }
+    if (y0 < 0 || x1 - x0 < w * .08) { y0 = T; y1 = B; x0 = Lf; x1 = R; }
+    const px = w * .03, py = h * .03;
+    const X = Math.max(0, x0 - px) / w, Y = Math.max(0, y0 - py) / h;
+    return { x: X, y: Y, w: Math.min(1, (x1 + px) / w) - X, h: Math.min(1, (y1 + py) / h) - Y };
+  }
+  function compress(c) {
+    let u = "";
+    for (const side of [1400, 1200, 1000, 850]) {
+      const s = Math.min(1, side / Math.max(c.width, c.height)), o = document.createElement("canvas");
+      o.width = Math.round(c.width * s); o.height = Math.round(c.height * s);
+      const x = o.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, o.width, o.height); x.drawImage(c, 0, 0, o.width, o.height);
+      for (const q of [.8, .7, .6]) { u = o.toDataURL("image/jpeg", q); if (u.length <= 480000) return u; }
+    }
+    return u;
+  }
+  function crop(f) {
+    return new Promise(async (resolve) => {
+      const ov = document.createElement("div"); ov.id = "dq-crop";
+      ov.innerHTML = `<div class="cr-top"><b>Həll olan hissəni seç</b><span>Künclərdən çək və ya yenidən çərçivə çiz</span></div>
+        <div class="cr-stage"><div class="cr-wrap" style="display:none"><canvas></canvas><div class="cr-box"><i class="h nw"></i><i class="h ne"></i><i class="h sw"></i><i class="h se"></i></div></div><div class="cr-load">Şəkil hazırlanır...</div></div>
+        <div class="cr-tools"><button data-a="rot">⟳ Fırlat</button><button data-a="auto">✨ Avtomatik</button><button data-a="all">⛶ Hamısı</button></div>
+        <div class="cr-bot"><button data-a="no">Ləğv et</button><button data-a="ok" class="go">✓ Təsdiqlə</button></div>`;
+      document.body.appendChild(ov); lock(true);
+      const end = v => { ov.remove(); lock(false); resolve(v); };
+      let src;
+      try { src = await loadSrc(f); } catch (e) { console.error(e); toast("❌ " + e.message); return end(null); }
+      const wrap = ov.querySelector(".cr-wrap"), cv = wrap.querySelector("canvas"), box = ov.querySelector(".cr-box");
+      let r;
+      const draw = () => {
+        const s = Math.min(1, 1100 / Math.max(src.width, src.height));
+        cv.width = Math.round(src.width * s); cv.height = Math.round(src.height * s);
+        cv.getContext("2d").drawImage(src, 0, 0, cv.width, cv.height);
+      };
+      const place = () => Object.assign(box.style, { left: r.x * 100 + "%", top: r.y * 100 + "%", width: r.w * 100 + "%", height: r.h * 100 + "%" });
+      draw(); r = autoBox(src); place();
+      ov.querySelector(".cr-load").remove(); wrap.style.display = "";
+      const cl = (v, a, b) => Math.max(a, Math.min(b, v)), M = .06;
+      let dr = null;
+      const pos = e => { const W = wrap.getBoundingClientRect(); return { x: cl((e.clientX - W.left) / W.width, 0, 1), y: cl((e.clientY - W.top) / W.height, 0, 1), W }; };
+      wrap.addEventListener("pointerdown", e => {
+        e.preventDefault(); const p = pos(e);
+        const hc = e.target.classList.contains("h") ? [...e.target.classList].find(c => c.length === 2) : null;
+        dr = { m: hc || (e.target === box ? "move" : "new"), p, r0: { ...r } };
+        wrap.setPointerCapture(e.pointerId);
+      });
+      wrap.addEventListener("pointermove", e => {
+        if (!dr) return; const p = pos(e), dx = p.x - dr.p.x, dy = p.y - dr.p.y;
+        let { x, y, w, h } = dr.r0;
+        if (dr.m === "new") { x = Math.min(dr.p.x, p.x); y = Math.min(dr.p.y, p.y); w = Math.abs(p.x - dr.p.x); h = Math.abs(p.y - dr.p.y); if (w < M || h < M) return; }
+        else if (dr.m === "move") { x = cl(x + dx, 0, 1 - w); y = cl(y + dy, 0, 1 - h); }
+        else {
+          if (dr.m.includes("w")) { const nx = cl(x + dx, 0, x + w - M); w += x - nx; x = nx; }
+          if (dr.m.includes("e")) w = cl(w + dx, M, 1 - x);
+          if (dr.m.includes("n")) { const ny = cl(y + dy, 0, y + h - M); h += y - ny; y = ny; }
+          if (dr.m.includes("s")) h = cl(h + dy, M, 1 - y);
+        }
+        r = { x, y, w, h }; place();
+      });
+      const up = () => { dr = null; };
+      wrap.addEventListener("pointerup", up); wrap.addEventListener("pointercancel", up);
+      ov.querySelectorAll("[data-a]").forEach(b => b.onclick = () => {
+        const a = b.dataset.a;
+        if (a === "no") return end(null);
+        if (a === "all") { r = { x: 0, y: 0, w: 1, h: 1 }; place(); }
+        if (a === "auto") { r = autoBox(src); place(); }
+        if (a === "rot") {
+          const n = document.createElement("canvas"); n.width = src.height; n.height = src.width;
+          const x = n.getContext("2d"); x.translate(n.width, 0); x.rotate(Math.PI / 2); x.drawImage(src, 0, 0);
+          src = n; draw(); r = autoBox(src); place();
+        }
+        if (a === "ok") {
+          const o = document.createElement("canvas");
+          const sx = Math.round(r.x * src.width), sy = Math.round(r.y * src.height);
+          o.width = Math.max(1, Math.round(r.w * src.width)); o.height = Math.max(1, Math.round(r.h * src.height));
+          o.getContext("2d").drawImage(src, sx, sy, o.width, o.height, 0, 0, o.width, o.height);
+          end(compress(o));
+        }
+      });
+    });
+  }
+
+  // ---------- Mövcud funksiyaların təhlükəsiz genişləndirilməsi ----------
+  const _rq = renderExamQuestion;
+  renderExamQuestion = function () {
+    _rq.apply(this, arguments);
+    const i = currentExamIndex, q = currentExam.questions[i];
+    if (q.type !== "detailed") { tray(); return; }
+    const a = currentExamAnswers[i] || {};
+    const imgHtml = q.imageBase64 ? `<img src="${q.imageBase64}" style="max-width:100%; border-radius:10px; margin-bottom:14px; border:1px solid var(--color-gray);" />` : "";
+    $("exam-question-box").innerHTML = `<div style="font-weight:700; margin-bottom:14px; font-size:15px;">Sual ${i + 1}/${currentExam.questions.length}${q.text ? ": " + esc(q.text) : ""}</div>${imgHtml}
+      <div class="muted-note" style="margin-bottom:10px;">📝 Kağızdakı həllinin şəklini göndər. Müəllim bu sualı əl ilə yoxlayacaq.</div>
+      <div class="field" style="margin-bottom:10px;"><label>Qısa cavab (istəyə görə)</label>
+        <input type="text" id="exam-detailed-text-input" value="${esc(a.text || "")}" placeholder="Qısa cavabınızı buraya yaza bilərsiniz" /></div>
+      <div id="dq-slot"></div>`;
+    $("exam-detailed-text-input").addEventListener("input", e => {
+      if (!currentExamAnswers[i] || typeof currentExamAnswers[i] !== "object") currentExamAnswers[i] = {};
+      currentExamAnswers[i].text = e.target.value; renderExamNavGrid();
+    });
+    paint(i); tray();
+  };
+  const _ng = renderExamNavGrid;
+  renderExamNavGrid = function () { _ng.apply(this, arguments); try { detIdx().forEach(navMark); } catch (e) {} };
+
+  // Proqres: şəkillər localStorage-a yazılmır (yaddaş dolub hər şey itirdi) — IndexedDB-də saxlanılır
+  saveExamProgress = function () {
+    if (!currentExam || !currentStudentUid) return;
+    try {
+      localStorage.setItem(examProgressKey(), JSON.stringify({
+        examId: currentExam.id, attemptId: aid(), currentExamIndex, examEndTime,
+        flagged: Array.from(flaggedQuestions),
+        answers: currentExamAnswers.map(a => a && typeof a === "object" ? { text: a.text || "", hasPhoto: !!a.photo } : a)
+      }));
+    } catch (e) {}
+  };
+
+  const _ex = exitExamMode;
+  exitExamMode = function () { _ex.apply(this, arguments); tray(); };
+
+  resumeExamIfAny = async function () {
+    let saved;
+    try { saved = JSON.parse(localStorage.getItem(examProgressKey()) || "null"); } catch (e) { return; }
+    if (!saved || !saved.examId) return;
+    try {
+      if (await findAttempt(saved.examId)) { clearExamProgress(); return; }
+      const exDoc = await db.collection("exams").doc(saved.examId).get();
+      if (!exDoc.exists) { clearExamProgress(); return; }
+      const questions = (await db.collection("exams").doc(saved.examId).collection("questions").orderBy("order").get()).docs.map(d => d.data());
+      if (!questions.length) { clearExamProgress(); return; }
+      const exData = exDoc.data();
+      let texts = exData.texts || [];
+      try { const t = await db.collection("exams").doc(saved.examId).collection("texts").get(); if (t.docs.length) texts = t.docs.map(d => d.data()); } catch (e) {}
+      currentExam = { id: exDoc.id, ...exData, questions, texts, attemptId: saved.attemptId || (saved.examId + "_" + currentStudentUid) };
+      currentExamAnswers = (saved.answers || new Array(questions.length).fill(null)).map(a => a && typeof a === "object" ? { text: a.text || "" } : a);
+      currentExamIndex = saved.currentExamIndex || 0;
+      examEndTime = saved.examEndTime;
+      flaggedQuestions = new Set(saved.flagged || []);
+      openTextId = null;
+      const recs = (await recAll()).filter(r => r.attemptId === currentExam.attemptId);
+      const again = [];
+      recs.forEach(r => {
+        if (!currentExamAnswers[r.q] || typeof currentExamAnswers[r.q] !== "object") currentExamAnswers[r.q] = {};
+        currentExamAnswers[r.q].photo = r.data.photoBase64;
+        S(r.q); st[r.q] = { s: r.done ? "ok" : "wait", v: 0, p: 0 };
+        if (!r.done) again.push(r.q);
+      });
+      if (Date.now() >= examEndTime) { await finishExam(true); return; }
+      v2Tab("stab-exams");
+      $("exam-view-list").style.display = "none";
+      $("exam-view-result").style.display = "none";
+      $("exam-view-taking").style.display = "block";
+      renderExamNavGrid(); renderExamQuestion(); startExamTimer(); enterExamMode(); tray();
+      again.forEach(i => upload(i));
+      toast("Yarımçıq qalmış sınağınıza qayıdıldı");
+    } catch (e) { console.error("Sınağa qayıtma xətası:", e); }
+  };
+
+  // Sınağı bitirmə: eyni ID (examId_studentId) — 10 dəfə bassa da tək nəticə
+  function overlay(t) {
+    const o = document.createElement("div"); o.id = "xs-ld";
+    o.innerHTML = `<div class="xs-ring"></div><div class="xs-lt">${t}</div><div class="xs-ls" id="dq-ld-s">Zəhmət olmasa səhifəni bağlamayın</div>`;
+    document.body.appendChild(o); return o;
+  }
+  async function complete(ex, attempt, ld) {
+    if (ex._done) { ld && ld.remove(); return; }
+    ex._done = true;
+    const pend = attempt.id === aid() ? detIdx().filter(i => currentExamAnswers[i] && currentExamAnswers[i].photo && (st[i] || {}).s !== "ok") : [];
+    if (pend.length) {
+      const s = $("dq-ld-s"); if (s) s.textContent = `📤 ${pend.length} həll şəkli göndərilir...`;
+      await Promise.race([Promise.all(pend.map(upload)), wait(45000)]);
+    }
+    const left = pend.filter(i => (st[i] || {}).s !== "ok");
+    if (left.length) db.collection("examAttempts").doc(attempt.id).update({ photosMissing: left }).catch(() => {});
+    const map = {}; detIdx().forEach(i => { const a = currentExamAnswers[i]; if (a && a.photo) map[i] = a.photo; });
+    clearExamProgress(); exitExamMode();
+    $("exam-view-taking").style.display = "none";
+    ld && ld.remove();
+    renderExamResult(ex, attempt, map);
+    if (left.length) toast(`⏳ ${left.length} şəkil hələ göndərilməyib — internet gələndə avtomatik gedəcək. Tətbiqi silməyin.`);
+    else (await recAll()).filter(r => r.attemptId === attempt.id).forEach(r => recDel(r.id));
+  }
+  finishExamInner = async function (autoSubmit) {
+    clearInterval(examTimerInterval);
+    saveOpenAnswerFromInput();
+    const ex = currentExam, id = aid(), ld = overlay("Sınaq göndərilir...");
+    try {
+      const old = await findAttempt(ex.id);
+      if (old) { toast("Bu sınaq artıq göndərilib ✅"); return complete(ex, old, ld); }
+      let correctCount = 0, detailedCount = 0;
+      const lightAnswers = [];
+      const perQuestion = ex.questions.map((q, i) => {
+        if (q.type === "detailed") {
+          detailedCount++;
+          const a = currentExamAnswers[i] || {};
+          lightAnswers.push(a.text || null);
+          return { selected: a.text || null, correct: null, isCorrect: null, type: q.type, points: null, maxPoints: 1, hasPhoto: !!a.photo };
+        }
+        const isCorrect = q.type === "open" ? checkOpenAnswer(currentExamAnswers[i], q.correctAnswer) : currentExamAnswers[i] === q.correctIndex;
+        if (isCorrect) correctCount++;
+        lightAnswers.push(currentExamAnswers[i] === undefined ? null : currentExamAnswers[i]);
+        return { selected: currentExamAnswers[i] === undefined ? null : currentExamAnswers[i], correct: q.type === "open" ? q.correctAnswer : q.correctIndex, isCorrect, type: q.type, points: isCorrect ? 1 : 0, maxPoints: 1 };
+      });
+      const totalCount = ex.questions.length;
+      const data = {
+        examId: ex.id, studentId: currentStudentUid, groupId: attemptGroupId(ex), topic: ex.topic, teacherId: ex.teacherId || null,
+        answers: lightAnswers, perQuestion, correctCount, totalCount, score: totalCount ? Math.round(correctCount / totalCount * 100) : 0,
+        detailedCount, detailedGradedCount: 0, pendingGrading: detailedCount > 0,
+        autoSubmitted: !!autoSubmit, submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      const w = db.collection("examAttempts").doc(id).set(data);
+      if (await race(w, 30000) === "timeout") {
+        ld.remove();
+        toast("📶 İnternet zəifdir. Cavablar yadda saxlanılıb — bağlantı gələn kimi avtomatik göndəriləcək. Səhifəni bağlamayın.");
+        w.then(() => { if (currentExam === ex) complete(ex, { ...data, id }, null); }).catch(e => console.error(e));
+        if (!autoSubmit) startExamTimer();
+        return;
+      }
+      return complete(ex, { ...data, id }, ld);
+    } catch (err) {
+      console.error("Sınaq göndərilmədi:", err);
+      if (err && err.code === "permission-denied") { const o = await findAttempt(ex.id); if (o) return complete(ex, o, ld); }
+      ld.remove();
+      toast("❌ Nəticə göndərilmədi. İnterneti yoxlayıb yenidən «Sınağı bitir» basın.");
+      if (!autoSubmit) startExamTimer();
+    }
+  };
+
+  // Bitirmədən əvvəl xəbərdarlıq
+  const fb = $("exam-finish-btn"), nb = fb.cloneNode(true); fb.replaceWith(nb);
+  nb.addEventListener("click", () => {
+    saveOpenAnswerFromInput();
+    const det = detIdx();
+    const noPhoto = det.filter(i => !(currentExamAnswers[i] && currentExamAnswers[i].photo));
+    const notSent = det.filter(i => currentExamAnswers[i] && currentExamAnswers[i].photo && (st[i] || {}).s !== "ok");
+    const blank = currentExam.questions.filter((q, i) => q.type !== "detailed" && !isAnswered(i)).length;
+    const chips = l => `<div class="dq-chips">${l.map(i => `<button data-q="${i}">${i + 1}</button>`).join("")}</div>`;
+    let msg = "";
+    if (noPhoto.length) msg += `<div>📷 <b>${noPhoto.length} sualın həlli göndərilməyib</b>${chips(noPhoto)}</div>`;
+    if (notSent.length) msg += `<div style="margin-top:8px">⏳ <b>${notSent.length} şəkil hələ serverə çatmayıb</b> — bitirsəniz göndərilməyə davam edəcək${chips(notSent)}</div>`;
+    if (blank) msg += `<div style="margin-top:8px">➖ ${blank} sual cavabsızdır</div>`;
+    const ov = document.createElement("div"); ov.id = "xs-ov";
+    ov.innerHTML = `<div class="bx"><div class="xs-ic">🏁</div><div class="xs-t">Sınağı bitirirsiniz?</div>
+      ${msg ? `<div class="xs-r" style="margin-top:14px">${msg}</div>` : `<div class="xs-s" style="margin:8px 0 16px">Bütün cavablar hazırdır.</div>`}
+      <div class="xs-b"><button class="xs-no">Geri qayıt</button><button class="xs-go">Bitir</button></div></div>`;
+    document.body.appendChild(ov);
+    const close = () => ov.remove();
+    ov.onclick = e => { if (e.target === ov) close(); };
+    ov.querySelector(".xs-no").onclick = close;
+    ov.querySelector(".xs-go").onclick = () => { close(); finishExam(false); };
+    ov.querySelectorAll("[data-q]").forEach(b => b.onclick = () => { close(); goToExamQuestion(Number(b.dataset.q)); });
+  });
+
+  // Artıq işlənmiş sınağa yenidən başlamaq olmaz
+  const _se = window.startExam;
+  window.startExam = function (id) {
+    if (studentAttemptsCache.some(a => a.examId === id)) { toast("Bu sınağı artıq işləmisiniz ✅"); return; }
+    return _se.apply(this, arguments);
+  };
+
+  // Arxa planda: köhnə sınaqlardan gözləyən şəkilləri göndər
+  async function flushAll() {
+    if (!currentStudentUid || !navigator.onLine) return;
+    for (const r of await recAll()) {
+      if (r.studentId !== currentStudentUid) continue;
+      if (currentExam && examExitGuardActive && r.attemptId === currentExam.attemptId) continue;
+      if (r.done) { recDel(r.id); continue; }
+      try {
+        if (await race(db.collection("detailedAnswers").doc(r.id).set({ ...r.data, createdAt: firebase.firestore.FieldValue.serverTimestamp() }), 30000) === "ok") {
+          await recDel(r.id); toast("✅ Gözləyən həll şəkli müəllimə göndərildi");
+        }
+      } catch (e) {
+        console.warn("flush:", e);
+        if ((e && e.code === "permission-denied" && await serverHas(r.id, r.data.photoBase64) !== "none") || Date.now() - r.ts > 30 * 864e5) recDel(r.id);
+      }
+    }
+  }
+  window.addEventListener("online", () => {
+    flushAll();
+    if (currentExam && examExitGuardActive) detIdx().forEach(i => { const s = st[i] || {}; if (s.s === "err" && !s.lock) upload(i); });
+  });
+  const _ip = initStudentPanel;
+  initStudentPanel = function () { const p = _ip.apply(this, arguments); setTimeout(flushAll, 4000); return p; };
+})();
+</script>
+
 </body>
 </html>
