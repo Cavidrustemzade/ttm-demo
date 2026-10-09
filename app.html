@@ -8659,7 +8659,7 @@ function homeExtra(){
   function toBits(v, n) { const a = []; for (let i = n - 1; i >= 0; i--) a.push((v >> i) & 1); return a; }
   function fromBits(a) { let v = 0; for (const b of a) v = v * 2 + b; return v; }
   function encodeBits(studentId, examId, page) {
-    const d = toBits(stuHash(studentId), 22).concat(toBits(exHash(examId), 8), toBits(page & 3, 2));
+    const d = toBits(studentId === null ? GEN : stuHash(studentId), 22).concat(toBits(examId ? exHash(examId) : 0, 8), toBits(page & 3, 2));
     return [1, 1].concat(d, toBits(crc8(d), 8), [1, 1]);
   }
   function decodeBits(b) {
@@ -8672,7 +8672,18 @@ function homeExtra(){
 
   // ---------- tərtibat ----------
   const isNumericAnswer = a => /^\d{1,5}([.,]\d{1,4})?$/.test(String(a || "").trim()) && String(a).replace(/\D/g, "").length <= 5;
-  function layout(questions) {
+  const GEN = 0x3fffff; // ümumi (adsız) vərəq nişanı
+  const numCode = id => String(hash32("n:" + id) % 1000000).padStart(6, "0");
+  function idItem() { // ümumi vərəqdə 6 rəqəmli şagird kodu
+    const x = 132, y = 34, cols = [];
+    for (let d = 0; d < 6; d++) {
+      const cx = x + 8 + d * 5.4;
+      cols.push({ box: { x: cx - 2.5, y: y + 6.5, w: 5, h: 5.5 }, dig: Array.from({ length: 10 }, (_, v) => ({ x: cx, y: y + 17 + v * 4.6, r: 1.8 })) });
+    }
+    return { t: "id", x, y, w: 46, h: 60, lx: x + 2, ly: y + 4, cols };
+  }
+  function layout(questions, opts) {
+    const gen = !!(opts && opts.generic), TOP = gen ? 97 : 34;
     const mcq = [], num = [], wr = [], det = [];
     questions.forEach((q, i) => {
       if (q.type === "mcq") mcq.push(i);
@@ -8741,7 +8752,7 @@ function homeExtra(){
       }
       pages.warnDetailed = warn;
     }
-    pages.forEach(p => { p.overflow = y > BOT; });
+    pages.forEach(p => { p.overflow = y > BOT; if (gen) { p.id = idItem(); p.generic = true; } });
     return pages;
   }
 
@@ -8925,6 +8936,12 @@ function homeExtra(){
     const hi = Math.max(60, area * 0.0012), lo = 10; // şübhə varsa müəllimə göstərilir, avtomatik 0 yalnız tam boşda
     return n >= hi ? "ink" : n >= lo ? "unsure" : "blank";
   }
+  function readId(sh, page) {
+    if (!page.id) return null;
+    let v = "", bad = false;
+    page.id.cols.forEach(c => { const r = pickOne(c.dig.map(b => sh.disk(b.x, b.y, b.r))); if (r.st !== "ok") bad = true; else v += r.v; });
+    return bad ? null : v;
+  }
   function readPage(sh, page) {
     return page.items.map(it => {
       if (it.t === "mcq") { const r = pickOne(it.b.map(b => sh.disk(b.x, b.y, b.r))); return { q: it.q, t: "mcq", ...r }; }
@@ -8968,7 +8985,7 @@ function homeExtra(){
     }
     return { w: ow, h: oh, data: out };
   }
-  const api = { warpRect, PW, PH, K, MK, MC, NBITS, BIT_X0, BIT_P, BIT_S, BIT_Y, stuHash, exHash, encodeBits, decodeBits, humanCode, layout, locate, readPage, isNumericAnswer, Sheet };
+  const api = { warpRect, GEN, numCode, readId, PW, PH, K, MK, MC, NBITS, BIT_X0, BIT_P, BIT_S, BIT_Y, stuHash, exHash, encodeBits, decodeBits, humanCode, layout, locate, readPage, isNumericAnswer, Sheet };
   if (typeof module !== "undefined") module.exports = api; else root.OMR = api;
 })(typeof window !== "undefined" ? window : this);
 
@@ -9009,6 +9026,9 @@ function homeExtra(){
     modal(`<h3 style="color:var(--color-primary);margin-bottom:6px;">🧾 Cavab vərəqi çap et</h3>
       <p class="muted-note" style="margin-bottom:12px;">Hər şagird üçün adı və kodu yazılmış A4 vərəq. Qapalı, açıq və ətraflı suallar eyni səhifədədir.</p>
       <div class="field" style="margin-bottom:10px;"><label>Sınaq</label><select id="pp-ex" onchange="ppPrintInfo()">${examOpts(examId)}</select></div>
+      <div class="field" style="margin-bottom:10px;"><label>Vərəq növü</label><select id="pp-mode" onchange="ppPrintInfo()">
+        <option value="g">Ümumi cavab kartı (hamı üçün eyni, şagird kodunu özü yazır)</option>
+        <option value="n">Hər şagirdə adı yazılmış vərəq</option></select></div>
       <div id="pp-info" class="muted-note" style="margin-bottom:12px;"></div>
       <button class="btn-small" id="pp-go" style="width:100%;" onclick="ppPrint()">📄 PDF hazırla</button>`);
     ppPrintInfo();
@@ -9020,15 +9040,17 @@ function homeExtra(){
     const ex = examsCache.find(e => e.id === id);
     box.textContent = "Yüklənir...";
     try {
-      const qs = await examQs(id), pages = OMR.layout(qs), st = exStudents(ex);
+      const gen = $("pp-mode").value === "g";
+      const qs = await examQs(id), pages = OMR.layout(qs, { generic: gen }), st = exStudents(ex);
       const c = t => qs.filter(q => q.type === t).length;
-      let h = `${qs.length} sual: ${c("mcq")} qapalı · ${c("open")} açıq · ${c("detailed")} ətraflı<br>${st.length} şagird → ${st.length * pages.length} səhifə`;
+      let h = `${qs.length} sual: ${c("mcq")} qapalı · ${c("open")} açıq · ${c("detailed")} ətraflı<br>` + (gen ? `1 nüsxə (${pages.length} səhifə) — printerdə istədiyiniz sayda çap edin` : `${st.length} şagird → ${st.length * pages.length} səhifə`);
       if (pages.some(p => p.overflow)) { box.innerHTML = h + `<div style="color:var(--color-danger);font-weight:700;margin-top:6px;">❌ Qapalı/açıq suallar bir səhifəyə sığmır. Sual sayını azaldın.</div>`; return; }
-      if (pages.length > 1) h += `<div style="color:#a9700a;font-weight:700;margin-top:6px;">⚠️ Ətraflı suallar bir səhifəyə rahat sığmır (hər qutu ən azı 38 mm olmalıdır). Qalanı 2-ci səhifəyə keçdi — hər şagird üçün 2 şəkil çəkiləcək.</div>`;
-      if (!st.length) h += `<div style="color:var(--color-danger);margin-top:6px;">Bu sınağın qruplarında şagird yoxdur.</div>`;
-      const hs = {}; let dup = false; st.forEach(s => { const k = OMR.stuHash(s.id); if (hs[k]) dup = true; hs[k] = 1; });
-      if (dup) h += `<div style="color:var(--color-danger);margin-top:6px;">İki şagirdin kodu üst-üstə düşdü — adminə bildirin.</div>`;
-      box.innerHTML = h; btn.disabled = !st.length;
+      if (pages.length > 1) h += `<div style="color:#a9700a;font-weight:700;margin-top:6px;">⚠️ Ətraflı suallar bir səhifəyə rahat sığmır (hər qutu ən azı 38 mm olmalıdır). Qalanı növbəti səhifəyə keçdi — vərəq ${pages.length} səhifədir, hər şagird üçün ${pages.length} şəkil çəkiləcək.</div>`;
+      if (!st.length && !gen) h += `<div style="color:var(--color-danger);margin-top:6px;">Bu sınağın qruplarında şagird yoxdur.</div>`;
+      const hs = {}; let dup = false; st.forEach(s => { const k = gen ? OMR.numCode(s.id) : OMR.stuHash(s.id); if (hs[k]) dup = true; hs[k] = 1; });
+      if (dup) h += `<div style="color:var(--color-danger);margin-top:6px;">İki şagirdin kodu üst-üstə düşdü — həmin vərəqləri yoxlayanda şagirdi əl ilə seçəcəksiniz.</div>`;
+      if (gen) h += `<div style="margin-top:6px;">Şagird kodları: «Əyani hazırlıq → Şagird kodları» bölməsində.</div>`;
+      box.innerHTML = h; btn.disabled = !gen && !st.length;
     } catch (e) { console.error(e); box.textContent = "Xəta: " + e.message; }
   };
 
@@ -9036,14 +9058,20 @@ function homeExtra(){
     const p = pages[pi];
     doc.setFillColor(0, 0, 0);
     OMR.MC.forEach(([x, y]) => doc.rect(x - OMR.MK / 2, y - OMR.MK / 2, OMR.MK, OMR.MK, "F"));
-    OMR.encodeBits(stu.id, ex.id, pi).forEach((b, i) => { if (b) doc.rect(OMR.BIT_X0 + i * OMR.BIT_P, OMR.BIT_Y - OMR.BIT_S / 2, OMR.BIT_S, OMR.BIT_S, "F"); });
+    OMR.encodeBits(stu ? stu.id : null, ex.id || null, pi).forEach((b, i) => { if (b) doc.rect(OMR.BIT_X0 + i * OMR.BIT_P, OMR.BIT_Y - OMR.BIT_S / 2, OMR.BIT_S, OMR.BIT_S, "F"); });
     setPdfFont(doc);
     doc.setTextColor(11, 60, 93); doc.setFontSize(12);
     boldText(doc, doc.splitTextToSize(ex.title || "Sınaq", 120)[0], 22, 15);
     doc.setTextColor(30, 30, 30); doc.setFontSize(10);
-    doc.text("Ad Soyad: " + doc.splitTextToSize(stu.fullName || "", 110)[0], 22, 21.5);
-    doc.setFontSize(9);
-    doc.text(`Kod: ${OMR.humanCode(stu.id)}    Tarix: ${fmtD(ex.activationAt)}    Səhifə ${pi + 1}/${pages.length}`, 22, 27.5);
+    if (stu) {
+      doc.text("Ad Soyad: " + doc.splitTextToSize(stu.fullName || "", 110)[0], 22, 21.5);
+      doc.setFontSize(9);
+      doc.text(`Kod: ${OMR.numCode(stu.id)}    Tarix: ${fmtD(ex.activationAt)}    Səhifə ${pi + 1}/${pages.length}`, 22, 27.5);
+    } else {
+      doc.setFontSize(9);
+      doc.text(`Cavab kartı    Tarix: ${fmtD(ex.activationAt)}    Səhifə ${pi + 1}/${pages.length}`, 22, 21.5);
+      doc.text("Şagird kodunu sağdakı xanaya yazın və dairələri işarələyin", 22, 27.5);
+    }
     doc.setTextColor(120, 120, 120); doc.setFontSize(7.5);
     doc.text("TTM Tədris Mərkəzi", 188, 15, { align: "right" });
     doc.text("Künclərdəki qara kvadratları örtməyin", 188, 21.5, { align: "right" });
@@ -9054,6 +9082,23 @@ function homeExtra(){
       doc.text(l.t, l.x, l.y, l.c ? { align: "center" } : undefined);
     });
     doc.setLineWidth(0.3);
+    if (p.id) {
+      const it = p.id;
+      doc.setTextColor(30, 30, 30); doc.setFontSize(10);
+      doc.text("Ad Soyad:", 14, 44); doc.setDrawColor(150, 150, 150); doc.line(32, 45, 126, 45);
+      doc.text("Qrup / sinif:", 14, 54); doc.line(36, 55, 126, 55);
+      doc.setFontSize(8); doc.setTextColor(90, 90, 90);
+      ["• Şagird kodunuz 6 rəqəmlidir (öz panelinizdə görünür).", "• Hər rəqəmi yuxarı xanaya yazın, altında həmin rəqəmin", "  dairəsini işarələyin (X, V və ya /).", "• Kod səhv olarsa, nəticə sizə yazılmaya bilər.", "• Künclərdəki qara kvadratları örtməyin, vərəqi qatlamayın."]
+        .forEach((t, k) => doc.text(t, 14, 65 + k * 5));
+      doc.setDrawColor(190, 198, 206); doc.roundedRect(it.x, it.y, it.w, it.h, 1.5, 1.5, "S");
+      doc.setTextColor(11, 60, 93); doc.setFontSize(8.5); boldText(doc, "Şagird kodu", it.lx, it.ly);
+      doc.setFontSize(6.5); doc.setTextColor(130, 130, 130);
+      it.cols[0].dig.forEach((b, v) => doc.text(String(v), it.x + 3, b.y + 1));
+      it.cols.forEach(c => {
+        doc.setDrawColor(110, 110, 110); doc.rect(c.box.x, c.box.y, c.box.w, c.box.h, "S");
+        doc.setDrawColor(70, 70, 70); c.dig.forEach(b => doc.circle(b.x, b.y, b.r, "S"));
+      });
+    }
     p.items.forEach(it => {
       doc.setTextColor(30, 30, 30); doc.setDrawColor(70, 70, 70);
       if (it.t === "mcq") {
@@ -9083,17 +9128,25 @@ function homeExtra(){
       }
     });
   }
+  window.ppDrawCard = (doc, ex, qs, newPage) => { // ümumi cavab kartını mövcud PDF-ə əlavə edir
+    const pages = OMR.layout(qs, { generic: true });
+    if (pages.some(p => p.overflow)) throw new Error("Suallar cavab kartına sığmır");
+    pages.forEach((_, pi) => { if (newPage || pi) doc.addPage(); drawSheet(doc, ex, qs, pages, pi, null); });
+    return pages.length;
+  };
   window.ppPrint = async () => {
     const id = $("pp-ex").value, ex = examsCache.find(e => e.id === id), btn = $("pp-go");
     if (!ex) return;
     btn.disabled = true; toast("PDF hazırlanır...");
     try {
       await ensureLib("jspdf"); const { jsPDF } = window.jspdf;
-      const qs = await examQs(id), pages = OMR.layout(qs), st = exStudents(ex);
+      const gen = $("pp-mode").value === "g";
+      const qs = await examQs(id), pages = OMR.layout(qs, { generic: gen }), st = exStudents(ex);
       const doc = new jsPDF({ unit: "mm", format: "a4" });
       await ensurePdfFont(doc);
       let first = true;
-      st.forEach(s => pages.forEach((_, pi) => { if (!first) doc.addPage(); first = false; drawSheet(doc, ex, qs, pages, pi, s); }));
+      if (gen) ppDrawCard(doc, ex, qs, false);
+      else st.forEach(s => pages.forEach((_, pi) => { if (!first) doc.addPage(); first = false; drawSheet(doc, ex, qs, pages, pi, s); }));
       doc.save(`${(ex.title || "sinaq").replace(/[^\wƏəıİĞğÜüŞşÖöÇç -]/g, "")}_cavab_vereqi.pdf`);
       toast("PDF hazırdır ✅ Çap edib şagirdlərə paylayın");
     } catch (e) { console.error(e); toast("PDF xətası: " + e.message); }
@@ -9140,9 +9193,10 @@ function homeExtra(){
     const ex = examsCache.find(e => e.id === id);
     if (!S || S.ex.id !== id) {
       const qs = await examQs(id);
-      S = { ex, qs, pages: OMR.layout(qs), list: {}, errs: [] };
+      S = { ex, qs, L: { n: OMR.layout(qs), g: OMR.layout(qs, { generic: true }) }, list: {}, errs: [], unk: 0 };
     }
-    const byHash = {}; exStudents(ex).forEach(s => byHash[OMR.stuHash(s.id)] = s);
+    const byHash = {}, byNum = {}, dupNum = {};
+    exStudents(ex).forEach(s => { byHash[OMR.stuHash(s.id)] = s; const c = OMR.numCode(s.id); if (byNum[c]) dupNum[c] = 1; byNum[c] = s; });
     for (let k = 0; k < files.length; k++) {
       $("pp-prog").textContent = `Oxunur: ${k + 1}/${files.length}...`;
       await new Promise(r => setTimeout(r, 30));
@@ -9152,12 +9206,15 @@ function homeExtra(){
         const r = OMR.locate(src.g, src.w, src.h);
         if (!r || r.err) throw new Error("4 qara künc tapılmadı — vərəqin hamısı kadrda olsun");
         if (!r.code) throw new Error("Vərəqin kodu oxunmadı (alt hissədəki qara zolaq görünsün)");
-        if (r.code.ex !== OMR.exHash(id)) throw new Error("Bu vərəq başqa sınağa aiddir");
-        const stu = byHash[r.code.stu];
-        if (!stu) throw new Error("Şagird tapılmadı (bu sınağın qruplarında yoxdur)");
-        const page = S.pages[r.code.page];
+        if (r.code.ex !== OMR.exHash(id) && r.code.ex !== 0) throw new Error("Bu vərəq başqa sınağa aiddir");
+        const kind = r.code.stu === OMR.GEN ? "g" : "n";
+        const page = S.L[kind][r.code.page];
         if (!page) throw new Error("Səhifə nömrəsi uyğun deyil");
-        const sh = r.sheet, res = OMR.readPage(sh, page);
+        const sh = r.sheet;
+        let stu = null, idRead = null;
+        if (kind === "n") { stu = byHash[r.code.stu]; if (!stu) throw new Error("Şagird tapılmadı (bu sınağın qruplarında yoxdur)"); }
+        else { idRead = OMR.readId(sh, page); if (idRead && !dupNum[idRead]) stu = byNum[idRead] || null; }
+        const res = OMR.readPage(sh, page);
         const K = OMR.K, full = { w: sh.w, h: sh.h, g: sh.g };
         const crop = (rc, hi) => {
           if (hi) { const o = OMR.warpRect(src.g, src.w, src.h, r.Hm, rc, Math.min(8, 1100 / Math.max(rc.w, rc.h))); return toURL(o.w, o.h, o.data, 0.72); }
@@ -9174,8 +9231,11 @@ function homeExtra(){
           if (a.t === "det" && a.st !== "blank") a.img = crop({ x: it.x, y: it.y, w: it.w, h: it.h }, true);
           rows[a.q] = a;
         });
-        const e = S.list[stu.id] || (S.list[stu.id] = { stu, pages: {}, rv: {}, saved: false });
+        const key = stu ? stu.id : "u" + (++S.unk);
+        const e = S.list[key] || (S.list[key] = { stu, kind, pages: {}, rv: {}, saved: false });
+        if (e.kind !== kind) throw new Error(`${stu.fullName}: həm adlı, həm ümumi vərəq yükləndi — birini seçin`);
         e.pages[r.code.page] = { rows, sheet: toURL(sh.w, sh.h, sh.g, 0.6) };
+        if (page.id) { e.idImg = crop({ x: page.id.x, y: page.id.y, w: page.id.w, h: page.id.h }); e.idRead = idRead; }
         e.saved = false;
       } catch (err) {
         console.error(err);
@@ -9200,20 +9260,23 @@ function homeExtra(){
     return false;
   }
   function pending(e) {
-    const rows = merged(e), miss = S.pages.length - Object.keys(e.pages).length;
-    let n = 0; S.qs.forEach((q, i) => { if (needs(rows[i]) && !(i in e.rv)) n++; });
+    const rows = merged(e), miss = S.L[e.kind].length - Object.keys(e.pages).length;
+    let n = e.stu ? 0 : 1; S.qs.forEach((q, i) => { if (needs(rows[i]) && !(i in e.rv)) n++; });
     return { n, miss };
   }
   function ppRenderList() {
     const box = $("pp-list"); if (!box || !S) return;
-    const ents = Object.values(S.list).sort((a, b) => (a.stu.fullName || "").localeCompare(b.stu.fullName || "", "az"));
+    const nm = e => e.stu ? e.stu.fullName || "" : "";
+    const ents = Object.entries(S.list).sort((a, b) => (a[1].stu ? 1 : 0) - (b[1].stu ? 1 : 0) || nm(a[1]).localeCompare(nm(b[1]), "az"));
     box.innerHTML = (S.errs.length ? `<div class="card" style="background:#fff6f6;border:1px solid #f3b9b9;box-shadow:none;margin-top:10px;"><b style="color:var(--color-danger);font-size:13px;">Oxunmayan şəkillər — yenidən çəkin:</b>${S.errs.map(x => `<div class="muted-note">• ${esc(x)}</div>`).join("")}</div>` : "") +
-      ents.map(e => {
+      ents.map(([key, e]) => {
         const p = pending(e);
         const tag = e.saved ? `<span class="v2-tag">Saxlanıldı</span>` : p.miss ? `<span class="v2-tag wait">${p.miss} səhifə çatmır</span>` : p.n ? `<span class="v2-tag wait">${p.n} təsdiq lazım</span>` : `<span class="v2-tag">Hazır</span>`;
-        return `<div class="list-item" style="cursor:pointer;" onclick="ppReview('${e.stu.id}')"><div class="list-item-info"><div class="list-item-title">${esc(e.stu.fullName)} ${tag}</div><div class="list-item-sub">Kod: ${OMR.humanCode(e.stu.id)}</div></div><span class="v2-chev">›</span></div>`;
+        const who = e.stu ? esc(e.stu.fullName) : `❓ Naməlum şagird`;
+        const sub = e.stu ? `Kod: ${OMR.numCode(e.stu.id)}${e.kind === "g" ? " · ümumi kart" : ""}` : `Kod oxunmadı${e.idRead ? " (" + e.idRead + ")" : ""} — toxunub şagirdi seçin`;
+        return `<div class="list-item" style="cursor:pointer;${e.stu ? "" : "background:#fffbef;"}" onclick="ppReview('${key}')"><div class="list-item-info"><div class="list-item-title">${who} ${tag}</div><div class="list-item-sub">${sub}</div></div><span class="v2-chev">›</span></div>`;
       }).join("") +
-      (ents.some(e => !e.saved && !pending(e).n && !pending(e).miss) ? `<button class="btn-small" style="width:100%;margin-top:8px;background:#2e9e6b;" onclick="ppSaveAll()">✅ Hazır olanların hamısını saxla</button>` : "");
+      (ents.map(x => x[1]).some(e => !e.saved && !pending(e).n && !pending(e).miss) ? `<button class="btn-small" style="width:100%;margin-top:8px;background:#2e9e6b;" onclick="ppSaveAll()">✅ Hazır olanların hamısını saxla</button>` : "");
   }
 
   // ---------- baxış / təsdiq ekranı ----------
@@ -9251,7 +9314,13 @@ function homeExtra(){
     });
     const p = pending(e);
     box.innerHTML = `<button class="btn-outline" onclick="ppRenderList()" style="margin:10px 0;">← Siyahı</button>
-      <div class="list-item-title" style="font-size:16px;color:var(--color-primary);">${esc(e.stu.fullName)}</div>
+      <div class="list-item-title" style="font-size:16px;color:var(--color-primary);">${e.stu ? esc(e.stu.fullName) : "❓ Naməlum şagird"}</div>
+      ${e.kind === "g" ? `<div class="card" style="box-shadow:none;border:1px solid ${e.stu ? "var(--color-gray)" : "#f0d17c"};background:${e.stu ? "#fff" : "#fffbef"};margin:8px 0;padding:12px;">
+        <div class="muted-note" style="margin-bottom:6px;">Kartdakı kod: <b>${e.idRead || "oxunmadı"}</b>${e.stu ? " → " + esc(e.stu.fullName) : ""}</div>
+        ${e.idImg ? `<img src="${e.idImg}" onclick="openImageLightbox(this.src)" style="max-width:150px;border-radius:8px;border:1px solid var(--color-gray);cursor:zoom-in;">` : ""}
+        <select onchange="ppAssign('${sid}',this.value)" style="width:100%;margin-top:8px;padding:9px;border-radius:8px;border:1.5px solid var(--color-gray);">
+          <option value="">${e.stu ? "Şagirdi dəyiş..." : "— Şagirdi seçin —"}</option>
+          ${exStudents(S.ex).map(s => `<option value="${s.id}">${esc(s.fullName)} · ${OMR.numCode(s.id)}</option>`).join("")}</select></div>` : ""}
       <div style="display:flex;gap:6px;margin:8px 0;flex-wrap:wrap;">${Object.keys(e.pages).map(k => `<button class="btn-outline" onclick="openImageLightbox(S_SHEET('${sid}',${k}))">🖼 Vərəq ${+k + 1}</button>`).join("")}</div>
       ${need ? `<h3 style="font-size:14px;margin:8px 0;">⚠️ Təsdiq lazımdır (${p.n})</h3>${need}` : `<div class="muted-note" style="margin:8px 0;">✅ Bütün cavablar avtomatik oxundu.</div>`}
       <h3 style="font-size:14px;margin:12px 0 8px;">Oxunan cavablar</h3>${ok}
@@ -9259,6 +9328,18 @@ function homeExtra(){
     $("pp-modal").scrollTop = 0;
   };
   window.S_SHEET = (sid, k) => S.list[sid].pages[k].sheet;
+  window.ppAssign = (key, sid) => {
+    if (!sid || key === sid) return;
+    const e = S.list[key], stu = exStudents(S.ex).find(s => s.id === sid);
+    if (!e || !stu) return;
+    const t = S.list[sid];
+    if (t && t !== e) {
+      if (t.kind !== e.kind) { toast("Bu şagirdin başqa növ vərəqi artıq var"); return; }
+      Object.assign(t.pages, e.pages); Object.assign(t.rv, e.rv); t.idImg = t.idImg || e.idImg; t.saved = false;
+    } else { e.stu = stu; e.saved = false; S.list[sid] = e; }
+    delete S.list[key];
+    ppReview(sid);
+  };
   window.ppSet = (sid, i, o) => {
     const e = S.list[sid];
     e.rv[i] = Object.assign({}, e.rv[i] || {}, o);
@@ -9345,6 +9426,107 @@ function homeExtra(){
     <button class="btn-outline" style="flex:1;padding:11px 8px;" onclick="ppScanOpen()">📷 Kağızları yoxla</button></div>`);
   const sync = () => { const p = $("pp-btns"); if (p && nb) p.style.display = nb.style.display === "none" ? "none" : "flex"; };
   if (nb) new MutationObserver(sync).observe(nb, { attributes: true, attributeFilter: ["style"] });
+})();
+
+</script>
+<script>
+/* ===== Əyani hazırlıq: PDF-ə optik forma, qısa yol, şagird kodları ===== */
+(function () {
+  const $ = id => document.getElementById(id);
+
+  // ---------- 1) "Kağız versiya (PDF)" pəncərəsinə optik forma seçimi ----------
+  const gbtn = $("pdf-generate-btn");
+  if (gbtn) {
+    gbtn.insertAdjacentHTML("beforebegin", `<div class="field-row"><div class="field"><label>Optik forma (cavab kartı)</label>
+      <select id="pdf-omr-field"><option value="">Əlavə edilməsin</option><option value="end">PDF-in sonuna ümumi cavab kartı əlavə et</option></select></div></div>`);
+    gbtn.addEventListener("click", () => {
+      window._ppCard = null;
+      if ($("pdf-omr-field").value !== "end" || !examQuestions.length) return;
+      const examId = $("exam-edit-id").value || null, act = $("exam-activation").value;
+      window._ppCard = { t: Date.now(), qs: examQuestions.slice(), ex: { id: examId, title: $("pdf-title-field").value.trim() || $("exam-title").value.trim() || "Sınaq", activationAt: act ? new Date(act).toISOString() : "" } };
+      ensureLib("jspdf").then(() => {
+        const API = window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.API;
+        if (!API || API._ppPatched) return;
+        API._ppPatched = true;
+        const orig = API.save;
+        API.save = function () {
+          const c = window._ppCard; window._ppCard = null;
+          if (c && Date.now() - c.t < 120000) {
+            try { const n = ppDrawCard(this, c.ex, c.qs, true); toast(`✅ Sonuna cavab kartı əlavə edildi (${n} səhifə)` + (c.ex.id ? "" : " — sınağı yadda saxlamağı unutmayın")); }
+            catch (e) { console.error(e); toast("⚠️ Cavab kartı əlavə edilmədi: " + e.message); }
+          }
+          return orig.apply(this, arguments);
+        };
+      }).catch(() => {});
+    }, true); // əsas PDF funksiyasından ƏVVƏL işləyir
+  }
+
+  // ---------- 2) Əyani hazırlıq bölməsi ----------
+  const main = document.querySelector("#view-admin .panel-main"), tabs = document.querySelector("#view-admin .tabs");
+  if (!main || !tabs) return;
+  const tb = document.createElement("button");
+  tb.className = "tab-btn"; tb.dataset.tab = "tab-eyani"; tb.textContent = "Əyani hazırlıq";
+  tabs.appendChild(tb);
+  const pn = document.createElement("div");
+  pn.className = "tab-panel"; pn.id = "tab-eyani";
+  pn.innerHTML = `
+    <div class="card"><h3>🏫 Əyani hazırlıq — kağız sınaq</h3>
+      <p class="muted-note">Sınağı kağızda keçirin, hər vərəqin 1 şəklini çəkin: qapalı və kodlu cavablar avtomatik yoxlanır, yalnız yazılmış ətraflı həllər sizə göstərilir.</p></div>
+    <div class="a-qgrid a-q4" style="margin-bottom:16px;">
+      <div class="a-qc" style="background:linear-gradient(135deg,#0ea5e9,#0369a1);" onclick="ppPrintOpen()"><div class="ic">🧾</div><div><b>Cavab kartı çap et</b><span>Ümumi və ya adlı vərəq</span></div></div>
+      <div class="a-qc" style="background:linear-gradient(135deg,#f59e0b,#b45309);" onclick="ppScanOpen()"><div class="ic">📷</div><div><b>Kağızları yoxla</b><span>Şəkil çək, avtomatik yoxla</span></div></div>
+      <div class="a-qc" style="background:linear-gradient(135deg,#10b981,#047857);" onclick="adminGo('tab-scores','grading')"><div class="ic">✍️</div><div><b>Ətraflı yoxlanış</b><span>Yazılmış həllərə bal ver</span></div></div>
+      <div class="a-qc" style="background:linear-gradient(135deg,#6366f1,#4338ca);" onclick="document.getElementById('ey-codes').scrollIntoView({behavior:'smooth'})"><div class="ic">🔢</div><div><b>Şagird kodları</b><span>Ümumi kart üçün 6 rəqəm</span></div></div>
+    </div>
+    <div class="card" id="ey-codes"><h3>🔢 Şagird kodları</h3>
+      <p class="muted-note" style="margin-bottom:10px;">Ümumi cavab kartında şagird bu kodu yazıb kodlaşdırır, sistem vərəqin kimə aid olduğunu özü tapır. Kod şagirdin öz panelində də görünür.</p>
+      <div class="field" style="margin-bottom:10px;"><select id="ey-group" onchange="eyCodes()"></select></div>
+      <div id="ey-list"></div></div>
+    <div class="card"><h3>Necə işləyir?</h3><div class="muted-note" style="font-size:13px;line-height:1.8;">
+      1. Sınağı hazırlayın (və ya «PDF hazırla»da optik formanı PDF-in sonuna əlavə edin).<br>
+      2. Cavab kartını çap edin, şagirdlər həll etsin.<br>
+      3. «Kağızları yoxla» → hər vərəqin 1 şəklini çəkin (4 qara künc görünsün).<br>
+      4. Şübhəli cavabları təsdiqləyin → «Saxla».<br>
+      5. Yazılmış ətraflı həllər «Ətraflı yoxlanış»a düşür, boşlar avtomatik 0 bal.</div></div>`;
+  main.appendChild(pn);
+  tb.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn[data-tab]").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll("#view-admin .tab-panel").forEach(p => p.classList.remove("active"));
+    tb.classList.add("active"); pn.classList.add("active");
+    const fab = $("pdf-fab-btn"); if (fab) fab.style.display = "none";
+    eyFill(); eyCodes();
+  });
+  try { A_MORE.unshift(["tab-eyani", "🏫", "#0ea5e9", "Əyani hazırlıq", "Kağız sınaq: cavab kartı, avtomatik yoxlama, kodlar"]); } catch (e) {}
+
+  function eyFill() {
+    const sel = $("ey-group"), cur = sel.value;
+    sel.innerHTML = `<option value="">Bütün qruplar</option>` + groupsCache.map(g => `<option value="${g.id}">${esc(g.name)}</option>`).join("");
+    sel.value = cur;
+  }
+  window.eyCodes = () => {
+    const gid = $("ey-group").value;
+    const list = studentsCache.filter(s => s.active !== false && (!gid || s.groupId === gid)).sort((a, b) => (a.fullName || "").localeCompare(b.fullName || "", "az"));
+    const cnt = {}; list.forEach(s => { const c = OMR.numCode(s.id); cnt[c] = (cnt[c] || 0) + 1; });
+    $("ey-list").innerHTML = list.length ? list.map(s => {
+      const c = OMR.numCode(s.id);
+      return `<div class="list-item"><div class="list-item-info"><div class="list-item-title">${esc(s.fullName)}</div><div class="list-item-sub"><span class="badge">${groupName(s.groupId)}</span></div></div>
+        <div style="font-weight:800;font-size:17px;letter-spacing:2px;color:var(--color-primary);">${c}${cnt[c] > 1 ? " ⚠️" : ""}</div></div>`;
+    }).join("") : `<div class="empty-state">Şagird yoxdur</div>`;
+  };
+
+  // Tez giriş: geniş qısa yol kartı
+  const qg = document.querySelector("#tab-home .a-qgrid");
+  if (qg) qg.insertAdjacentHTML("beforeend", `<div class="a-qc" style="grid-column:1/-1;min-height:0;flex-direction:row;align-items:center;gap:14px;background:linear-gradient(135deg,#0ea5e9,#0B3C5D);" onclick="adminGo('tab-eyani')">
+    <div class="ic">🏫</div><div style="flex:1;"><b>Əyani hazırlıq</b><span>Kağız sınaq: cavab kartı, avtomatik yoxlama, ətraflı həllər</span></div><div style="font-size:26px;">›</div></div>`);
+
+  // ---------- 3) Şagird öz kodunu görür ----------
+  const badge = $("s-group-badge");
+  if (badge) badge.insertAdjacentHTML("afterend", `<div id="s-omr-code" class="muted-note" style="margin-top:6px;"></div>`);
+  const oi = initStudentPanel;
+  initStudentPanel = function (uid) {
+    try { $("s-omr-code").innerHTML = `Cavab kartı kodun: <b style="letter-spacing:2px;color:var(--color-primary);font-size:15px;">${OMR.numCode(uid)}</b>`; } catch (e) {}
+    return oi.apply(this, arguments);
+  };
 })();
 
 </script>
