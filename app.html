@@ -8640,5 +8640,713 @@ function homeExtra(){
 })();
 </script>
 
+
+<!-- ===== KAĞIZ SINAQ: cavab vərəqi + bir şəkillə avtomatik yoxlama ===== -->
+<script>
+/* ===== TTM OMR nüvəsi: cavab vərəqi tərtibatı + şəkildən oxuma (kitabxanasız, təmiz JS) ===== */
+(function (root) {
+  const PW = 210, PH = 297, K = 5; // A4 mm, düzəldilmiş şəkildə 5 px/mm
+  const MK = 9, MC = [[12.5, 12.5], [197.5, 12.5], [197.5, 284.5], [12.5, 284.5]]; // marker mərkəzləri (TL,TR,BR,BL)
+  const TOP = 34, BOT = 276, LX = 12, RX = 198;
+  const NBITS = 44, BIT_X0 = 27.1, BIT_P = 3.6, BIT_S = 2.6, BIT_Y = 284.5;
+  const MIN_DET_H = 38;
+
+  // ---------- kodlaşdırma ----------
+  function hash32(s) { let h = 0x811c9dc5; s = String(s); for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h >>> 0; }
+  const stuHash = id => hash32("s:" + id) & 0x3fffff; // 22 bit
+  const exHash = id => hash32("e:" + id) & 0xff; // 8 bit
+  function crc8(bits) { let c = 0; for (const b of bits) { const f = ((c >> 7) & 1) ^ b; c = (c << 1) & 0xff; if (f) c ^= 0x07; } return c; }
+  function toBits(v, n) { const a = []; for (let i = n - 1; i >= 0; i--) a.push((v >> i) & 1); return a; }
+  function fromBits(a) { let v = 0; for (const b of a) v = v * 2 + b; return v; }
+  function encodeBits(studentId, examId, page) {
+    const d = toBits(stuHash(studentId), 22).concat(toBits(exHash(examId), 8), toBits(page & 3, 2));
+    return [1, 1].concat(d, toBits(crc8(d), 8), [1, 1]);
+  }
+  function decodeBits(b) {
+    if (b.length !== NBITS || !b[0] || !b[1] || !b[42] || !b[43]) return null;
+    const d = b.slice(2, 34);
+    if (fromBits(b.slice(34, 42)) !== crc8(d)) return null;
+    return { stu: fromBits(d.slice(0, 22)), ex: fromBits(d.slice(22, 30)), page: fromBits(d.slice(30, 32)) };
+  }
+  const humanCode = id => stuHash(id).toString(36).toUpperCase().padStart(5, "0");
+
+  // ---------- tərtibat ----------
+  const isNumericAnswer = a => /^\d{1,5}([.,]\d{1,4})?$/.test(String(a || "").trim()) && String(a).replace(/\D/g, "").length <= 5;
+  function layout(questions) {
+    const mcq = [], num = [], wr = [], det = [];
+    questions.forEach((q, i) => {
+      if (q.type === "mcq") mcq.push(i);
+      else if (q.type === "open") (isNumericAnswer(q.correctAnswer) ? num : wr).push(i);
+      else if (q.type === "detailed") det.push(i);
+    });
+    const pages = [{ items: [], labels: [] }];
+    let y = TOP;
+    const P0 = pages[0];
+    if (mcq.length) {
+      P0.labels.push({ t: "Qapalı suallar — dairənin içinə X, V və ya / qoyun (qaraltmaq lazım deyil)", x: LX, y: y + 3 });
+      y += 5;
+      const cols = 4, cw = (RX - LX) / cols, rows = Math.ceil(mcq.length / cols), pitch = 6.6;
+      for (let c = 0; c < cols; c++) for (let k = 0; k < 5; k++)
+        P0.labels.push({ t: "ABCDE"[k], x: LX + c * cw + 11 + k * pitch, y: y + 3, c: true, sm: true });
+      mcq.forEach((qi, j) => {
+        const c = Math.floor(j / rows), r = j % rows, x = LX + c * cw, yy = y + 8 + r * pitch;
+        P0.items.push({ t: "mcq", q: qi, lx: x + 1, ly: yy + 1.2, b: [0, 1, 2, 3, 4].map(k => ({ x: x + 11 + k * pitch, y: yy, r: 2.4 })) });
+      });
+      y += 8 + rows * pitch;
+    }
+    if (num.length) {
+      y += 2;
+      P0.labels.push({ t: "Kodlaşdırılan açıq suallar — rəqəmləri yazın və dairələri işarələyin (vergül: rəqəmdən sonrakı «,» dairəsi)", x: LX, y: y + 3 });
+      y += 5;
+      const iw = 37, per = Math.floor((RX - LX) / iw), ih = 66;
+      num.forEach((qi, j) => {
+        const c = j % per, r = Math.floor(j / per), x = LX + c * iw, yy = y + r * ih;
+        const cols = [];
+        for (let d = 0; d < 5; d++) {
+          const cx = x + 8 + d * 5.4;
+          cols.push({ box: { x: cx - 2.5, y: yy + 6, w: 5, h: 5.5 }, comma: d < 4 ? { x: cx, y: yy + 15, r: 1.8 } : null,
+            dig: Array.from({ length: 10 }, (_, v) => ({ x: cx, y: yy + 20 + v * 4.6, r: 1.8 })) });
+        }
+        P0.items.push({ t: "num", q: qi, lx: x + 1, ly: yy + 3.5, x, y: yy, w: iw - 2, h: ih - 2, cols });
+      });
+      y += Math.ceil(num.length / per) * ih;
+    }
+    if (wr.length) {
+      y += 2;
+      P0.labels.push({ t: "Açıq suallar — cavabı qutuya aydın yazın", x: LX, y: y + 3 });
+      y += 5;
+      const per = 4, iw = (RX - LX) / per, ih = 18;
+      wr.forEach((qi, j) => {
+        const x = LX + (j % per) * iw, yy = y + Math.floor(j / per) * ih;
+        P0.items.push({ t: "wr", q: qi, x: x + 0.5, y: yy, w: iw - 2, h: ih - 2, lx: x + 2, ly: yy + 4, ink: { x: x + 2, y: yy + 6, w: iw - 5, h: ih - 9.5 } });
+      });
+      y += Math.ceil(wr.length / per) * ih;
+    }
+    if (det.length) {
+      y += 2;
+      let pi = 0, left = det.slice(), warn = false;
+      while (left.length) {
+        const P = pages[pi], top = pi === 0 ? y : TOP, H = BOT - top;
+        const cols = left.length === 1 ? 1 : 2, cw = (RX - LX) / cols;
+        let rows = Math.ceil(left.length / cols), h = H / rows;
+        if (h < MIN_DET_H) { rows = Math.max(0, Math.floor(H / MIN_DET_H)); h = rows ? H / rows : 0; warn = true; }
+        const take = left.splice(0, rows * cols);
+        take.forEach((qi, j) => {
+          const x = LX + (j % cols) * cw, yy = top + Math.floor(j / cols) * h, w = cw - 2, hh = h - 2;
+          P.items.push({ t: "det", q: qi, x, y: yy, w, h: hh, lx: x + 2, ly: yy + 4.2,
+            fin: { x: x + w - 36, y: yy + hh - 10, w: 34, h: 8 }, finL: { x: x + w - 57, y: yy + hh - 10, w: 20, h: 8 },
+            ink: { x: x + 1.5, y: yy + 6.5, w: w - 3, h: hh - 8 } });
+        });
+        if (left.length) { pages.push({ items: [], labels: [] }); pi++; }
+      }
+      pages.warnDetailed = warn;
+    }
+    pages.forEach(p => { p.overflow = y > BOT; });
+    return pages;
+  }
+
+  // ---------- şəkil emalı ----------
+  function integral(g, w, h) {
+    const I = new Float64Array((w + 1) * (h + 1));
+    for (let y = 0; y < h; y++) { let s = 0; for (let x = 0; x < w; x++) { s += g[y * w + x]; I[(y + 1) * (w + 1) + x + 1] = I[y * (w + 1) + x + 1] + s; } }
+    return I;
+  }
+  function binarize(g, w, h, win, t) {
+    const I = integral(g, w, h), b = new Uint8Array(w * h), r = win >> 1, W = w + 1;
+    for (let y = 0; y < h; y++) {
+      const y0 = Math.max(0, y - r), y1 = Math.min(h, y + r + 1);
+      for (let x = 0; x < w; x++) {
+        const x0 = Math.max(0, x - r), x1 = Math.min(w, x + r + 1);
+        const m = (I[y1 * W + x1] - I[y0 * W + x1] - I[y1 * W + x0] + I[y0 * W + x0]) / ((x1 - x0) * (y1 - y0));
+        b[y * w + x] = g[y * w + x] < m * t ? 1 : 0;
+      }
+    }
+    return b;
+  }
+  function components(b, w, h, minA) {
+    const lab = new Int32Array(w * h), out = [], st = new Int32Array(w * h);
+    let n = 0;
+    for (let s = 0; s < w * h; s++) {
+      if (!b[s] || lab[s]) continue;
+      n++; let sp = 0; st[sp++] = s; lab[s] = n;
+      let a = 0, sx = 0, sy = 0, sxx = 0, syy = 0, sxy = 0, x0 = w, x1 = 0, y0 = h, y1 = 0;
+      while (sp) {
+        const p = st[--sp], x = p % w, y = (p / w) | 0;
+        a++; sx += x; sy += y; sxx += x * x; syy += y * y; sxy += x * y;
+        if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+        if (x > 0 && b[p - 1] && !lab[p - 1]) { lab[p - 1] = n; st[sp++] = p - 1; }
+        if (x < w - 1 && b[p + 1] && !lab[p + 1]) { lab[p + 1] = n; st[sp++] = p + 1; }
+        if (y > 0 && b[p - w] && !lab[p - w]) { lab[p - w] = n; st[sp++] = p - w; }
+        if (y < h - 1 && b[p + w] && !lab[p + w]) { lab[p + w] = n; st[sp++] = p + w; }
+      }
+      if (a < minA) continue;
+      const cx = sx / a, cy = sy / a, vx = sxx / a - cx * cx, vy = syy / a - cy * cy, cv = sxy / a - cx * cy;
+      const tr = vx + vy, dt = Math.sqrt(Math.max(0, (vx - vy) ** 2 / 4 + cv * cv));
+      const l1 = tr / 2 + dt, l2 = Math.max(1e-6, tr / 2 - dt);
+      out.push({ a, cx, cy, l1, l2, x0, x1, y0, y1 });
+    }
+    return out;
+  }
+  function solveH(src, dst) { // dst -> src homografiyası
+    const A = [], B = [];
+    for (let i = 0; i < 4; i++) {
+      const [X, Y] = dst[i], [x, y] = src[i];
+      A.push([X, Y, 1, 0, 0, 0, -x * X, -x * Y]); B.push(x);
+      A.push([0, 0, 0, X, Y, 1, -y * X, -y * Y]); B.push(y);
+    }
+    for (let c = 0; c < 8; c++) {
+      let p = c; for (let r = c + 1; r < 8; r++) if (Math.abs(A[r][c]) > Math.abs(A[p][c])) p = r;
+      [A[c], A[p]] = [A[p], A[c]]; [B[c], B[p]] = [B[p], B[c]];
+      if (Math.abs(A[c][c]) < 1e-12) return null;
+      for (let r = 0; r < 8; r++) if (r !== c) { const f = A[r][c] / A[c][c]; for (let k = c; k < 8; k++) A[r][k] -= f * A[c][k]; B[r] -= f * B[c]; }
+    }
+    return B.map((v, i) => v / A[i][i]).concat([1]);
+  }
+  function cross(o, a, b) { return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]); }
+  function polyArea(p) { let s = 0; for (let i = 0; i < p.length; i++) { const a = p[i], b = p[(i + 1) % p.length]; s += a[0] * b[1] - b[0] * a[1]; } return s / 2; }
+  const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+
+  function findMarkers(g, w, h) {
+    const win = (Math.round(Math.min(w, h) / 7)) | 1;
+    const b = binarize(g, w, h, win, 0.78);
+    const minA = Math.max(25, w * h * 0.00004), maxA = w * h * 0.02;
+    let cand = components(b, w, h, minA).filter(c => {
+      if (c.a > maxA) return false;
+      const ratio = c.a / (12 * Math.sqrt(c.l1 * c.l2)); // bərk qabarıq forma ≈ 1
+      const elong = c.l1 / c.l2;
+      const fill = c.a / ((c.x1 - c.x0 + 1) * (c.y1 - c.y0 + 1));
+      return ratio > 0.85 && ratio < 1.15 && elong < 2.2 && fill > 0.45;
+    }).sort((p, q) => q.a - p.a).slice(0, 10);
+    if (cand.length < 4) return null;
+    let best = null;
+    const n = cand.length;
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) for (let k = j + 1; k < n; k++) for (let l = k + 1; l < n; l++) {
+      const cs = [cand[i], cand[j], cand[k], cand[l]];
+      const am = Math.max(...cs.map(c => c.a)), an = Math.min(...cs.map(c => c.a));
+      if (am / an > 3.5) continue;
+      const mx = cs.reduce((s, c) => s + c.cx, 0) / 4, my = cs.reduce((s, c) => s + c.cy, 0) / 4;
+      const p = cs.map(c => [c.cx, c.cy]).sort((a, b) => Math.atan2(a[1] - my, a[0] - mx) - Math.atan2(b[1] - my, b[0] - mx));
+      let conv = true; for (let t = 0; t < 4; t++) if (cross(p[t], p[(t + 1) % 4], p[(t + 2) % 4]) <= 0) conv = false;
+      if (!conv) continue;
+      const s0 = (dist(p[0], p[1]) + dist(p[2], p[3])) / 2, s1 = (dist(p[1], p[2]) + dist(p[3], p[0])) / 2;
+      const asp = Math.max(s0, s1) / Math.min(s0, s1);
+      if (asp < 1.05 || asp > 2.1) continue;
+      // marker ölçüsü səhifə ölçüsünə uyğun olmalıdır (9mm / 185mm)
+      const side = Math.sqrt(cs.reduce((s, c) => s + c.a, 0) / 4), pageW = Math.min(s0, s1);
+      const rel = side / pageW; if (rel < 0.025 || rel > 0.11) continue;
+      const area = Math.abs(polyArea(p)), sc = area * (1 - Math.abs(asp - 1.48) / 2);
+      if (!best || sc > best.sc) best = { sc, p, side };
+    }
+    return best;
+  }
+
+  function warp(g, w, h, Hm, ow, oh) {
+    const out = new Uint8ClampedArray(ow * oh);
+    for (let y = 0; y < oh; y++) for (let x = 0; x < ow; x++) {
+      const X = (x + 0.5) / K, Y = (y + 0.5) / K, z = Hm[6] * X + Hm[7] * Y + 1;
+      const sx = (Hm[0] * X + Hm[1] * Y + Hm[2]) / z - 0.5, sy = (Hm[3] * X + Hm[4] * Y + Hm[5]) / z - 0.5;
+      const x0 = Math.floor(sx), y0 = Math.floor(sy);
+      if (x0 < 0 || y0 < 0 || x0 >= w - 1 || y0 >= h - 1) { out[y * ow + x] = 255; continue; }
+      const fx = sx - x0, fy = sy - y0, i = y0 * w + x0;
+      out[y * ow + x] = (g[i] * (1 - fx) + g[i + 1] * fx) * (1 - fy) + (g[i + w] * (1 - fx) + g[i + w + 1] * fx) * fy;
+    }
+    return out;
+  }
+
+  // ---------- düzəldilmiş vərəqin oxunması ----------
+  function Sheet(gray) {
+    const w = PW * K, h = PH * K;
+    this.g = gray; this.w = w; this.h = h;
+    this.b = binarize(gray, w, h, 41, 0.8);
+  }
+  Sheet.prototype.disk = function (cx, cy, r) { // dairənin içində mürəkkəb payı
+    const b = this.b, w = this.w, R = r * K * 0.62, X = cx * K, Y = cy * K;
+    let n = 0, d = 0;
+    for (let y = Math.floor(Y - R); y <= Math.ceil(Y + R); y++) for (let x = Math.floor(X - R); x <= Math.ceil(X + R); x++) {
+      if ((x - X) ** 2 + (y - Y) ** 2 > R * R || x < 0 || y < 0 || x >= w || y >= this.h) continue;
+      n++; d += b[y * w + x];
+    }
+    return n ? d / n : 0;
+  };
+  Sheet.prototype.rectInk = function (r, excl) { // bölgədə əl yazısı (səs-küysüz)
+    const w = this.w, x0 = Math.round(r.x * K), y0 = Math.round(r.y * K), x1 = Math.round((r.x + r.w) * K), y1 = Math.round((r.y + r.h) * K);
+    const rw = x1 - x0, rh = y1 - y0; if (rw <= 0 || rh <= 0) return 0;
+    const sub = new Uint8Array(rw * rh);
+    for (let y = 0; y < rh; y++) for (let x = 0; x < rw; x++) {
+      const X = (x + x0) / K, Y = (y + y0) / K;
+      if (excl && excl.some(e => X >= e.x && X <= e.x + e.w && Y >= e.y && Y <= e.y + e.h)) continue;
+      sub[y * rw + x] = this.b[(y + y0) * w + x + x0];
+    }
+    return components(sub, rw, rh, 6).reduce((s, c) => s + c.a, 0);
+  };
+  Sheet.prototype.meanG = function (cx, cy, r) {
+    const g = this.g, w = this.w, R = r * K, X = cx * K, Y = cy * K; let n = 0, s = 0;
+    for (let y = Math.floor(Y - R); y <= Math.ceil(Y + R); y++) for (let x = Math.floor(X - R); x <= Math.ceil(X + R); x++) {
+      if ((x - X) ** 2 + (y - Y) ** 2 > R * R || x < 0 || y < 0 || x >= w || y >= this.h) continue; n++; s += g[y * w + x];
+    }
+    return n ? s / n : 255;
+  };
+  Sheet.prototype.bits = function () { // kağızın öz ağlığı ilə müqayisə (yerli eşik qara ardıcıllıqda yanılır)
+    const out = [];
+    for (let i = 0; i < NBITS; i++) {
+      const cx = BIT_X0 + i * BIT_P + BIT_S / 2;
+      const ref = Math.max(this.meanG(cx, BIT_Y - 4.3, 0.9), this.meanG(cx, BIT_Y + 4.3, 0.9));
+      out.push(this.meanG(cx, BIT_Y, BIT_S * 0.3) < ref * 0.62 ? 1 : 0);
+    }
+    return out;
+  };
+
+  const ON = 0.12, MAYBE = 0.06;
+  function pickOne(scores) {
+    const idx = scores.map((s, i) => [s, i]).sort((a, b) => b[0] - a[0]);
+    const [s1, i1] = idx[0], s2 = idx[1] ? idx[1][0] : 0;
+    if (s1 < MAYBE) return { v: null, st: "blank" };
+    if (s1 < ON) return { v: i1, st: "unsure" };
+    if (s2 >= ON || (s2 >= MAYBE && s2 > s1 * 0.55)) return { v: null, st: "multi", marks: idx.filter(x => x[0] >= MAYBE).map(x => x[1]) };
+    return { v: i1, st: "ok" };
+  }
+  function readNum(sh, it) {
+    let str = "", seen = false, gap = false, bad = false;
+    it.cols.forEach((c, d) => {
+      const r = pickOne(c.dig.map(b => sh.disk(b.x, b.y, b.r)));
+      if (r.st === "multi" || r.st === "unsure") bad = true;
+      if (r.v === null) { if (seen) gap = true; return; }
+      if (gap) bad = true;
+      seen = true; str += r.v;
+      if (c.comma && sh.disk(c.comma.x, c.comma.y, c.comma.r) >= ON) str += ",";
+      else if (c.comma && sh.disk(c.comma.x, c.comma.y, c.comma.r) >= MAYBE) bad = true;
+    });
+    str = str.replace(/,$/, "");
+    if ((str.match(/,/g) || []).length > 1) bad = true;
+    if (!seen && !bad) return { v: "", st: "blank" };
+    return { v: str, st: bad ? "unsure" : "ok" };
+  }
+  function inkState(n, area) {
+    const hi = Math.max(60, area * 0.0012), lo = 10; // şübhə varsa müəllimə göstərilir, avtomatik 0 yalnız tam boşda
+    return n >= hi ? "ink" : n >= lo ? "unsure" : "blank";
+  }
+  function readPage(sh, page) {
+    return page.items.map(it => {
+      if (it.t === "mcq") { const r = pickOne(it.b.map(b => sh.disk(b.x, b.y, b.r))); return { q: it.q, t: "mcq", ...r }; }
+      if (it.t === "num") return { q: it.q, t: "num", ...readNum(sh, it) };
+      const area = it.ink.w * it.ink.h * K * K;
+      const B = 0.9, f = it.fin;
+      const excl = f ? [{ x: f.x - B, y: f.y - B, w: f.w + 2 * B, h: 2 * B }, { x: f.x - B, y: f.y + f.h - B, w: f.w + 2 * B, h: 2 * B },
+        { x: f.x - B, y: f.y - B, w: 2 * B, h: f.h + 2 * B }, { x: f.x + f.w - B, y: f.y - B, w: 2 * B, h: f.h + 2 * B }, it.finL] : null;
+      const n = sh.rectInk(it.ink, excl);
+      return { q: it.q, t: it.t, ink: n, st: inkState(n, area) };
+    });
+  }
+
+  // tam axın: boz şəkil -> {gray(düzəldilmiş), code, ...}
+  function locate(g, w, h) {
+    const m = findMarkers(g, w, h);
+    if (!m) return { err: "nomark" };
+    const W = PW * K, Hh = PH * K;
+    let best = null;
+    for (let rot = 0; rot < 4; rot++) {
+      const src = [0, 1, 2, 3].map(i => m.p[(i + rot) % 4]);
+      const Hm = solveH(src, MC);
+      if (!Hm) continue;
+      const gray = warp(g, w, h, Hm, W, Hh), sh = new Sheet(gray), bits = sh.bits(), code = decodeBits(bits);
+      const gs = bits[0] + bits[1] + bits[42] + bits[43];
+      if (code) return { sheet: sh, code, rot, Hm };
+      if (!best || gs > best.gs) best = { sheet: sh, code: null, rot, gs, Hm };
+    }
+    return best;
+  }
+
+  function warpRect(g, w, h, Hm, r, k) { // istənilən bölgəni yüksək dəqiqlikdə düzəlt
+    const ow = Math.round(r.w * k), oh = Math.round(r.h * k), out = new Uint8ClampedArray(ow * oh);
+    for (let y = 0; y < oh; y++) for (let x = 0; x < ow; x++) {
+      const X = r.x + (x + 0.5) / k, Y = r.y + (y + 0.5) / k, z = Hm[6] * X + Hm[7] * Y + 1;
+      const sx = (Hm[0] * X + Hm[1] * Y + Hm[2]) / z - 0.5, sy = (Hm[3] * X + Hm[4] * Y + Hm[5]) / z - 0.5;
+      const x0 = Math.floor(sx), y0 = Math.floor(sy);
+      if (x0 < 0 || y0 < 0 || x0 >= w - 1 || y0 >= h - 1) { out[y * ow + x] = 255; continue; }
+      const fx = sx - x0, fy = sy - y0, i = y0 * w + x0;
+      out[y * ow + x] = (g[i] * (1 - fx) + g[i + 1] * fx) * (1 - fy) + (g[i + w] * (1 - fx) + g[i + w + 1] * fx) * fy;
+    }
+    return { w: ow, h: oh, data: out };
+  }
+  const api = { warpRect, PW, PH, K, MK, MC, NBITS, BIT_X0, BIT_P, BIT_S, BIT_Y, stuHash, exHash, encodeBits, decodeBits, humanCode, layout, locate, readPage, isNumericAnswer, Sheet };
+  if (typeof module !== "undefined") module.exports = api; else root.OMR = api;
+})(typeof window !== "undefined" ? window : this);
+
+</script>
+<script>
+/* ===== KAĞIZ SINAQ: cavab vərəqi çapı + bir şəkillə avtomatik yoxlama ===== */
+(function () {
+  const $ = id => document.getElementById(id);
+  const LET = "ABCDE";
+  const qCache = {};
+  async function examQs(id) {
+    if (!qCache[id]) qCache[id] = (await db.collection("exams").doc(id).collection("questions").orderBy("order").get()).docs.map(d => d.data());
+    return qCache[id];
+  }
+  const exGroups = ex => ex.groupIds || (ex.groupId ? [ex.groupId] : []);
+  const exStudents = ex => studentsCache.filter(s => s.active !== false && exGroups(ex).includes(s.groupId)).sort((a, b) => (a.fullName || "").localeCompare(b.fullName || "", "az"));
+  const fmtD = iso => { const d = iso ? new Date(iso) : new Date(); return isNaN(d) ? "" : String(d.getDate()).padStart(2, "0") + "." + String(d.getMonth() + 1).padStart(2, "0") + "." + d.getFullYear(); };
+
+  // ---------- modal ----------
+  function modal(html) {
+    let m = $("pp-modal");
+    if (!m) {
+      m = document.createElement("div"); m.id = "pp-modal";
+      m.style.cssText = "position:fixed;inset:0;z-index:4000;background:rgba(11,60,93,.4);backdrop-filter:blur(4px);display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;";
+      m.addEventListener("click", e => { if (e.target === m) ppClose(); });
+      document.body.appendChild(m);
+    }
+    m.innerHTML = `<div style="background:#fff;border-radius:20px;width:100%;max-width:560px;padding:18px;box-shadow:var(--shadow-lg);position:relative;margin:auto 0;">
+      <button onclick="ppClose()" style="position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:50%;background:var(--color-light-gray);color:var(--color-text-muted);font-size:15px;">✕</button>${html}</div>`;
+    m.style.display = "flex"; document.body.style.overflow = "hidden";
+    const t = $("toast"); if (t) t.style.zIndex = 9000;
+  }
+  window.ppClose = () => { const m = $("pp-modal"); if (m) m.style.display = "none"; document.body.style.overflow = ""; };
+  const examOpts = sel => `<option value="">— Sınaq seçin —</option>` + examsCache.map(e => `<option value="${e.id}" ${e.id === sel ? "selected" : ""}>${esc(e.title)}</option>`).join("");
+
+  // ================= 1) ÇAP =================
+  window.ppPrintOpen = (examId) => {
+    modal(`<h3 style="color:var(--color-primary);margin-bottom:6px;">🧾 Cavab vərəqi çap et</h3>
+      <p class="muted-note" style="margin-bottom:12px;">Hər şagird üçün adı və kodu yazılmış A4 vərəq. Qapalı, açıq və ətraflı suallar eyni səhifədədir.</p>
+      <div class="field" style="margin-bottom:10px;"><label>Sınaq</label><select id="pp-ex" onchange="ppPrintInfo()">${examOpts(examId)}</select></div>
+      <div id="pp-info" class="muted-note" style="margin-bottom:12px;"></div>
+      <button class="btn-small" id="pp-go" style="width:100%;" onclick="ppPrint()">📄 PDF hazırla</button>`);
+    ppPrintInfo();
+  };
+  window.ppPrintInfo = async () => {
+    const id = $("pp-ex").value, box = $("pp-info"), btn = $("pp-go");
+    btn.disabled = true;
+    if (!id) { box.innerHTML = ""; return; }
+    const ex = examsCache.find(e => e.id === id);
+    box.textContent = "Yüklənir...";
+    try {
+      const qs = await examQs(id), pages = OMR.layout(qs), st = exStudents(ex);
+      const c = t => qs.filter(q => q.type === t).length;
+      let h = `${qs.length} sual: ${c("mcq")} qapalı · ${c("open")} açıq · ${c("detailed")} ətraflı<br>${st.length} şagird → ${st.length * pages.length} səhifə`;
+      if (pages.some(p => p.overflow)) { box.innerHTML = h + `<div style="color:var(--color-danger);font-weight:700;margin-top:6px;">❌ Qapalı/açıq suallar bir səhifəyə sığmır. Sual sayını azaldın.</div>`; return; }
+      if (pages.length > 1) h += `<div style="color:#a9700a;font-weight:700;margin-top:6px;">⚠️ Ətraflı suallar bir səhifəyə rahat sığmır (hər qutu ən azı 38 mm olmalıdır). Qalanı 2-ci səhifəyə keçdi — hər şagird üçün 2 şəkil çəkiləcək.</div>`;
+      if (!st.length) h += `<div style="color:var(--color-danger);margin-top:6px;">Bu sınağın qruplarında şagird yoxdur.</div>`;
+      const hs = {}; let dup = false; st.forEach(s => { const k = OMR.stuHash(s.id); if (hs[k]) dup = true; hs[k] = 1; });
+      if (dup) h += `<div style="color:var(--color-danger);margin-top:6px;">İki şagirdin kodu üst-üstə düşdü — adminə bildirin.</div>`;
+      box.innerHTML = h; btn.disabled = !st.length;
+    } catch (e) { console.error(e); box.textContent = "Xəta: " + e.message; }
+  };
+
+  function drawSheet(doc, ex, qs, pages, pi, stu) {
+    const p = pages[pi];
+    doc.setFillColor(0, 0, 0);
+    OMR.MC.forEach(([x, y]) => doc.rect(x - OMR.MK / 2, y - OMR.MK / 2, OMR.MK, OMR.MK, "F"));
+    OMR.encodeBits(stu.id, ex.id, pi).forEach((b, i) => { if (b) doc.rect(OMR.BIT_X0 + i * OMR.BIT_P, OMR.BIT_Y - OMR.BIT_S / 2, OMR.BIT_S, OMR.BIT_S, "F"); });
+    setPdfFont(doc);
+    doc.setTextColor(11, 60, 93); doc.setFontSize(12);
+    boldText(doc, doc.splitTextToSize(ex.title || "Sınaq", 120)[0], 22, 15);
+    doc.setTextColor(30, 30, 30); doc.setFontSize(10);
+    doc.text("Ad Soyad: " + doc.splitTextToSize(stu.fullName || "", 110)[0], 22, 21.5);
+    doc.setFontSize(9);
+    doc.text(`Kod: ${OMR.humanCode(stu.id)}    Tarix: ${fmtD(ex.activationAt)}    Səhifə ${pi + 1}/${pages.length}`, 22, 27.5);
+    doc.setTextColor(120, 120, 120); doc.setFontSize(7.5);
+    doc.text("TTM Tədris Mərkəzi", 188, 15, { align: "right" });
+    doc.text("Künclərdəki qara kvadratları örtməyin", 188, 21.5, { align: "right" });
+    doc.text("İşarə: X, V və ya / — qaraltmaq lazım deyil", 188, 27.5, { align: "right" });
+    doc.setDrawColor(180, 190, 200); doc.setLineWidth(0.3); doc.line(22, 31, 188, 31);
+    p.labels.forEach(l => {
+      doc.setTextColor(l.sm ? 90 : 11, l.sm ? 90 : 60, l.sm ? 90 : 93); doc.setFontSize(l.sm ? 7 : 8);
+      doc.text(l.t, l.x, l.y, l.c ? { align: "center" } : undefined);
+    });
+    doc.setLineWidth(0.3);
+    p.items.forEach(it => {
+      doc.setTextColor(30, 30, 30); doc.setDrawColor(70, 70, 70);
+      if (it.t === "mcq") {
+        doc.setFontSize(9); boldText(doc, String(it.q + 1), it.lx, it.ly);
+        it.b.forEach(b => doc.circle(b.x, b.y, b.r, "S"));
+      } else if (it.t === "num") {
+        doc.setDrawColor(190, 198, 206); doc.roundedRect(it.x, it.y, it.w, it.h, 1.5, 1.5, "S");
+        doc.setFontSize(9); boldText(doc, (it.q + 1) + ".", it.lx, it.ly);
+        doc.setDrawColor(110, 110, 110);
+        doc.setFontSize(6.5); doc.setTextColor(130, 130, 130);
+        doc.text(",", it.x + 3, it.cols[0].comma.y + 1);
+        it.cols[0].dig.forEach((b, v) => doc.text(String(v), it.x + 3, b.y + 1));
+        it.cols.forEach(c => {
+          doc.setDrawColor(110, 110, 110); doc.rect(c.box.x, c.box.y, c.box.w, c.box.h, "S");
+          doc.setDrawColor(70, 70, 70);
+          if (c.comma) doc.circle(c.comma.x, c.comma.y, c.comma.r, "S");
+          c.dig.forEach(b => doc.circle(b.x, b.y, b.r, "S"));
+        });
+      } else {
+        doc.setDrawColor(120, 120, 120); doc.rect(it.x, it.y, it.w, it.h, "S");
+        doc.setFontSize(8.5); boldText(doc, `${it.q + 1}. ${it.t === "det" ? "Həll" : "Cavab"}`, it.lx, it.ly);
+        if (it.fin) {
+          doc.setFontSize(7.5); doc.setTextColor(90, 90, 90);
+          doc.text("Son cavab:", it.finL.x, it.fin.y + 5.5);
+          doc.rect(it.fin.x, it.fin.y, it.fin.w, it.fin.h, "S");
+        }
+      }
+    });
+  }
+  window.ppPrint = async () => {
+    const id = $("pp-ex").value, ex = examsCache.find(e => e.id === id), btn = $("pp-go");
+    if (!ex) return;
+    btn.disabled = true; toast("PDF hazırlanır...");
+    try {
+      await ensureLib("jspdf"); const { jsPDF } = window.jspdf;
+      const qs = await examQs(id), pages = OMR.layout(qs), st = exStudents(ex);
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
+      await ensurePdfFont(doc);
+      let first = true;
+      st.forEach(s => pages.forEach((_, pi) => { if (!first) doc.addPage(); first = false; drawSheet(doc, ex, qs, pages, pi, s); }));
+      doc.save(`${(ex.title || "sinaq").replace(/[^\wƏəıİĞğÜüŞşÖöÇç -]/g, "")}_cavab_vereqi.pdf`);
+      toast("PDF hazırdır ✅ Çap edib şagirdlərə paylayın");
+    } catch (e) { console.error(e); toast("PDF xətası: " + e.message); }
+    btn.disabled = false;
+  };
+
+  // ================= 2) YOXLAMA =================
+  let S = null; // { ex, qs, pages, list:{stuId:{stu,pages:{},rv}}, errs:[] }
+  window.ppScanOpen = (examId) => {
+    modal(`<h3 style="color:var(--color-primary);margin-bottom:6px;">📷 Kağız vərəqləri yoxla</h3>
+      <p class="muted-note" style="margin-bottom:12px;">Hər vərəqin 1 şəklini çəkin: 4 qara künc görünsün, kölgə az olsun. Bir dəfəyə çox şəkil seçə bilərsiniz.</p>
+      <div class="field" style="margin-bottom:10px;"><label>Sınaq</label><select id="pp-sex">${examOpts(examId)}</select></div>
+      <div class="upload-choice-grid">
+        <label class="upload-choice-card"><div class="upload-choice-icon">📷</div><div class="upload-choice-title">Kamera</div><div class="upload-choice-sub">Vərəqi çək</div><input type="file" accept="image/*" capture="environment" onchange="ppFiles(this)"></label>
+        <label class="upload-choice-card"><div class="upload-choice-icon">🖼️</div><div class="upload-choice-title">Qalereya</div><div class="upload-choice-sub">Çox şəkil seç</div><input type="file" accept="image/*" multiple onchange="ppFiles(this)"></label>
+      </div>
+      <div id="pp-prog" class="muted-note"></div>
+      <div id="pp-list"></div>`);
+    S = null;
+  };
+  function grayOf(img, max) {
+    const f = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+    const w = Math.round(img.naturalWidth * f), h = Math.round(img.naturalHeight * f);
+    const c = document.createElement("canvas"); c.width = w; c.height = h;
+    const x = c.getContext("2d"); x.drawImage(img, 0, 0, w, h);
+    const d = x.getImageData(0, 0, w, h).data, g = new Uint8Array(w * h);
+    for (let i = 0; i < w * h; i++) g[i] = (d[i * 4] * 299 + d[i * 4 + 1] * 587 + d[i * 4 + 2] * 114) / 1000;
+    return { g, w, h };
+  }
+  function toURL(gw, gh, data, q) {
+    const c = document.createElement("canvas"); c.width = gw; c.height = gh;
+    const x = c.getContext("2d"), im = x.createImageData(gw, gh);
+    for (let i = 0; i < gw * gh; i++) { const v = data[i]; im.data[i * 4] = im.data[i * 4 + 1] = im.data[i * 4 + 2] = v; im.data[i * 4 + 3] = 255; }
+    x.putImageData(im, 0, 0);
+    return c.toDataURL("image/jpeg", q || 0.75);
+  }
+  const loadImg = f => new Promise((res, rej) => { const u = URL.createObjectURL(f), i = new Image(); i.onload = () => { URL.revokeObjectURL(u); res(i); }; i.onerror = () => { URL.revokeObjectURL(u); rej(new Error("Şəkil açılmadı (JPG/PNG seçin)")); }; i.src = u; });
+
+  window.ppFiles = async (inp) => {
+    const files = Array.from(inp.files || []); inp.value = "";
+    const id = $("pp-sex").value;
+    if (!id) { toast("Əvvəlcə sınaq seçin"); return; }
+    if (!files.length) return;
+    const ex = examsCache.find(e => e.id === id);
+    if (!S || S.ex.id !== id) {
+      const qs = await examQs(id);
+      S = { ex, qs, pages: OMR.layout(qs), list: {}, errs: [] };
+    }
+    const byHash = {}; exStudents(ex).forEach(s => byHash[OMR.stuHash(s.id)] = s);
+    for (let k = 0; k < files.length; k++) {
+      $("pp-prog").textContent = `Oxunur: ${k + 1}/${files.length}...`;
+      await new Promise(r => setTimeout(r, 30));
+      const f = files[k];
+      try {
+        const img = await loadImg(f), src = grayOf(img, 2200);
+        const r = OMR.locate(src.g, src.w, src.h);
+        if (!r || r.err) throw new Error("4 qara künc tapılmadı — vərəqin hamısı kadrda olsun");
+        if (!r.code) throw new Error("Vərəqin kodu oxunmadı (alt hissədəki qara zolaq görünsün)");
+        if (r.code.ex !== OMR.exHash(id)) throw new Error("Bu vərəq başqa sınağa aiddir");
+        const stu = byHash[r.code.stu];
+        if (!stu) throw new Error("Şagird tapılmadı (bu sınağın qruplarında yoxdur)");
+        const page = S.pages[r.code.page];
+        if (!page) throw new Error("Səhifə nömrəsi uyğun deyil");
+        const sh = r.sheet, res = OMR.readPage(sh, page);
+        const K = OMR.K, full = { w: sh.w, h: sh.h, g: sh.g };
+        const crop = (rc, hi) => {
+          if (hi) { const o = OMR.warpRect(src.g, src.w, src.h, r.Hm, rc, Math.min(8, 1100 / Math.max(rc.w, rc.h))); return toURL(o.w, o.h, o.data, 0.72); }
+          const x0 = Math.max(0, Math.round(rc.x * K)), y0 = Math.max(0, Math.round(rc.y * K)), w = Math.round(rc.w * K), h = Math.round(rc.h * K), d = new Uint8ClampedArray(w * h);
+          for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) d[y * w + x] = full.g[(y + y0) * full.w + x + x0];
+          return toURL(w, h, d);
+        };
+        const rows = {};
+        res.forEach(a => {
+          const it = page.items.find(i => i.q === a.q);
+          if (a.t === "mcq" && a.st !== "ok" && a.st !== "blank") a.img = crop({ x: it.lx - 1, y: it.b[0].y - 4, w: 42, h: 8 });
+          if (a.t === "num" && a.st !== "blank") a.img = crop({ x: it.x, y: it.y, w: it.w, h: it.h });
+          if (a.t === "wr" && a.st !== "blank") a.img = crop({ x: it.x, y: it.y, w: it.w, h: it.h }, true);
+          if (a.t === "det" && a.st !== "blank") a.img = crop({ x: it.x, y: it.y, w: it.w, h: it.h }, true);
+          rows[a.q] = a;
+        });
+        const e = S.list[stu.id] || (S.list[stu.id] = { stu, pages: {}, rv: {}, saved: false });
+        e.pages[r.code.page] = { rows, sheet: toURL(sh.w, sh.h, sh.g, 0.6) };
+        e.saved = false;
+      } catch (err) {
+        console.error(err);
+        S.errs.push(`${f.name || "şəkil"}: ${err.message}`);
+      }
+    }
+    $("pp-prog").textContent = "";
+    ppRenderList();
+  };
+
+  // hər sual üçün yekun vəziyyət (müəllim düzəlişi nəzərə alınır)
+  function merged(e) {
+    const rows = {}; Object.values(e.pages).forEach(p => Object.assign(rows, p.rows));
+    return rows;
+  }
+  function needs(a) {
+    if (!a) return true;
+    if (a.t === "mcq") return a.st === "multi" || a.st === "unsure";
+    if (a.t === "num") return a.st === "unsure";
+    if (a.t === "wr") return a.st !== "blank";
+    if (a.t === "det") return a.st === "unsure";
+    return false;
+  }
+  function pending(e) {
+    const rows = merged(e), miss = S.pages.length - Object.keys(e.pages).length;
+    let n = 0; S.qs.forEach((q, i) => { if (needs(rows[i]) && !(i in e.rv)) n++; });
+    return { n, miss };
+  }
+  function ppRenderList() {
+    const box = $("pp-list"); if (!box || !S) return;
+    const ents = Object.values(S.list).sort((a, b) => (a.stu.fullName || "").localeCompare(b.stu.fullName || "", "az"));
+    box.innerHTML = (S.errs.length ? `<div class="card" style="background:#fff6f6;border:1px solid #f3b9b9;box-shadow:none;margin-top:10px;"><b style="color:var(--color-danger);font-size:13px;">Oxunmayan şəkillər — yenidən çəkin:</b>${S.errs.map(x => `<div class="muted-note">• ${esc(x)}</div>`).join("")}</div>` : "") +
+      ents.map(e => {
+        const p = pending(e);
+        const tag = e.saved ? `<span class="v2-tag">Saxlanıldı</span>` : p.miss ? `<span class="v2-tag wait">${p.miss} səhifə çatmır</span>` : p.n ? `<span class="v2-tag wait">${p.n} təsdiq lazım</span>` : `<span class="v2-tag">Hazır</span>`;
+        return `<div class="list-item" style="cursor:pointer;" onclick="ppReview('${e.stu.id}')"><div class="list-item-info"><div class="list-item-title">${esc(e.stu.fullName)} ${tag}</div><div class="list-item-sub">Kod: ${OMR.humanCode(e.stu.id)}</div></div><span class="v2-chev">›</span></div>`;
+      }).join("") +
+      (ents.some(e => !e.saved && !pending(e).n && !pending(e).miss) ? `<button class="btn-small" style="width:100%;margin-top:8px;background:#2e9e6b;" onclick="ppSaveAll()">✅ Hazır olanların hamısını saxla</button>` : "");
+  }
+
+  // ---------- baxış / təsdiq ekranı ----------
+  window.ppReview = (sid) => {
+    const e = S.list[sid], rows = merged(e), box = $("pp-list");
+    const btn = (on, js, t, bg) => `<button onclick="${js}" style="padding:7px 11px;border-radius:9px;font-weight:800;font-size:12.5px;border:2px solid ${on ? bg || "var(--color-primary)" : "var(--color-gray)"};background:${on ? bg || "var(--color-primary)" : "#fff"};color:${on ? "#fff" : "var(--color-text)"};">${t}</button>`;
+    let need = "", ok = "";
+    S.qs.forEach((q, i) => {
+      const a = rows[i], rv = e.rv[i];
+      if (!a) { need += `<div class="list-item"><div class="list-item-info"><div class="list-item-title">${i + 1}. Bu səhifə yüklənməyib</div></div></div>`; return; }
+      const img = a.img ? `<img src="${a.img}" onclick="openImageLightbox(this.src)" style="max-width:100%;border-radius:8px;border:1px solid var(--color-gray);margin:6px 0;cursor:zoom-in;">` : "";
+      if (a.t === "mcq") {
+        const cur = rv ? rv.v : (a.st === "ok" ? a.v : null);
+        const lbl = a.st === "ok" ? LET[a.v] : a.st === "blank" ? "boş" : a.st === "multi" ? "bir neçə işarə" : "aydın deyil";
+        const body = `${img}<div style="display:flex;gap:6px;flex-wrap:wrap;">${[0, 1, 2, 3, 4].map(k => btn(rv && rv.v === k, `ppSet('${sid}',${i},{v:${k}})`, LET[k])).join("")}${btn(rv && rv.v === null && !rv.x, `ppSet('${sid}',${i},{v:null})`, "Boş", "#64748b")}${btn(rv && rv.x, `ppSet('${sid}',${i},{v:null,x:1})`, "Səhv say", "var(--color-danger)")}</div>`;
+        if (needs(a) && !rv) need += `<div class="list-item" style="flex-direction:column;align-items:stretch;background:#fffbef;"><div class="list-item-title">${i + 1}. Qapalı — ${lbl} ⚠️</div>${body}</div>`;
+        else ok += `<div class="list-item" style="flex-direction:column;align-items:stretch;"><div class="list-item-title" onclick="this.nextElementSibling.style.display='block'" style="cursor:pointer;">${i + 1}. ${cur === null ? (rv && rv.x ? "çox işarə (səhv)" : "boş") : LET[cur]} <span class="muted-note">· düzəlt ▾</span></div><div style="display:none;">${body}</div></div>`;
+      } else if (a.t === "num" || a.t === "wr") {
+        const val = rv ? rv.txt : (a.t === "num" ? a.v : "");
+        const res = rv && rv.ok !== undefined ? rv.ok : null;
+        const body = `${img}<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;"><input type="text" value="${esc(val || "")}" placeholder="Şagirdin cavabı" style="flex:1;min-width:110px;padding:8px;border:1.5px solid var(--color-gray);border-radius:8px;" onchange="ppSet('${sid}',${i},{txt:this.value})">
+          ${btn(res === true, `ppSet('${sid}',${i},{ok:true})`, "✅", "#2e9e6b")}${btn(res === false, `ppSet('${sid}',${i},{ok:false})`, "❌", "var(--color-danger)")}${btn(rv && rv.blank, `ppSet('${sid}',${i},{blank:1})`, "Boş", "#64748b")}</div>
+          <div class="muted-note">Düzgün cavab: <b>${esc(q.correctAnswer || "")}</b></div>`;
+        if (needs(a) && !rv) need += `<div class="list-item" style="flex-direction:column;align-items:stretch;background:#fffbef;"><div class="list-item-title">${i + 1}. Açıq sual — yoxlayın ⚠️</div>${body}</div>`;
+        else {
+          const shown = rv ? (rv.blank ? "boş" : (rv.txt || "") + (rv.ok === true ? " ✅" : rv.ok === false ? " ❌" : "")) : (a.st === "blank" ? "boş" : a.v);
+          ok += `<div class="list-item" style="flex-direction:column;align-items:stretch;"><div class="list-item-title" onclick="this.nextElementSibling.style.display='block'" style="cursor:pointer;">${i + 1}. ${esc(shown)} <span class="muted-note">· düzəlt ▾</span></div><div style="display:none;">${body}</div></div>`;
+        }
+      } else if (a.t === "det") {
+        const ink = rv ? rv.ink : a.st === "ink";
+        const body = `${img}<div style="display:flex;gap:6px;">${btn(rv ? rv.ink : false, `ppSet('${sid}',${i},{ink:true})`, "✍️ Yazılıb → yoxlanışa", "#2e9e6b")}${btn(rv ? !rv.ink : false, `ppSet('${sid}',${i},{ink:false})`, "Boş → 0 bal", "#64748b")}</div>`;
+        if (needs(a) && !rv) need += `<div class="list-item" style="flex-direction:column;align-items:stretch;background:#fffbef;"><div class="list-item-title">${i + 1}. Ətraflı — yazı var? ⚠️</div>${body}</div>`;
+        else ok += `<div class="list-item" style="flex-direction:column;align-items:stretch;"><div class="list-item-title" onclick="this.nextElementSibling.style.display='block'" style="cursor:pointer;">${i + 1}. Ətraflı — ${ink ? "✍️ yoxlanışa gedəcək" : "boş (0 bal)"} <span class="muted-note">· düzəlt ▾</span></div><div style="display:none;">${body}</div></div>`;
+      }
+    });
+    const p = pending(e);
+    box.innerHTML = `<button class="btn-outline" onclick="ppRenderList()" style="margin:10px 0;">← Siyahı</button>
+      <div class="list-item-title" style="font-size:16px;color:var(--color-primary);">${esc(e.stu.fullName)}</div>
+      <div style="display:flex;gap:6px;margin:8px 0;flex-wrap:wrap;">${Object.keys(e.pages).map(k => `<button class="btn-outline" onclick="openImageLightbox(S_SHEET('${sid}',${k}))">🖼 Vərəq ${+k + 1}</button>`).join("")}</div>
+      ${need ? `<h3 style="font-size:14px;margin:8px 0;">⚠️ Təsdiq lazımdır (${p.n})</h3>${need}` : `<div class="muted-note" style="margin:8px 0;">✅ Bütün cavablar avtomatik oxundu.</div>`}
+      <h3 style="font-size:14px;margin:12px 0 8px;">Oxunan cavablar</h3>${ok}
+      <button class="btn-small" style="width:100%;margin-top:12px;" ${p.n || p.miss ? "disabled" : ""} onclick="ppSave('${sid}')">${p.miss ? p.miss + " səhifə çatmır" : p.n ? p.n + " sual təsdiq gözləyir" : e.saved ? "Yenidən saxla" : "✅ Təsdiqlə və saxla"}</button>`;
+    $("pp-modal").scrollTop = 0;
+  };
+  window.S_SHEET = (sid, k) => S.list[sid].pages[k].sheet;
+  window.ppSet = (sid, i, o) => {
+    const e = S.list[sid];
+    e.rv[i] = Object.assign({}, e.rv[i] || {}, o);
+    if (o.blank) { e.rv[i].txt = ""; e.rv[i].ok = false; }
+    if (o.txt !== undefined && o.txt.trim()) { delete e.rv[i].blank; e.rv[i].ok = checkOpenAnswer(o.txt, S.qs[i].correctAnswer); }
+    e.saved = false;
+    const y = $("pp-modal").scrollTop; ppReview(sid); $("pp-modal").scrollTop = y;
+  };
+
+  // ---------- saxlama ----------
+  function build(e) {
+    const rows = merged(e), photos = [];
+    let correct = 0, det = 0, detG = 0;
+    const answers = [], pq = S.qs.map((q, i) => {
+      const a = rows[i], rv = e.rv[i];
+      if (q.type === "detailed") {
+        det++;
+        const ink = rv ? rv.ink : a.st === "ink";
+        if (ink) { photos.push({ i, img: a.img }); answers.push(null); return { selected: null, correct: null, isCorrect: null, type: q.type, points: null, maxPoints: 1, hasPhoto: true }; }
+        detG++; answers.push(null);
+        return { selected: null, correct: null, isCorrect: null, type: q.type, points: 0, maxPoints: 1, hasPhoto: false, blank: true };
+      }
+      if (q.type === "mcq") {
+        const v = rv ? rv.v : (a.st === "ok" ? a.v : null), ok = v !== null && v === q.correctIndex;
+        if (ok) correct++; answers.push(v);
+        return { selected: v, correct: q.correctIndex, isCorrect: ok, type: q.type, points: ok ? 1 : 0, maxPoints: 1, ...(rv && rv.x ? { multi: true } : {}) };
+      }
+      let txt = rv ? (rv.blank ? "" : rv.txt ?? (a.t === "num" ? a.v : "")) : (a.st === "blank" ? "" : a.v);
+      let ok = rv && rv.ok !== undefined ? rv.ok : (txt ? checkOpenAnswer(txt, q.correctAnswer) : false);
+      if (ok && !txt) txt = "(müəllim təsdiqi)";
+      if (ok) correct++; answers.push(txt || null);
+      return { selected: txt || null, correct: q.correctAnswer, isCorrect: ok, type: q.type, points: ok ? 1 : 0, maxPoints: 1 };
+    });
+    const total = S.qs.length, st = computeAttemptStats(pq);
+    return { pq, answers, photos, correct, total, det, detG, score: st.score };
+  }
+  async function saveOne(e) {
+    const ex = S.ex, b = build(e);
+    let attId = ex.id + "_" + e.stu.id;
+    const old = await db.collection("examAttempts").where("examId", "==", ex.id).where("studentId", "==", e.stu.id).get();
+    if (!old.empty) {
+      const o = old.docs[0];
+      if (o.data().source !== "paper" && !confirm(`${e.stu.fullName} bu sınağı onlayn işləyib. Kağız nəticəsi onun yerinə yazılsın?`)) return false;
+      attId = o.id;
+    }
+    await db.collection("examAttempts").doc(attId).set({
+      examId: ex.id, studentId: e.stu.id, groupId: e.stu.groupId || null, topic: ex.topic || "", teacherId: currentTeacherId,
+      answers: b.answers, perQuestion: b.pq, correctCount: b.correct, totalCount: b.total, score: b.score,
+      detailedCount: b.det, detailedGradedCount: b.detG, pendingGrading: b.detG < b.det,
+      source: "paper", autoSubmitted: false, submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    for (const ph of b.photos) {
+      await db.collection("detailedAnswers").doc(`${attId}_${ph.i}`).set({
+        attemptId: attId, examId: ex.id, studentId: e.stu.id, groupId: e.stu.groupId || null, teacherId: currentTeacherId,
+        questionIndex: ph.i, photoBase64: ph.img, points: null, maxPoints: 1, source: "paper",
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+    e.saved = true;
+    return true;
+  }
+  const errMsg = err => err && err.code === "permission-denied" ? "Firestore icazəsi yoxdur (qaydalara müəllim yazısı əlavə olunmalıdır)" : (err.message || err);
+  window.ppSave = async (sid) => {
+    const e = S.list[sid];
+    try { if (await saveOne(e)) { toast(`✅ ${e.stu.fullName} — nəticə saxlanıldı`); ppRenderList(); } }
+    catch (err) { console.error(err); toast("❌ " + errMsg(err)); }
+  };
+  window.ppSaveAll = async () => {
+    const ready = Object.values(S.list).filter(e => !e.saved && !pending(e).n && !pending(e).miss);
+    let n = 0;
+    for (const e of ready) {
+      $("pp-prog").textContent = `Saxlanılır: ${n + 1}/${ready.length}...`;
+      try { if (await saveOne(e)) n++; } catch (err) { console.error(err); toast("❌ " + e.stu.fullName + ": " + errMsg(err)); break; }
+    }
+    $("pp-prog").textContent = "";
+    toast(`✅ ${n} şagirdin nəticəsi saxlanıldı. Ətraflı həllər «Ətraflı yoxlanış» bölməsində`);
+    ppRenderList();
+  };
+
+  // ---------- düymələr ----------
+  const nb = $("ex-new-btn");
+  if (nb) nb.insertAdjacentHTML("afterend", `<div id="pp-btns" style="display:flex;gap:8px;margin-bottom:12px;">
+    <button class="btn-outline" style="flex:1;padding:11px 8px;" onclick="ppPrintOpen()">🧾 Cavab vərəqi çap et</button>
+    <button class="btn-outline" style="flex:1;padding:11px 8px;" onclick="ppScanOpen()">📷 Kağızları yoxla</button></div>`);
+  const sync = () => { const p = $("pp-btns"); if (p && nb) p.style.display = nb.style.display === "none" ? "none" : "flex"; };
+  if (nb) new MutationObserver(sync).observe(nb, { attributes: true, attributeFilter: ["style"] });
+})();
+
+</script>
 </body>
 </html>
