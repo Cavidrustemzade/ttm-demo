@@ -9445,18 +9445,25 @@ function homeExtra(){
       const examId = $("exam-edit-id").value || null, act = $("exam-activation").value;
       window._ppCard = { t: Date.now(), qs: examQuestions.slice(), ex: { id: examId, title: $("pdf-title-field").value.trim() || $("exam-title").value.trim() || "Sınaq", activationAt: act ? new Date(act).toISOString() : "" } };
       ensureLib("jspdf").then(() => {
-        const API = window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.API;
-        if (!API || API._ppPatched) return;
-        API._ppPatched = true;
-        const orig = API.save;
-        API.save = function () {
-          const c = window._ppCard; window._ppCard = null;
-          if (c && Date.now() - c.t < 120000) {
-            try { const n = ppDrawCard(this, c.ex, c.qs, true); toast(`✅ Sonuna cavab kartı əlavə edildi (${n} səhifə)` + (c.ex.id ? "" : " — sınağı yadda saxlamağı unutmayın")); }
-            catch (e) { console.error(e); toast("⚠️ Cavab kartı əlavə edilmədi: " + e.message); }
+        const J = window.jspdf;
+        if (!J || !J.jsPDF || J._ppPatched) return;
+        J._ppPatched = true;
+        const Orig = J.jsPDF;
+        const Wrap = function () { // yalnız optik forma seçiləndə yaranan PDF-ə toxunur
+          const d = new Orig(...arguments), c = window._ppCard;
+          if (c && Date.now() - c.t < 120000 && typeof d.save === "function") {
+            window._ppCard = null;
+            const sv = d.save.bind(d);
+            d.save = function () {
+              try { const n = ppDrawCard(d, c.ex, c.qs, true); toast(`✅ Sonuna cavab kartı əlavə edildi (${n} səhifə)` + (c.ex.id ? "" : " — sınağı yadda saxlamağı unutmayın")); }
+              catch (e) { console.error(e); toast("⚠️ Cavab kartı əlavə edilmədi: " + e.message); }
+              return sv.apply(null, arguments);
+            };
           }
-          return orig.apply(this, arguments);
+          return d;
         };
+        Wrap.prototype = Orig.prototype; Wrap.API = Orig.API; Object.setPrototypeOf(Wrap, Orig);
+        J.jsPDF = Wrap;
       }).catch(() => {});
     }, true); // əsas PDF funksiyasından ƏVVƏL işləyir
   }
