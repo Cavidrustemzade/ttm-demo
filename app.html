@@ -3923,6 +3923,17 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
     function lerp(a, b, t) { return Math.round(a + (b - a) * t); }
 
     function drawHeader() {
+      // Başlıq stili seçimi (yeni): seçilmiş stil varsa onu çəkir, xəta olsa köhnə klassik stilə qayıdır
+      if (typeof window.ttmPdfHeader === "function") {
+        try {
+          const hs = (document.getElementById("pdf-hstyle-field") || {}).value || "classic";
+          const hn = ((document.getElementById("pdf-hnum-field") || {}).value || "").trim();
+          contentStartY = window.ttmPdfHeader(doc, hs, { title, classVal, numberVal, badge: hn, color: [cr, cg, cb], pageW, pageH, marginX });
+          setPdfFont(doc, "normal");
+          doc.setTextColor(30, 30, 30);
+          return;
+        } catch (e) { console.error("Başlıq stili xətası, klassik stil çəkilir:", e); }
+      }
       // Real gradient banner: tünd mavi -> orta mavi -> açıq mavi, soldan sağa
       const headerH = pageH * 0.09; // səhifənin ~9%-i
       const stops = [[11, 60, 93], [23, 106, 150], [90, 169, 214]];
@@ -4297,12 +4308,19 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
       });
     }
 
-    doc.save(`${title.replace(/[^\wƏəıİĞğÜüŞşÖöÇç -]/g, "")}.pdf`);
-    toast("PDF hazırdır ✅");
+    const _pdfName = `${title.replace(/[^\wƏəıİĞğÜüŞşÖöÇç -]/g, "") || "sinaq"}.pdf`;
+    if (window._ttmPdfPreview && typeof window.ttmShowPdfPreview === "function") {
+      window._ttmPdfPreview = false;
+      window.ttmShowPdfPreview(doc, _pdfName);
+    } else {
+      doc.save(_pdfName);
+      toast("PDF hazırdır ✅");
+    }
   } catch (err) {
     console.error(err);
     toast("PDF hazırlanarkən xəta: " + err.message);
   } finally {
+    window._ttmPdfPreview = false;
     document.getElementById("pdf-generate-btn").disabled = false;
   }
 });
@@ -9537,5 +9555,739 @@ function homeExtra(){
 })();
 
 </script>
+<style>
+/* ===== Addımlı sınaq yaratma (wizard) ===== */
+#ex-back-btn{display:none!important}
+#exam-form-title{display:none}
+.wz-head{margin:-4px 0 14px}
+.wz-top{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.wz-back{width:42px;height:42px;border-radius:14px;background:#fff;box-shadow:0 4px 14px rgba(11,60,93,.12);font-size:20px;color:var(--color-primary);flex-shrink:0;transition:transform .2s}
+.wz-back:active{transform:scale(.92)}
+.wz-tt{flex:1;min-width:0}
+.wz-title{font-size:22px;font-weight:800;color:var(--color-primary);line-height:1.15}
+.wz-sub{font-size:13px;color:var(--color-text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wz-badge{background:rgba(11,60,93,.07);color:var(--color-primary);font-weight:800;font-size:11.5px;letter-spacing:.5px;padding:8px 11px;border-radius:12px;white-space:nowrap}
+.wz-steps{display:flex;align-items:flex-start;justify-content:space-between;position:relative}
+.wz-st{display:flex;flex-direction:column;align-items:center;gap:6px;width:33.33%;cursor:pointer;position:relative;z-index:1;-webkit-tap-highlight-color:transparent}
+.wz-dot{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;background:#e8edf3;color:#7a8a9c;transition:all .35s cubic-bezier(.2,.8,.2,1)}
+.wz-lb{font-size:11.5px;color:#7a8a9c;text-align:center;font-weight:600;transition:color .3s}
+.wz-st.on .wz-dot{background:var(--color-primary);color:#fff;box-shadow:0 0 0 5px rgba(11,60,93,.13);transform:scale(1.08)}
+.wz-st.on .wz-lb{color:var(--color-primary);font-weight:800}
+.wz-st.done .wz-dot{background:#10b981;color:#fff}
+.wz-st.done .wz-lb{color:#0f766e}
+.wz-ln{position:absolute;top:17px;height:3px;background:#e8edf3;border-radius:3px;overflow:hidden}
+.wz-ln b{display:block;height:100%;width:0;background:#10b981;transition:width .45s ease}
+.wz-ln.l1{left:calc(16.66% + 22px);right:calc(50% + 22px)}
+.wz-ln.l2{left:calc(50% + 22px);right:calc(16.66% + 22px)}
+.wz-bar{height:6px;background:#e8edf3;border-radius:6px;margin-top:14px;overflow:hidden}
+.wz-bar i{display:block;height:100%;width:33%;border-radius:6px;background:linear-gradient(90deg,var(--color-primary),#2b8ac4);transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.wz-pane{display:none}
+.wz-pane.act{display:block}
+.wz-pane.in-r{animation:wzInR .42s cubic-bezier(.2,.8,.2,1)}
+.wz-pane.in-l{animation:wzInL .42s cubic-bezier(.2,.8,.2,1)}
+@keyframes wzInR{from{opacity:0;transform:translateX(34px)}to{opacity:1;transform:none}}
+@keyframes wzInL{from{opacity:0;transform:translateX(-34px)}to{opacity:1;transform:none}}
+.wz-sec{display:flex;gap:12px;align-items:center;margin:4px 0 16px}
+.wz-sec-ic{width:44px;height:44px;border-radius:14px;background:rgba(11,60,93,.07);display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0}
+.wz-sec h4{font-size:17px;font-weight:800;color:var(--color-primary);margin:0}
+.wz-sec p{font-size:12.5px;color:var(--color-text-muted);margin:2px 0 0}
+.wz-pane .field{margin-bottom:12px}
+.wz-pane .field label{font-weight:700;color:var(--color-primary)}
+.wz-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.wz-chip{padding:7px 12px;border-radius:999px;background:var(--color-light-gray);border:1.5px solid var(--color-gray);font-size:12.5px;font-weight:600;color:var(--color-text);transition:all .2s}
+.wz-chip.on{background:var(--color-primary);border-color:var(--color-primary);color:#fff;transform:scale(1.04)}
+.wz-hint{display:flex;gap:12px;align-items:center;background:linear-gradient(135deg,rgba(11,60,93,.05),rgba(43,138,196,.08));border-radius:16px;padding:14px;margin:6px 0 14px}
+.wz-hint .ic{font-size:22px}
+.wz-hint b{display:block;color:var(--color-primary);font-size:13.5px}
+.wz-hint span{font-size:12px;color:var(--color-text-muted)}
+.wz-nav{display:flex;gap:10px;margin-top:18px}
+.wz-nav button{flex:1;padding:15px;border-radius:16px;font-size:15.5px;font-weight:800;transition:transform .15s,opacity .2s}
+.wz-nav button:active{transform:scale(.97)}
+.wz-prev{background:var(--color-light-gray);color:var(--color-primary);border:1.5px solid var(--color-gray)!important;flex:.6!important}
+.wz-next{background:linear-gradient(135deg,var(--color-primary-light),var(--color-primary));color:#fff;box-shadow:0 10px 24px rgba(11,60,93,.28)}
+.wz-next.ok{background:linear-gradient(135deg,#10b981,#047857);box-shadow:0 10px 24px rgba(4,120,87,.28)}
+.wz-next:disabled{opacity:.6}
+.wz-cnt{display:inline-flex;align-items:center;gap:6px;background:#10b981;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;margin-left:8px;transition:transform .3s}
+.wz-cnt.zero{background:#e8edf3;color:#7a8a9c}
+.wz-cnt.pop{animation:wzPop .4s}
+@keyframes wzPop{50%{transform:scale(1.25)}}
+.wz-det{border:1.5px dashed var(--color-gray);border-radius:16px;padding:4px 14px;margin:14px 0}
+.wz-det summary{cursor:pointer;padding:10px 0;font-weight:700;color:var(--color-primary);font-size:14px;list-style:none}
+.wz-det summary::-webkit-details-marker{display:none}
+.wz-det summary:after{content:"▾";float:right;transition:transform .25s}
+.wz-det[open] summary:after{transform:rotate(180deg)}
+.wz-qtitle{display:flex;align-items:center;justify-content:space-between;margin:6px 0 12px}
+.wz-qtitle h4{margin:0;font-size:16px;color:var(--color-primary);font-weight:800}
+.wz-pdfbtn{background:rgba(11,60,93,.07);color:var(--color-primary);font-weight:700;font-size:12.5px;padding:8px 12px;border-radius:12px}
+.wz-sum{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.wz-sum div{background:var(--color-light-gray);border-radius:14px;padding:10px 12px;min-width:0}
+.wz-sum div.w{grid-column:1/-1}
+.wz-sum small{display:block;font-size:11px;color:var(--color-text-muted);font-weight:600}
+.wz-sum b{font-size:14px;color:var(--color-primary);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wz-gtools{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.wz-gtools label{margin:0}
+.wz-link{background:none;color:#2b8ac4;font-weight:700;font-size:12.5px;padding:4px}
+.wz-pane .group-check-pill{transition:all .2s cubic-bezier(.2,.8,.2,1)}
+.wz-pane .group-check-pill.checked{background:var(--color-primary);color:#fff;border-color:var(--color-primary);transform:scale(1.03)}
+.wz-pane .group-check-pill input{accent-color:#10b981}
+.wz-err{animation:wzShake .45s}
+.wz-err input,.wz-err select,.wz-err #exam-groups-checklist{border-color:#ef4444!important}
+@keyframes wzShake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+
+/* ===== PDF pəncərəsi ===== */
+#pdf-modal-overlay>div{max-width:520px!important;padding:0!important;border-radius:26px!important;animation:pmUp .45s cubic-bezier(.2,1,.3,1)}
+@keyframes pmUp{from{opacity:0;transform:translateY(40px) scale(.97)}to{opacity:1;transform:none}}
+@media(max-width:640px){
+  #pdf-modal-overlay{align-items:flex-end!important;padding:0!important}
+  #pdf-modal-overlay>div{max-height:94vh!important;border-radius:26px 26px 0 0!important}
+}
+.pm-head{padding:20px 22px 6px;position:relative}
+.pm-head:before{content:"";display:block;width:42px;height:5px;border-radius:5px;background:#dfe5ec;margin:-8px auto 12px}
+#pdf-modal-close-btn{z-index:2}
+.pm-sec{padding:12px 22px 6px}
+.pm-sec-t{display:flex;align-items:center;gap:9px;font-weight:800;color:var(--color-primary);font-size:14.5px;margin-bottom:12px}
+.pm-sec-t b{width:24px;height:24px;border-radius:8px;background:var(--color-primary);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center}
+.pm-foot{position:sticky;bottom:0;background:linear-gradient(to top,#fff 75%,rgba(255,255,255,0));padding:14px 22px 18px;display:flex;gap:10px;z-index:3}
+.pm-foot button{flex:1;padding:14px!important;border-radius:16px!important;font-size:15px!important;font-weight:800!important}
+.pm-prev{background:rgba(11,60,93,.08);color:var(--color-primary)}
+.hs-grid{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 10px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.hs-grid::-webkit-scrollbar{display:none}
+.hs-card{flex:0 0 128px;scroll-snap-align:start;background:#fff;border:2px solid #e3e9f0;border-radius:16px;padding:7px 7px 9px;text-align:center;position:relative;transition:all .25s cubic-bezier(.2,.8,.2,1)}
+.hs-card svg{width:100%;height:auto;display:block;border-radius:10px;background:#fff;box-shadow:inset 0 0 0 1px #edf1f5}
+.hs-card span{display:block;font-size:12px;font-weight:700;color:var(--color-text);margin-top:7px}
+.hs-card em{position:absolute;top:-7px;left:8px;background:#f59e0b;color:#fff;font-style:normal;font-size:9.5px;font-weight:800;padding:2px 7px;border-radius:999px}
+.hs-card.on{border-color:var(--color-primary);box-shadow:0 8px 22px rgba(11,60,93,.18);transform:translateY(-2px)}
+.hs-card.on:after{content:"✓";position:absolute;top:-8px;right:-6px;width:22px;height:22px;border-radius:50%;background:#10b981;color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;animation:wzPop .35s}
+.hs-card .c{fill:var(--hc,#0B3C5D)}
+.hs-card .cs{stroke:var(--hc,#0B3C5D)}
+.hs-card .l{fill:#dde3ea}
+.hs-live{position:relative;border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 0 0 1px #e3e9f0,0 6px 18px rgba(11,60,93,.08);min-height:90px;margin-top:2px}
+.hs-live canvas{display:block;width:100%;transition:opacity .25s}
+.hs-live-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--color-text-muted);background:linear-gradient(90deg,#f5f7fa 25%,#eef2f6 50%,#f5f7fa 75%);background-size:200% 100%;animation:hsSh 1.2s linear infinite}
+@keyframes hsSh{to{background-position:-200% 0}}
+.hs-live-tag{position:absolute;top:8px;right:8px;background:rgba(11,60,93,.75);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px}
+.cp-trigger{width:100%;display:flex;align-items:center;gap:10px;padding:7px 10px;border:1.5px solid var(--color-gray);border-radius:var(--radius-sm);background:var(--color-light-gray);font-size:13.5px;font-weight:700;color:var(--color-text);transition:transform .15s}
+.cp-trigger:active{transform:scale(.97)}
+.cp-trigger .sw{width:28px;height:28px;border-radius:9px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.cp-trigger .ar{margin-left:auto;color:var(--color-text-muted)}
+
+/* ===== Rəng seçici ===== */
+.cp-ov{position:fixed;inset:0;z-index:90;background:rgba(8,28,45,.42);backdrop-filter:blur(3px);display:flex;align-items:flex-end;justify-content:center;animation:cpFade .25s}
+@media(min-width:641px){.cp-ov{align-items:center}}
+@keyframes cpFade{from{opacity:0}}
+.cp-box{background:#fff;width:100%;max-width:420px;border-radius:26px 26px 0 0;padding:16px 20px 20px;box-shadow:0 -10px 40px rgba(0,0,0,.2);animation:cpIn .5s cubic-bezier(.2,1.25,.35,1);max-height:94vh;overflow-y:auto}
+@media(min-width:641px){.cp-box{border-radius:26px}}
+@keyframes cpIn{from{transform:translateY(60px) scale(.94);opacity:0}}
+.cp-ov.out{animation:cpFade .2s reverse forwards}
+.cp-ov.out .cp-box{animation:cpOut .22s forwards}
+@keyframes cpOut{to{transform:translateY(50px) scale(.96);opacity:0}}
+.cp-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cp-hd b{font-size:18px;color:var(--color-primary)}
+.cp-x{width:32px;height:32px;border-radius:50%;background:var(--color-light-gray);color:var(--color-text-muted);font-size:15px}
+.cp-pv{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.cp-cmp{display:flex;width:84px;height:46px;border-radius:14px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.12);flex-shrink:0}
+.cp-cmp i{flex:1;transition:background .15s}
+.cp-hex{flex:1;min-width:0;padding:12px;border:1.5px solid var(--color-gray);border-radius:14px;font-size:16px;font-weight:800;letter-spacing:1px;text-transform:uppercase;font-family:ui-monospace,monospace;color:var(--color-text)}
+.cp-sv{position:relative;height:170px;border-radius:16px;touch-action:none;cursor:crosshair;background-image:linear-gradient(to top,#000,rgba(0,0,0,0)),linear-gradient(to right,#fff,rgba(255,255,255,0))}
+.cp-hue{position:relative;height:18px;border-radius:999px;margin:16px 4px 6px;touch-action:none;cursor:pointer;background:linear-gradient(90deg,#f00,#ff0 17%,#0f0 33%,#0ff 50%,#00f 67%,#f0f 83%,#f00)}
+.cp-k{position:absolute;width:24px;height:24px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35);transform:translate(-50%,-50%);pointer-events:none;transition:transform .12s}
+.cp-hue .cp-k{top:50%}
+.cp-drag .cp-k{transform:translate(-50%,-50%) scale(1.25)}
+.cp-lb{font-size:12px;font-weight:700;color:var(--color-text-muted);margin:14px 0 8px;text-transform:uppercase;letter-spacing:.5px}
+.cp-grid{display:grid;grid-template-columns:repeat(9,1fr);gap:8px}
+.cp-sw{aspect-ratio:1;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.1);transition:transform .18s;animation:cpPop .4s cubic-bezier(.2,1.4,.4,1) backwards}
+.cp-sw:active{transform:scale(.88)}
+.cp-sw.on{box-shadow:0 0 0 2.5px #fff,0 0 0 4.5px var(--color-primary)}
+@keyframes cpPop{from{transform:scale(0);opacity:0}}
+.cp-act{display:flex;gap:10px;margin-top:18px}
+.cp-act button{flex:1;padding:14px;border-radius:16px;font-weight:800;font-size:15px}
+.cp-cancel{background:var(--color-light-gray);color:var(--color-text)}
+.cp-ok{background:var(--color-primary);color:#fff;box-shadow:0 8px 20px rgba(11,60,93,.25)}
+.cp-eye{background:rgba(11,60,93,.07);color:var(--color-primary);font-weight:700;font-size:12.5px;padding:7px 11px;border-radius:12px}
+
+/* ===== Tam önizləmə ===== */
+.pv-ov{position:fixed;inset:0;z-index:95;background:#1f2a36;display:flex;flex-direction:column;animation:cpFade .25s}
+.pv-top{display:flex;align-items:center;gap:10px;padding:12px 14px;color:#fff}
+.pv-top b{flex:1;font-size:15px}
+.pv-top button{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;font-size:16px}
+.pv-body{flex:1;overflow-y:auto;padding:6px 14px 20px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.pv-page{width:100%;max-width:760px;background:#fff;border-radius:6px;box-shadow:0 10px 30px rgba(0,0,0,.35);animation:pmUp .45s cubic-bezier(.2,1,.3,1) backwards;position:relative;min-height:120px}
+.pv-page canvas{display:block;width:100%;border-radius:6px}
+.pv-page small{position:absolute;bottom:-18px;right:4px;color:#9fb0c2;font-size:11px}
+.pv-note{color:#ffd88a;font-size:12px;text-align:center;padding:0 16px 6px}
+.pv-foot{display:flex;gap:10px;padding:12px 14px 16px;background:#18212b}
+.pv-foot button{flex:1;padding:14px;border-radius:16px;font-weight:800;font-size:15px}
+.pv-edit{background:rgba(255,255,255,.1);color:#fff}
+.pv-dl{background:#10b981;color:#fff}
+</style>
+<script>
+/* ===== Addımlı sınaq yaratma + PDF başlıq stilləri + rəng seçici + önizləmə ===== */
+(function(){
+  const $ = id => document.getElementById(id);
+  const LS = { get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }, set(k,v){ try { localStorage.setItem(k,v); } catch(e){} } };
+  const fieldOf = id => { const el = $(id); return el ? (el.closest(".field") || el) : null; };
+
+  // =================================================================
+  // 1) SINAQ: 3 ADDIM
+  // =================================================================
+  const titleH = $("exam-form-title");
+  const card = titleH && titleH.closest(".card");
+  if (card) {
+    const dbBox = $("ex-export") ? $("ex-export").parentElement : null;
+    const head = document.createElement("div");
+    head.className = "wz-head";
+    head.innerHTML = `
+      <div class="wz-top">
+        <button type="button" class="wz-back" id="wz-back" aria-label="Geri">←</button>
+        <div class="wz-tt"><div class="wz-title" id="wz-title">Sınaq yarat</div><div class="wz-sub" id="wz-sub">Yeni sınağınızı hazırlayın</div></div>
+        <span class="wz-badge" id="wz-badge">ADDIM 1 / 3</span>
+      </div>
+      <div class="wz-steps">
+        <i class="wz-ln l1"><b></b></i><i class="wz-ln l2"><b></b></i>
+        <div class="wz-st" data-s="1"><span class="wz-dot">1</span><span class="wz-lb">Əsas məlumatlar</span></div>
+        <div class="wz-st" data-s="2"><span class="wz-dot">2</span><span class="wz-lb">Suallar</span></div>
+        <div class="wz-st" data-s="3"><span class="wz-dot">3</span><span class="wz-lb">Göndər və yarat</span></div>
+      </div>
+      <div class="wz-bar"><i id="wz-bar"></i></div>`;
+
+    const p1 = document.createElement("section"); p1.className = "wz-pane"; p1.dataset.s = "1";
+    p1.innerHTML = `<div class="wz-sec"><div class="wz-sec-ic">📝</div><div><h4>Sınağın əsas məlumatları</h4><p>Sınaq haqqında əsas məlumatları daxil edin.</p></div></div>`;
+    const p2 = document.createElement("section"); p2.className = "wz-pane"; p2.dataset.s = "2";
+    p2.innerHTML = `<div class="wz-sec"><div class="wz-sec-ic">🧩</div><div><h4>Sualları əlavə edin</h4><p>Şəkil seçin, PDF-dən kəsin və ya tək-tək yazın.</p></div></div>`;
+    const p3 = document.createElement("section"); p3.className = "wz-pane"; p3.dataset.s = "3";
+    p3.innerHTML = `<div class="wz-sec"><div class="wz-sec-ic">🚀</div><div><h4>Göndər və yarat</h4><p>Hansı qruplara və nə vaxt açılacağını seçin.</p></div></div><div class="wz-sum" id="wz-sum"></div>`;
+
+    titleH.after(head); head.after(p1); p1.after(p2); p2.after(p3); // əvvəl DOM-a qoy ki, getElementById işləsin
+    // --- Addım 1 ---
+    [fieldOf("exam-title"), fieldOf("exam-topic"), fieldOf("exam-timelimit")].forEach(f => f && p1.appendChild(f));
+    const tl = $("exam-timelimit");
+    if (tl) {
+      const chips = document.createElement("div"); chips.className = "wz-chips";
+      chips.innerHTML = [30, 45, 60, 90, 120, 180].map(m => `<button type="button" class="wz-chip" data-m="${m}">${m} dəq</button>`).join("");
+      tl.after(chips);
+      const syncChips = () => chips.querySelectorAll(".wz-chip").forEach(c => c.classList.toggle("on", c.dataset.m === String(tl.value)));
+      chips.addEventListener("click", e => { const c = e.target.closest(".wz-chip"); if (!c) return; tl.value = c.dataset.m; syncChips(); });
+      tl.addEventListener("input", syncChips); syncChips();
+      window._wzSyncChips = syncChips;
+    }
+    p1.insertAdjacentHTML("beforeend", `<div class="wz-hint"><div class="ic">💡</div><div><b>Sualları növbəti addımda əlavə edəcəksiniz.</b><span>Qrupları və açılma vaxtını isə son addımda seçəcəksiniz.</span></div></div>`);
+    if (dbBox) { dbBox.style.margin = "0 0 4px"; p1.appendChild(dbBox); }
+
+    // --- Addım 2 ---
+    const qt = document.createElement("div"); qt.className = "wz-qtitle";
+    qt.innerHTML = `<h4>Suallar <span class="wz-cnt zero" id="wz-cnt">0 sual</span></h4><button type="button" class="wz-pdfbtn" id="wz-pdf2">📄 PDF</button>`;
+    p2.appendChild(qt);
+    const grid = card.querySelector(".upload-choice-grid");
+    [grid, $("exam-questions-builder"), $("exam-add-question-btn")].forEach(n => n && p2.appendChild(n));
+    const det = document.createElement("details"); det.className = "wz-det";
+    det.innerHTML = `<summary>📖 Mətnlər (mətnə bağlı suallar üçün, istəyə görə)</summary>`;
+    const tb = $("exam-texts-builder"), tBtn = $("exam-add-text-btn");
+    if (tb) {
+      const note = tb.previousElementSibling; // izah mətni
+      if (note && note.classList.contains("muted-note")) det.appendChild(note);
+      det.appendChild(tb);
+    }
+    if (tBtn) det.appendChild(tBtn);
+    p2.appendChild(det);
+
+    // --- Addım 3 ---
+    const gField = $("exam-groups-checklist") ? $("exam-groups-checklist").closest(".field") : null;
+    if (gField) {
+      const lbl = gField.querySelector("label");
+      const tools = document.createElement("div"); tools.className = "wz-gtools";
+      if (lbl) { lbl.textContent = "👥 Qruplar (birdən çox seçə bilərsiniz)"; tools.appendChild(lbl); }
+      tools.insertAdjacentHTML("beforeend", `<button type="button" class="wz-link" id="wz-gall">Hamısını seç</button>`);
+      gField.insertBefore(tools, gField.firstChild);
+      p3.appendChild(gField);
+    }
+    const actF = fieldOf("exam-activation");
+    if (actF) {
+      const l = actF.querySelector("label"); if (l) l.textContent = "🗓️ Aktivləşmə tarixi/saatı";
+      p3.appendChild(actF);
+      actF.insertAdjacentHTML("beforeend", `<div class="wz-chips"><button type="button" class="wz-chip" data-a="now">İndi</button><button type="button" class="wz-chip" data-a="h1">1 saat sonra</button><button type="button" class="wz-chip" data-a="tm">Sabah 09:00</button></div>`);
+      actF.querySelector(".wz-chips").addEventListener("click", e => {
+        const c = e.target.closest(".wz-chip"); if (!c) return;
+        const d = new Date();
+        if (c.dataset.a === "h1") d.setHours(d.getHours() + 1);
+        if (c.dataset.a === "tm") { d.setDate(d.getDate() + 1); d.setHours(9, 0, 0, 0); }
+        const p = n => String(n).padStart(2, "0");
+        $("exam-activation").value = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+        c.classList.add("on"); setTimeout(() => c.classList.remove("on"), 600);
+      });
+    }
+    const vF = fieldOf("exam-video");
+    if (vF) {
+      const vd = document.createElement("details"); vd.className = "wz-det";
+      vd.innerHTML = `<summary>🎬 İzahat videosu (istəyə görə)</summary>`;
+      vd.appendChild(vF); p3.appendChild(vd);
+      vd.open = !!$("exam-video").value;
+      window._wzVideoDet = vd;
+    }
+    const saveBtn = $("exam-save-btn"), saveRow = saveBtn ? saveBtn.parentElement : null;
+    p3.insertAdjacentHTML("beforeend", `<button type="button" class="wz-pdfbtn" id="wz-pdf3" style="width:100%;padding:12px;margin-top:6px;">📄 Kağız versiya (PDF) hazırla</button>`);
+    if (saveRow) { saveRow.style.display = "none"; p3.appendChild(saveRow); }
+
+    // köhnə boş qalan sətirləri və başlıqları təmizlə
+    Array.from(card.children).forEach(ch => {
+      if (ch === titleH || ch.id === "exam-edit-id") return;
+      if (ch.matches(".field-row") && !ch.querySelector("input,select,textarea,button")) ch.remove();
+      else if (ch.tagName === "H3") ch.remove();
+    });
+    const nav = document.createElement("div"); nav.className = "wz-nav";
+    nav.innerHTML = `<button type="button" class="wz-prev" id="wz-prev">← Geri</button><button type="button" class="wz-next" id="wz-next">Davam et →</button>`;
+    p3.after(nav);
+
+    let cur = 1;
+    const isEdit = () => !!$("exam-edit-id").value;
+    function updCount() {
+      const n = (typeof examQuestions !== "undefined" && examQuestions) ? examQuestions.length : 0;
+      const el = $("wz-cnt"); if (!el) return;
+      const old = el.textContent;
+      el.textContent = n + " sual"; el.classList.toggle("zero", !n);
+      if (old !== el.textContent && n) { el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); }
+    }
+    function updSummary() {
+      const v = id => ($(id) && $(id).value || "").trim();
+      const n = (typeof examQuestions !== "undefined" && examQuestions) ? examQuestions.length : 0;
+      const t = (typeof examTexts !== "undefined" && examTexts) ? examTexts.length : 0;
+      $("wz-sum").innerHTML = `<div class="w"><small>Sınaq adı</small><b>${esc(v("exam-title") || "—")}</b></div>
+        <div><small>Mövzu / Fənn</small><b>${esc(v("exam-topic") || "—")}</b></div>
+        <div><small>Vaxt</small><b>⏱ ${esc(v("exam-timelimit") || "30")} dəq</b></div>
+        <div><small>Suallar</small><b>🧩 ${n} sual</b></div>
+        <div><small>Mətnlər</small><b>📖 ${t}</b></div>`;
+    }
+    function shake(el) { if (!el) return; el.classList.remove("wz-err"); void el.offsetWidth; el.classList.add("wz-err"); setTimeout(() => el.classList.remove("wz-err"), 1600); }
+    function valid(s) {
+      if (s === 1) {
+        if (!$("exam-title").value.trim()) { shake(fieldOf("exam-title")); $("exam-title").focus(); toast("Sınağın adını yazın"); return false; }
+        if (!$("exam-topic").value.trim()) { shake(fieldOf("exam-topic")); $("exam-topic").focus(); toast("Mövzu / fənni yazın"); return false; }
+      }
+      if (s === 2 && !examQuestions.length) { shake(grid); toast("Ən azı 1 sual əlavə edin"); return false; }
+      return true;
+    }
+    function wzGo(s, noAnim) {
+      const dir = s >= cur ? "in-r" : "in-l";
+      cur = s;
+      [p1, p2, p3].forEach(p => { const on = p.dataset.s === String(s); p.classList.remove("in-r", "in-l"); p.classList.toggle("act", on); if (on && !noAnim) p.classList.add(dir); });
+      head.querySelectorAll(".wz-st").forEach(st => { const k = +st.dataset.s; st.classList.toggle("on", k === s); st.classList.toggle("done", k < s); st.querySelector(".wz-dot").textContent = k < s ? "✓" : k; });
+      head.querySelector(".l1 b").style.width = s > 1 ? "100%" : "0";
+      head.querySelector(".l2 b").style.width = s > 2 ? "100%" : "0";
+      $("wz-bar").style.width = (s / 3 * 100) + "%";
+      $("wz-badge").textContent = `ADDIM ${s} / 3`;
+      $("wz-prev").style.display = s === 1 ? "none" : "";
+      const nx = $("wz-next");
+      nx.classList.toggle("ok", s === 3);
+      nx.textContent = s === 3 ? (isEdit() ? "✓ Dəyişiklikləri saxla" : "✓ Sınağı yarat") : "Davam et →";
+      const fab = $("pdf-fab-btn");
+      if (fab && card.style.display !== "none") fab.style.display = s === 1 ? "none" : "flex";
+      if (s === 2) { updCount(); if (typeof examTexts !== "undefined" && examTexts.length) det.open = true; }
+      if (s === 3) { updSummary(); if (window._wzVideoDet) window._wzVideoDet.open = window._wzVideoDet.open || !!$("exam-video").value; }
+      if (window._wzSyncChips) window._wzSyncChips();
+      if (!noAnim) { const top = head.getBoundingClientRect().top + window.scrollY - 90; if (window.scrollY > top) window.scrollTo({ top: Math.max(0, top), behavior: "smooth" }); }
+    }
+    window.wzGo = wzGo;
+
+    head.querySelectorAll(".wz-st").forEach(st => st.addEventListener("click", () => {
+      const t = +st.dataset.s;
+      if (t <= cur || isEdit()) return wzGo(t);
+      for (let k = cur; k < t; k++) if (!valid(k)) { if (k !== cur) wzGo(k); return; }
+      wzGo(t);
+    }));
+    $("wz-prev").addEventListener("click", () => wzGo(Math.max(1, cur - 1)));
+    $("wz-next").addEventListener("click", () => {
+      if (cur < 3) { if (valid(cur)) wzGo(cur + 1); return; }
+      if (!getSelectedExamGroupIds().length) { shake(gField); toast("Ən azı 1 qrup seçin"); return; }
+      if (!$("exam-activation").value) { shake(actF); toast("Aktivləşmə tarixini seçin"); return; }
+      if (!valid(1)) return wzGo(1);
+      if (!valid(2)) return wzGo(2);
+      saveBtn.click();
+    });
+    $("wz-back").addEventListener("click", () => $("ex-back-btn").click());
+    $("wz-gall").addEventListener("click", () => {
+      const all = Array.from(document.querySelectorAll("#exam-groups-checklist input"));
+      const allOn = all.length && all.every(i => i.checked);
+      setSelectedExamGroupIds(allOn ? [] : all.map(i => i.value));
+      $("wz-gall").textContent = allOn ? "Hamısını seç" : "Seçimi təmizlə";
+    });
+    const openPdf = () => { if (!examQuestions.length) { toast("Əvvəlcə sual əlavə edin"); return; } $("pdf-fab-btn").click(); };
+    $("wz-pdf2").addEventListener("click", openPdf);
+    $("wz-pdf3").addEventListener("click", openPdf);
+
+    // yadda saxla düyməsinin vəziyyəti (disabled) → "Sınağı yarat" düyməsinə
+    if (saveBtn) new MutationObserver(() => { $("wz-next").disabled = cur === 3 && saveBtn.disabled; if (saveBtn.disabled && cur === 3) $("wz-next").textContent = "⏳ Saxlanılır..."; else if (cur === 3) wzGo(3, true); }).observe(saveBtn, { attributes: true, attributeFilter: ["disabled"] });
+    // başlıq (yeni / redaktə)
+    const syncTitle = () => {
+      const t = titleH.textContent || "";
+      const ed = isEdit();
+      $("wz-title").textContent = ed ? "Sınağı redaktə et" : "Sınaq yarat";
+      $("wz-sub").textContent = ed ? (t.split(":").slice(1).join(":").trim() || "Dəyişiklikləri edin") : "Yeni sınağınızı hazırlayın";
+      if (cur === 3) wzGo(3, true);
+    };
+    new MutationObserver(syncTitle).observe(titleH, { childList: true, characterData: true, subtree: true });
+    const qb = $("exam-questions-builder");
+    if (qb) new MutationObserver(updCount).observe(qb, { childList: true });
+
+    // rejim dəyişəndə addım 1-dən başla
+    if (typeof examMode === "function") {
+      const oem = examMode;
+      examMode = function (m) { oem(m); if (m === "create") { wzGo(1, true); syncTitle(); } };
+    }
+    // "PDF hazırla" qısa yolu → birbaşa suallar addımı
+    window.adminPdf = function () {
+      adminNewExam();
+      wzGo(2, true);
+      if (examQuestions.length) $("pdf-fab-btn").click();
+      else toast("Əvvəlcə sualları əlavə et, sonra 📄 PDF düyməsi ilə hazırla");
+    };
+    wzGo(1, true);
+  }
+
+  // =================================================================
+  // 2) PDF BAŞLIQ STİLLƏRİ (jsPDF, mm)
+  // =================================================================
+  const mix = (c, t) => c.map(v => Math.round(v + (255 - v) * t));
+  const dark = (c, t) => c.map(v => Math.round(v * (1 - t)));
+  const UP = s => String(s || "").toLocaleUpperCase("az");
+  const capH = sz => sz * 0.3528 * 0.71;
+  function poly(doc, pts, st) { const d = []; for (let i = 1; i < pts.length; i++) d.push([pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]]); doc.lines(d, pts[0][0], pts[0][1], [1, 1], st, true); }
+  function fit(doc, t, maxW, sz, min) { doc.setFontSize(sz); while (sz > min && doc.getTextWidth(t) > maxW) { sz -= 0.5; doc.setFontSize(sz); } return sz; }
+  const B = (doc, t, x, y, o) => boldText(doc, t, x, y, o);
+
+  const HS = {
+    classic(doc, o) {
+      const { pageW, marginX: mX } = o, [cr, cg, cb] = o.color;
+      const headerH = o.pageH * 0.09, stops = [[11, 60, 93], [23, 106, 150], [90, 169, 214]], steps = 90, L = (a, b, t) => Math.round(a + (b - a) * t);
+      for (let i = 0; i < steps; i++) {
+        const t = i / (steps - 1), A = t < .5 ? stops[0] : stops[1], Z = t < .5 ? stops[1] : stops[2], tt = t < .5 ? t / .5 : (t - .5) / .5;
+        doc.setFillColor(L(A[0], Z[0], tt), L(A[1], Z[1], tt), L(A[2], Z[2], tt));
+        doc.rect(i * pageW / steps, 0, pageW / steps + 0.6, headerH, "F");
+      }
+      doc.setTextColor(255, 255, 255); setPdfFont(doc, "bold");
+      if (o.classVal) { doc.setFontSize(11); B(doc, o.classVal, mX, headerH / 2 + 2.5); }
+      doc.setFontSize(15); B(doc, "TTM", pageW / 2, headerH / 2 - 0.5, { align: "center" });
+      doc.setFontSize(6.5); B(doc, "TƏDRİS MƏRKƏZİ", pageW / 2, headerH / 2 + 5, { align: "center" });
+      if (o.numberVal) { doc.setFontSize(11); B(doc, o.numberVal, pageW - mX, headerH / 2 + 2.5, { align: "right" }); }
+      let y = headerH + 14;
+      if (o.title) {
+        doc.setTextColor(cr, cg, cb); doc.setFontSize(19);
+        const tl = doc.splitTextToSize(o.title, pageW - 44);
+        B(doc, tl, pageW / 2, y, { align: "center" }); y += tl.length * 8 + 3;
+        doc.setDrawColor(cr, cg, cb); doc.setLineWidth(0.4);
+        doc.line(pageW / 2 - 23, y, pageW / 2 - 2.5, y); doc.line(pageW / 2 + 2.5, y, pageW / 2 + 23, y);
+        doc.setFillColor(cr, cg, cb); doc.circle(pageW / 2, y, 1, "F"); y += 10;
+      } else y += 4;
+      return y;
+    },
+    test(doc, o) { // Dairəvi nömrə + "TEST" zolağı
+      const { pageW: W, marginX: mX } = o, C = o.color, Lt = mix(C, .55), cx = mX + 9, cy = 17;
+      setPdfFont(doc, "bold");
+      doc.setDrawColor(205, 210, 216); doc.setLineWidth(0.6); doc.line(cx, 25.5, W - mX, 25.5);
+      doc.setFillColor(...C); poly(doc, [[cx + 4, 9], [cx + 52, 9], [cx + 49, 14], [cx + 4, 14]], "F");
+      doc.setFillColor(...Lt); for (let i = 0; i < 4; i++) { const x = cx + 54 + i * 3.3; poly(doc, [[x, 9], [x + 1.7, 9], [x - 1.3, 14], [x - 3, 14]], "F"); }
+      doc.setFillColor(...C); poly(doc, [[cx + 57, 15.5], [cx + 60.6, 15.5], [cx + 66.5, 25.5], [cx + 62.9, 25.5]], "F");
+      doc.setFillColor(255, 255, 255); doc.setDrawColor(...C); doc.setLineWidth(1.1); doc.circle(cx, cy, 8.5, "FD");
+      doc.setTextColor(...C); const bs = fit(doc, o.badge || "1", 12, 20, 9); B(doc, o.badge || "1", cx, cy + capH(bs) / 2, { align: "center" });
+      doc.setTextColor(...dark(C, .1)); doc.setFontSize(15); B(doc, "TEST", cx + 12, 22.8, { charSpace: 0.7 });
+      if (o.title) { doc.setTextColor(...C); fit(doc, UP(o.title), W - mX - (cx + 70), 13, 7.5); B(doc, UP(o.title), W - mX, 22.8, { align: "right" }); }
+      const meta = [o.classVal, o.numberVal].filter(Boolean).join("   ·   ");
+      if (meta) { doc.setTextColor(120, 130, 142); doc.setFontSize(8.5); doc.text(meta, W - mX, 15.5, { align: "right" }); }
+      return 34;
+    },
+    brans(doc, o) { // Sağda nömrəli tab + kənar xətt + yan yazı
+      const { pageW: W, pageH: H, marginX: mX } = o, C = o.color;
+      setPdfFont(doc, "bold");
+      const T = UP(o.title || "");
+      let ts = fit(doc, T, 120, 14, 9), tw = T ? doc.getTextWidth(T) : 0;
+      const tabW = 30, tabX = Math.max(mX + 42, W - mX - 2 - tw - 5 - tabW);
+      doc.setFillColor(...C); doc.roundedRect(tabX, -8, tabW, 29, 5, 5, "F");
+      doc.setTextColor(255, 255, 255); const bs = fit(doc, o.badge || "01", 24, 28, 10); B(doc, o.badge || "01", tabX + tabW / 2, 10.5 + capH(bs) / 2, { align: "center" });
+      if (T) { doc.setTextColor(...C); doc.setFontSize(ts); B(doc, T, tabX + tabW + 5, 14.5); }
+      doc.setDrawColor(...C); doc.setLineWidth(0.45);
+      doc.line(tabX + tabW, 17.5, W - 6, 17.5); doc.line(W - 6, 17.5, W - 6, 118);
+      const label = UP([o.numberVal, o.classVal].filter(Boolean).join("  ·  ") || "TTM TƏDRİS MƏRKƏZİ");
+      doc.setFontSize(8.5); const lw = doc.getTextWidth(label), bh = Math.min(120, Math.max(40, lw + 14));
+      doc.setFillColor(...mix(C, .3)); doc.roundedRect(W - 8.6, 120, 5.2, bh, 1.2, 1.2, "F");
+      doc.setFillColor(...C); doc.circle(W - 6, 119, 0.9, "F"); doc.circle(W - 6, 121 + bh, 0.9, "F");
+      doc.setTextColor(255, 255, 255); B(doc, label, W - 6 + capH(8.5) / 2, 120 + bh / 2 + lw / 2, { angle: 90 });
+      doc.setLineDashPattern([1.3, 1.1], 0); doc.line(W - 6, 122 + bh, W - 6, H - 12); doc.setLineDashPattern([], 0);
+      doc.setTextColor(140, 150, 160); doc.setFontSize(7.5); doc.text("TTM TƏDRİS MƏRKƏZİ", mX, 10);
+      if (o.classVal && tabX > mX + 40) { doc.setTextColor(...C); doc.setFontSize(10); B(doc, o.classVal, mX, 15.5); }
+      return 30;
+    },
+    unite(doc, o) { // Böyük banner + bucaqlı nömrə nişanı
+      const { pageW: W, marginX: mX } = o, C = o.color, A = [243, 146, 0];
+      const y0 = 9, h = 22, x = mX, w = W - 2 * mX, bx = x + w - 54;
+      setPdfFont(doc, "bold");
+      doc.setFillColor(...dark(C, .45)); doc.roundedRect(x + 1.4, y0 + 1.8, w - 1.4, h, 7, 7, "F");
+      doc.setFillColor(...C); doc.roundedRect(x, y0, w - 2, h, 7, 7, "F");
+      doc.setFillColor(...dark(A, .35)); poly(doc, [[bx + 14, y0 - 4], [bx + 55, y0 - 4], [bx + 43, y0 + h + 4], [bx + 2, y0 + h + 4]], "F");
+      doc.setFillColor(...A); poly(doc, [[bx + 12, y0 - 4], [bx + 52, y0 - 4], [bx + 40, y0 + h + 3], [bx, y0 + h + 3]], "F");
+      doc.setFillColor(254, 238, 216); doc.roundedRect(bx + 16, y0 + 0.5, 18, 12, 3.5, 3.5, "F");
+      doc.setTextColor(...dark(A, .25)); const bs = fit(doc, o.badge || "1.", 15, 19, 9); B(doc, o.badge || "1.", bx + 25, y0 + 6.5 + capH(bs) / 2, { align: "center" });
+      doc.setTextColor(255, 255, 255); const lb = UP(o.numberVal || "BÖLMƏ"); fit(doc, lb, 26, 10.5, 6); B(doc, lb, bx + 24, y0 + h - 1.2, { align: "center", charSpace: 0.3 });
+      if (o.title) {
+        const T = UP(o.title), maxW = bx - x - 10; let sz = 18; doc.setFontSize(sz);
+        let lines = doc.splitTextToSize(T, maxW);
+        while ((lines.length > 2 || lines.some(l => doc.getTextWidth(l) > maxW)) && sz > 10) { sz -= 1; doc.setFontSize(sz); lines = doc.splitTextToSize(T, maxW); }
+        lines = lines.slice(0, 2); const lh = sz * 0.3528 * 1.1, cy = y0 + h / 2 - (lines.length - 1) * lh / 2 + capH(sz) / 2;
+        doc.setTextColor(255, 255, 255); B(doc, lines, (x + bx) / 2 + 2, cy, { align: "center", lineHeightFactor: 1.1 });
+      }
+      let y = y0 + h + 10;
+      if (o.classVal) {
+        doc.setFontSize(9); const cw = doc.getTextWidth(UP(o.classVal)) + 12;
+        doc.setFillColor(...mix(C, .25)); poly(doc, [[x - 3, y - 1], [x + cw, y - 1], [x + cw - 2.5, y + 5.5], [x - 3, y + 5.5]], "F");
+        doc.setTextColor(255, 255, 255); B(doc, UP(o.classVal), x + 3, y + 3.5);
+        doc.setDrawColor(...mix(C, .6)); doc.setLineWidth(0.4); doc.line(x + cw + 2, y + 2.2, W - mX, y + 2.2);
+        y += 14;
+      }
+      return y;
+    },
+    minimal(doc, o) { // YENİ: Modern xətt
+      const { pageW: W, marginX: mX } = o, C = o.color;
+      setPdfFont(doc, "bold");
+      doc.setFillColor(...C); doc.roundedRect(W - mX - 24, 8, 24, 16, 3.5, 3.5, "F");
+      doc.setTextColor(255, 255, 255); doc.setFontSize(14); B(doc, "TTM", W - mX - 12, 16.3, { align: "center" });
+      doc.setFontSize(5.2); doc.text("TƏDRİS MƏRKƏZİ", W - mX - 12, 21, { align: "center" });
+      doc.setTextColor(...C); fit(doc, o.title || "Sınaq", W - 2 * mX - 34, 20, 11); B(doc, o.title || "Sınaq", mX, 16.5);
+      const meta = [o.classVal, o.numberVal, o.badge ? "№ " + o.badge : ""].filter(Boolean).join("   •   ");
+      if (meta) { doc.setTextColor(120, 130, 142); doc.setFontSize(9); doc.text(meta, mX, 23); }
+      doc.setDrawColor(...C); doc.setLineWidth(1.6); doc.line(mX, 28.5, mX + 55, 28.5);
+      doc.setDrawColor(...mix(C, .7)); doc.setLineWidth(0.35); doc.line(mX + 57, 28.5, W - mX, 28.5);
+      doc.setFillColor(...C); doc.circle(mX + 56, 28.5, 0.8, "F");
+      return 37;
+    },
+    student(doc, o) { // YENİ: Şagird vərəqi (ad-soyad sahəli)
+      const { pageW: W, marginX: mX } = o, C = o.color;
+      setPdfFont(doc, "bold");
+      doc.setFillColor(...C); doc.rect(0, 0, W, 4, "F");
+      doc.setFillColor(...mix(C, .55)); doc.rect(0, 4, W, 1.2, "F");
+      if (o.badge) { doc.setFillColor(...C); doc.circle(mX + 5.5, 14, 5.5, "F"); doc.setTextColor(255, 255, 255); const bs = fit(doc, o.badge, 8, 13, 7); B(doc, o.badge, mX + 5.5, 14 + capH(bs) / 2, { align: "center" }); }
+      doc.setTextColor(...C); fit(doc, o.title || "Sınaq", W - 2 * mX - 50, 16, 10); B(doc, o.title || "Sınaq", W / 2, 16, { align: "center" });
+      doc.setTextColor(120, 130, 142); doc.setFontSize(8.5); doc.text(o.numberVal || "TTM Tədris Mərkəzi", W - mX, 15, { align: "right" });
+      const by = 21, bh = 10, bw = W - 2 * mX, cols = [0.42, 0.2, 0.2, 0.18];
+      doc.setFillColor(...mix(C, .94)); doc.setDrawColor(...mix(C, .55)); doc.setLineWidth(0.35); doc.roundedRect(mX, by, bw, bh, 2.5, 2.5, "FD");
+      const labs = ["Ad, soyad:", "Sinif: " + (o.classVal || ""), "Tarix:", "Bal:"]; let cx = mX;
+      setPdfFont(doc, "normal"); doc.setFontSize(8.5); doc.setTextColor(...dark(C, .1));
+      cols.forEach((f, i) => { if (i) doc.line(cx, by + 2, cx, by + bh - 2); doc.text(labs[i], cx + 3, by + 6.3); cx += bw * f; });
+      return 39;
+    }
+  };
+  window.ttmPdfHeader = function (doc, key, o) { return (HS[key] || HS.classic)(doc, o); };
+
+  // =================================================================
+  // 3) RƏNG SEÇİCİ
+  // =================================================================
+  const PAL = ["#0B3C5D","#1D4ED8","#2563EB","#0EA5E9","#0891B2","#0D9488","#059669","#16A34A","#65A30D","#CA8A04","#F59E0B","#EA580C","#DC2626","#E11D48","#DB2777","#C026D3","#7C3AED","#4F46E5","#1E293B","#334155","#64748B","#7F1D1D","#14532D","#000000"];
+  const h2r = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const r2h = (r, g, b) => "#" + [r, g, b].map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0")).join("").toUpperCase();
+  function hsv2rgb(h, s, v) { const f = (n, k = (n + h / 60) % 6) => v - v * s * Math.max(Math.min(k, 4 - k, 1), 0); return [f(5), f(3), f(1)].map(x => x * 255); }
+  function rgb2hsv(r, g, b) { r /= 255; g /= 255; b /= 255; const v = Math.max(r, g, b), c = v - Math.min(r, g, b); const h = c && (v === r ? (g - b) / c : v === g ? 2 + (b - r) / c : 4 + (r - g) / c); return [60 * (h < 0 ? h + 6 : h), v && c / v, v]; }
+  const recent = () => { try { return JSON.parse(LS.get("ttm_recent_colors") || "[]"); } catch (e) { return []; } };
+
+  window.ttmPickColor = function (start) {
+    return new Promise(res => {
+      start = /^#[0-9a-f]{6}$/i.test(start || "") ? start.toUpperCase() : "#0B3C5D";
+      let [H, S, V] = rgb2hsv(...h2r(start)), cur = start;
+      const ov = document.createElement("div"); ov.className = "cp-ov";
+      const rec = recent();
+      ov.innerHTML = `<div class="cp-box" role="dialog">
+        <div class="cp-hd"><b>🎨 Rəng seçin</b><button type="button" class="cp-x">✕</button></div>
+        <div class="cp-pv"><div class="cp-cmp" title="Köhnə | Yeni"><i style="background:${start}"></i><i class="cp-new"></i></div><input class="cp-hex" maxlength="7" spellcheck="false" />
+          ${window.EyeDropper ? `<button type="button" class="cp-eye">🎯 Ekrandan</button>` : ""}</div>
+        <div class="cp-sv"><span class="cp-k"></span></div>
+        <div class="cp-hue"><span class="cp-k"></span></div>
+        <div class="cp-lb">Hazır palitra</div>
+        <div class="cp-grid">${PAL.map((c, i) => `<button type="button" class="cp-sw" data-c="${c}" style="background:${c};animation-delay:${60 + i * 18}ms"></button>`).join("")}</div>
+        ${rec.length ? `<div class="cp-lb">Son istifadə olunan</div><div class="cp-grid">${rec.map((c, i) => `<button type="button" class="cp-sw" data-c="${c}" style="background:${c};animation-delay:${i * 30}ms"></button>`).join("")}</div>` : ""}
+        <div class="cp-act"><button type="button" class="cp-cancel">Ləğv et</button><button type="button" class="cp-ok">✓ Seç</button></div></div>`;
+      document.body.appendChild(ov);
+      const q = s => ov.querySelector(s), sv = q(".cp-sv"), hue = q(".cp-hue"), hex = q(".cp-hex");
+      function paint(fromHex) {
+        if (!fromHex) cur = r2h(...hsv2rgb(H, S, V));
+        sv.style.backgroundColor = `hsl(${H},100%,50%)`;
+        sv.querySelector(".cp-k").style.cssText = `left:${S * 100}%;top:${(1 - V) * 100}%;background:${cur}`;
+        hue.querySelector(".cp-k").style.cssText = `left:${H / 360 * 100}%;background:hsl(${H},100%,50%)`;
+        q(".cp-new").style.background = cur;
+        if (document.activeElement !== hex) hex.value = cur;
+        ov.querySelectorAll(".cp-sw").forEach(b => b.classList.toggle("on", b.dataset.c.toUpperCase() === cur));
+      }
+      function setHex(h) { cur = h.toUpperCase(); [H, S, V] = rgb2hsv(...h2r(cur)); paint(true); }
+      function drag(el, fn) {
+        el.addEventListener("pointerdown", e => {
+          el.setPointerCapture(e.pointerId); el.classList.add("cp-drag");
+          const mv = ev => { const r = el.getBoundingClientRect(); fn(Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width)), Math.max(0, Math.min(1, (ev.clientY - r.top) / r.height))); paint(); };
+          mv(e); el.onpointermove = mv;
+          el.onpointerup = el.onpointercancel = () => { el.onpointermove = null; el.classList.remove("cp-drag"); };
+        });
+      }
+      drag(sv, (x, y) => { S = x; V = 1 - y; });
+      drag(hue, x => { H = Math.min(359.9, x * 360); });
+      hex.addEventListener("input", () => { let v = hex.value.trim(); if (v[0] !== "#") v = "#" + v; if (/^#[0-9a-f]{6}$/i.test(v)) setHex(v); });
+      hex.addEventListener("blur", () => { hex.value = cur; });
+      ov.querySelectorAll(".cp-sw").forEach(b => b.addEventListener("click", () => setHex(b.dataset.c)));
+      if (q(".cp-eye")) q(".cp-eye").addEventListener("click", async () => { try { const r = await new EyeDropper().open(); setHex(r.sRGBHex.length === 7 ? r.sRGBHex : r2h(...(r.sRGBHex.match(/\d+/g) || [0, 0, 0]).map(Number))); } catch (e) {} });
+      const close = val => {
+        ov.classList.add("out"); setTimeout(() => ov.remove(), 220);
+        if (val) { const r = [val].concat(recent().filter(c => c !== val)).slice(0, 9); LS.set("ttm_recent_colors", JSON.stringify(r)); }
+        res(val);
+      };
+      q(".cp-x").onclick = q(".cp-cancel").onclick = () => close(null);
+      q(".cp-ok").onclick = () => close(cur);
+      ov.addEventListener("click", e => { if (e.target === ov) close(null); });
+      paint(true);
+    });
+  };
+
+  // =================================================================
+  // 4) PDF PƏNCƏRƏSİ: yeni düzən, stil kartları, canlı başlıq önizləməsi
+  // =================================================================
+  const ovl = $("pdf-modal-overlay"), box = ovl && ovl.firstElementChild, gbtn = $("pdf-generate-btn");
+  if (box && gbtn) {
+    const STY = [
+      ["classic", "Klassik", "", `<defs><linearGradient id="hsg" x1="0" x2="1"><stop offset="0" stop-color="#0B3C5D"/><stop offset=".5" stop-color="#176A96"/><stop offset="1" stop-color="#5AA9D6"/></linearGradient></defs><rect width="100" height="12" fill="url(#hsg)"/><rect x="44" y="3.5" width="12" height="3" rx="1" fill="#fff"/><rect x="30" y="18" width="40" height="4" rx="1.5" class="c"/><rect x="40" y="25" width="20" height=".8" class="c"/>`],
+      ["test", "Test", "", `<circle cx="11" cy="12" r="7" fill="#fff" stroke-width="1.6" class="cs"/><text x="11" y="15" font-size="8" font-weight="800" text-anchor="middle" class="c">1</text><path d="M18 6h28l-2 4H18z" class="c"/><path d="M48 6h1.5l-2 4H46zM51 6h1.5l-2 4H49z" class="c" opacity=".45"/><path d="M50 11h2.5l4 8h-2.5z" class="c"/><text x="19" y="18" font-size="6" font-weight="800" fill="#334">TEST</text><rect x="64" y="14" width="30" height="3" rx="1" class="c"/><rect x="11" y="20.5" width="85" height=".8" fill="#ccd3db"/>`],
+      ["brans", "Branş", "", `<rect x="46" y="-4" width="17" height="16" rx="3" class="c"/><text x="54.5" y="9" font-size="7" font-weight="800" fill="#fff" text-anchor="middle">04</text><rect x="66" y="4" width="22" height="3" rx="1" class="c"/><path d="M63 10h33v32" fill="none" stroke-width=".7" class="cs"/><rect x="94.5" y="40" width="3" height="18" rx=".8" class="c" opacity=".7"/><path d="M96 58v6" stroke-dasharray="1.2 1" stroke-width=".7" class="cs"/>`],
+      ["unite", "Bölmə", "", `<rect x="5" y="5.5" width="88" height="15" rx="5" fill="#000" opacity=".25"/><rect x="4" y="4.5" width="88" height="15" rx="5" class="c"/><rect x="18" y="9.5" width="40" height="5" rx="1.5" fill="#fff"/><path d="M72 2h22l-6 21H66z" fill="#F39200"/><rect x="77" y="4.5" width="9" height="7" rx="2" fill="#FEEED8"/><rect x="4" y="25" width="22" height="3.5" class="c" opacity=".7"/>`],
+      ["minimal", "Modern", "YENİ", `<rect x="4" y="6" width="50" height="5" rx="1.5" class="c"/><rect x="4" y="14" width="34" height="2" rx="1" fill="#aab4c0"/><rect x="80" y="4" width="16" height="12" rx="2.5" class="c"/><text x="88" y="12" font-size="5" font-weight="800" fill="#fff" text-anchor="middle">TTM</text><rect x="4" y="20" width="30" height="1.6" class="c"/><rect x="35" y="20.4" width="61" height=".6" class="c" opacity=".35"/>`],
+      ["student", "Şagird vərəqi", "YENİ", `<rect width="100" height="2.6" class="c"/><circle cx="8" cy="9.5" r="3.6" class="c"/><rect x="32" y="7" width="36" height="4" rx="1.5" class="c"/><rect x="4" y="15" width="92" height="8" rx="2" fill="#fff" stroke-width=".6" class="cs" style="fill:#f3f6fa"/><path d="M42 16.5v5M60 16.5v5M78 16.5v5" stroke="#b7c2ce" stroke-width=".5"/><rect x="7" y="18" width="14" height="1.6" fill="#8a97a6"/>`]
+    ];
+    const lines = `<g class="l"><rect x="4" y="34" width="42" height="2"/><rect x="4" y="39" width="36" height="2"/><rect x="4" y="44" width="40" height="2"/><rect x="54" y="34" width="40" height="2"/><rect x="54" y="39" width="34" height="2"/><rect x="54" y="44" width="38" height="2"/><rect x="4" y="54" width="30" height="2"/><rect x="54" y="54" width="32" height="2"/></g>`;
+
+    // gizli sahələr
+    const close = $("pdf-modal-close-btn"), h3 = box.querySelector("h3"), pNote = h3 && h3.nextElementSibling;
+    const rows = Array.from(box.querySelectorAll(":scope > .field-row"));
+    const hd = document.createElement("div"); hd.className = "pm-head";
+    if (h3) hd.appendChild(h3); if (pNote && pNote.tagName === "P") hd.appendChild(pNote);
+    const s1 = document.createElement("div"); s1.className = "pm-sec";
+    s1.innerHTML = `<input type="hidden" id="pdf-hstyle-field" value="classic" /><div class="pm-sec-t"><b>1</b>Başlıq stili</div>
+      <div class="hs-grid" id="hs-grid">${STY.map(s => `<button type="button" class="hs-card" data-k="${s[0]}">${s[2] ? `<em>${s[2]}</em>` : ""}<svg viewBox="0 0 100 62">${s[3]}${lines}</svg><span>${s[1]}</span></button>`).join("")}</div>
+      <div class="hs-live" id="hs-live"><canvas id="hs-canvas" width="840" height="252"></canvas><div class="hs-live-msg" id="hs-msg">Önizləmə hazırlanır…</div><span class="hs-live-tag">Canlı önizləmə</span></div>`;
+    const s2 = document.createElement("div"); s2.className = "pm-sec";
+    s2.innerHTML = `<div class="pm-sec-t"><b>2</b>Başlıq məlumatları</div>`;
+    const s3 = document.createElement("div"); s3.className = "pm-sec";
+    s3.innerHTML = `<div class="pm-sec-t"><b>3</b>Rəng və səhifə</div>`;
+    if (rows[0]) s2.appendChild(rows[0]);
+    if (rows[1]) s2.appendChild(rows[1]);
+    s2.insertAdjacentHTML("beforeend", `<div class="field-row" id="pdf-hnum-row"><div class="field"><label id="pdf-hnum-label">Nömrə</label><input type="text" id="pdf-hnum-field" maxlength="5" placeholder="Məs: 1" /></div></div>`);
+    rows.slice(2).forEach(r => s3.appendChild(r));
+    const foot = document.createElement("div"); foot.className = "pm-foot";
+    foot.innerHTML = `<button type="button" class="pm-prev" id="pdf-preview-btn">👁 Önizlə</button>`;
+    foot.appendChild(gbtn); gbtn.style.width = "";
+    // əvvəlki (sonradan əlavə olunmuş) sətirlər, məs. optik forma — 3-cü bölməyə
+    Array.from(box.children).forEach(ch => { if (ch !== close && ch.matches(".field-row")) s3.appendChild(ch); });
+    box.innerHTML = ""; box.append(close, hd, s1, s2, s3, foot);
+
+    // rəng sahəsini gözəl düyməyə çevir
+    const col = $("pdf-color-field");
+    const trig = document.createElement("button"); trig.type = "button"; trig.className = "cp-trigger";
+    trig.innerHTML = `<span class="sw"></span><span class="hx"></span><span class="ar">🎨</span>`;
+    col.style.display = "none"; col.after(trig);
+    const paintTrig = () => { trig.querySelector(".sw").style.background = col.value; trig.querySelector(".hx").textContent = col.value.toUpperCase(); $("hs-grid").style.setProperty("--hc", col.value); };
+    trig.addEventListener("click", async () => {
+      const v = await ttmPickColor(col.value);
+      if (v) { col.value = v.toLowerCase(); LS.set("ttm_pdf_color", col.value); paintTrig(); col.dispatchEvent(new Event("input", { bubbles: true })); col.dispatchEvent(new Event("change", { bubbles: true })); }
+    });
+
+    // stil seçimi
+    const NUM = { test: ["Test nömrəsi (dairədə)", "Məs: 1"], brans: ["Nömrə (tabda)", "Məs: 04"], unite: ["Bölmə nömrəsi", "Məs: 1."], student: ["Nömrə (istəyə görə)", "Məs: 3"], minimal: ["Nömrə (istəyə görə)", "Məs: 2"] };
+    const SIDE = { classic: "Sağ tərəf yazısı (istəyə görə)", test: "Əlavə yazı (sağ üstdə)", brans: "Yan zolaq yazısı (məs: RİYAZİYYAT)", unite: "Nişan yazısı (məs: BÖLMƏ)", minimal: "Əlavə yazı (istəyə görə)", student: "Sağ üst yazı (istəyə görə)" };
+    const sideLbl = $("pdf-number-field") ? $("pdf-number-field").closest(".field").querySelector("label") : null;
+    function setStyle(k, noLive) {
+      $("pdf-hstyle-field").value = k; LS.set("ttm_pdf_hstyle", k);
+      $("hs-grid").querySelectorAll(".hs-card").forEach(c => c.classList.toggle("on", c.dataset.k === k));
+      const n = NUM[k];
+      $("pdf-hnum-row").style.display = n ? "" : "none";
+      if (n) { $("pdf-hnum-label").textContent = n[0]; $("pdf-hnum-field").placeholder = n[1]; }
+      if (sideLbl) sideLbl.textContent = SIDE[k] || SIDE.classic;
+      const SPH = { brans: "Məs: RİYAZİYYAT", unite: "Məs: BÖLMƏ", test: "Məs: Riyaziyyat" };
+      if ($("pdf-number-field")) $("pdf-number-field").placeholder = SPH[k] || "Məs: BSİ-1";
+      if ($("pdf-number-field")) $("pdf-number-field").maxLength = (k === "brans" || k === "test" || k === "student") ? 30 : 14;
+      if (!noLive) liveSoon();
+    }
+    $("hs-grid").addEventListener("click", e => { const c = e.target.closest(".hs-card"); if (c) { setStyle(c.dataset.k); c.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" }); } });
+
+    // yaddaşdan bərpa
+    const sc = LS.get("ttm_pdf_color"); if (sc && /^#[0-9a-f]{6}$/i.test(sc)) col.value = sc;
+    paintTrig();
+    setStyle(LS.get("ttm_pdf_hstyle") && HS[LS.get("ttm_pdf_hstyle")] ? LS.get("ttm_pdf_hstyle") : "classic", true);
+
+    // --- canlı başlıq önizləməsi ---
+    let liveT = null, liveN = 0;
+    const liveSoon = () => { clearTimeout(liveT); liveT = setTimeout(renderLive, 380); };
+    async function renderLive() {
+      if (ovl.style.display === "none") return;
+      const my = ++liveN, msg = $("hs-msg"), cv = $("hs-canvas");
+      try {
+        await ensureLib("jspdf"); await ensureLib("pdfjs");
+        const keep = window._ppCard; window._ppCard = null;
+        const doc = new window.jspdf.jsPDF({ unit: "mm", format: "a4" });
+        window._ppCard = keep;
+        await ensurePdfFont(doc);
+        const v = id => ($(id) && $(id).value || "").trim();
+        const o = { title: v("pdf-title-field") || v("exam-title") || "Sınaq adı", classVal: v("pdf-class-field"), numberVal: v("pdf-number-field"), badge: v("pdf-hnum-field"), color: hexToRgb(col.value), pageW: 210, pageH: 297, marginX: 12 };
+        const y = window.ttmPdfHeader(doc, $("pdf-hstyle-field").value, o);
+        doc.setFillColor(226, 231, 237);
+        const two = ($("pdf-columns-field") || {}).value !== "1";
+        for (let i = 0; i < 6; i++) { const yy = y + i * 9; if (two) { doc.rect(12, yy, 80 - (i % 3) * 9, 2.4, "F"); doc.rect(110, yy, 76 - (i % 2) * 12, 2.4, "F"); } else doc.rect(12, yy, 170 - (i % 3) * 20, 2.4, "F"); }
+        if (two) { doc.setDrawColor(...mix(o.color, .6)); doc.setLineWidth(0.3); doc.line(105, y - 2, 105, y + 52); }
+        const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(doc.output("arraybuffer")) }).promise;
+        const pg = await pdf.getPage(1);
+        if (my !== liveN) return;
+        const wCss = cv.parentElement.clientWidth || 440, dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const vp = pg.getViewport({ scale: wCss * dpr / pg.getViewport({ scale: 1 }).width });
+        const off = document.createElement("canvas"); off.width = vp.width; off.height = Math.round(vp.height * 0.3);
+        const ctx = off.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, off.width, off.height);
+        await pg.render({ canvasContext: ctx, viewport: vp }).promise;
+        if (my !== liveN) return;
+        cv.width = off.width; cv.height = off.height; cv.getContext("2d").drawImage(off, 0, 0);
+        msg.style.display = "none";
+      } catch (e) { console.error(e); if (my === liveN) { msg.textContent = "Önizləmə alınmadı (internet?)"; msg.style.display = "flex"; } }
+    }
+    ["pdf-title-field", "pdf-class-field", "pdf-number-field", "pdf-hnum-field", "pdf-columns-field"].forEach(id => { const el = $(id); if (el) { el.addEventListener("input", liveSoon); el.addEventListener("change", liveSoon); } });
+    col.addEventListener("input", liveSoon);
+    $("pdf-fab-btn").addEventListener("click", () => {
+      if (!$("pdf-title-field").value.trim() && $("exam-title") && $("exam-title").value.trim()) $("pdf-title-field").value = $("exam-title").value.trim();
+      setTimeout(renderLive, 60);
+    });
+
+    // --- tam önizləmə ---
+    $("pdf-preview-btn").addEventListener("click", () => {
+      if (!examQuestions.length) { toast("Əvvəlcə sual əlavə edin"); return; }
+      if (gbtn.disabled) return;
+      window._ttmPdfPreview = true;
+      gbtn.click();
+    });
+    window.ttmShowPdfPreview = async function (doc, name) {
+      const ov = document.createElement("div"); ov.className = "pv-ov";
+      const n = doc.getNumberOfPages();
+      const omr = $("pdf-omr-field") && $("pdf-omr-field").value === "end";
+      ov.innerHTML = `<div class="pv-top"><button type="button" class="pv-x">✕</button><b>👁 Önizləmə · ${n} səhifə</b></div>
+        ${omr ? `<div class="pv-note">🧾 Optik forma yükləyəndə sona əlavə olunacaq</div>` : ""}
+        <div class="pv-body"></div>
+        <div class="pv-foot"><button type="button" class="pv-edit">✏️ Düzəlt</button><button type="button" class="pv-dl">⬇ PDF-i yüklə</button></div>`;
+      document.body.appendChild(ov);
+      const body = ov.querySelector(".pv-body");
+      const shut = () => { ov.classList.add("out"); ov.remove(); };
+      ov.querySelector(".pv-x").onclick = ov.querySelector(".pv-edit").onclick = shut;
+      ov.querySelector(".pv-dl").onclick = () => { shut(); doc.save(name); toast("PDF hazırdır ✅"); closePdfModal(); };
+      try {
+        await ensureLib("pdfjs");
+        const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(doc.output("arraybuffer")) }).promise;
+        for (let i = 1; i <= pdf.numPages; i++) {
+          if (!ov.isConnected) return;
+          const wrap = document.createElement("div"); wrap.className = "pv-page"; wrap.style.animationDelay = Math.min(i - 1, 4) * 70 + "ms";
+          wrap.innerHTML = `<canvas></canvas><small>${i} / ${pdf.numPages}</small>`; body.appendChild(wrap);
+          const pg = await pdf.getPage(i), cv = wrap.querySelector("canvas");
+          const w = Math.min(body.clientWidth - 28, 760) || 340, dpr = Math.min(window.devicePixelRatio || 1, 2);
+          const vp = pg.getViewport({ scale: w * dpr / pg.getViewport({ scale: 1 }).width });
+          cv.width = vp.width; cv.height = vp.height;
+          await pg.render({ canvasContext: cv.getContext("2d"), viewport: vp }).promise;
+        }
+      } catch (e) { console.error(e); body.innerHTML = `<div class="pv-note">Önizləmə göstərilə bilmədi. "PDF-i yüklə" ilə birbaşa yükləyə bilərsiniz.</div>`; }
+    };
+  }
+})();
+</script>
+
 </body>
 </html>
