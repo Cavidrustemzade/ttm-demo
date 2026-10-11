@@ -908,7 +908,89 @@ function ensureLib(n){
   return TTM_LP[n];
 }
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script>
+/* ===== TTM riyazi göstərmə (KaTeX) — təhlükəsiz, özü yüklənən ===== */
+(function () {
+  var KX = "https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js", loading = null, queue = [];
+  function loadKatex() {
+    if (window.katex && window.katex.render) return Promise.resolve();
+    if (loading) return loading;
+    loading = new Promise(function (res) {
+      var t0 = Date.now();
+      (function wait() {                                   // defer ilə yüklənən skripti gözlə
+        if (window.katex && window.katex.render) return res();
+        if (Date.now() - t0 > 2500 && !document.getElementById("ttm-katex2")) {
+          var s = document.createElement("script"); s.id = "ttm-katex2"; s.src = KX;
+          s.onload = function () { res(); }; s.onerror = function () { loading = null; res(); };
+          document.head.appendChild(s); return;
+        }
+        if (Date.now() - t0 > 15000) { loading = null; return res(); }
+        setTimeout(wait, 60);
+      })();
+    });
+    return loading;
+  }
+  // Mətni hissələrə böl: $$..$$, \[..\], \(..\), $..$  ( \$ = adi dollar işarəsi )
+  function split(str) {
+    var out = [], buf = "", i = 0, n = str.length;
+    function flush() { if (buf) { out.push({ t: buf }); buf = ""; } }
+    while (i < n) {
+      var c = str[i], c2 = str.substr(i, 2);
+      if (c2 === "\\$") { buf += "$"; i += 2; continue; }
+      var open = null, close = null, disp = false;
+      if (c2 === "$$") { open = "$$"; close = "$$"; disp = true; }
+      else if (c2 === "\\[") { open = "\\["; close = "\\]"; disp = true; }
+      else if (c2 === "\\(") { open = "\\("; close = "\\)"; }
+      else if (c === "$") { open = "$"; close = "$"; }
+      if (open) {
+        var j = i + open.length, end = -1;
+        while (j < n) {
+          if (str[j] === "\\" && close === "$" && str[j + 1] === "$") { j += 2; continue; }
+          if (str.substr(j, close.length) === close) { end = j; break; }
+          j++;
+        }
+        if (end > i + open.length - 1 && str.slice(i + open.length, end).trim()) {
+          flush(); out.push({ m: str.slice(i + open.length, end), d: disp }); i = end + close.length; continue;
+        }
+      }
+      buf += c; i++;
+    }
+    flush(); return out;
+  }
+  var HAS = /\$|\\\(|\\\[/;
+  function renderNode(root) {
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (nd) {
+        var p = nd.parentNode;
+        if (!p || /^(SCRIPT|STYLE|TEXTAREA|INPUT|CODE|PRE)$/.test(p.nodeName) || (p.closest && p.closest(".katex"))) return NodeFilter.FILTER_REJECT;
+        return HAS.test(nd.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+      }
+    }), list = [], nd;
+    while ((nd = walker.nextNode())) list.push(nd);
+    list.forEach(function (tn) {
+      var parts = split(tn.nodeValue);
+      if (parts.length === 1 && parts[0].t != null) { if (parts[0].t !== tn.nodeValue) tn.nodeValue = parts[0].t; return; }
+      var frag = document.createDocumentFragment();
+      parts.forEach(function (p) {
+        if (p.t != null) { frag.appendChild(document.createTextNode(p.t)); return; }
+        var sp = document.createElement("span"); sp.className = "ttm-m";
+        try { window.katex.render(p.m, sp, { displayMode: p.d, throwOnError: false, strict: "ignore", trust: false, output: "html" }); }
+        catch (e) { sp.textContent = p.m; }
+        frag.appendChild(sp);
+      });
+      tn.parentNode.replaceChild(frag, tn);
+    });
+  }
+  window.ttmTeX = function (el) {
+    if (typeof el === "string") el = document.getElementById(el);
+    if (!el) return;
+    if (window.katex && window.katex.render) { renderNode(el); return; }
+    loadKatex().then(function () { if (window.katex && window.katex.render && el.isConnected) renderNode(el); });
+  };
+  window.ttmTeXSplit = split;
+  loadKatex();
+})();
+</script>
 <style id="v2-style">
 /* ===== v2: şagird paneli dizaynı ===== */
 .v2-welcome{display:flex;align-items:center;justify-content:space-between;gap:12px;background:linear-gradient(135deg,#ffffff,#eef5fb)}
@@ -5968,19 +6050,7 @@ async function finishExamInner(autoSubmit) {
 
 // ===== Analiz (Cloudflare Worker) =====
 const AI_WORKER_URL = "https://ttm-ai.tamtedrismerkezi.workers.dev";
-function renderMath(elId) {
-  const el = document.getElementById(elId);
-  if (!el || typeof renderMathInElement !== "function") return;
-  try {
-    renderMathInElement(el, {
-      delimiters: [
-        { left: "$$", right: "$$", display: true },
-        { left: "$", right: "$", display: false }
-      ],
-      throwOnError: false
-    });
-  } catch (e) { /* riyazi render xətası kritik deyil */ }
-}
+function renderMath(elId) { ttmTeX(elId); }
 
 
 window.aiAnalyze = async (i, btn) => {
@@ -10685,7 +10755,7 @@ function homeExtra(){
 .pq-lb{background:#e0f2fe;color:#0369a1;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pq-qc.back{animation:pqInB .35s cubic-bezier(.2,.8,.2,1)}
 @keyframes pqInB{from{opacity:0;transform:translateX(-30px)}}
-.pq-qt .katex{font-size:1.12em}
+.pq-qt .katex{font-size:1.1em}.pq-qt{line-height:1.85}.pq-qt .mfrac{margin:0 1px}.ttm-m .katex-display{margin:.35em 0;white-space:normal;overflow-x:auto;overflow-y:hidden;padding:2px 0}.pq-qt,.pq-ot{overflow-wrap:anywhere}
 .pq-ot .katex{font-size:1.15em}
 .pq-qt .katex-display{margin:.4em 0}
 .pq-opt{min-height:56px}
@@ -10706,15 +10776,12 @@ function homeExtra(){
 .pq-cfa button:active{transform:scale(.96)}
 .pq-cfn{background:var(--color-light-gray);color:var(--color-primary)}
 .pq-cfy{background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;box-shadow:0 10px 22px rgba(220,38,38,.28)}
+.pq-sbody{width:100%;max-width:760px;margin:0 auto}.pq-shead,.pq-sfoot{padding-left:max(14px,calc((100% - 760px)/2));padding-right:max(14px,calc((100% - 760px)/2))}
 .qb-txt .katex{font-size:1em}
 .qe-prev{padding:10px;border-radius:10px;background:#f8fafc;border:1px dashed var(--color-gray);font-size:14.5px;line-height:1.6;margin-top:6px;min-height:20px}
 </style>
 <script>
 /* ===================== ŞAGİRD: TƏKRAR ===================== */
-window.ttmTeX = function (el) {
-  if (!el || typeof renderMathInElement !== "function" || !window.katex) return;
-  try { renderMathInElement(el, { delimiters: [{ left: "$$", right: "$$", display: true }, { left: "$", right: "$", display: false }], throwOnError: false, strict: "ignore" }); } catch (e) {}
-};
 (function () {
   const $ = id => document.getElementById(id);
   const L = "ABCDE";
