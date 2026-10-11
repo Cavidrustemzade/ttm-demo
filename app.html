@@ -10655,44 +10655,122 @@ function homeExtra(){
 .qb-oi button{width:36px;height:36px;border-radius:10px;font-weight:800;border:2px solid var(--color-gray);background:#fff;flex:none}
 .qb-oi button.on{background:#22c55e;border-color:#22c55e;color:#fff}
 .qb-oi input{flex:1;padding:9px;border:1.5px solid var(--color-gray);border-radius:10px;font-size:14px}
+.sq-in{animation:sqIn .5s cubic-bezier(.2,.9,.25,1) both;will-change:transform,opacity}
+@keyframes sqIn{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
+.sq-grid .a-qc{animation:sqIn .5s cubic-bezier(.2,.9,.25,1) both}
+.sq-grid .a-qc:nth-child(2){animation-delay:60ms}.sq-grid .a-qc:nth-child(3){animation-delay:120ms}.sq-grid .a-qc:nth-child(4){animation-delay:180ms}
+.sq-grid{margin-bottom:16px}
+.sq-subjs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+@media(min-width:700px){.sq-subjs{grid-template-columns:repeat(4,1fr)}}
+.sq-subj{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:10px;text-align:left;padding:16px 14px;border-radius:20px;background:#fff;border:1px solid rgba(11,60,93,.08);box-shadow:0 8px 22px rgba(11,60,93,.07);overflow:hidden;animation:sqIn .55s cubic-bezier(.2,.9,.25,1) both;transition:transform .18s cubic-bezier(.2,.9,.25,1),box-shadow .18s;will-change:transform}
+.sq-subj:before{content:"";position:absolute;right:-26px;top:-26px;width:90px;height:90px;border-radius:50%;background:var(--c);opacity:.09}
+.sq-subj:active{transform:scale(.95)}
+.sq-subj.off{opacity:.55;filter:saturate(.4)}
+.sq-si{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:18px;box-shadow:0 8px 16px rgba(0,0,0,.15);flex:none}
+.sq-sn{font-weight:800;font-size:15px;color:var(--color-text);line-height:1.2}
+.sq-sc{font-size:12px;font-weight:700;color:var(--c)}
+.sq-subj.off .sq-sc{color:var(--color-text-muted)}
+.sq-shead{display:flex;align-items:center;gap:14px;background:#fff;border-radius:20px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow-sm);border-left:5px solid var(--c)}
+.pq-stage{position:fixed;inset:0;z-index:4500;background:#f1f5f9;display:flex;flex-direction:column;animation:stIn .35s cubic-bezier(.2,.9,.25,1)}
+.pq-stage.out{animation:stOut .25s ease forwards}
+@keyframes stIn{from{opacity:0;transform:translateY(24px)}}
+@keyframes stOut{to{opacity:0;transform:translateY(24px)}}
+.pq-shead{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top,0px)) 14px 10px;background:#fff;box-shadow:0 2px 12px rgba(11,60,93,.06)}
+.pq-end{padding:9px 14px;border-radius:12px;background:#fee2e2;color:#b91c1c;font-weight:800;font-size:13px;flex:none}
+.pq-sbody{flex:1;overflow-y:auto;padding:12px 14px 20px;-webkit-overflow-scrolling:touch}
+.pq-sbody .pq-pills{margin:0 0 10px}
+.pq-sfoot{display:flex;gap:10px;padding:10px 14px calc(12px + env(safe-area-inset-bottom,0px));background:#fff;box-shadow:0 -2px 12px rgba(11,60,93,.06)}
+.pq-sfoot .pq-go,.pq-sfoot .pq-ghost{margin:0;flex:1}
+.pq-prev{width:54px;border-radius:16px;background:var(--color-light-gray);color:var(--color-primary);font-weight:800;font-size:18px;border:1.5px solid var(--color-gray);flex:none}
+.pq-lb{background:#e0f2fe;color:#0369a1;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pq-qc.back{animation:pqInB .35s cubic-bezier(.2,.8,.2,1)}
+@keyframes pqInB{from{opacity:0;transform:translateX(-30px)}}
+.pq-qt .katex{font-size:1.12em}
+.pq-ot .katex{font-size:1.15em}
+.pq-qt .katex-display{margin:.4em 0}
+.pq-opt{min-height:56px}
+.pq-cf{position:fixed;inset:0;z-index:6000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(8,28,45,0);backdrop-filter:blur(0);transition:background .24s ease,backdrop-filter .24s ease}
+.pq-cf.on{background:rgba(8,28,45,.5);backdrop-filter:blur(4px)}
+.pq-cfb{position:relative;width:100%;max-width:360px;background:#fff;border-radius:26px;padding:26px 20px 18px;text-align:center;box-shadow:0 30px 70px rgba(0,0,0,.3);transform:scale(.82) translateY(14px);opacity:0;transition:transform .34s cubic-bezier(.2,1.35,.4,1),opacity .2s ease;will-change:transform,opacity}
+.pq-cf.on .pq-cfb{transform:none;opacity:1}
+.pq-cf.off .pq-cfb{transform:scale(.92);opacity:0;transition:transform .2s ease,opacity .2s ease}
+.pq-cfx{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;background:var(--color-light-gray);color:var(--color-text-muted);font-size:14px}
+.pq-cfi{width:64px;height:64px;border-radius:20px;margin:0 auto 12px;background:linear-gradient(135deg,#fef3c7,#fde68a);display:flex;align-items:center;justify-content:center;font-size:30px;animation:cfBob 2s ease-in-out infinite}
+@keyframes cfBob{50%{transform:translateY(-4px)}}
+.pq-cfb h3{font-size:19px;color:var(--color-primary);margin:0 0 6px}
+.pq-cfb p{font-size:13.5px;color:var(--color-text-muted);line-height:1.5;margin:0 0 14px}
+.pq-cfs{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:16px}
+.pq-cfs span{font-size:12px;font-weight:800;padding:5px 10px;border-radius:999px}
+.pq-cfa{display:flex;gap:10px}
+.pq-cfa button{flex:1;padding:14px;border-radius:16px;font-weight:800;font-size:15px;transition:transform .12s}
+.pq-cfa button:active{transform:scale(.96)}
+.pq-cfn{background:var(--color-light-gray);color:var(--color-primary)}
+.pq-cfy{background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;box-shadow:0 10px 22px rgba(220,38,38,.28)}
+.qb-txt .katex{font-size:1em}
+.qe-prev{padding:10px;border-radius:10px;background:#f8fafc;border:1px dashed var(--color-gray);font-size:14.5px;line-height:1.6;margin-top:6px;min-height:20px}
 </style>
 <script>
-/* ===================== ŞAGİRD: TƏKRAR SINAQ ===================== */
+/* ===================== ŞAGİRD: TƏKRAR ===================== */
+window.ttmTeX = function (el) {
+  if (!el || typeof renderMathInElement !== "function" || !window.katex) return;
+  try { renderMathInElement(el, { delimiters: [{ left: "$$", right: "$$", display: true }, { left: "$", right: "$", display: false }], throwOnError: false, strict: "ignore" }); } catch (e) {}
+};
 (function () {
   const $ = id => document.getElementById(id);
   const L = "ABCDE";
-  const PQ = { idx: null, qs: {}, stats: null, uid: null, sess: null, cfg: null };
+  const SUBJ = ["Riyaziyyat", "Azərbaycan dili", "Ədəbiyyat", "İngilis dili", "Tarix", "Coğrafiya", "Fizika", "Kimya", "Biologiya", "İnformatika"];
+  const PQ = { idx: null, qs: {}, stats: null, uid: null, sess: null, last: null, cfg: null, subj: null, view: "home" };
   window._PQ = PQ;
   const main = document.querySelector("#view-student .panel-main"), tabs = document.querySelector("#view-student .tabs");
   if (!main || !tabs) return;
 
   const tb = document.createElement("button");
-  tb.className = "tab-btn"; tb.dataset.stab = "stab-practice"; tb.textContent = "Təkrar sınaq";
+  tb.className = "tab-btn"; tb.dataset.stab = "stab-practice"; tb.textContent = "Təkrar";
   tabs.appendChild(tb);
   const pn = document.createElement("div");
   pn.className = "tab-panel"; pn.id = "stab-practice";
-  pn.innerHTML = `<div class="v2-backrow"><button class="pq-backbtn" onclick="pqBack()">←</button><div class="v2-backtitle" id="pq-title">Təkrar sınaq</div></div><div id="pq-root"></div>`;
+  pn.innerHTML = `<div class="v2-backrow"><button class="pq-backbtn" onclick="pqBack()">←</button><div class="v2-backtitle" id="pq-title">Təkrar</div></div><div id="pq-root"></div>`;
   main.appendChild(pn);
   tb.addEventListener("click", () => {
     document.querySelectorAll(".tab-btn[data-stab]").forEach(b => b.classList.remove("active"));
     document.querySelectorAll("#view-student .tab-panel").forEach(p => p.classList.remove("active"));
     tb.classList.add("active"); pn.classList.add("active");
     try { v2SyncNav("stab-race"); } catch (e) {}
-    if (!PQ.sess) pqHome();
+    if (!PQ.sess && PQ.view !== "cfg" && PQ.view !== "subj") pqHome();
     window.scrollTo(0, 0);
   });
   window.pqOpen = () => window.v2Tab("stab-practice");
   window.pqBack = () => {
     if (PQ.sess) { pqQuit(); return; }
-    if (PQ.cfg) { pqHome(); return; }
-    if (window.ttmBack) ttmBack({ id: "stab-more" }); else v2Tab("stab-more");
+    if (PQ.view === "cfg") { pqSubject(PQ.subj); return; }
+    if (PQ.view === "subj" || PQ.view === "res") { pqHome(); return; }
+    if (window.ttmBack) ttmBack({ id: "stab-home" }); else v2Tab("stab-home");
   };
 
-  // "Daha çox" və ana səhifəyə giriş
+  // "Daha çox" sırası
   const more = document.querySelector("#stab-more .card .v2-sec-head");
-  if (more) more.insertAdjacentHTML("afterend", `<div class="v2-more-row" onclick="pqOpen()"><span class="v2-more-ico" style="background:#0ea5e9;">📚</span><div style="flex:1;min-width:0;"><div class="v2-more-t">Təkrar sınaq</div><div class="v2-more-s">İmtahan sualları ilə mövzu-mövzu hazırlaş</div></div><span class="v2-chev">›</span></div>`);
-  const subj = $("s-subject-cards");
-  if (subj) subj.closest(".card").insertAdjacentHTML("afterend", `<div class="pq-hero" style="cursor:pointer;margin-bottom:16px;" onclick="pqOpen()"><h2>📚 Təkrar sınaq</h2><p>2019-cu ildən imtahanlarda çıxmış suallar — istədiyin qədər işlə</p><div style="margin-top:12px;position:relative;font-weight:800;font-size:13.5px;">Başla →</div></div>`);
+  if (more) more.insertAdjacentHTML("afterend", `<div class="v2-more-row" onclick="pqOpen()"><span class="v2-more-ico" style="background:#0ea5e9;">📚</span><div style="flex:1;min-width:0;"><div class="v2-more-t">Təkrar</div><div class="v2-more-s">İmtahan sualları ilə fənn və mövzu üzrə hazırlaş</div></div><span class="v2-chev">›</span></div>`);
+
+  // ---------- Ana səhifə: Tez giriş ----------
+  const ann = $("s-ann");
+  if (ann) ann.insertAdjacentHTML("afterend", `<div class="v2-sec-head" style="margin-top:4px;"><h3 style="color:var(--color-primary);">Tez giriş</h3></div>
+    <div class="a-qgrid a-q4 sq-grid">
+      <div class="a-qc" style="background:linear-gradient(135deg,#ef4444,#b91c1c);" onclick="v2Tab('stab-exams')"><div class="ic a-svg"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M9 14l2 2 4-4"/></svg></div><div><b>Sınaqlar</b><span id="sq-exams">Müəllimin sınaqları</span></div></div>
+      <div class="a-qc" style="background:linear-gradient(135deg,#0ea5e9,#0369a1);" onclick="pqOpen()"><div class="ic a-svg"><svg viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v14a2 2 0 0 0-2-2H2zM22 4h-7a3 3 0 0 0-3 3v14a2 2 0 0 1 2-2h8z"/></svg></div><div><b>Təkrar</b><span>Fənn seç, imtahan suallarını işlə</span></div></div>
+      <div class="a-qc" style="background:linear-gradient(135deg,#6366f1,#4338ca);" onclick="v2Tab('stab-scores')"><div class="ic a-svg"><svg viewBox="0 0 24 24"><path d="M5 20V11M12 20V4M19 20v-6"/></svg></div><div><b>Nəticələr</b><span>Bal və irəliləyiş</span></div></div>
+      <div class="a-qc" style="background:linear-gradient(135deg,#f59e0b,#b45309);" onclick="v2Tab('stab-roadmap')"><div class="ic a-svg"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg></div><div><b>Yol xəritəm</b><span>Fərdi tövsiyələr</span></div></div>
+    </div>`);
+  try {
+    const orl = window.renderStudentExamList;
+    window.renderStudentExamList = function () {
+      orl.apply(this, arguments);
+      try {
+        const done = new Set(studentAttemptsCache.map(a => a.examId)), now = new Date();
+        const n = studentExamsCache.filter(e => new Date(e.activationAt) <= now && !done.has(e.id)).length;
+        const el = $("sq-exams"); if (el) el.textContent = n ? `${n} aktiv sınaq gözləyir` : "Hazırda aktiv sınaq yoxdur";
+      } catch (e) {}
+    };
+  } catch (e) {}
 
   // ---------- məlumat ----------
   async function loadIdx(force) {
@@ -10736,40 +10814,59 @@ function homeExtra(){
   const yrs = a => { a = (a || []).slice().sort(); return a.length ? (a[0] === a[a.length - 1] ? a[0] : a[0] + "–" + a[a.length - 1]) : ""; };
   const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const setTitle = t => { const e = $("pq-title"); if (e) e.textContent = t; };
+  const icon = s => { try { return v2Icon(s); } catch (e) { return { t: "📘", bg: "#0B3C5D" }; } };
+  const subjOf = o => o.subject || "Riyaziyyat";
+  const js = s => esc(JSON.stringify(s));
 
-  // ---------- ana görünüş ----------
+  // ---------- 1) Fənlər ----------
   async function pqHome() {
-    PQ.sess = null; PQ.cfg = null; setTitle("Təkrar sınaq");
+    PQ.view = "home"; PQ.cfg = null; PQ.subj = null; setTitle("Təkrar");
     const r = $("pq-root");
     r.innerHTML = `<div class="pq-sk" style="height:150px"></div><div class="pq-sk"></div><div class="pq-sk"></div>`;
     let idx, st;
     try { [idx, st] = await Promise.all([loadIdx(), loadStats()]); }
     catch (e) { console.error(e); r.innerHTML = `<div class="pq-empty">Suallar yüklənmədi: ${esc(e.message)}</div><button class="pq-ghost" onclick="pqHome()">Yenidən cəhd et</button>`; return; }
-    const topics = Object.keys(idx).sort((a, b) => a.localeCompare(b, "az"));
+    const cnt = {};
+    Object.values(idx).forEach(o => { const s = subjOf(o); cnt[s] = (cnt[s] || 0) + o.count; });
+    const list = SUBJ.concat(Object.keys(cnt).filter(s => !SUBJ.includes(s)));
+    list.sort((a, b) => (cnt[b] ? 1 : 0) - (cnt[a] ? 1 : 0));
     const wn = Object.keys(st.wrong).length;
-    let h = `<div class="pq-hero"><h2>Təkrar sınaq</h2><p>İmtahanlarda çıxmış suallarla mövzu-mövzu hazırlaş.</p>
+    let h = `<div class="pq-hero sq-in"><h2>Təkrar</h2><p>2019-cu ildən imtahanlarda çıxmış suallarla hazırlaş.</p>
       <div class="pq-hstats"><div><b>${st.done || 0}</b><span>həll edilib</span></div><div><b>${pct(st.correct, st.done)}%</b><span>dəqiqlik</span></div><div><b>${wn}</b><span>səhv bankı</span></div></div></div>`;
-    if (wn) h += `<div class="pq-wrongcard" onclick="pqWrongAll()"><div class="ic">↻</div><div style="flex:1;"><div class="pq-tn">Səhvlərimi təkrarla</div><div class="pq-ts">${wn} sual səni gözləyir — düz cavab verdikcə siyahıdan çıxır</div></div><span class="v2-chev">›</span></div>`;
-    h += `<div class="pq-sec">Mövzular</div>`;
-    if (!topics.length) h += `<div class="pq-card pq-empty">Hələ sual əlavə edilməyib. Tezliklə burada olacaq.</div>`;
-    else h += `<div class="pq-tgrid">` + topics.map(t => {
-      const o = idx[t], ts = st.topics[t] || {}, p = ts.best || 0;
-      return `<div class="pq-tc" onclick="pqTopic(${esc(JSON.stringify(t))})"><div class="pq-ring" style="${ring(p)}"><span>${ts.done ? p + "%" : "—"}</span></div>
-        <div style="flex:1;min-width:0;"><div class="pq-tn">${esc(t)}</div><div class="pq-ts">${o.subject ? esc(o.subject) + " · " : ""}${o.count} sual${o.years && o.years.length ? " · " + yrs(o.years) : ""}</div>
-        <div class="pq-ts">${ts.done ? `${ts.done} cavab · ən yaxşı ${p}%` : "Hələ başlamamısan"}</div></div><span class="v2-chev">›</span></div>`;
+    if (wn) h += `<div class="pq-wrongcard sq-in" style="animation-delay:60ms" onclick="pqWrongAll()"><div class="ic">↻</div><div style="flex:1;"><div class="pq-tn">Səhvlərimi təkrarla</div><div class="pq-ts">${wn} sual səni gözləyir — düz cavab verdikcə siyahıdan çıxır</div></div><span class="v2-chev">›</span></div>`;
+    h += `<div class="pq-sec">Fənni seç</div><div class="sq-subjs">` + list.map((s, i) => {
+      const ic = icon(s), n = cnt[s] || 0;
+      return `<button class="sq-subj ${n ? "" : "off"}" style="--c:${ic.bg};animation-delay:${80 + i * 45}ms" onclick="${n ? `pqSubject(${js(s)})` : `toast('${esc(s)} sualları tezliklə əlavə olunacaq')`}">
+        <span class="sq-si" style="background:${ic.bg}">${ic.t}</span><span class="sq-sn">${esc(s)}</span><span class="sq-sc">${n ? n + " sual" : "Tezliklə"}</span></button>`;
     }).join("") + `</div>`;
     r.innerHTML = h;
   }
   window.pqHome = pqHome;
 
-  // ---------- mövzu ayarları ----------
+  // ---------- 2) Mövzular ----------
+  window.pqSubject = async (s) => {
+    PQ.view = "subj"; PQ.subj = s; PQ.cfg = null; setTitle(s);
+    const idx = await loadIdx(), st = await loadStats(), ic = icon(s);
+    const topics = Object.keys(idx).filter(t => subjOf(idx[t]) === s).sort((a, b) => a.localeCompare(b, "az"));
+    $("pq-root").innerHTML = `<div class="sq-shead sq-in" style="--c:${ic.bg}"><span class="sq-si" style="background:${ic.bg}">${ic.t}</span><div><div class="pq-tn" style="font-size:19px;">${esc(s)}</div><div class="pq-ts">${topics.length} mövzu · mövzunu seç</div></div></div>
+      <div class="pq-tgrid">` + (topics.length ? topics.map((t, i) => {
+      const o = idx[t], ts = st.topics[t] || {}, p = ts.best || 0;
+      return `<div class="pq-tc sq-in" style="animation-delay:${60 + i * 50}ms" onclick="pqTopic(${js(t)})"><div class="pq-ring" style="${ring(p)}"><span>${ts.done ? p + "%" : "—"}</span></div>
+        <div style="flex:1;min-width:0;"><div class="pq-tn">${esc(t)}</div><div class="pq-ts">${o.count} sual${o.years && o.years.length ? " · " + yrs(o.years) : ""}</div>
+        <div class="pq-ts">${ts.done ? `${ts.done} cavab · ən yaxşı ${p}%` : "Hələ başlamamısan"}</div></div><span class="v2-chev">›</span></div>`;
+    }).join("") : `<div class="pq-card pq-empty">Bu fənn üzrə hələ mövzu yoxdur.</div>`) + `</div>`;
+    window.scrollTo(0, 0);
+  };
+
+  // ---------- 3) Ayarlar ----------
   window.pqTopic = async (t) => {
-    PQ.cfg = { t, year: "all", count: 20, mode: "mix" };
+    PQ.view = "cfg"; PQ.cfg = { t, year: "all", count: 20, mode: "mix" };
     setTitle(t);
     const r = $("pq-root");
     r.innerHTML = `<div class="pq-sk" style="height:300px"></div>`;
     let qs;
     try { qs = await loadTopic(t); } catch (e) { r.innerHTML = `<div class="pq-empty">Xəta: ${esc(e.message)}</div>`; return; }
+    if (!PQ.subj && PQ.idx && PQ.idx[t]) PQ.subj = subjOf(PQ.idx[t]);
     PQ.cfg.qs = qs;
     renderCfg();
     window.scrollTo(0, 0);
@@ -10787,7 +10884,7 @@ function homeExtra(){
     if (c.mode === "wrong" && !wrongN) c.mode = "mix";
     const n = pool().length, take = c.count === "all" ? n : Math.min(n, c.count);
     const hist = (ts.hist || []).slice(-8);
-    $("pq-root").innerHTML = `<div class="pq-card">
+    $("pq-root").innerHTML = `<div class="pq-card sq-in">
       <div class="pq-tn" style="font-size:18px;color:var(--color-primary);">${esc(c.t)}</div>
       <div class="pq-ts">${c.qs.length} sual · ${yrs(years)}</div>
       <div class="pq-lbl">İmtahan ili</div>
@@ -10805,10 +10902,22 @@ function homeExtra(){
   }
   window.pqSet = (k, v) => { PQ.cfg[k] = v; renderCfg(); };
 
-  // ---------- sessiya ----------
+  // ---------- 4) Sınaq (tam ekran) ----------
+  let ov = null;
+  function openStage() {
+    if (ov) return;
+    ov = document.createElement("div"); ov.className = "pq-stage"; ov.id = "pq-stage";
+    document.body.appendChild(ov); document.body.style.overflow = "hidden";
+    try { history.pushState({ ttmNav: 1 }, "", location.href); } catch (e) {}
+  }
+  function closeStage() {
+    if (!ov) return;
+    const o = ov; ov = null; o.classList.add("out");
+    setTimeout(() => o.remove(), 260); document.body.style.overflow = "";
+  }
   function begin(list, label, topicKey) {
     PQ.sess = { list, i: 0, ans: [], ok: 0, label, topic: topicKey, t0: Date.now() };
-    renderQ();
+    openStage(); renderQ();
   }
   window.pqStart = () => {
     const c = PQ.cfg; let a = pool();
@@ -10828,27 +10937,33 @@ function homeExtra(){
       if (!all.length) { toast("Səhv suallar tapılmadı"); pqHome(); return; }
       PQ.cfg = null;
       begin(shuffle(all).slice(0, 30), "Səhvlərim", null);
+      pqHome();
     } catch (e) { console.error(e); toast("Xəta: " + e.message); pqHome(); }
   };
-  function renderQ() {
-    const s = PQ.sess, q = s.list[s.i], a = s.ans[s.i], n = s.list.length;
-    setTitle(s.label);
+  function renderQ(dir) {
+    const s = PQ.sess; if (!s || !ov) return;
+    const q = s.list[s.i], a = s.ans[s.i], n = s.list.length;
     const done = s.ans.filter(x => x).length, bad = done - s.ok;
     const meta = [q.year, q.exam].filter(Boolean).join(" · ");
-    let opts = (q.options || []).map((o, k) => {
+    const opts = (q.options || []).map((o, k) => {
       let cls = "";
       if (a) { if (k === q.correctIndex) cls = "r"; else if (k === a.s) cls = "w"; else cls = "dim"; }
-      return `<button class="pq-opt ${cls}" ${a ? "disabled" : ""} onclick="pqPick(${k})"><b>${L[k]}</b><span>${esc(o)}</span></button>`;
+      return `<button class="pq-opt ${cls}" ${a ? "disabled" : ""} onclick="pqPick(${k})"><b>${L[k]}</b><span class="pq-ot">${esc(o)}</span></button>`;
     }).join("");
-    $("pq-root").innerHTML = `<div class="pq-top"><div class="pq-topr"><button class="pq-x" onclick="pqQuit()">✕</button><div class="pq-bar"><i style="width:${(done / n) * 100}%"></i></div><div class="pq-cnt">${s.i + 1} / ${n}</div></div>
-      <div class="pq-pills"><span class="pq-ok">✓ ${s.ok}</span><span class="pq-no">✗ ${bad}</span></div></div>
-      <div class="pq-card pq-qc">${meta ? `<span class="pq-meta">${esc(meta)}</span>` : ""}
+    ov.innerHTML = `<div class="pq-shead"><button class="pq-x" onclick="pqQuit()" aria-label="Bağla">✕</button>
+        <div class="pq-bar"><i style="width:${(done / n) * 100}%"></i></div><div class="pq-cnt">${s.i + 1} / ${n}</div>
+        <button class="pq-end" onclick="pqQuit()">Bitir</button></div>
+      <div class="pq-sbody"><div class="pq-pills"><span class="pq-ok">✓ ${s.ok}</span><span class="pq-no">✗ ${bad}</span><span class="pq-lb">${esc(s.label)}</span></div>
+      <div class="pq-card pq-qc ${dir === "b" ? "back" : ""}">${meta ? `<span class="pq-meta">${esc(meta)}</span>` : ""}
         <div class="pq-qt">${esc(q.text || "")}</div>
         ${q.imageBase64 ? `<img class="pq-qimg" src="${q.imageBase64}" onclick="openImageLightbox(this.src)" alt="">` : ""}
         <div class="pq-opts">${opts}</div>
-        ${a ? `<div class="pq-fb ${a.ok ? "ok" : "no"}">${a.ok ? ["Əla! Düzdür 🎉", "Afərin! ✅", "Düz cavab! 👏"][s.i % 3] : `Səhv. Düzgün cavab: ${L[q.correctIndex]}) ${esc(q.options[q.correctIndex])}`}</div>
-          <button class="pq-go" onclick="pqNext()">${s.i + 1 < n ? "Növbəti sual →" : "Nəticəni gör →"}</button>` : `<button class="pq-ghost" onclick="pqPick(-1)">Bilmirəm, keç</button>`}
-      </div>`;
+        ${a ? `<div class="pq-fb ${a.ok ? "ok" : "no"}">${a.ok ? ["Əla! Düzdür 🎉", "Afərin! ✅", "Düz cavab! 👏"][s.i % 3] : a.s < 0 ? `Keçdin. Düzgün cavab: <b>${L[q.correctIndex]}</b>` : `Səhv. Düzgün cavab: <b>${L[q.correctIndex]}</b>`}</div>` : ""}
+      </div></div>
+      <div class="pq-sfoot">${s.i > 0 ? `<button class="pq-prev" onclick="pqPrev()">←</button>` : ""}
+        ${a ? `<button class="pq-go" onclick="pqNext()">${s.i + 1 < n ? "Növbəti sual →" : "Nəticəni gör →"}</button>` : `<button class="pq-ghost" onclick="pqPick(-1)">Bilmirəm, keç</button>`}</div>`;
+    ttmTeX(ov);
+    const b = ov.querySelector(".pq-sbody"); if (b && dir) b.scrollTop = 0;
   }
   window.pqPick = (k) => {
     const s = PQ.sess; if (!s || s.ans[s.i]) return;
@@ -10858,17 +10973,46 @@ function homeExtra(){
     if (ok) delete st.wrong[q.id]; else st.wrong[q.id] = Date.now();
     const tk = q.topic || "Digər", tt = st.topics[tk] = st.topics[tk] || { done: 0, correct: 0, best: 0, hist: [] };
     tt.done++; if (ok) tt.correct++;
-    try { navigator.vibrate && navigator.vibrate(ok ? 30 : [40, 40, 40]); } catch (e) {}
+    try { navigator.vibrate && navigator.vibrate(ok ? 25 : [35, 40, 35]); } catch (e) {}
     saveStats();
     renderQ();
   };
-  window.pqNext = () => { const s = PQ.sess; if (s.i + 1 < s.list.length) { s.i++; renderQ(); window.scrollTo(0, 0); } else finish(); };
-  window.pqQuit = () => {
-    const s = PQ.sess; if (!s) return;
-    const done = s.ans.filter(x => x).length;
-    if (!done) { PQ.sess = null; PQ.cfg ? renderCfg() : pqHome(); setTitle(PQ.cfg ? PQ.cfg.t : "Təkrar sınaq"); return; }
-    if (confirm(`${done} suala cavab vermisən. Bitirib nəticəyə baxaq?`)) finish();
+  window.pqNext = () => { const s = PQ.sess; if (s.i + 1 < s.list.length) { s.i++; renderQ("f"); } else finish(); };
+  window.pqPrev = () => { const s = PQ.sess; if (s.i > 0) { s.i--; renderQ("b"); } };
+
+  // ---------- Təsdiq pəncərəsi ----------
+  function ask(o) {
+    return new Promise(res => {
+      const m = document.createElement("div"); m.className = "pq-cf";
+      m.innerHTML = `<div class="pq-cfb"><button class="pq-cfx" aria-label="Bağla">✕</button>
+        <div class="pq-cfi">${o.icon || "🏁"}</div><h3>${o.title}</h3><p>${o.text}</p>
+        ${o.stats ? `<div class="pq-cfs">${o.stats}</div>` : ""}
+        <div class="pq-cfa"><button class="pq-cfn">${o.no || "Davam et"}</button><button class="pq-cfy">${o.yes || "Bitir"}</button></div></div>`;
+      document.body.appendChild(m);
+      requestAnimationFrame(() => m.classList.add("on"));
+      const done = v => { m.classList.remove("on"); m.classList.add("off"); setTimeout(() => m.remove(), 240); res(v); };
+      m.querySelector(".pq-cfx").onclick = () => done(false);
+      m.querySelector(".pq-cfn").onclick = () => done(false);
+      m.querySelector(".pq-cfy").onclick = () => done(true);
+      m.addEventListener("click", e => { if (e.target === m) done(false); });
+    });
+  }
+  let asking = false;
+  window.pqQuit = async () => {
+    const s = PQ.sess; if (!s || asking) return;
+    const done = s.ans.filter(x => x).length, left = s.list.length - done;
+    asking = true;
+    const yes = await ask(done ? {
+      title: "Sınağı bitirirsiniz?", text: left ? `${left} sual hələ cavablanmayıb. Bitirsəniz nəticəniz hesablanacaq.` : "Bütün suallara cavab verdiniz. Nəticəyə baxaq?",
+      stats: `<span class="pq-ok">✓ ${s.ok} düz</span><span class="pq-no">✗ ${done - s.ok} səhv</span><span class="pq-lb">${left} qalıb</span>`
+    } : { icon: "👋", title: "Çıxmaq istəyirsiniz?", text: "Hələ heç bir suala cavab verməmisiniz.", yes: "Çıx" });
+    asking = false;
+    if (!yes || PQ.sess !== s) return;
+    if (!done) { PQ.sess = null; closeStage(); return; }
+    finish();
   };
+
+  // ---------- 5) Nəticə ----------
   function finish() {
     const s = PQ.sess, st = PQ.stats;
     const items = s.list.map((q, i) => ({ id: q.id, s: s.ans[i] ? s.ans[i].s : null, ok: !!(s.ans[i] && s.ans[i].ok) }));
@@ -10876,51 +11020,54 @@ function homeExtra(){
     if (s.topic && done) {
       const tt = st.topics[s.topic] = st.topics[s.topic] || { done: 0, correct: 0, best: 0, hist: [] };
       tt.hist = (tt.hist || []).concat([{ p, n: s.list.length, d: Date.now() }]).slice(-12);
-      if (s.list.length >= 5 || s.list.length === (PQ.cfg && PQ.cfg.qs.length)) tt.best = Math.max(tt.best || 0, p);
+      if (s.list.length >= 5) tt.best = Math.max(tt.best || 0, p);
       tt.last = p;
     }
     saveStats(true);
     if (done) db.collection("practiceAttempts").add({
-      studentId: currentStudentUid, topic: s.topic || "Səhvlərim", total: s.list.length, answered: done, correct: s.ok, score: p,
+      studentId: currentStudentUid, topic: s.topic || "Səhvlərim", subject: PQ.subj || "", total: s.list.length, answered: done, correct: s.ok, score: p,
       mode: PQ.cfg ? PQ.cfg.mode : "wrong", year: PQ.cfg ? String(PQ.cfg.year) : "all", items,
       seconds: Math.round((Date.now() - s.t0) / 1000), createdAt: firebase.firestore.FieldValue.serverTimestamp()
     }).catch(e => console.error("practiceAttempts:", e));
-    s.done = true;
+    PQ.last = s; PQ.sess = null;
+    closeStage();
+    if (!pn.classList.contains("active")) window.v2Tab("stab-practice");
     renderRes();
   }
   function renderRes() {
-    const s = PQ.sess, n = s.list.length, p = pct(s.ok, n), bad = s.ans.filter(x => x && !x.ok).length, skip = n - s.ans.filter(x => x).length;
+    const s = PQ.last; PQ.view = "res";
+    const n = s.list.length, p = pct(s.ok, n), bad = s.ans.filter(x => x && !x.ok).length, skip = n - s.ans.filter(x => x).length;
     const msg = p >= 85 ? "Möhtəşəm nəticə! 🏆" : p >= 60 ? "Yaxşıdır, davam et! 💪" : "Səhvləri təkrarla, alınacaq! 📚";
     const col = p >= 75 ? "#22c55e" : p >= 50 ? "#f59e0b" : "#ef4444";
     setTitle("Nəticə");
-    $("pq-root").innerHTML = `<div class="pq-card pq-res">
+    $("pq-root").innerHTML = `<div class="pq-card pq-res sq-in">
       <div class="pq-bigring" style="${ring(p, col)}"><span>${p}%</span></div>
       <div class="pq-tn" style="font-size:19px;">${msg}</div>
       <div class="pq-ts" style="font-size:13px;margin-top:4px;">${esc(s.label)} · ${n} sual</div>
       <div class="pq-hstats" style="margin-top:16px;">
         <div style="background:#dcfce7;color:#15803d;"><b>${s.ok}</b><span>düz</span></div>
         <div style="background:#fee2e2;color:#b91c1c;"><b>${bad}</b><span>səhv</span></div>
-        <div style="background:#f1f5f9;color:#475569;"><b>${skip}</b><span>keçilib</span></div></div>
-      <div class="pq-lbl" style="text-align:left;">Suallar (bax: toxun)</div>
-      <div class="pq-dots">${s.list.map((q, i) => { const a = s.ans[i]; return `<button class="${!a ? "s" : a.ok ? "r" : "w"}" onclick="pqReview(${i})">${i + 1}</button>`; }).join("")}</div>
+        <div style="background:#f1f5f9;color:#475569;"><b>${skip}</b><span>cavabsız</span></div></div>
+      <div class="pq-lbl" style="text-align:left;">Suallar (baxmaq üçün toxun)</div>
+      <div class="pq-dots">${s.list.map((q, i) => { const a = s.ans[i]; return `<button class="${!a || a.s < 0 ? "s" : a.ok ? "r" : "w"}" onclick="pqReview(${i})">${i + 1}</button>`; }).join("")}</div>
       ${bad + skip ? `<button class="pq-go" onclick="pqRetryWrong()">↻ Səhvləri yenidən işlə (${bad + skip})</button>` : ""}
       <button class="pq-ghost" onclick="pqAgain()">Yenidən başla</button>
-      <button class="pq-ghost" onclick="pqHome()">Mövzulara qayıt</button></div>`;
+      <button class="pq-ghost" onclick="${PQ.subj ? `pqSubject(${js(PQ.subj)})` : "pqHome()"}">Mövzulara qayıt</button></div>`;
     window.scrollTo(0, 0);
   }
   window.pqReview = (i) => {
-    const s = PQ.sess, q = s.list[i], a = s.ans[i];
-    const ov = document.createElement("div"); ov.className = "pq-ov";
-    ov.innerHTML = `<div class="pq-sheet"><div class="pq-sh-h"><b>${i + 1}-ci sual</b><button class="pq-x" onclick="this.closest('.pq-ov').remove()">✕</button></div>
+    const s = PQ.last, q = s.list[i], a = s.ans[i];
+    const m = document.createElement("div"); m.className = "pq-ov";
+    m.innerHTML = `<div class="pq-sheet"><div class="pq-sh-h"><b>${i + 1}-ci sual</b><button class="pq-x" onclick="this.closest('.pq-ov').remove()">✕</button></div>
       ${[q.year, q.exam].filter(Boolean).length ? `<span class="pq-meta">${esc([q.year, q.exam].filter(Boolean).join(" · "))}</span>` : ""}
       <div class="pq-qt">${esc(q.text || "")}</div>${q.imageBase64 ? `<img class="pq-qimg" src="${q.imageBase64}" onclick="openImageLightbox(this.src)">` : ""}
-      <div class="pq-opts">${q.options.map((o, k) => `<div class="pq-opt ${k === q.correctIndex ? "r" : a && k === a.s ? "w" : "dim"}"><b>${L[k]}</b><span>${esc(o)}</span></div>`).join("")}</div>
-      ${!a || a.s === -1 ? `<div class="pq-fb no">Bu suala cavab verməmisən</div>` : ""}</div>`;
-    ov.addEventListener("click", e => { if (e.target === ov) ov.remove(); });
-    document.body.appendChild(ov);
+      <div class="pq-opts">${q.options.map((o, k) => `<div class="pq-opt ${k === q.correctIndex ? "r" : a && k === a.s ? "w" : "dim"}"><b>${L[k]}</b><span class="pq-ot">${esc(o)}</span></div>`).join("")}</div>
+      ${!a || a.s < 0 ? `<div class="pq-fb no">Bu suala cavab verməmisən</div>` : ""}</div>`;
+    m.addEventListener("click", e => { if (e.target === m) m.remove(); });
+    document.body.appendChild(m); ttmTeX(m);
   };
   window.pqRetryWrong = () => {
-    const s = PQ.sess, list = s.list.filter((q, i) => !s.ans[i] || !s.ans[i].ok);
+    const s = PQ.last, list = s.list.filter((q, i) => !s.ans[i] || !s.ans[i].ok);
     if (list.length) begin(shuffle(list.slice()), s.label, null);
   };
   window.pqAgain = () => { if (PQ.cfg) pqStart(); else pqWrongAll(); };
@@ -11005,6 +11152,7 @@ function homeExtra(){
       <div style="flex:1;min-width:0;"><div class="qb-txt">${esc(q.text || "(şəkilli sual)")}</div><div class="qb-sub">${esc([q.year, q.exam, q.topic].filter(Boolean).join(" · "))}</div></div>
       ${q.imageBase64 ? `<img class="qb-th" src="${q.imageBase64}" alt="">` : ""}
       <span class="qb-ans">${L[q.correctIndex] || "?"}</span></div>`).join("") : `<div class="empty-state">Sual yoxdur. «JSON yüklə» ilə əlavə edin.</div>`;
+    ttmTeX($("qb-list"));
   }
   window.qbF = (k, v) => { QB.f[k] = v; render(); };
 
@@ -11088,7 +11236,7 @@ function homeExtra(){
     const e = ED, ov = e._ov;
     const v = x => esc(x == null ? "" : x);
     ov.firstElementChild.innerHTML = `<div class="pq-sh-h"><b>${e._new ? "Yeni sual" : "Sual " + (e.no || "") + " · " + esc(e.id)}</b><button class="pq-x" onclick="this.closest('.pq-ov').remove()">✕</button></div>
-      <div class="field" style="margin-bottom:10px;"><label>Sual mətni</label><textarea id="qe-text" style="min-height:90px;">${v(e.text)}</textarea></div>
+      <div class="field" style="margin-bottom:10px;"><label>Sual mətni</label><textarea id="qe-text" style="min-height:90px;" oninput="qbPrev()">${v(e.text)}</textarea><div class="muted-note">Düstur üçün: $\\dfrac{a}{b}$, $x^2$, $\\overline{abc}$</div><div class="qe-prev" id="qe-prev"></div></div>
       <div class="field" style="margin-bottom:10px;"><label>Şəkil (istəyə görə)</label>
         ${e.imageBase64 ? `<img src="${e.imageBase64}" style="max-width:100%;border-radius:10px;border:1px solid var(--color-gray);margin-bottom:6px;"><button class="btn-outline" onclick="qbImg(null)" style="margin-bottom:6px;">Şəkli sil</button>` : ""}
         <input type="file" accept="image/*" onchange="qbImg(this)"></div>
@@ -11103,6 +11251,7 @@ function homeExtra(){
       <button class="pq-go" id="qe-save">Yadda saxla</button>
       ${e._new ? "" : `<button class="pq-ghost" style="color:var(--color-danger);" id="qe-del">Sualı sil</button>`}`;
     ov.querySelector("#qe-save").onclick = save;
+    qbPrev();
     const d = ov.querySelector("#qe-del"); if (d) d.onclick = del;
   }
   function grab() {
@@ -11111,6 +11260,7 @@ function homeExtra(){
     e.topic = g("qe-topic").trim(); e.subtopic = g("qe-sub").trim(); e.exam = g("qe-exam").trim(); e.subject = g("qe-subj").trim();
     e.year = Number(g("qe-year")) || ""; e.no = Number(g("qe-no")) || "";
   }
+  window.qbPrev = () => { const t = document.getElementById("qe-text"), b = document.getElementById("qe-prev"); if (!t || !b) return; b.textContent = t.value; ttmTeX(b); };
   window.qbCor = k => { grab(); ED.correctIndex = k; draw(); };
   window.qbImg = async inp => {
     grab();
