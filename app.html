@@ -1204,12 +1204,184 @@ function ensureLib(n){
 .gr-nav{display:flex;gap:8px;margin-top:10px}
 .gr-nav button{flex:1;padding:9px;border-radius:10px;border:1px solid rgba(15,23,42,.12);background:#fff;font-weight:700;font-size:13px;cursor:pointer}
 </style>
+<meta name="color-scheme" content="light" />
+<style id="u15-css">
+/* ===== 15.10 yeniləmə ===== */
+.rs-off{display:none!important}
+.q-item-del-icon,.q-item-gear{width:40px;height:40px;border-radius:12px;font-size:15px}
+.status-btn{height:40px}
+.daily-note-btn{width:40px;height:40px}
+.ex-ic{width:42px;height:42px}
+@media(max-width:699px){#exam-taking-layout .exam-nav-btn{height:38px;min-height:38px}}
+/* şifrə gözü */
+.pw-wrap{position:relative}
+.pw-wrap input{padding-right:50px!important}
+.pw-eye{position:absolute;right:3px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:10px;background:none;display:flex;align-items:center;justify-content:center;color:#6b7686}
+.pw-eye svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+/* açılış ekranı (intro ilə eyni görünüş) */
+#view-loading{background:linear-gradient(160deg,#0a4aa8,#0B3C5D 60%,#072a42);gap:0;padding:28px;text-align:center}
+#view-loading .sp-lg{width:96px;height:96px;border-radius:26px;background:#0B3C5D;border:2px solid #4aa3ff;box-shadow:0 0 40px rgba(74,163,255,.5);display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:900;margin-bottom:22px;color:#fff}
+#view-loading h1{font-size:30px;line-height:1.15;color:#fff}
+#view-loading p{opacity:.85;margin-top:8px;font-size:14px;color:#fff}
+#view-loading .sp-bar{width:62%;max-width:260px;height:6px;border-radius:9px;background:rgba(255,255,255,.2);margin-top:44px;overflow:hidden;position:relative}
+#view-loading .sp-bar i{position:absolute;top:0;bottom:0;width:40%;border-radius:9px;background:#22d3ee;animation:spBar 1.1s ease-in-out infinite}
+@keyframes spBar{0%{left:-40%}100%{left:100%}}
+#view-loading.sp-fix{position:fixed;inset:0;z-index:4900;transition:opacity .45s ease;pointer-events:none}
+#view-loading.sp-out{opacity:0}
+/* giriş: qapı animasiyası */
+#login-btn{position:relative;overflow:hidden}
+#login-btn .lg-door{position:absolute;right:18px;top:50%;width:16px;height:24px;margin-top:-12px;border-radius:3px;background:#fde68a;opacity:0;transition:opacity .25s;perspective:80px}
+#login-btn .lg-door i{position:absolute;inset:0;border-radius:3px;background:#072a42;border:1.5px solid rgba(255,255,255,.85);transform-origin:left center;transition:transform .4s ease}
+#login-btn .lg-door i:after{content:"";position:absolute;right:2px;top:50%;width:3px;height:3px;border-radius:50%;background:#fff}
+#login-btn .lg-man{position:absolute;left:18px;top:50%;width:14px;height:24px;margin-top:-12px;opacity:0;transition:left 1.1s cubic-bezier(.4,0,.2,1),opacity .2s}
+#login-btn .lg-man svg{width:14px;height:24px;display:block;overflow:visible}
+#login-btn .lg-l1,#login-btn .lg-l2{transform-box:fill-box;transform-origin:50% 0}
+#login-btn.lg-walk .lg-door,#login-btn.lg-walk .lg-man,#login-btn.lg-bump .lg-door,#login-btn.lg-bump .lg-man{opacity:1}
+#login-btn.lg-walk .lg-man{left:calc(100% - 54px)}
+#login-btn.lg-walk .lg-l1{animation:lgLeg .28s ease-in-out infinite alternate}
+#login-btn.lg-walk .lg-l2{animation:lgLeg .28s ease-in-out infinite alternate-reverse}
+@keyframes lgLeg{from{transform:rotate(-24deg)}to{transform:rotate(24deg)}}
+#login-btn.lg-walk #btn-spinner,#login-btn.lg-bump #btn-spinner{display:none!important}
+#login-btn.lg-in .lg-door i{transform:rotateY(-80deg)}
+#login-btn.lg-in .lg-man{left:calc(100% - 30px);opacity:0;transition:left .4s ease .2s,opacity .2s ease .5s}
+#login-btn.lg-bump{animation:lgShake .45s}
+#login-btn.lg-bump .lg-man{left:calc(100% - 72px);transition:left .3s cubic-bezier(.2,1.6,.4,1)}
+@keyframes lgShake{20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+/* açar-söndür */
+.tg{width:52px;height:30px;border-radius:999px;background:#cbd5e1;position:relative;flex:none;transition:background .2s}
+.tg:after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:left .22s cubic-bezier(.2,.9,.3,1.2)}
+.tg.on{background:#10b981}.tg.on:after{left:25px}
+.ico-s{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+/* ===== Nəticələr ===== */
+.rs-chips{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 12px;-webkit-overflow-scrolling:touch}
+.rs-chips::-webkit-scrollbar{display:none}
+.rs-chips button{flex:none;height:38px;padding:0 16px;border-radius:999px;border:1px solid #DCE3EA;background:#fff;color:#3D4B5C;font-weight:700;font-size:13px}
+.rs-chips button.on{background:#0B3C5D;border-color:#0B3C5D;color:#fff}
+.rs-hero{position:relative;overflow:hidden;border-radius:26px;padding:20px;color:#fff;background:#0B3C5D;box-shadow:0 18px 40px rgba(7,42,66,.25);margin-bottom:14px;animation:rsIn .5s cubic-bezier(.2,.9,.25,1)}
+.rs-hero:before{content:"";position:absolute;right:-50px;top:-50px;width:170px;height:170px;border-radius:50%;background:#14507D}
+.rs-top{display:flex;align-items:center;gap:18px;position:relative}
+.rs-ring{position:relative;width:120px;height:120px;flex:none}
+.rs-ring svg{transform:rotate(-90deg)}
+.rs-ring circle{fill:none;stroke-width:11;stroke-linecap:round}
+.rs-ring .fg{transition:stroke-dashoffset 1.3s cubic-bezier(.2,.8,.2,1)}
+.rs-ring b{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:32px;font-weight:800;line-height:1}
+.rs-ring small{font-size:11px;font-weight:600;color:#B9CEDD;margin-top:4px}
+.rs-kpi{flex:1;display:grid;gap:8px;min-width:0}
+.rs-kpi div{display:flex;justify-content:space-between;align-items:center;background:#164A70;border-radius:12px;padding:8px 11px;font-size:12px;color:#C9DAE6}
+.rs-kpi b{font-size:16px;color:#fff}
+.rs-sub{position:relative;margin-top:14px;display:flex;align-items:center;gap:10px;background:#164A70;border-radius:14px;padding:10px 12px;font-size:13px;line-height:1.4}
+.rs-sub i{width:28px;height:28px;border-radius:9px;background:#5EEAD4;display:flex;align-items:center;justify-content:center;flex:none}
+.rs-card{background:#fff;border-radius:22px;padding:16px;border:1px solid #E4EAF0;margin-bottom:14px;animation:rsIn .5s cubic-bezier(.2,.9,.25,1) both}
+.rs-h{font-size:16px;font-weight:800;color:#0B3C5D;margin:0 0 10px;display:flex;justify-content:space-between;align-items:baseline}
+.rs-h span{font-size:12px;font-weight:600;color:#5B6878}
+.rs-tot{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:14px}
+.rs-tot div{background:#fff;border:1px solid #E4EAF0;border-radius:18px;padding:12px 4px;text-align:center}
+.rs-tot i{display:block;width:8px;height:8px;border-radius:50%;margin:0 auto 6px}
+.rs-tot b{display:block;font-size:20px;font-weight:800}
+.rs-tot span{font-size:11px;font-weight:600;color:#5B6878}
+.rs-row{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:#fff;border:1px solid #E4EAF0;border-radius:20px;padding:14px;margin-bottom:10px;transition:transform .15s;animation:rsIn .45s cubic-bezier(.2,.9,.25,1) both;font-family:inherit;color:inherit}
+.rs-row:active{transform:scale(.98)}
+.rs-sc{width:58px;height:58px;border-radius:18px;flex:none;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px}
+.rs-sc small{font-size:11px}
+.rs-mid{flex:1;min-width:0}
+.rs-t{font-weight:800;font-size:14px;color:#14212E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rs-m{font-size:12px;color:#5B6878;margin-top:2px}
+.rs-seg{display:flex;height:6px;border-radius:6px;overflow:hidden;background:#EEF2F6;margin:8px 0 5px}
+.rs-seg i{display:block;height:100%}
+.rs-more{width:100%;height:48px;border-radius:16px;border:1.5px solid #DCE3EA;background:#fff;color:#0B3C5D;font-weight:700;font-size:14px;margin-bottom:14px}
+.rs-empty{text-align:center;background:#fff;border-radius:24px;padding:36px 20px;border:1px solid #E4EAF0}
+.rs-empty b{display:block;font-size:17px;color:#0B3C5D;margin:12px 0 6px}
+.rs-empty p{font-size:13px;color:#5B6878;margin-bottom:18px}
+.rs-empty button{padding:13px 22px;border-radius:14px;background:#0B3C5D;color:#fff;font-weight:800}
+@keyframes rsIn{from{opacity:0;transform:translateY(14px)}}
+/* nəticədə vaxt kartı */
+.tm-card{background:#fff;border-radius:18px;padding:16px;border:1px solid #E4EAF0;margin-bottom:16px}
+.tm-big{display:flex;align-items:center;gap:12px}
+.tm-big i{width:44px;height:44px;border-radius:14px;background:#E6F4FF;display:flex;align-items:center;justify-content:center;flex:none}
+.tm-big b{font-size:22px;color:#0B3C5D;display:block}
+.tm-big span{font-size:12px;color:#5B6878}
+.tm-q{display:flex;align-items:center;gap:10px;width:100%;background:none;padding:8px 0;text-align:left;font-family:inherit;color:inherit}
+.tm-q em{font-style:normal;font-size:13px;font-weight:700;width:86px;flex:none}
+.tm-q div{flex:1;height:8px;border-radius:8px;background:#EEF2F6;overflow:hidden}
+.tm-q div i{display:block;height:100%;border-radius:8px;background:#F59E0B}
+.tm-q b{font-size:12.5px;width:44px;text-align:right;flex:none}
+.tm-line{font-size:12.5px;color:#0B3C5D;background:#EEF5FB;border-radius:10px;padding:8px 10px;margin-bottom:8px;font-weight:600}
+/* ===== Yol xəritəm ===== */
+#stab-roadmap>.card{display:none}
+.rm-hero{position:relative;overflow:hidden;border-radius:26px;padding:20px;color:#fff;background:#0B3C5D;box-shadow:0 18px 40px rgba(7,42,66,.25);margin-bottom:14px;animation:rsIn .5s cubic-bezier(.2,.9,.25,1)}
+.rm-hero:before{content:"";position:absolute;left:-40px;bottom:-70px;width:180px;height:180px;border-radius:50%;background:#14507D}
+.rm-hero>*{position:relative}
+.rm-row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.rm-lvl{font-size:12px;font-weight:800;background:#164A70;padding:6px 11px;border-radius:999px;color:#C9DAE6}
+.rm-str{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:800;background:#164A70;padding:5px 11px 5px 7px;border-radius:999px}
+.rm-str svg{width:18px;height:18px}
+.rm-big{display:flex;justify-content:space-between;align-items:flex-end;margin-top:16px}
+.rm-big small{display:block;font-size:12px;color:#B9CEDD;font-weight:600}
+.rm-big b{font-size:44px;font-weight:800;letter-spacing:-1.5px;line-height:1.05}
+.rm-goal{background:#164A70;border-radius:14px;padding:8px 12px;text-align:right;color:#fff}
+.rm-goal b{font-size:20px;letter-spacing:0}
+.rm-bar{position:relative;margin-top:14px;height:12px;border-radius:12px;background:#24587F;overflow:visible}
+.rm-bar i{display:block;height:100%;border-radius:12px;background:#5EEAD4;transition:width 1.2s cubic-bezier(.2,.8,.2,1)}
+.rm-bar em{position:absolute;top:-4px;width:3px;height:20px;border-radius:3px;background:#fff}
+.rm-sub{display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:#C9DAE6}
+.rm-xp{height:5px;border-radius:5px;background:#24587F;margin-top:12px;overflow:hidden}
+.rm-xp i{display:block;height:100%;background:#FBBF24;border-radius:5px}
+.rm-today{background:#fff;border-radius:24px;padding:18px;border:2px solid #0B3C5D;margin-bottom:12px;box-shadow:0 12px 28px rgba(11,60,93,.12);animation:rsIn .5s .05s cubic-bezier(.2,.9,.25,1) both}
+.rm-tl{font-size:11px;font-weight:800;letter-spacing:1px;color:#0F766E}
+.rm-tt{font-size:22px;font-weight:800;color:#0B3C5D;margin:4px 0 6px;line-height:1.2}
+.rm-tr{font-size:13.5px;color:#3D4B5C;line-height:1.5}
+.rm-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.rm-meta span{font-size:12px;font-weight:700;padding:5px 10px;border-radius:999px;background:#EEF3F8;color:#0B3C5D}
+.rm-meta span.x{background:#FEF3C7;color:#92400E}
+.rm-day{display:flex;align-items:center;gap:10px;background:#ECFDF5;border:1px solid #BBF7D0;color:#166534;border-radius:16px;padding:10px 12px;font-size:13px;font-weight:700;margin-bottom:12px}
+.rm-next{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #E4EAF0;border-radius:16px;padding:12px 14px;margin-bottom:8px;opacity:.72}
+.rm-next i{width:32px;height:32px;border-radius:10px;background:#F1F5F9;display:flex;align-items:center;justify-content:center;flex:none}
+.rm-next b{font-size:14px;display:block}
+.rm-next span{font-size:12px;color:#5B6878}
+.rm-sec{display:flex;justify-content:space-between;align-items:baseline;margin:22px 4px 10px}
+.rm-sec h3{margin:0;font-size:17px;font-weight:800;color:#0B3C5D}
+.rm-sec span{font-size:12px;color:#5B6878}
+.rm-path{background:#fff;border:1px solid #E4EAF0;border-radius:22px;padding:16px;position:relative}
+.rm-path:before{content:"";position:absolute;left:39px;top:36px;bottom:36px;width:4px;border-radius:4px;background:#E4EAF0}
+.rm-node{position:relative;display:flex;align-items:center;gap:14px;padding:7px 0}
+.rm-dot{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;font-size:13px;font-weight:800;box-shadow:0 0 0 5px #fff;box-sizing:border-box}
+.rm-node b{font-size:14.5px;display:block}
+.rm-node span{font-size:12px;color:#5B6878}
+.rm-node.cur{background:#FFF6F6;margin:0 -8px;padding:8px;border-radius:18px}
+.rm-node.cur .rm-dot{box-shadow:0 0 0 5px #FDE2E2}
+.rm-node em{font-style:normal;font-size:11px;font-weight:800;background:#DC2626;color:#fff;padding:3px 8px;border-radius:999px;margin-left:auto}
+.rm-bank{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:#fff;border:1px solid #E4EAF0;border-radius:20px;padding:14px;margin-top:14px;font-family:inherit;color:inherit}
+.rm-bank>i{width:46px;height:46px;border-radius:14px;background:#FFF1E6;display:flex;align-items:center;justify-content:center;flex:none}
+.rm-tm{font-weight:800;font-size:13px;padding:7px 11px;border-radius:12px;background:#EEF3F8;color:#0B3C5D;flex:none;font-variant-numeric:tabular-nums}
+.rm-tm.lo{background:#FEE2E2;color:#B91C1C}
+.rm-win{text-align:center;padding:10px 4px}
+.rm-check{width:96px;height:96px;border-radius:50%;margin:10px auto 14px;background:#10B981;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 12px #D1FAE5;animation:pqPop .6s cubic-bezier(.2,1.4,.4,1)}
+.rm-check svg{width:48px;height:48px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:40;stroke-dashoffset:40;animation:rmDraw .5s .3s ease forwards}
+@keyframes rmDraw{to{stroke-dashoffset:0}}
+.rm-win h2{font-size:22px;color:#0B3C5D;margin:0 0 4px}
+.rm-xpg{display:inline-block;font-size:15px;font-weight:800;color:#92400E;background:#FEF3C7;padding:6px 14px;border-radius:999px;margin:6px 0 16px;animation:pqPop .5s .4s cubic-bezier(.2,1.4,.4,1) both}
+.rm-wt{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.rm-wt div{background:#fff;border:1px solid #E4EAF0;border-radius:16px;padding:12px 4px}
+.rm-wt b{display:block;font-size:18px;color:#0B3C5D}
+.rm-wt span{font-size:11px;color:#5B6878;font-weight:600}
+.rm-lvup{background:linear-gradient(135deg,#FEF3C7,#FDE68A);color:#92400E;border-radius:16px;padding:12px;font-weight:800;margin-bottom:12px;animation:pqPop .5s .6s cubic-bezier(.2,1.4,.4,1) both}
+.rm-gl{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.rm-gl button{flex:1;min-width:56px;height:48px;border-radius:14px;border:1.5px solid #DCE3EA;background:#fff;font-weight:800;font-size:15px;color:#0B3C5D}
+.rm-gl button.on{background:#0B3C5D;color:#fff;border-color:#0B3C5D}
+</style>
+<script>
+/* ===== Ümumi köməkçilər: Azərbaycan dilində xəta, tarix, təsdiq pəncərəsi ===== */
+function errAzText(s){s=String(s||"");if(/[əğıöüşçƏĞİÖÜŞÇ]/.test(s))return s;if(/permission|insufficient/i.test(s))return "Bu əməliyyata icazə yoxdur";if(/index/i.test(s))return "Server ayarı tamamlanmayıb, admin ilə əlaqə saxlayın";if(/offline|network|internet|fetch|unavailable/i.test(s))return "İnternet bağlantısı yoxdur";if(/\b(the|is|are|not|of|failed|error|missing|denied|requires|cannot|invalid|unknown|undefined|null|exception|could|unexpected|found)\b/i.test(s))return "Xəta baş verdi, yenidən cəhd edin";return s;}
+function errAz(x){try{var c=String((x&&x.code)||"").replace(/^firestore\//,""),M={"permission-denied":"Bu əməliyyata icazə yoxdur","unavailable":"İnternet bağlantısı yoxdur","failed-precondition":"Server ayarı tamamlanmayıb, admin ilə əlaqə saxlayın","not-found":"Məlumat tapılmadı","deadline-exceeded":"Server cavab vermədi, yenidən cəhd edin","resource-exhausted":"Limit doldu, bir az sonra yenidən cəhd edin","auth/network-request-failed":"İnternet bağlantısı yoxdur","auth/too-many-requests":"Çox cəhd edildi, bir az sonra yenidən yoxlayın","auth/weak-password":"Şifrə ən azı 6 simvol olmalıdır","auth/invalid-email":"İstifadəçi adı düzgün deyil"};if(M[c])return M[c];if(x&&x.name==="AbortError")return "Server cavab vermədi, yenidən cəhd edin";return errAzText((x&&x.message)||x);}catch(z){return "Xəta baş verdi, yenidən cəhd edin";}}
+function fmtAz(s){var m=String(s||"").match(/^(\d{4})-(\d{2})-(\d{2})/);return m?m[3]+"."+m[2]+"."+m[1]:s;}
+function ttmConfirm(msg){return new Promise(function(res){var m=document.createElement("div"),bad=/sil|rədd|deaktiv|çıxar/i.test(msg);m.className="pq-cf";m.innerHTML='<div class="pq-cfb"><div class="pq-cfi" style="background:'+(bad?'#FEE2E2':'#E0F2FE')+'"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="'+(bad?'#DC2626':'#0B3C5D')+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(bad?'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>':'<circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/>')+'</svg></div><p style="white-space:pre-line;font-size:15px;color:#1c2530;font-weight:600;line-height:1.5"></p><div class="pq-cfa"><button class="pq-cfn">Ləğv et</button><button class="pq-cfy">Təsdiqlə</button></div></div>';m.querySelector("p").textContent=msg;if(!bad)m.querySelector(".pq-cfy").style.background="linear-gradient(135deg,#14507d,#072a42)";document.body.appendChild(m);requestAnimationFrame(function(){m.classList.add("on")});function done(v){m.classList.remove("on");m.classList.add("off");setTimeout(function(){m.remove()},240);res(v);}m.querySelector(".pq-cfn").onclick=function(){done(false)};m.querySelector(".pq-cfy").onclick=function(){done(true)};m.addEventListener("click",function(e){if(e.target===m)done(false)});});}
+</script>
+
 </head>
 <body>
 
 <div id="view-loading" class="splash-screen">
-  <div class="splash-logo">TTM</div>
-  <div>Yüklənir...</div>
+  <div class="sp-lg">TTM</div><h1>TƏDRİS<br>MƏRKƏZİ</h1><p>Rəqəmsal təhsil platforması</p><div class="sp-bar"><i></i></div>
 </div>
 
 <div id="view-login" class="login-page" style="display:none">
@@ -1217,7 +1389,7 @@ function ensureLib(n){
     <div class="login-header">
       <div class="login-logo">TTM</div>
       <h1>TTM Tədris Mərkəzi</h1>
-      <p id="login-subtitle">Şagird və Valideyn Portalı — TEST rejimi</p>
+      <p id="login-subtitle">Şagird və Müəllim Portalı</p>
     </div>
     <div class="error-box" id="error-box"></div>
     <div class="info-box" id="info-box"></div>
@@ -1285,7 +1457,7 @@ function ensureLib(n){
     <span class="auth-switch-link" id="auth-switch-link">Müəllimsiniz? Qeydiyyatdan keçin</span>
     <span class="auth-switch-link" id="student-switch-link">Şagirdsiniz? Qeydiyyatdan keçin</span>
 
-    <div class="login-footer">© 2026 TTM Tədris Mərkəzi — Demo test səhifəsi</div>
+    <div class="login-footer">© 2026 TTM Tədris Mərkəzi</div>
     <button id="pwa-install-btn" style="display:none; width:100%; margin-top:14px; background:var(--color-light-gray); color:var(--color-primary); padding:11px; border-radius:var(--radius-sm); font-size:13.5px; font-weight:600;">Tətbiqi Yüklə</button>
   </div>
 </div>
@@ -1347,7 +1519,7 @@ function ensureLib(n){
       <div class="card"><h3>Mənim elanlarım</h3><div id="an-list"><div class="empty-state">Yüklənir...</div></div></div>
     </div>
     <div class="tab-panel" id="tab-more"><div class="card"><div class="v2-sec-head"><h3>Daha çox</h3></div><div id="a-more-list"></div></div></div>
-    <div class="tab-panel" id="tab-settings"><div class="card"><h3>Parametrlər</h3><div class="list-item"><div class="list-item-info"><div class="list-item-title" id="a-set-name">—</div><div class="list-item-sub">Hesab</div></div></div><button class="btn-small" id="a-set-logout" style="width:100%;background:var(--color-danger);margin-top:8px;">Çıxış</button><a href="delete-account.html" class="btn-outline" style="display:block;text-align:center;text-decoration:none;margin-top:8px;color:var(--color-danger);border-color:var(--color-danger);">Hesabı sil</a><div class="muted-note">Əlavə parametrlər tezliklə.</div></div></div>
+    <div class="tab-panel" id="tab-settings"><div class="card"><h3>Parametrlər</h3><div class="list-item"><div class="list-item-info"><div class="list-item-title" id="a-set-name">—</div><div class="list-item-sub">Hesab</div></div></div><button class="btn-small" id="a-set-logout" style="width:100%;background:var(--color-danger);margin-top:8px;">Çıxış</button><a href="delete-account.html" class="btn-outline" style="display:block;text-align:center;text-decoration:none;margin-top:8px;color:var(--color-danger);border-color:var(--color-danger);">Hesabı sil</a></div></div>
     <div class="tab-panel active" id="tab-students">
       <div class="card">
         <h3 id="student-form-title">Yeni şagird əlavə et</h3>
@@ -2171,7 +2343,7 @@ auth.onAuthStateChanged(async (user) => {
   } catch (err) {
     console.error(err);
     showView("view-login");
-    showError("Firestore xətası: " + (err.code || "") + " " + (err.message || err));
+    showError("Firestore xətası: " + (err.code || "") + " " + (errAz(err) || err));
   }
 });
 
@@ -2205,7 +2377,7 @@ form.addEventListener("submit", async (e) => {
     if (["auth/invalid-credential","auth/wrong-password","auth/user-not-found"].includes(err.code)) {
       showError("İstifadəçi adı və ya şifrə yanlışdır.");
     } else {
-      showError(err.message || "Daxil olarkən xəta baş verdi.");
+      showError(errAz(err) || "Daxil olarkən xəta baş verdi.");
     }
     setLoading(false);
   }
@@ -2223,7 +2395,7 @@ authSwitchLink.addEventListener("click", () => {
   teacherRegisterForm.style.display = showingTeacherRegister ? "block" : "none";
   document.getElementById("login-subtitle").textContent = showingTeacherRegister
     ? "Müəllim qeydiyyatı"
-    : "Şagird və Valideyn Portalı — TEST rejimi";
+    : "Şagird və Müəllim Portalı";
   authSwitchLink.textContent = showingTeacherRegister ? "Girişə qayıt" : "Müəllimsiniz? Qeydiyyatdan keçin";
 });
 
@@ -2264,7 +2436,7 @@ teacherRegisterForm.addEventListener("submit", async (e) => {
     if (err.code === "auth/email-already-in-use") {
       showError("Bu istifadəçi adı artıq istifadə olunub, başqasını seçin.");
     } else {
-      showError(err.message || "Qeydiyyat zamanı xəta baş verdi.");
+      showError(errAz(err) || "Qeydiyyat zamanı xəta baş verdi.");
     }
     if (auth.currentUser) { try { await auth.signOut(); } catch (e2) { /* etinasız */ } }
   } finally {
@@ -2544,7 +2716,7 @@ function ensurePaymentsListener() {
   }, err => {
     console.error(err);
     paymentsListenerOn = false;
-    document.getElementById("payments-list").innerHTML = `<div class="empty-state">Xəta: ${esc(err.message)}</div>`;
+    document.getElementById("payments-list").innerHTML = `<div class="empty-state">Xəta: ${esc(errAz(err))}</div>`;
   });
 }
 function loadPayments(monthKey) { currentPaymentMonth = monthKey; ensurePaymentsListener(); recomputePaymentCaches(); }
@@ -2650,7 +2822,7 @@ window.updatePaymentDay = async (studentId, val) => {
     toast("Ödəniş günü yadda saxlandı");
   } catch (err) {
     console.error(err);
-    toast("Xəta: " + err.message);
+    toast("Xəta: " + errAz(err));
   }
 };
 
@@ -2661,7 +2833,7 @@ window.updateMonthlyFee = async (studentId, val) => {
     toast("Məbləğ yadda saxlandı");
   } catch (err) {
     console.error(err);
-    toast("Xəta: " + err.message);
+    toast("Xəta: " + errAz(err));
   }
 };
 
@@ -2678,7 +2850,7 @@ window.togglePayment = async (studentId) => {
     toast(newPaid ? "Ödənilib kimi qeyd olundu" : "Ödənilməyib kimi qeyd olundu");
   } catch (err) {
     console.error(err);
-    toast("Xəta: " + err.message);
+    toast("Xəta: " + errAz(err));
   }
 };
 
@@ -2801,7 +2973,7 @@ document.getElementById("group-save-btn").addEventListener("click", async () => 
 });
 
 window.deleteGroup = async (id) => {
-  if (!confirm("Bu qrupu silmək istədiyinizə əminsiniz?")) return;
+  if (!(await ttmConfirm("Bu qrupu silmək istədiyinizə əminsiniz?"))) return;
   await db.collection("groups").doc(id).delete();
   toast("Qrup silindi");
 };
@@ -2914,7 +3086,7 @@ document.getElementById("student-save-btn").addEventListener("click", async () =
     if (err.code === "auth/email-already-in-use") {
       toast("Bu istifadəçi adı artıq istifadə olunub, başqasını seçin");
     } else {
-      toast("Xəta: " + err.message);
+      toast("Xəta: " + errAz(err));
     }
   } finally {
     document.getElementById("student-save-btn").disabled = false;
@@ -2922,7 +3094,7 @@ document.getElementById("student-save-btn").addEventListener("click", async () =
 });
 
 window.deleteStudent = async (id) => {
-  if (!confirm("Bu şagirdi silmək istədiyinizə əminsiniz? (Giriş imkanı dərhal bağlanacaq)")) return;
+  if (!(await ttmConfirm("Bu şagirdi silmək istədiyinizə əminsiniz? (Giriş imkanı dərhal bağlanacaq)"))) return;
   await db.collection("students").doc(id).update({ active: false });
   await db.collection("users").doc(id).delete();
   toast("Şagird silindi");
@@ -2997,7 +3169,7 @@ function loadDailyStatusForGroup() {
       dailyStatusCache = {};
       snap.forEach(d => { dailyStatusCache[d.data().studentId] = d.data(); });
       renderDailyCards();
-    }, err => { console.error(err); toast("Xəta: " + err.message); });
+    }, err => { console.error(err); toast("Xəta: " + errAz(err)); });
 }
 
 function renderDailyCards() {
@@ -3058,7 +3230,7 @@ window.setDailyStatus = async (studentId, field, value) => {
       studentId, groupId: dailyCurrentGroupId, teacherId: currentTeacherId, date: dailyCurrentDate,
       [field]: newVal, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
-  } catch (err) { console.error(err); toast("Xəta: " + err.message); }
+  } catch (err) { console.error(err); toast("Xəta: " + errAz(err)); }
 };
 
 window.saveDailyNote = async (studentId, note) => {
@@ -3068,7 +3240,7 @@ window.saveDailyNote = async (studentId, note) => {
       note: note.trim(), updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
     toast("Qeyd saxlandı");
-  } catch (err) { console.error(err); toast("Xəta: " + err.message); }
+  } catch (err) { console.error(err); toast("Xəta: " + errAz(err)); }
 };
 
 function renderDailyStatsBar(list) {
@@ -3279,7 +3451,7 @@ document.getElementById("daily-pdf-btn").addEventListener("click", async () => {
     toast("PDF hazırdır");
   } catch (err) {
     console.error(err);
-    toast("PDF xətası: " + err.message);
+    toast("PDF xətası: " + errAz(err));
   } finally {
     btn.disabled = false;
   }
@@ -3446,7 +3618,7 @@ window.toggleTopic = async (id, newVal) => {
 };
 
 window.deleteDoc = async (coll, id) => {
-  if (!confirm("Silmək istədiyinizə əminsiniz?")) return;
+  if (!(await ttmConfirm("Silmək istədiyinizə əminsiniz?"))) return;
   await db.collection(coll).doc(id).delete();
   toast("Silindi");
 };
@@ -3826,7 +3998,7 @@ document.getElementById("crop-pdf-input").addEventListener("change", async (e) =
     await renderCropPage();
   } catch (err) {
     console.error(err);
-    toast("PDF açıla bilmədi: " + err.message);
+    toast("PDF açıla bilmədi: " + errAz(err));
   }
 });
 
@@ -4403,7 +4575,7 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
     }
   } catch (err) {
     console.error(err);
-    toast("PDF hazırlanarkən xəta: " + err.message);
+    toast("PDF hazırlanarkən xəta: " + errAz(err));
   } finally {
     window._ttmPdfPreview = false;
     document.getElementById("pdf-generate-btn").disabled = false;
@@ -4501,7 +4673,7 @@ document.getElementById("exam-save-btn").addEventListener("click", async () => {
     resetExamForm();
   } catch (err) {
     console.error(err);
-    toast("Xəta: " + err.message);
+    toast("Xəta: " + errAz(err));
   } finally {
     document.getElementById("exam-save-btn").disabled = false;
   }
@@ -4577,7 +4749,7 @@ window.editExam = async (id) => {
     examQuestions = qSnap.docs.map(d => d.data());
   } catch (err) {
     console.error("Suallar yüklənmədi:", err);
-    toast("Xəta: suallar yüklənmədi (" + (err.code || err.message) + ")");
+    toast("Xəta: suallar yüklənmədi (" + (err.code || errAz(err)) + ")");
     return;
   }
   try {
@@ -4593,7 +4765,7 @@ window.editExam = async (id) => {
 };
 
 window.deleteExam = async (id) => {
-  if (!confirm("Bu sınağı silmək istədiyinizə əminsiniz?")) return;
+  if (!(await ttmConfirm("Bu sınağı silmək istədiyinizə əminsiniz?"))) return;
   const qSnap = await db.collection("exams").doc(id).collection("questions").get();
   const batch = db.batch();
   qSnap.forEach(d => batch.delete(d.ref));
@@ -4696,7 +4868,7 @@ window.uploadSlideImage = async (i, inputEl) => {
     toast("Şəkil yükləndi. İndi «Sayt parametrlərini yadda saxla» düyməsini basın");
   } catch (e) {
     console.error(e);
-    toast("Xəta (" + (e.code || "naməlum") + "): " + (e.message || e));
+    toast("Xəta (" + (e.code || "naməlum") + "): " + (errAz(e) || e));
     alert("Şəkil yüklənmədi.\nXəta kodu: " + (e.code || "naməlum") + "\n\nBu adətən Firebase Storage-ın icazə qaydaları (Security Rules) səbəbindən olur. Bu mesajı olduğu kimi göndər ki, düzəldək.");
   }
 };
@@ -4766,7 +4938,7 @@ document.getElementById("ss-save-btn").addEventListener("click", async () => {
     toast("Sayt ayarları yadda saxlandı");
   } catch (e) {
     console.error(e);
-    toast("Xəta: " + e.message);
+    toast("Xəta: " + errAz(e));
   }
 });
 
@@ -4834,14 +5006,14 @@ function loadTeacherRequests() {
 }
 
 window.approveTeacher = async (uid) => {
-  if (!confirm("Ödənişi aldığınızı təsdiqləyirsiniz? Bu, 1 illik giriş açacaq.")) return;
+  if (!(await ttmConfirm("Ödənişi aldığınızı təsdiqləyirsiniz? Bu, 1 illik giriş açacaq."))) return;
   const expiresAt = firebase.firestore.Timestamp.fromDate(new Date(Date.now() + ONE_YEAR_MS));
   await db.collection("teachers").doc(uid).update({ status: "active", expiresAt, approvedAt: firebase.firestore.FieldValue.serverTimestamp() });
   toast("Müəllim təsdiqləndi");
 };
 
 window.rejectTeacher = async (uid) => {
-  if (!confirm("Bu qeydiyyatı rədd etmək istədiyinizə əminsiniz?")) return;
+  if (!(await ttmConfirm("Bu qeydiyyatı rədd etmək istədiyinizə əminsiniz?"))) return;
   await db.collection("teachers").doc(uid).update({ status: "rejected" });
   toast("Rədd edildi");
 };
@@ -4856,7 +5028,7 @@ window.extendTeacher = async (uid) => {
 };
 
 window.deactivateTeacher = async (uid) => {
-  if (!confirm("Bu müəllimin girişini deaktiv etmək istədiyinizə əminsiniz?")) return;
+  if (!(await ttmConfirm("Bu müəllimin girişini deaktiv etmək istədiyinizə əminsiniz?"))) return;
   await db.collection("teachers").doc(uid).update({ status: "inactive" });
   toast("Deaktiv edildi");
 };
@@ -4889,7 +5061,7 @@ document.getElementById("analytics-exam-select").addEventListener("change", asyn
     renderAnalyticsExamResult(questions, attempts);
   }, err => {
     console.error(err);
-    el.innerHTML = `<div class="empty-state">Xəta: ${esc(err.message)}</div>`;
+    el.innerHTML = `<div class="empty-state">Xəta: ${esc(errAz(err))}</div>`;
   });
 });
 
@@ -5074,7 +5246,7 @@ document.getElementById("grading-question-select").addEventListener("change", as
     renderGradingPanel();
   } catch (err) {
     console.error(err);
-    panel.innerHTML = `<div class="empty-state">Xəta baş verdi: ${esc(err.message)}</div>`;
+    panel.innerHTML = `<div class="empty-state">Xəta baş verdi: ${esc(errAz(err))}</div>`;
   }
 });
 
@@ -5158,7 +5330,7 @@ window.gradeCurrentAnswer = async (points) => {
     renderGradingPanel();
   } catch (err) {
     console.error(err);
-    toast("Xəta: " + err.message);
+    toast("Xəta: " + errAz(err));
     renderGradingPanel();
   } finally { gradingBusy = false; }
 };
@@ -5178,7 +5350,7 @@ function loadStudentAnalytics(studentId) {
     renderStudentAnalyticsResult(attempts);
   }, err => {
     console.error(err);
-    el.innerHTML = `<div class="empty-state">Xəta: ${esc(err.message)}</div>`;
+    el.innerHTML = `<div class="empty-state">Xəta: ${esc(errAz(err))}</div>`;
   });
 }
 
@@ -5694,7 +5866,7 @@ async function resumeExamIfAny() {
 window.startExam = async (examId) => {
   const ex = studentExamsCache.find(e => e.id === examId);
   if (!ex) return;
-  if (!confirm(`"${ex.title}" sınağına başlayırsınız. ${ex.timeLimitMinutes} dəqiqəniz var. Davam edilsin?`)) return;
+  if (!(await ttmConfirm(`"${ex.title}" sınağına başlayırsınız. ${ex.timeLimitMinutes} dəqiqəniz var. Davam edilsin?`))) return;
 
   toast("Suallar yüklənir...");
   const qSnap = await db.collection("exams").doc(examId).collection("questions").orderBy("order").get();
@@ -6087,7 +6259,7 @@ window.aiAnalyze = async (i, btn) => {
     out.innerHTML = esc(d.answer).replace(/\n/g, "<br>");
     renderMath("ai-out-" + i);
   } catch (e) {
-    out.textContent = e.name === "AbortError" ? "AI cavab vermədi (vaxt bitdi), yenidən cəhd edin." : "Xəta: " + e.message;
+    out.textContent = e.name === "AbortError" ? "AI cavab vermədi (vaxt bitdi), yenidən cəhd edin." : "Xəta: " + errAz(e);
   }
   btn.disabled = false;
 };
@@ -6115,7 +6287,7 @@ window.generateTopicPractice = async (key, topicName, btn) => {
     window._practiceCache[key] = d.data;
     renderPracticeBox(key);
   } catch (e) {
-    const msg = e.name === "AbortError" ? "AI cavab vermədi (vaxt bitdi)" : e.message;
+    const msg = e.name === "AbortError" ? "AI cavab vermədi (vaxt bitdi)" : errAz(e);
     box.innerHTML = `<div class="muted-note">Xəta: ${esc(msg)} — yenidən cəhd edin.</div>`;
   }
   btn.disabled = false;
@@ -6137,7 +6309,7 @@ async function loadRoadmap() {
         <button class="btn-small" style="width:100%; margin-top:10px;" onclick="generateRoadmap(this)">Yol xəritəmi hazırla</button>`;
     }
   } catch (e) {
-    el.innerHTML = `<div class="empty-state">Xəta: ${esc(e.message)}</div>
+    el.innerHTML = `<div class="empty-state">Xəta: ${esc(errAz(e))}</div>
       <button class="btn-small" style="width:100%; margin-top:10px;" onclick="generateRoadmap(this)">Yol xəritəmi hazırla</button>`;
   }
 }
@@ -6181,7 +6353,7 @@ window.generateRoadmap = async (btn) => {
     await db.collection("studentRoadmaps").add({ ...roadmap, generatedAt: firebase.firestore.FieldValue.serverTimestamp() });
     renderRoadmapContent(roadmap);
   } catch (e) {
-    const msg = e.name === "AbortError" ? "AI cavab vermədi (vaxt bitdi), yenidən cəhd edin." : e.message;
+    const msg = e.name === "AbortError" ? "AI cavab vermədi (vaxt bitdi), yenidən cəhd edin." : errAz(e);
     el.innerHTML = `<div class="empty-state">Xəta: ${esc(msg)}</div>
       <button class="btn-small" style="width:100%; margin-top:10px;" onclick="generateRoadmap(this)">Yenidən cəhd et</button>`;
   }
@@ -6235,7 +6407,7 @@ window.generatePractice = async (i, btn) => {
     window._practiceCache[i] = d.data;
     renderPracticeBox(i);
   } catch (e) {
-    const msg = e.name === "AbortError" ? "AI cavab vermədi (vaxt bitdi)" : e.message;
+    const msg = e.name === "AbortError" ? "AI cavab vermədi (vaxt bitdi)" : errAz(e);
     box.innerHTML = `<div class="muted-note">Xəta: ${esc(msg)} — yenidən cəhd edin.</div>`;
   }
   btn.disabled = false;
@@ -6639,7 +6811,7 @@ function renderStudentDaily(reports) {
     const score = dailyScoreOf(r);
     return `<div class="list-item">
       <div class="list-item-info">
-        <div class="list-item-title">${r.date} ${score !== null ? `— ${score}%` : ""}</div>
+        <div class="list-item-title">${fmtAz(r.date)} ${score !== null ? `— ${score}%` : ""}</div>
         <div class="list-item-sub">Ev tapşırığı: ${DAILY_LBL[r.homework] || "—"} · Sual-cavab: ${DAILY_LBL[r.qa] || "—"} · Təkrar: ${DAILY_LBL[r.repeat] || "—"}</div>
         ${r.note ? `<div class="list-item-sub" style="margin-top:4px;">${esc(r.note)}</div>` : ""}
       </div>
@@ -6793,8 +6965,8 @@ function rebuildStudentsCache() {
   afterStudentsChanged();
 }
 window.removeEnrolled = async (enrId) => {
-  if (!confirm("Bu şagirdi sizin siyahıdan çıxarmaq istəyirsiniz? (Şagirdin hesabı və nəticələri silinmir)")) return;
-  try { await db.collection("enrollments").doc(enrId).delete(); toast("Şagird çıxarıldı"); } catch (e) { toast("Xəta: " + e.message); }
+  if (!(await ttmConfirm("Bu şagirdi sizin siyahıdan çıxarmaq istəyirsiniz? (Şagirdin hesabı və nəticələri silinmir)"))) return;
+  try { await db.collection("enrollments").doc(enrId).delete(); toast("Şagird çıxarıldı"); } catch (e) { toast("Xəta: " + errAz(e)); }
 };
 
 function initEnrollments() {
@@ -6814,7 +6986,7 @@ function initEnrollments() {
       try {
         await db.collection("teacherCodes").doc(c).set({ teacherId: currentTeacherId, teacherName, subject });
         toast("Kod yaradıldı"); return;
-      } catch (e) { if (i === 4) toast("Xəta: " + e.message); }
+      } catch (e) { if (i === 4) toast("Xəta: " + errAz(e)); }
     }
   };
   db.collection("enrollments").where("teacherId", "==", currentTeacherId).onSnapshot(s => {
@@ -6854,16 +7026,16 @@ window.approveEnrollment = async (id) => {
   try {
     await db.collection("enrollments").doc(id).update({ status: "active", groupId, approvedAt: firebase.firestore.FieldValue.serverTimestamp() });
     toast("Şagird qrupa əlavə edildi");
-  } catch (e) { toast("Xəta: " + e.message); }
+  } catch (e) { toast("Xəta: " + errAz(e)); }
 };
 window.rejectEnrollment = async (id) => {
-  if (!confirm("Sorğunu rədd etmək istəyirsiniz?")) return;
-  try { await db.collection("enrollments").doc(id).delete(); toast("Rədd edildi"); } catch (e) { toast("Xəta: " + e.message); }
+  if (!(await ttmConfirm("Sorğunu rədd etmək istəyirsiniz?"))) return;
+  try { await db.collection("enrollments").doc(id).delete(); toast("Rədd edildi"); } catch (e) { toast("Xəta: " + errAz(e)); }
 };
 window.moveEnrollment = async (id) => {
   const groupId = document.getElementById("enr-m-" + id).value;
   if (!groupId) return;
-  try { await db.collection("enrollments").doc(id).update({ groupId }); toast("Qrup dəyişdirildi"); } catch (e) { toast("Xəta: " + e.message); }
+  try { await db.collection("enrollments").doc(id).update({ groupId }); toast("Qrup dəyişdirildi"); } catch (e) { toast("Xəta: " + errAz(e)); }
 };
 
 </script>
@@ -6881,7 +7053,7 @@ window.moveEnrollment = async (id) => {
     document.getElementById("teacher-register-form").style.display = "none";
     sForm.style.display = open ? "block" : "none";
     tLink.style.display = open ? "none" : "";
-    document.getElementById("login-subtitle").textContent = open ? "Şagird qeydiyyatı" : "Şagird və Valideyn Portalı — TEST rejimi";
+    document.getElementById("login-subtitle").textContent = open ? "Şagird qeydiyyatı" : "Şagird və Müəllim Portalı";
     link.textContent = open ? "Girişə qayıt" : "Şagirdsiniz? Qeydiyyatdan keçin";
   });
   const btn = document.getElementById("student-register-btn");
@@ -6906,7 +7078,7 @@ window.moveEnrollment = async (id) => {
       window.location.reload(); // artıq daxil olub, səhifə yenilənəndə şagird panelinə düşür
     } catch (err) {
       console.error(err);
-      showError(err.code === "auth/email-already-in-use" ? "Bu istifadəçi adı artıq istifadə olunub, başqasını seçin." : (err.message || "Qeydiyyat zamanı xəta baş verdi."));
+      showError(err.code === "auth/email-already-in-use" ? "Bu istifadəçi adı artıq istifadə olunub, başqasını seçin." : (errAz(err) || "Qeydiyyat zamanı xəta baş verdi."));
       if (auth.currentUser) { try { await auth.currentUser.delete(); } catch (e2) { try { await auth.signOut(); } catch (e3) {} } }
       setLoad(false);
       suppressAuthRouting = false;
@@ -7134,7 +7306,7 @@ async function v2LoadProfiles() {
   } catch (e) {
     v2ProfilesLoaded = false;
     console.error(e);
-    document.getElementById("v2-tlist").innerHTML = `<div class="empty-state">Siyahı yüklənmədi: ${esc(e.message)}</div>`;
+    document.getElementById("v2-tlist").innerHTML = `<div class="empty-state">Siyahı yüklənmədi: ${esc(errAz(e))}</div>`;
     return;
   }
   v2RenderList();
@@ -7246,7 +7418,7 @@ window.v2SendRequest = async (tid) => {
     window.openTeacherProfile(tid);
   } catch (e) {
     console.error(e);
-    toast(e.code === "permission-denied" ? "Bu müəllimə artıq sorğu göndərmisiniz" : "Xəta: " + e.message);
+    toast(e.code === "permission-denied" ? "Bu müəllimə artıq sorğu göndərmisiniz" : "Xəta: " + errAz(e));
     if (btn) btn.disabled = false;
   }
 };
@@ -7339,13 +7511,13 @@ async function v2RenderSection() {
     } else if (key === "daily") {
       if (!d.daily) d.daily = (await db.collection("dailyReports").where("studentId", "==", currentStudentUid).get()).docs.map(x => x.data()).filter(r => r.teacherId === tid).sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 30);
       if (!ok()) return;
-      body.innerHTML = `<h3>Gündəlik hesabatlar</h3>` + (d.daily.length ? d.daily.map(r => `<div class="list-item"><div class="list-item-info"><div class="list-item-title">${esc(r.date)}</div>
+      body.innerHTML = `<h3>Gündəlik hesabatlar</h3>` + (d.daily.length ? d.daily.map(r => `<div class="list-item"><div class="list-item-info"><div class="list-item-title">${esc(fmtAz(r.date))}</div>
         <div class="list-item-sub">${r.attended ? "✓ İştirak etdi" : "✗ İştirak etmədi"} · ${r.homeworkDone ? "✓ Tapşırıq edildi" : "✗ Tapşırıq edilmədi"} · Hazırlıq: ${Number(r.prepPercentage) || 0}%</div>
         ${r.note ? `<div class="list-item-sub" style="margin-top:4px;">${esc(r.note)}</div>` : ""}</div></div>`).join("") : `<div class="empty-state">Hələ hesabat yoxdur</div>`);
     }
   } catch (e) {
     console.error(e);
-    if (ok()) body.innerHTML = `<div class="empty-state">Xəta: ${esc(e.message)}</div>`;
+    if (ok()) body.innerHTML = `<div class="empty-state">Xəta: ${esc(errAz(e))}</div>`;
   }
 }
 
@@ -7414,7 +7586,7 @@ async function loadMyProfile() {
   try {
     const d = await db.collection("teacherProfiles").doc(currentTeacherId).get();
     myProfile = d.exists ? d.data() : null;
-  } catch (e) { statusEl.textContent = "Profil yüklənmədi: " + e.message; return; }
+  } catch (e) { statusEl.textContent = "Profil yüklənmədi: " + errAz(e); return; }
   myPhotoData = (myProfile && myProfile.photo) || "";
   document.getElementById("mp-photo-preview").src = v2SafePhoto(myProfile) || MP_BLANK;
   document.getElementById("mp-name").value = (myProfile && myProfile.fullName) || document.getElementById("admin-name").textContent || "";
@@ -7465,18 +7637,18 @@ document.getElementById("mp-save-btn").addEventListener("click", async () => {
     toast("Profil yadda saxlandı");
   } catch (e) {
     console.error(e);
-    toast("Xəta: " + e.message);
+    toast("Xəta: " + errAz(e));
   } finally { btn.disabled = false; }
 });
 document.getElementById("mp-delete-btn").addEventListener("click", async () => {
-  if (!confirm("Profil siyahıdan silinsin? Mövcud şagirdlərin qoşulması pozulmur.")) return;
+  if (!(await ttmConfirm("Profil siyahıdan silinsin? Mövcud şagirdlərin qoşulması pozulmur."))) return;
   try {
     await db.collection("teacherProfiles").doc(currentTeacherId).delete();
     myProfile = null; myPhotoData = "";
     try{localStorage.removeItem("ttm_hp_"+currentTeacherId);}catch(e){}
     document.getElementById("mp-status").textContent = "Profil silindi.";
     toast("Profil silindi");
-  } catch (e) { toast("Xəta: " + e.message); }
+  } catch (e) { toast("Xəta: " + errAz(e)); }
 });
 </script>
 <script>
@@ -7580,7 +7752,7 @@ if (pwaBtn) {
     try {
       const d = JSON.parse(await f.text());
       if (d.format !== "ttm-exam" || !Array.isArray(d.questions)) throw new Error("format");
-      if (examQuestions.length && !confirm("Hazırkı suallar silinib faylın sualları yüklənəcək. Davam edilsin?")) { e.target.value = ""; return; }
+      if (examQuestions.length && !(await ttmConfirm("Hazırkı suallar silinib faylın sualları yüklənəcək. Davam edilsin?"))) { e.target.value = ""; return; }
       examTexts = d.texts || [];
       examQuestions = d.questions.map(q => Object.assign(
         { type: "mcq", text: "", imageBase64: "", options: ["A", "B", "C", "D", "E"], correctIndex: 0, correctAnswer: "", textId: "" }, q));
@@ -7669,7 +7841,7 @@ if (pwaBtn) {
       render();
     } catch (err) {
       console.error(err);
-      out.innerHTML = `<div class="empty-state">Xəta: ${esc(err.message)}</div>`;
+      out.innerHTML = `<div class="empty-state">Xəta: ${esc(errAz(err))}</div>`;
     }
   }
 
@@ -7771,7 +7943,7 @@ if (pwaBtn) {
       await shareOrDl(doc.output("blob"), safeName(meta.group + " " + meta.exam) + ".pdf", "application/pdf");
     } catch (err) {
       console.error(err);
-      toast("PDF xətası: " + err.message);
+      toast("PDF xətası: " + errAz(err));
     } finally {
       btn.disabled = false;
     }
@@ -7854,7 +8026,7 @@ window.ntOpen=()=>{
   document.body.appendChild(o);
   const end=()=>{localStorage.setItem("ttm_onboarded","1");o.remove();};
   setTimeout(()=>{
-    if(!first){o.remove();return;}
+    if(!first){o.style.transition="opacity .45s ease";o.style.opacity="0";setTimeout(()=>o.remove(),460);return;}
     let i=0;o.className="sl";
     const draw=()=>{const x=S[i],last=i===S.length-1;
       o.innerHTML=`<button class="skip">Keç</button><div><div class="em">${x[0]}</div><h1>${x[1]}</h1><p>${x[2]}</p></div><div style="width:100%"><div class="dots">${S.map((_,k)=>`<i class="${k===i?"on":""}"></i>`).join("")}</div><button class="v2-cta">${last?"Başla":"Növbəti"} →</button></div>`;
@@ -7994,12 +8166,12 @@ async function anMyLoad(){
     const s=await db.collection("announcements").where("teacherId","==",currentTeacherId).get();
     const l=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt&&b.createdAt.toMillis?b.createdAt.toMillis():0)-(a.createdAt&&a.createdAt.toMillis?a.createdAt.toMillis():0));
     box.innerHTML=l.length?l.map(a=>`<div class="list-item"><div class="list-item-info"><div class="list-item-title">${esc(a.title)}</div><div class="list-item-sub">${[a.groupName,a.time].filter(Boolean).map(esc).join(" · ")}</div></div><div class="list-item-actions"><button class="btn-danger" onclick="anDel('${a.id}')">Sil</button></div></div>`).join(""):'<div class="empty-state">Hələ elan yoxdur</div>';
-  }catch(e){console.error(e);box.innerHTML='<div class="empty-state">Xəta: '+esc(e.message)+'</div>';}
+  }catch(e){console.error(e);box.innerHTML='<div class="empty-state">Xəta: '+esc(errAz(e))+'</div>';}
 }
 window.anDel=async(id)=>{
-  if(!confirm("Elan silinsin?"))return;
+  if(!(await ttmConfirm("Elan silinsin?")))return;
   try{await db.collection("announcements").doc(id).delete();annCache=null;toast("Elan silindi");anMyLoad();annLoad("a-ann");}
-  catch(e){toast("Xəta: "+e.message);}
+  catch(e){toast("Xəta: "+errAz(e));}
 };
 A("an-save-btn").addEventListener("click",async()=>{
   const title=A("an-title").value.trim(),text=A("an-text").value.trim();
@@ -8012,7 +8184,7 @@ A("an-save-btn").addEventListener("click",async()=>{
     annCache=null;
     toast("Elan yayımlandı");
     anMyLoad();
-  }catch(e){console.error(e);toast("Xəta: "+e.message);}
+  }catch(e){console.error(e);toast("Xəta: "+errAz(e));}
   finally{btn.disabled=false;}
 });
 function homeExtra(){
@@ -8470,7 +8642,7 @@ function homeExtra(){
       document.body.appendChild(ov); lock(true);
       const end = v => { ov.remove(); lock(false); resolve(v); };
       let src;
-      try { src = await loadSrc(f); } catch (e) { console.error(e); toast("" + e.message); return end(null); }
+      try { src = await loadSrc(f); } catch (e) { console.error(e); toast("" + errAz(e)); return end(null); }
       const wrap = ov.querySelector(".cr-wrap"), cv = wrap.querySelector("canvas"), box = ov.querySelector(".cr-box");
       let r;
       const draw = () => {
@@ -9140,7 +9312,7 @@ function homeExtra(){
       if (dup) h += `<div style="color:var(--color-danger);margin-top:6px;">İki şagirdin kodu üst-üstə düşdü — həmin vərəqləri yoxlayanda şagirdi əl ilə seçəcəksiniz.</div>`;
       if (gen) h += `<div style="margin-top:6px;">Şagird kodları: «Əyani hazırlıq → Şagird kodları» bölməsində.</div>`;
       box.innerHTML = h; btn.disabled = !gen && !st.length;
-    } catch (e) { console.error(e); box.textContent = "Xəta: " + e.message; }
+    } catch (e) { console.error(e); box.textContent = "Xəta: " + errAz(e); }
   };
 
   function drawSheet(doc, ex, qs, pages, pi, stu) {
@@ -9238,7 +9410,7 @@ function homeExtra(){
       else st.forEach(s => pages.forEach((_, pi) => { if (!first) doc.addPage(); first = false; drawSheet(doc, ex, qs, pages, pi, s); }));
       doc.save(`${(ex.title || "sinaq").replace(/[^\wƏəıİĞğÜüŞşÖöÇç -]/g, "")}_cavab_vereqi.pdf`);
       toast("PDF hazırdır. Çap edib şagirdlərə paylayın");
-    } catch (e) { console.error(e); toast("PDF xətası: " + e.message); }
+    } catch (e) { console.error(e); toast("PDF xətası: " + errAz(e)); }
     btn.disabled = false;
   };
 
@@ -9328,7 +9500,7 @@ function homeExtra(){
         e.saved = false;
       } catch (err) {
         console.error(err);
-        S.errs.push(`${f.name || "şəkil"}: ${err.message}`);
+        S.errs.push(`${f.name || "şəkil"}: ${errAz(err)}`);
       }
     }
     $("pp-prog").textContent = "";
@@ -9471,7 +9643,7 @@ function homeExtra(){
     const old = await db.collection("examAttempts").where("examId", "==", ex.id).where("studentId", "==", e.stu.id).get();
     if (!old.empty) {
       const o = old.docs[0];
-      if (o.data().source !== "paper" && !confirm(`${e.stu.fullName} bu sınağı onlayn işləyib. Kağız nəticəsi onun yerinə yazılsın?`)) return false;
+      if (o.data().source !== "paper" && !(await ttmConfirm(`${e.stu.fullName} bu sınağı onlayn işləyib. Kağız nəticəsi onun yerinə yazılsın?`))) return false;
       attId = o.id;
     }
     await db.collection("examAttempts").doc(attId).set({
@@ -9490,7 +9662,7 @@ function homeExtra(){
     e.saved = true;
     return true;
   }
-  const errMsg = err => err && err.code === "permission-denied" ? "Firestore icazəsi yoxdur (qaydalara müəllim yazısı əlavə olunmalıdır)" : (err.message || err);
+  const errMsg = err => err && err.code === "permission-denied" ? "Firestore icazəsi yoxdur (qaydalara müəllim yazısı əlavə olunmalıdır)" : (errAz(err) || err);
   window.ppSave = async (sid) => {
     const e = S.list[sid];
     try { if (await saveOne(e)) { toast(`${e.stu.fullName} — nəticə saxlanıldı`); ppRenderList(); } }
@@ -9545,7 +9717,7 @@ function homeExtra(){
             const sv = d.save.bind(d);
             d.save = function () {
               try { const n = ppDrawCard(d, c.ex, c.qs, true); toast(`Sonuna cavab kartı əlavə edildi (${n} səhifə)` + (c.ex.id ? "" : " — sınağı yadda saxlamağı unutmayın")); }
-              catch (e) { console.error(e); toast("Cavab kartı əlavə edilmədi: " + e.message); }
+              catch (e) { console.error(e); toast("Cavab kartı əlavə edilmədi: " + errAz(e)); }
               return sv.apply(null, arguments);
             };
           }
@@ -10893,7 +11065,7 @@ function homeExtra(){
     r.innerHTML = `<div class="pq-sk" style="height:150px"></div><div class="pq-sk"></div><div class="pq-sk"></div>`;
     let idx, st;
     try { [idx, st] = await Promise.all([loadIdx(), loadStats()]); }
-    catch (e) { console.error(e); r.innerHTML = `<div class="pq-empty">Suallar yüklənmədi: ${esc(e.message)}</div><button class="pq-ghost" onclick="pqHome()">Yenidən cəhd et</button>`; return; }
+    catch (e) { console.error(e); r.innerHTML = `<div class="pq-empty">Suallar yüklənmədi: ${esc(errAz(e))}</div><button class="pq-ghost" onclick="pqHome()">Yenidən cəhd et</button>`; return; }
     const cnt = {};
     Object.values(idx).forEach(o => { const s = subjOf(o); cnt[s] = (cnt[s] || 0) + o.count; });
     const list = SUBJ.concat(Object.keys(cnt).filter(s => !SUBJ.includes(s)));
@@ -10933,7 +11105,7 @@ function homeExtra(){
     const r = $("pq-root");
     r.innerHTML = `<div class="pq-sk" style="height:300px"></div>`;
     let qs;
-    try { qs = await loadTopic(t); } catch (e) { r.innerHTML = `<div class="pq-empty">Xəta: ${esc(e.message)}</div>`; return; }
+    try { qs = await loadTopic(t); } catch (e) { r.innerHTML = `<div class="pq-empty">Xəta: ${esc(errAz(e))}</div>`; return; }
     if (!PQ.subj && PQ.idx && PQ.idx[t]) PQ.subj = subjOf(PQ.idx[t]);
     PQ.cfg.qs = qs;
     renderCfg();
@@ -11006,7 +11178,7 @@ function homeExtra(){
       PQ.cfg = null;
       begin(shuffle(all).slice(0, 30), "Səhvlərim", null);
       pqHome();
-    } catch (e) { console.error(e); toast("Xəta: " + e.message); pqHome(); }
+    } catch (e) { console.error(e); toast("Xəta: " + errAz(e)); pqHome(); }
   };
   function renderQ(dir) {
     const s = PQ.sess; if (!s || !ov) return;
@@ -11187,7 +11359,7 @@ function homeExtra(){
       const s = await db.collection("questions").get();
       QB.all = s.docs.map(d => ({ id: d.id, ...d.data() }));
       render();
-    } catch (e) { console.error(e); $("qb-list").innerHTML = `<div class="empty-state">Xəta: ${esc(e.code === "permission-denied" ? "Firestore qaydalarına «questions» əlavə edilməyib" : e.message)}</div>`; }
+    } catch (e) { console.error(e); $("qb-list").innerHTML = `<div class="empty-state">Xəta: ${esc(e.code === "permission-denied" ? "Firestore qaydalarına «questions» əlavə edilməyib" : errAz(e))}</div>`; }
   }
   function buildIdx(list) {
     const t = {};
@@ -11277,7 +11449,7 @@ function homeExtra(){
         toast(`✅ ${ok.length} sual bazaya yazıldı`);
       } catch (e) {
         console.error(e); btn.disabled = false;
-        ov.querySelector("#qb-prog").textContent = "❌ " + (e.code === "permission-denied" ? "Firestore qaydaları icazə vermir (admin yazısı əlavə edin)" : e.message);
+        ov.querySelector("#qb-prog").textContent = "❌ " + (e.code === "permission-denied" ? "Firestore qaydaları icazə vermir (admin yazısı əlavə edin)" : errAz(e));
       }
     };
   };
@@ -11351,20 +11523,659 @@ function homeExtra(){
       if (i >= 0) QB.all[i] = d; else QB.all.push(d);
       await saveIdx();
       e._ov.remove(); render(); toast("Yadda saxlandı");
-    } catch (err) { console.error(err); btn.disabled = false; toast("Xəta: " + err.message); }
+    } catch (err) { console.error(err); btn.disabled = false; toast("Xəta: " + errAz(err)); }
   }
   async function del() {
-    if (!confirm("Bu sual silinsin?")) return;
+    if (!(await ttmConfirm("Bu sual silinsin?"))) return;
     try {
       await db.collection("questions").doc(ED.id).delete();
       QB.all = QB.all.filter(x => x.id !== ED.id);
       await saveIdx();
       ED._ov.remove(); render(); toast("Silindi");
-    } catch (err) { toast("Xəta: " + err.message); }
+    } catch (err) { toast("Xəta: " + errAz(err)); }
   }
   window.qbLoad = qbLoad;
 })();
 </script>
 
+<script>
+/* ===== 15.10 yeniləmə: səs, şifrə gözü, giriş animasiyası, nəticələr, vaxt, yol xəritəm ===== */
+(function () {
+  const $ = id => document.getElementById(id);
+  const LS = { g(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } }, s(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+  const SV = (p, c) => `<svg viewBox="0 0 24 24" class="${c || "ico-s"}" aria-hidden="true"><path d="${p}"/></svg>`;
+  const mmss = s => { s = Math.max(0, Math.round(s || 0)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+  const ord = n => { const D = { 1: "ci", 2: "ci", 3: "cü", 4: "cü", 5: "ci", 6: "cı", 7: "ci", 8: "ci", 9: "cu" }, T = { 1: "cu", 2: "ci", 3: "cu", 4: "cı", 5: "ci", 6: "cı", 7: "ci", 8: "ci", 9: "cı" }; return n + "-" + (n % 10 ? D[n % 10] : n % 100 ? T[(n % 100) / 10] : "cü"); };
+
+  // ================= SƏS VƏ TİTRƏMƏ =================
+  let AC = null;
+  const sndOn = () => LS.g("ttm_sound", "1") === "1", hapOn = () => LS.g("ttm_haptic", "1") === "1";
+  function tone(f, t, d, v) {
+    try {
+      AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+      if (AC.state === "suspended") AC.resume();
+      const o = AC.createOscillator(), g = AC.createGain(), s = AC.currentTime + t;
+      o.type = "sine"; o.frequency.value = f;
+      g.gain.setValueAtTime(0, s); g.gain.linearRampToValueAtTime(v || .045, s + .015); g.gain.exponentialRampToValueAtTime(.0001, s + d);
+      o.connect(g); g.connect(AC.destination); o.start(s); o.stop(s + d + .03);
+    } catch (e) {}
+  }
+  const SND = {
+    ok: () => { tone(660, 0, .14); tone(990, .09, .22); },
+    no: () => { tone(320, 0, .18, .035); tone(250, .1, .24, .03); },
+    done: () => [523, 659, 784, 1046].forEach((f, i) => tone(f, i * .09, .28, .04)),
+    door: () => { tone(392, 0, .12, .03); tone(587, .14, .3, .04); }
+  };
+  window.ttmSound = k => { if (sndOn() && SND[k]) SND[k](); };
+  window.ttmBuzz = p => { try { if (hapOn() && navigator.vibrate) navigator.vibrate(p); } catch (e) {} };
+  document.addEventListener("pointerdown", e => {
+    if (e.target.closest("button,a.btn-small,.a-qc,.v2-more-row,.rs-row,.pq-tc,.sq-subj,.v2-sc,.v2-trow,.door-card")) ttmBuzz(6);
+  }, { passive: true });
+
+  function toggles() {
+    const row = (k, t, s, bg, ic) => `<div class="v2-more-row" style="cursor:default"><span class="v2-more-ico" style="background:${bg}">${SV(ic)}</span><div style="flex:1;min-width:0;"><div class="v2-more-t">${t}</div><div class="v2-more-s">${s}</div></div><button type="button" class="tg ${LS.g(k, "1") === "1" ? "on" : ""}" role="switch" aria-checked="${LS.g(k, "1") === "1"}" aria-label="${t}" data-k="${k}"></button></div>`;
+    return row("ttm_sound", "Səs", "Düz cavab, giriş və sınaq sonu", "#0ea5e9", "M4 9v6h4l5 4V5L8 9zM16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11") +
+      row("ttm_haptic", "Titrəmə", "Düymələrə toxunanda yüngül titrəmə", "#8b5cf6", "M8 3h8v18H8zM4 8v8M20 8v8");
+  }
+  document.addEventListener("click", e => {
+    const b = e.target.closest(".tg[data-k]"); if (!b) return;
+    const on = !b.classList.contains("on");
+    LS.s(b.dataset.k, on ? "1" : "0");
+    document.querySelectorAll(`.tg[data-k="${b.dataset.k}"]`).forEach(x => { x.classList.toggle("on", on); x.setAttribute("aria-checked", on); });
+    if (on && b.dataset.k === "ttm_sound") ttmSound("ok");
+    if (on && b.dataset.k === "ttm_haptic") ttmBuzz(20);
+  });
+  const smore = document.querySelector('#stab-more a[href="delete-account.html"]');
+  if (smore) smore.insertAdjacentHTML("beforebegin", toggles());
+  const alog = $("a-set-logout");
+  if (alog) alog.insertAdjacentHTML("beforebegin", `<div style="margin:6px 0 4px">${toggles()}</div>`);
+
+  // ================= ŞİFRƏ GÖZÜ =================
+  const EYE = SV("M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z", " "),
+    EYEX = SV("M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM3 3l18 18", " ");
+  ["password", "tr-password", "sr-password", "payments-pin-input"].forEach(id => {
+    const i = $(id); if (!i) return;
+    const w = document.createElement("div"); w.className = "pw-wrap";
+    i.parentNode.insertBefore(w, i); w.appendChild(i);
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "pw-eye"; b.innerHTML = EYE; b.setAttribute("aria-label", "Şifrəni göstər");
+    b.onclick = () => { const s = i.type === "password"; i.type = s ? "text" : "password"; b.innerHTML = s ? EYEX : EYE; b.setAttribute("aria-label", s ? "Şifrəni gizlət" : "Şifrəni göstər"); };
+    w.appendChild(b);
+  });
+
+  // ================= XƏTA MESAJLARI =================
+  const _toast = toast;
+  toast = function (m) {
+    m = String(m == null ? "" : m);
+    const k = m.match(/^([^:]{0,40}:\s*)(.+)$/);
+    if (k) { const t = errAzText(k[2]); if (t !== k[2]) m = t; } else m = errAzText(m);
+    return _toast(m);
+  };
+
+  // ================= GİRİŞ: QAPI ANİMASİYASI + AÇILIŞ KEÇİDİ =================
+  const lb = $("login-btn");
+  if (lb) {
+    lb.insertAdjacentHTML("beforeend", `<span class="lg-door" aria-hidden="true"><i></i></span><span class="lg-man" aria-hidden="true"><svg viewBox="0 0 14 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><circle cx="7" cy="3.5" r="2.6" fill="#fff" stroke="none"/><path d="M7 7v8M7 9.5l-3.5 3.5M7 9.5l3.5 3.5"/><path class="lg-l1" d="M7 15l-2.5 7.5"/><path class="lg-l2" d="M7 15l2.5 7.5"/></svg></span>`);
+    $("login-form").addEventListener("submit", () => {
+      if (!$("username").value.trim() || !$("password").value) return;
+      lb.classList.remove("lg-bump", "lg-in"); void lb.offsetWidth; lb.classList.add("lg-walk");
+    }, true);
+  }
+  const _sv = showView;
+  showView = function (id) {
+    const ld = $("view-loading"), wasL = ld && ld.style.display !== "none";
+    if ((id === "view-admin" || id === "view-student") && lb && lb.classList.contains("lg-walk") && !lb.classList.contains("lg-in")) {
+      lb.classList.add("lg-in"); ttmSound("door"); ttmBuzz(15);
+      setTimeout(() => { _sv(id); lb.classList.remove("lg-walk", "lg-in"); }, 850);
+      return;
+    }
+    _sv(id);
+    if (wasL && id !== "view-loading" && ld) {
+      ld.style.display = ""; ld.classList.add("sp-fix");
+      requestAnimationFrame(() => requestAnimationFrame(() => ld.classList.add("sp-out")));
+      setTimeout(() => { ld.style.display = "none"; ld.classList.remove("sp-fix", "sp-out"); }, 480);
+    }
+  };
+  const _se = showError;
+  showError = function () {
+    if (lb && lb.classList.contains("lg-walk")) {
+      lb.classList.remove("lg-walk"); lb.classList.add("lg-bump"); ttmSound("no"); ttmBuzz([30, 40, 30]);
+      setTimeout(() => lb.classList.remove("lg-bump"), 800);
+    }
+    return _se.apply(this, arguments);
+  };
+  const _si = showInfo;
+  showInfo = function () { if (lb) lb.classList.remove("lg-walk", "lg-in"); return _si.apply(this, arguments); };
+
+  // ================= EMOJİLƏRİN TƏMİZLƏNMƏSİ =================
+  const ICO = {
+    "📊": "M5 20V11M12 20V4M19 20v-6", "📈": "M4 16l6-6 4 4 6-6M14 8h6v6", "✅": "M5 12l5 5 9-10", "🎯": "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z",
+    "🎓": "M2 9l10-5 10 5-10 5zM6 11v5c3 2 9 2 12 0v-5", "🏆": "M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M9 20h6",
+    "🗑️": "M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3", "📚": "M2 4h7a3 3 0 0 1 3 3v14a2 2 0 0 0-2-2H2zM22 4h-7a3 3 0 0 0-3 3v14a2 2 0 0 1 2-2h8z",
+    "🎥": "M3 6h13v12H3zM16 10l5-3v10l-5-3", "🎬": "M3 6h13v12H3zM16 10l5-3v10l-5-3", "📣": "M3 10v4h4l6 4V6L7 10zM16 9a4 4 0 0 1 0 6", "📄": "M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6",
+    "📅": "M4 6h16v14H4zM4 10h16M8 3v4M16 3v4", "💳": "M3 6h18v12H3zM3 10h18", "💬": "M4 5h16v11H8l-4 4z", "🧑‍🏫": "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c0-4 4-6 8-6s8 2 8 6",
+    "👤": "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c0-4 4-6 8-6s8 2 8 6", "🌐": "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18",
+    "⚙️": "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2", "🏫": "M3 10l9-6 9 6M5 10v9h14v-9M10 19v-5h4v5",
+    "🗂️": "M3 6h6l2 2h10v11H3z", "⏳": "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2", "⏱": "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2", "❌": "M6 6l12 12M18 6L6 18", "➖": "M5 12h14",
+    "💰": "M3 7h18v10H3zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z", "🔢": "M5 9h14M5 15h14M10 4L8 20M16 4l-2 16", "🧾": "M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6",
+    "📷": "M4 8h3l2-3h6l2 3h3v11H4zM12 10a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z", "✍️": "M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"
+  };
+  const EMO = /[\p{Extended_Pictographic}‍️]+\s*/gu;
+  function deEmoji() {
+    document.querySelectorAll(".v2-more-ico,.stat-icon-badge,.a-qc .ic:not(.a-svg)").forEach(el => {
+      if (el.querySelector("svg")) return;
+      const t = el.textContent.trim(); if (!t || !/\p{Extended_Pictographic}/u.test(t)) return;
+      el.innerHTML = SV(ICO[t] || ICO[t.replace(/️/g, "")] || "M12 8v8M8 12h8");
+    });
+    document.querySelectorAll("h3,.tab-btn,.v2-more-t").forEach(el => {
+      el.childNodes.forEach(n => { if (n.nodeType === 3 && /\p{Extended_Pictographic}/u.test(n.nodeValue)) n.nodeValue = n.nodeValue.replace(EMO, ""); });
+    });
+  }
+  let deT = 0;
+  new MutationObserver(() => { if (deT) return; deT = requestAnimationFrame(() => { deT = 0; deEmoji(); }); }).observe(document.body, { childList: true, subtree: true });
+  deEmoji();
+
+  // ================= QUIZ HİSSƏSİ GİZLƏDİLİR =================
+  ["score-save-btn", "scores-list"].forEach(id => { const e = $(id); if (e) e.closest(".card").classList.add("rs-off"); });
+  const spn = $("stab-scores");
+  if (spn) { spn.querySelectorAll(":scope>.card").forEach(c => c.classList.add("rs-off")); spn.insertAdjacentHTML("afterbegin", '<div id="rs-root"></div>'); }
+
+  // ================= VAXT İZLƏMƏ (sınaq) =================
+  const RT = {}; let rtLoaded = null;
+  function loadRT() {
+    if (!rtLoaded) rtLoaded = db.collection("attemptTimes").where("studentId", "==", currentStudentUid).get()
+      .then(s => s.forEach(d => { RT[d.id] = d.data(); })).catch(e => console.warn("attemptTimes:", e));
+    return rtLoaded;
+  }
+  function tick(fin) {
+    const ex = currentExam; if (!ex || !ex.questions) return;
+    const n = Date.now();
+    if (!ex._t) ex._t = new Array(ex.questions.length).fill(0);
+    if (ex._li != null && ex._ls) ex._t[ex._li] += n - ex._ls;
+    if (!fin) ex._li = currentExamIndex;
+    ex._ls = n;
+  }
+  const _rq = renderExamQuestion;
+  renderExamQuestion = function () { try { tick(); } catch (e) {} return _rq.apply(this, arguments); };
+  const _fe = finishExam;
+  finishExam = async function () {
+    const ex = currentExam;
+    if (ex && ex._t && !ex._done) { tick(true); ex._tsec = ex._t.map(x => Math.round(x / 1000)); ex._dur = ex._tsec.reduce((a, b) => a + b, 0); }
+    const r = await _fe.apply(this, arguments);
+    if (ex && ex._done && !ex._tSaved) {
+      ex._tSaved = 1; ttmSound("done");
+      if (ex._tsec) {
+        const id = ex.id + "_" + currentStudentUid, d = { attemptId: id, examId: ex.id, studentId: currentStudentUid, teacherId: ex.teacherId || null, times: ex._tsec, durationSec: ex._dur, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+        RT[id] = d;
+        db.collection("attemptTimes").doc(id).set(d).catch(e => console.warn("attemptTimes yazılmadı:", e));
+      }
+    }
+    return r;
+  };
+  function timeCard(times, dur, limitMin) {
+    const arr = (times || []).map((s, i) => [i, s]).filter(x => x[1] > 0).sort((a, b) => b[1] - a[1]).slice(0, 3);
+    const mx = arr.length ? arr[0][1] : 1, n = (times || []).filter(s => s > 0).length || 1;
+    return `<div class="tm-card" id="exam-tm-card"><div class="tm-big"><i>${SV("M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2", " ").replace("<svg", '<svg width="22" height="22" fill="none" stroke="#0B3C5D" stroke-width="2" stroke-linecap="round"')}</i><div><b>${mmss(dur)}-da bitirdin</b><span>Ayrılmış vaxt: ${limitMin || "—"} dəq · Orta: ${mmss(dur / n)} / sual</span></div></div>
+      ${arr.length ? `<div class="rs-m" style="margin:12px 0 4px;font-weight:700">Ən çox vaxt aparan suallar</div>` + arr.map(([i, s]) => `<button type="button" class="tm-q" onclick="scrollToResultQuestion(${i})"><em>${ord(i + 1)} sual</em><div><i style="width:${Math.round(s / mx * 100)}%"></i></div><b>${mmss(s)}</b></button>`).join("") : ""}</div>`;
+  }
+  const _rr = renderExamResult;
+  renderExamResult = function (ex, attempt) {
+    const r = _rr.apply(this, arguments);
+    (async () => {
+      let t = ex && ex._tsec ? { times: ex._tsec, durationSec: ex._dur } : RT[attempt.id];
+      if (!t) { try { const d = await db.collection("attemptTimes").doc(attempt.id).get(); if (d.exists) t = RT[attempt.id] = d.data(); } catch (e) {} }
+      const old = $("exam-tm-card"); if (old) old.remove();
+      if (!t || !t.durationSec) return;
+      const hero = document.querySelector("#exam-view-result .exam-result-hero");
+      if (hero) hero.insertAdjacentHTML("afterend", timeCard(t.times, t.durationSec, ex && ex.timeLimitMinutes));
+    })();
+    return r;
+  };
+  const tmLine = t => { const top = (t.times || []).map((s, i) => [i, s]).sort((a, b) => b[1] - a[1]).slice(0, 3).filter(x => x[1] > 0); return `<div class="tm-line">Vaxt: ${mmss(t.durationSec)}${top.length ? " · ən uzun: " + top.map(([i, s]) => `${ord(i + 1)} sual ${mmss(s)}`).join(", ") : ""}</div>`; };
+  [["toggleAttemptDetail", "attempt-detail-"], ["toggleStudentAttemptDetail", "student-attempt-detail-"]].forEach(([fn, pre]) => {
+    const o = window[fn]; if (!o) return;
+    window[fn] = async function (id) {
+      await o.apply(this, arguments);
+      const box = $(pre + id); if (!box || box.style.display !== "block" || box.querySelector(".tm-line")) return;
+      try { const d = await db.collection("attemptTimes").doc(id).get(); if (d.exists) box.insertAdjacentHTML("afterbegin", tmLine(d.data())); } catch (e) {}
+    };
+  });
+
+  // Təkrar: hər sualın vaxtı
+  function pqT() { const P = window._PQ; return P && P.sess; }
+  if (window.pqPick) {
+    const op = window.pqPick;
+    window.pqPick = function (k) {
+      const s = pqT(), i = s ? s.i : -1, q = s && s.list[i], had = s && s.ans[i];
+      if (s && !had) { s.tms = s.tms || []; s.tms[i] = Date.now() - (s._ts || s.t0); }
+      const r = op.apply(this, arguments);
+      const a = s && s.ans[i];
+      if (a && !had) {
+        ttmSound(a.ok ? "ok" : "no");
+        try { rmRecord("q:" + q.id, a.ok, { t: q.topic, src: "q" }); } catch (e) {}
+      }
+      return r;
+    };
+    ["pqNext", "pqPrev"].forEach(f => { const o = window[f]; window[f] = function () { const r = o.apply(this, arguments); const s = pqT(); if (s) s._ts = Date.now(); else pqTimeLine(); return r; }; });
+    const oq = window.pqQuit;
+    window.pqQuit = async function () { const r = await oq.apply(this, arguments); setTimeout(pqTimeLine, 60); return r; };
+  }
+  function pqTimeLine() {
+    const P = window._PQ, s = P && P.last, box = document.querySelector("#pq-root .pq-res");
+    if (!s || !s.tms || !box || box.querySelector(".tm-line")) return;
+    const v = s.tms.map(x => (x || 0) / 1000), n = v.filter(x => x > 0), tot = n.reduce((a, b) => a + b, 0);
+    if (!n.length) return;
+    const mi = v.indexOf(Math.max(...v));
+    ttmSound("done");
+    box.querySelector(".pq-hstats").insertAdjacentHTML("afterend", `<div class="tm-line" style="margin-top:12px">Ümumi vaxt: ${mmss(tot)} · Orta: ${mmss(tot / n.length)} / sual · Ən uzun: ${mi + 1}-ci sual (${mmss(v[mi])})</div>`);
+  }
+
+  // ================= SINAQ YARADANDA SUALA MÖVZU =================
+  let topicList = null;
+  async function loadTopics() {
+    if (topicList) return;
+    topicList = [];
+    try { const d = await db.collection("qbankMeta").doc("index").get(); if (d.exists && d.data().topics) topicList = Object.keys(d.data().topics); } catch (e) {}
+    let dl = $("qt-dl"); if (!dl) { dl = document.createElement("datalist"); dl.id = "qt-dl"; document.body.appendChild(dl); }
+    dl.innerHTML = topicList.map(t => `<option value="${esc(t)}">`).join("");
+  }
+  const _rqb = renderQuestionBuilder;
+  renderQuestionBuilder = function () {
+    const r = _rqb.apply(this, arguments);
+    loadTopics();
+    document.querySelectorAll("#exam-questions-builder .q-builder-item").forEach((it, qi) => {
+      const q = examQuestions[qi], f = it.querySelector('input[oninput^="updateQuestionText"]');
+      if (!q || !f || it.querySelector(".qt-in")) return;
+      f.closest(".field").insertAdjacentHTML("afterend", `<div class="field qt-in" style="margin:0 0 10px"><input type="text" list="qt-dl" value="${esc(q.topic || "")}" placeholder="Mövzu (məs: Faiz) — Yol xəritəsi üçün" oninput="examQuestions[${qi}].topic=this.value.trim()" /></div>`);
+    });
+    return r;
+  };
+
+  // ================= NƏTİCƏLƏR =================
+  const col = p => p >= 75 ? ["#16A34A", "#E8F8EE", "#15803D"] : p >= 50 ? ["#F59E0B", "#FFF4E5", "#B45309"] : ["#DC2626", "#FDECEC", "#B91C1C"];
+  const ms = a => a.submittedAt && a.submittedAt.toMillis ? a.submittedAt.toMillis() : Date.now();
+  const dt = a => { const d = new Date(ms(a)); return String(d.getDate()).padStart(2, "0") + "." + String(d.getMonth() + 1).padStart(2, "0") + "." + d.getFullYear(); };
+  function cnt(a) {
+    let ok = 0, bad = 0, bl = 0, pe = 0;
+    (a.perQuestion || []).forEach(q => {
+      if (!q) return;
+      if (q.type === "detailed") { if (q.points == null) pe++; else if (q.points >= (q.maxPoints ?? 1)) ok++; else bad++; return; }
+      if (q.isCorrect) ok++; else if (q.selected == null || q.selected === "") bl++; else bad++;
+    });
+    return { ok, bad, bl, pe };
+  }
+  function chart(v) {
+    const W = 320, H = 140, P = 18, n = v.length, x = i => n < 2 ? W / 2 : P + i * (W - 2 * P) / (n - 1), y = s => H - P - (s / 100) * (H - 2 * P - 12);
+    const pts = v.map((s, i) => [x(i), y(s)]), line = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + "," + p[1].toFixed(1)).join("");
+    return `<svg role="img" aria-label="Son sınaqların balı: ${v.join(", ")}" viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">
+      ${[25, 50, 75].map(g => `<line x1="${P}" x2="${W - P}" y1="${y(g)}" y2="${y(g)}" stroke="#EEF2F6" stroke-dasharray="3 4"/>`).join("")}
+      ${n > 1 ? `<path d="${line}L${pts[n - 1][0]},${H}L${pts[0][0]},${H}Z" fill="#E0F2FE"/><path d="${line}" fill="none" stroke="#0B3C5D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>` : ""}
+      ${pts.map((p, i) => i === n - 1 ? `<circle cx="${p[0]}" cy="${p[1]}" r="6" fill="#0B3C5D" stroke="#fff" stroke-width="3"/><text x="${p[0]}" y="${p[1] - 12}" font-size="12" font-weight="800" fill="#0B3C5D" text-anchor="middle">${v[i]}</text>` : `<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="#fff" stroke="${col(v[i])[0]}" stroke-width="2.5"/><text x="${p[0]}" y="${p[1] - 10}" font-size="11" font-weight="700" fill="#5B6878" text-anchor="middle">${v[i]}</text>`).join("")}</svg>`;
+  }
+  let rsF = "all", rsAll = false, rsAnim = true;
+  window.rsSetF = f => { rsF = f; rsAll = false; rsRender(); };
+  window.rsMore = () => { rsAll = true; rsRender(); };
+  function rsRender() {
+    const r = $("rs-root"); if (!r || !currentStudentUid) return;
+    const all = studentAttemptsCache.slice().sort((a, b) => ms(a) - ms(b));
+    if (!all.length) {
+      r.innerHTML = `<div class="rs-empty"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#0B3C5D" stroke-width="1.7" stroke-linecap="round"><path d="M5 20V11M12 20V4M19 20v-6"/></svg><b>Hələ nəticən yoxdur</b><p>İlk sınağını işlə, irəliləyişin burada görünəcək.</p><button onclick="v2Tab('stab-exams')">Sınaqlara keç</button></div>`;
+      return;
+    }
+    const subs = [...new Set(all.map(a => a.topic).filter(Boolean))];
+    if (rsF !== "all" && !subs.includes(rsF)) rsF = "all";
+    const at = rsF === "all" ? all : all.filter(a => a.topic === rsF);
+    const S = at.map(a => ({ a, s: computeAttemptStats(a.perQuestion).score, c: cnt(a), ex: studentExamsCache.find(e => e.id === a.examId), t: RT[a.id] }));
+    const sc = S.map(x => x.s), avg = Math.round(sc.reduce((p, v) => p + v, 0) / sc.length), best = Math.max(...sc), last = sc[sc.length - 1], d = sc.length > 1 ? last - sc[sc.length - 2] : null;
+    const T = S.reduce((t, x) => (t.ok += x.c.ok, t.bad += x.c.bad, t.bl += x.c.bl, t.pe += x.c.pe, t), { ok: 0, bad: 0, bl: 0, pe: 0 });
+    const C = 339.3, off = C * (1 - avg / 100);
+    const sub = d == null ? "İlk addım atıldı — davam et!" : d > 0 ? `Son sınaqda <b>+${d} bal</b> irəliləyiş. Belə davam!` : d < 0 ? `Son sınaq əvvəlkindən <b>${-d} bal</b> aşağıdır. Səhvlərini Yol xəritəndə düzəlt.` : "Nəticən sabit qalıb. Bir addım irəli!";
+    const list = S.slice().reverse(), shown = rsAll ? list : list.slice(0, 5);
+    r.innerHTML = (subs.length > 1 ? `<div class="rs-chips">${["all"].concat(subs).map(s => `<button type="button" class="${rsF === s ? "on" : ""}" onclick='rsSetF(${JSON.stringify(s).replace(/'/g, "&#39;")})'>${s === "all" ? "Hamısı" : esc(s)}</button>`).join("")}</div>` : "") +
+      `<div class="rs-hero"><div class="rs-top">
+        <div class="rs-ring"><svg width="120" height="120" viewBox="0 0 124 124"><circle cx="62" cy="62" r="54" stroke="#24587F"></circle><circle class="fg" id="rs-fg" cx="62" cy="62" r="54" stroke="#5EEAD4" stroke-dasharray="${C}" stroke-dashoffset="${rsAnim ? C : off}"></circle></svg><b>${avg}%<small>ortalama</small></b></div>
+        <div class="rs-kpi"><div>Sınaq<b>${at.length}</b></div><div>Ən yaxşı<b>${best}%</b></div><div>Son<b>${last}%</b></div></div></div>
+        <div class="rs-sub"><i>${SV("M4 16l6-6 4 4 6-6M14 8h6v6", " ").replace("<svg", '<svg width="16" height="16" fill="none" stroke="#0B3C5D" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"')}</i><div>${sub}</div></div></div>
+      <div class="rs-card"><div class="rs-h">İrəliləyiş<span>son ${Math.min(10, sc.length)} sınaq</span></div>${chart(sc.slice(-10))}</div>
+      <div class="rs-tot">
+        <div><i style="background:#16A34A"></i><b>${T.ok}</b><span>düz</span></div>
+        <div><i style="background:#DC2626"></i><b>${T.bad}</b><span>səhv</span></div>
+        <div><i style="background:#94A3B8"></i><b>${T.bl}</b><span>boş</span></div>
+        <div><i style="background:#F59E0B"></i><b>${T.pe}</b><span>yoxlanılır</span></div></div>
+      <div class="rs-h" style="margin:20px 4px 10px;font-size:18px">Sınaqlarım<span>${at.length} nəticə</span></div>` +
+      shown.map((x, i) => {
+        const n = x.c.ok + x.c.bad + x.c.bl + x.c.pe || 1, w = v => (v / n * 100).toFixed(1) + "%", c = col(x.s);
+        return `<button type="button" class="rs-row" style="animation-delay:${Math.min(i, 6) * 50}ms" onclick="v2ViewResult('${x.a.id}')">
+          <div class="rs-sc" style="background:${c[1]};color:${c[2]}">${x.s}<small>%</small></div>
+          <div class="rs-mid"><div class="rs-t">${x.ex ? esc(x.ex.title) : "Sınaq"}</div><div class="rs-m">${esc(x.a.topic || "")} · ${dt(x.a)}${x.t && x.t.durationSec ? " · " + mmss(x.t.durationSec) : ""}</div>
+          <div class="rs-seg"><i style="width:${w(x.c.ok)};background:#22C55E"></i><i style="width:${w(x.c.bad)};background:#EF4444"></i><i style="width:${w(x.c.pe)};background:#F59E0B"></i></div>
+          <div class="rs-m">${x.c.ok} düz · ${x.c.bad} səhv · ${x.c.bl} boş${x.c.pe ? ` · ${x.c.pe} yoxlanılır` : ""}</div></div>
+          ${SV("M9 6l6 6-6 6", " ").replace("<svg", '<svg width="18" height="18" fill="none" stroke="#0B3C5D" stroke-width="2.4" stroke-linecap="round" style="flex:none"')}</button>`;
+      }).join("") + (!rsAll && list.length > 5 ? `<button type="button" class="rs-more" onclick="rsMore()">Hamısına bax (${list.length})</button>` : "");
+    if (rsAnim) { rsAnim = false; requestAnimationFrame(() => requestAnimationFrame(() => { const f = $("rs-fg"); if (f) f.style.strokeDashoffset = off; })); }
+  }
+  const _rl = window.renderStudentExamList;
+  window.renderStudentExamList = function () {
+    _rl.apply(this, arguments);
+    try { rsRender(); if (currentStudentUid && !rtLoaded) loadRT().then(rsRender); } catch (e) { console.error(e); }
+  };
+  document.querySelectorAll('[data-stab="stab-scores"],[data-go="stab-scores"]').forEach(b => b.addEventListener("click", () => { rsAnim = true; setTimeout(rsRender, 0); }));
+
+  // ================= YOL XƏRİTƏM =================
+  const DAY = 864e5, STEP_N = 5, Q_SEC = 90;
+  const ymd = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  const today = () => ymd(new Date()), yday = () => ymd(new Date(Date.now() - DAY));
+  const wk = () => { const d = new Date(), j = new Date(d.getFullYear(), 0, 1); return d.getFullYear() + "-" + Math.ceil(((d - j) / DAY + j.getDay() + 1) / 7); };
+  const LV = ["Başlanğıc", "Həvəskar", "Çalışqan", "Bilici", "Usta", "Ekspert", "Əfsanə"];
+  const lvl = xp => { const i = Math.min(LV.length - 1, Math.floor(Math.sqrt(xp / 60))); return { i, name: LV[i], from: 60 * i * i, to: 60 * (i + 1) * (i + 1) }; };
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+  async function getStats() {
+    const P = window._PQ || (window._PQ = {});
+    if (P.stats && P.uid === currentStudentUid) return P.stats;
+    let s = { wrong: {}, topics: {}, done: 0, correct: 0 };
+    try { const d = await db.collection("practiceStats").doc(currentStudentUid).get(); if (d.exists) s = Object.assign(s, d.data()); } catch (e) { console.warn(e); }
+    s.wrong = s.wrong || {}; s.topics = s.topics || {};
+    P.stats = s; P.uid = currentStudentUid;
+    return s;
+  }
+  function RM(s) {
+    const r = s.rm = s.rm || {};
+    r.xp = r.xp || 0; r.streak = r.streak || 0; r.goal = r.goal || 80; r.it = r.it || {};
+    if (!r.today || r.today.d !== today()) r.today = { d: today(), steps: 0, qs: 0 };
+    if (!r.week || r.week.w !== wk()) r.week = { w: wk(), fixed: 0 };
+    if (r.last && r.last !== today() && r.last !== yday()) r.streak = 0;
+    return r;
+  }
+  let saveT = 0;
+  function save(now) {
+    const s = window._PQ && window._PQ.stats; if (!s || !currentStudentUid) return;
+    clearTimeout(saveT);
+    const go = () => { const o = { ...s }; delete o.updatedAt; o.updatedAt = firebase.firestore.FieldValue.serverTimestamp(); db.collection("practiceStats").doc(currentStudentUid).set(o).catch(e => console.warn("yol xəritəsi yazılmadı:", e)); };
+    if (now) go(); else saveT = setTimeout(go, 900);
+  }
+  // Cavabı yadda saxla: 1 → 3 gün → mənimsənildi
+  window.rmRecord = function (key, ok, meta) {
+    const s = window._PQ && window._PQ.stats; if (!s) return;
+    const r = RM(s), now = Date.now();
+    let it = r.it[key];
+    if (ok) {
+      if (!it) { r.it[key] = { t: meta.t || "Digər", src: meta.src, s: 1, a: now }; return save(); }
+      if (it.m || it.s) return;
+      it.n = (it.n || 0) + 1;
+      if (it.n >= 2) { it.m = 1; r.week.fixed++; if (key.startsWith("q:")) delete s.wrong[key.slice(2)]; }
+      else it.due = now + 3 * DAY;
+    } else {
+      if (!it || it.s) it = r.it[key] = { t: meta.t || (it && it.t) || "Digər", src: meta.src, a: now };
+      it.n = 0; it.m = 0; it.w = (it.w || 0) + 1; it.due = now + DAY;
+    }
+    save();
+  };
+
+  const EQ = {};
+  const exQs = id => EQ[id] || (EQ[id] = db.collection("exams").doc(id).collection("questions").orderBy("order").get().then(s => s.docs.map(d => d.data())).catch(() => []));
+  const BQ = {};
+  async function bankQs(ids) {
+    const need = ids.filter(i => !(i in BQ));
+    for (let k = 0; k < need.length; k += 10) {
+      const ch = need.slice(k, k + 10);
+      try { const s = await db.collection("questions").where(firebase.firestore.FieldPath.documentId(), "in", ch).get(); s.forEach(d => { BQ[d.id] = { id: d.id, ...d.data() }; }); } catch (e) {}
+      ch.forEach(i => { if (!(i in BQ)) BQ[i] = null; });
+    }
+    return ids.map(i => BQ[i]).filter(Boolean);
+  }
+  const BT = {};
+  const bankTopic = t => BT[t] || (BT[t] = db.collection("questions").where("topic", "==", t).get().then(s => s.docs.map(d => { const q = { id: d.id, ...d.data() }; BQ[q.id] = q; return q; })).catch(() => []));
+  let IDX = null;
+  async function bankIdx() {
+    if (IDX) return IDX;
+    if (window._PQ && window._PQ.idx) return (IDX = window._PQ.idx);
+    try { const d = await db.collection("qbankMeta").doc("index").get(); IDX = d.exists && d.data().topics || {}; } catch (e) { IDX = {}; }
+    return IDX;
+  }
+
+  let TS = {};
+  const acc = t => TS[t] && TS[t].t ? TS[t].c / TS[t].t : .5;
+  async function sync(s) {
+    const r = RM(s), now = Date.now();
+    TS = {};
+    const add = (t, ok) => { const o = TS[t] = TS[t] || { c: 0, t: 0 }; o.t++; if (ok) o.c++; };
+    Object.entries(s.topics || {}).forEach(([t, o]) => { const x = TS[t] = TS[t] || { c: 0, t: 0 }; x.t += o.done || 0; x.c += o.correct || 0; });
+    const atts = studentAttemptsCache || [];
+    const QS = await Promise.all(atts.map(a => exQs(a.examId)));
+    atts.forEach((a, ai) => {
+      const qs = QS[ai], tm = RT[a.id] && RT[a.id].times, corr = [];
+      (a.perQuestion || []).forEach((p, i) => {
+        const q = qs[i]; if (!p || !q || p.type === "detailed") return;
+        const t = q.topic || a.topic || "Digər";
+        add(t, !!p.isCorrect);
+        if (q.textId) return;
+        const key = "e:" + a.examId + ":" + i;
+        if (!p.isCorrect && !r.it[key]) r.it[key] = { t, src: "e", n: 0, due: 0, w: 1, a: ms(a) };
+        if (p.isCorrect && tm) corr.push([i, tm[i] || 0, t]);
+      });
+      if (corr.length > 3) {
+        const v = corr.map(x => x[1]).sort((x, y) => x - y), med = v[v.length >> 1];
+        corr.forEach(([i, sec, t]) => { const key = "e:" + a.examId + ":" + i; if (sec > Math.max(60, med * 2) && !r.it[key]) r.it[key] = { t, src: "e", n: 0, due: 0, slow: 1, a: ms(a) }; });
+      }
+    });
+    const ids = Object.keys(s.wrong || {}).filter(id => !r.it["q:" + id]);
+    if (ids.length) (await bankQs(ids)).forEach(q => { r.it["q:" + q.id] = { t: q.topic || "Digər", src: "q", n: 0, due: 0, w: 1, a: s.wrong[q.id] || now }; });
+  }
+  function plan(s) {
+    const r = RM(s), now = Date.now(), due = {};
+    Object.entries(r.it).forEach(([k, v]) => { if (!v.m && !v.s && (v.due || 0) <= now) (due[v.t] = due[v.t] || []).push(k); });
+    return Object.keys(due).sort((x, y) => acc(x) - acc(y) || due[y].length - due[x].length)
+      .map(t => ({ t, kind: "fix", keys: due[t].sort((x, y) => (r.it[x].a || 0) - (r.it[y].a || 0)), slow: due[t].filter(k => r.it[k].slow).length }));
+  }
+  async function newTopics() {
+    const idx = await bankIdx(), have = Object.keys(idx);
+    const studied = have.filter(t => TS[t] && TS[t].t && acc(t) < .85).sort((x, y) => acc(x) - acc(y));
+    const fresh = have.filter(t => !TS[t] || !TS[t].t);
+    return studied.concat(fresh).map(t => ({ t, kind: "new" }));
+  }
+  async function nextPlan(s) {
+    const p = plan(s);
+    if (p.length >= 3) return p;
+    const used = new Set(p.map(x => x.t));
+    return p.concat((await newTopics()).filter(x => !used.has(x.t)));
+  }
+  async function buildStep(s, pi) {
+    const r = RM(s), items = [];
+    if (pi.kind === "fix") {
+      for (const key of pi.keys) {
+        if (items.length >= STEP_N) break;
+        const it = r.it[key], p = key.split(":");
+        let q = null;
+        if (p[0] === "e") { const qs = await exQs(p[1]); q = qs[+p[2]]; }
+        else q = (await bankQs([p[1]]))[0];
+        if (q && (q.type === "mcq" || q.type === "open" || !q.type)) items.push({ key, q, src: p[0], slow: it.slow, t: it.t });
+      }
+    }
+    if (items.length < STEP_N) {
+      const pool = shuffle((await bankTopic(pi.t)).filter(q => !r.it["q:" + q.id] && Array.isArray(q.options)));
+      pool.slice(0, STEP_N - items.length).forEach(q => items.push({ key: "q:" + q.id, q, src: "n", t: pi.t }));
+    }
+    return { t: pi.t, items, i: 0, ans: [], ok: 0, tms: [], t0: Date.now(), ts: Date.now(), lim: items.length * Q_SEC };
+  }
+
+  // ---------- Yol xəritəsi ana ekranı ----------
+  const ICL = { lock: "M5 11h14v10H5zM8 11V8a4 4 0 0 1 8 0v3", fire: "M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-3 2-4 2-7 2 1 3 2 3-3z", undo: "M3 12a9 9 0 1 0 3-6.7M3 4v5h5", check: "M5 12l5 5 9-10" };
+  const ic = (p, c, w) => `<svg width="${w || 18}" height="${w || 18}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${p}"/></svg>`;
+  let CUR = null;
+  async function rmHome() {
+    const root = $("roadmap-content"); if (!root) return;
+    root.innerHTML = `<div class="pq-sk" style="height:200px"></div><div class="pq-sk" style="height:170px"></div><div class="pq-sk"></div>`;
+    try {
+      const s = await getStats(); RM(s); await loadRT(); await sync(s); save();
+      const r = s.rm, pl = await nextPlan(s), first = pl[0], nexts = pl.slice(1, 3);
+      CUR = first || null;
+      const ex = (studentAttemptsCache || []).slice().sort((a, b) => ms(b) - ms(a)).slice(0, 3).map(a => computeAttemptStats(a.perQuestion).score);
+      const allT = Object.values(TS).reduce((o, x) => (o.c += x.c, o.t += x.t, o), { c: 0, t: 0 });
+      const ready = ex.length ? Math.round(ex.reduce((a, b) => a + b, 0) / ex.length) : allT.t ? Math.round(allT.c / allT.t * 100) : 0;
+      const L = lvl(r.xp), xpP = Math.round((r.xp - L.from) / (L.to - L.from) * 100);
+      const bank = Object.values(r.it).filter(v => !v.m && !v.s).length, mast = Object.values(r.it).filter(v => v.m).length;
+      const gap = Math.max(0, r.goal - ready);
+      let h = `<div class="rm-hero">
+        <div class="rm-row"><span class="rm-lvl">Səviyyə ${L.i + 1} · ${L.name}</span><span class="rm-str">${ic(ICL.fire, r.streak ? "#FBBF24" : "#7C93A8")}${r.streak} gün</span></div>
+        <div class="rm-big"><div><small>Hazırlıq səviyyən</small><b>${ready}%</b></div><button type="button" class="rm-goal" onclick="rmGoal()"><small>Hədəf</small><b>${r.goal}%</b></button></div>
+        <div class="rm-bar"><i id="rm-bar-i" style="width:0"></i><em style="left:calc(${Math.min(r.goal, 99)}% - 1px)"></em></div>
+        <div class="rm-sub"><span>${gap ? `Hədəfə ${gap} bal qalıb` : "Hədəfə çatdın! Yenisini qoy"}</span><span>${r.xp} / ${L.to} xal</span></div>
+        <div class="rm-xp"><i style="width:${xpP}%"></i></div></div>`;
+      if (r.today.steps) h += `<div class="rm-day">${ic(ICL.check, "#16A34A")}Bu gün: ${r.today.steps} addım · ${r.today.qs} sual. Əla gedirsən!</div>`;
+      if (first) {
+        const n = first.kind === "fix" ? first.keys.length : 0;
+        const why = first.kind === "fix" ? (first.slow && first.slow === n ? `Bu mövzuda ${n} sualı düz, amma çox yavaş həll etmisən. Sürətini artır.` : `Bu mövzuda ${n} səhv sualın var. Düzəlt — səhv bankın kiçilsin.`) : (TS[first.t] && TS[first.t].t ? `Bu mövzuda nəticən ${Math.round(acc(first.t) * 100)}%-dir. Yeni suallarla möhkəmləndir.` : `Yeni mövzu. İmtahan sualları ilə başla.`);
+        h += `<div class="rm-today"><div class="rm-tl">${r.today.steps ? "NÖVBƏTİ ADDIMIN" : "BUGÜNKÜ ADDIMIN"}</div><div class="rm-tt">${esc(first.t)}</div><div class="rm-tr">${why}</div>
+          <div class="rm-meta"><span>${STEP_N} sual</span><span>~${Math.round(STEP_N * Q_SEC / 60)} dəq</span><span class="x">+${STEP_N * 10 + 10} xal</span></div>
+          <button type="button" class="pq-go" id="rm-go" onclick="rmStart()">Başla →</button></div>`;
+        h += nexts.map((x, i) => `<div class="rm-next"><i>${ic(ICL.lock, "#94A3B8", 16)}</i><div style="flex:1;min-width:0"><b>${i + 2}. ${esc(x.t)}</b><span>${x.kind === "fix" ? x.keys.length + " səhv sual" : "Yeni suallar"} · əvvəlki addımı bitirəndə açılır</span></div></div>`).join("");
+      } else {
+        h += `<div class="rs-empty"><b>Hələ addım yoxdur</b><p>Bir sınaq işlə və ya Təkrar bölməsində sual həll et — Yol xəritən özü qurulacaq.</p><button onclick="pqOpen()">Təkrara keç</button></div>`;
+      }
+      const tops = Object.keys(TS).filter(t => TS[t].t).sort((x, y) => acc(y) - acc(x)).slice(0, 7);
+      if (tops.length) {
+        h += `<div class="rm-sec"><h3>Mövzu yolu</h3><span>güclüdən zəifə</span></div><div class="rm-path">` + tops.map(t => {
+          const p = Math.round(acc(t) * 100), c = col(p), cur = first && first.t === t;
+          return `<div class="rm-node ${cur ? "cur" : ""}"><div class="rm-dot" style="background:${p >= 75 ? c[0] : c[1]};color:${p >= 75 ? "#fff" : c[2]};${p >= 75 ? "" : "border:3px solid " + c[0]}">${p >= 75 ? ic(ICL.check, "#fff", 20) : p}</div><div style="min-width:0"><b>${esc(t)}</b><span>${p}% · ${TS[t].t} sual</span></div>${cur ? "<em>İndi</em>" : ""}</div>`;
+        }).join("") + `</div>`;
+      }
+      h += `<button type="button" class="rm-bank" onclick="rmStart()"><i>${ic(ICL.undo, "#C2410C", 22)}</i><div style="flex:1;min-width:0"><div class="v2-more-t">Səhv bankı: ${bank} sual</div><div class="v2-more-s">Mənimsənildi: ${mast} · bu həftə ${r.week.fixed} səhv düzəltdin</div></div><span class="v2-chev">›</span></button>
+        <div class="rs-m" style="text-align:center;margin:14px 0 4px">Səhv sual 1 və 3 gün sonra yenə çıxır, 2 dəfə düz cavab verəndə mənimsənilir.</div>`;
+      root.innerHTML = h;
+      requestAnimationFrame(() => requestAnimationFrame(() => { const b = $("rm-bar-i"); if (b) b.style.width = Math.min(100, ready) + "%"; }));
+    } catch (e) {
+      console.error(e);
+      root.innerHTML = `<div class="rs-empty"><b>Yol xəritəsi yüklənmədi</b><p>${esc(errAz(e))}</p><button onclick="loadRoadmap()">Yenidən cəhd et</button></div>`;
+    }
+  }
+  loadRoadmap = rmHome;
+  window.rmGoal = () => {
+    const s = window._PQ && window._PQ.stats; if (!s) return;
+    const r = RM(s), m = document.createElement("div");
+    m.className = "pq-ov";
+    m.innerHTML = `<div class="pq-sheet"><div class="pq-sh-h"><b>Hədəfini seç</b><button class="pq-x" aria-label="Bağla">✕</button></div><div class="rs-m">Sınaqlarda neçə faizə çatmaq istəyirsən?</div>
+      <div class="rm-gl">${[60, 70, 80, 90, 100].map(g => `<button type="button" class="${r.goal === g ? "on" : ""}" data-g="${g}">${g}%</button>`).join("")}</div></div>`;
+    m.addEventListener("click", e => {
+      if (e.target === m || e.target.closest(".pq-x")) return m.remove();
+      const b = e.target.closest("[data-g]"); if (!b) return;
+      r.goal = +b.dataset.g; save(true); m.remove(); rmHome();
+    });
+    document.body.appendChild(m);
+  };
+
+  // ---------- Addım (tam ekran) ----------
+  let ST = null, stEl = null, tmI = 0;
+  function openStage() {
+    if (stEl) return;
+    stEl = document.createElement("div"); stEl.className = "pq-stage"; document.body.appendChild(stEl);
+    document.body.style.overflow = "hidden";
+    try { history.pushState({ ttmNav: 1 }, "", location.href); } catch (e) {}
+  }
+  function closeStage() {
+    clearInterval(tmI);
+    if (stEl) { const o = stEl; stEl = null; o.classList.add("out"); setTimeout(() => o.remove(), 260); }
+    document.body.style.overflow = ""; ST = null;
+  }
+  const stageMsg = t => { stEl.innerHTML = `<div class="pq-sbody" style="display:flex;align-items:center;justify-content:center"><div class="rs-m" style="font-size:15px">${t}</div></div>`; };
+  window.rmStart = async () => {
+    const s = await getStats();
+    openStage(); stageMsg("Addım hazırlanır...");
+    try {
+      if (!CUR) { const pl = await nextPlan(s); CUR = pl[0]; }
+      if (!CUR) { closeStage(); toast("Hələ addım yoxdur"); return; }
+      ST = await buildStep(s, CUR);
+      if (!ST.items.length) { const pl = (await nextPlan(s)).filter(x => x.t !== CUR.t); CUR = pl[0] || null; if (CUR) ST = await buildStep(s, CUR); }
+      if (!ST || !ST.items.length) { closeStage(); toast("Bu mövzuda sual qalmayıb — afərin!"); rmHome(); return; }
+      ST.s0 = { xp: RM(s).xp, bank: Object.values(RM(s).it).filter(v => !v.m && !v.s).length };
+      renderStep();
+      clearInterval(tmI); tmI = setInterval(stepTick, 1000);
+    } catch (e) { console.error(e); closeStage(); toast(errAz(e)); }
+  };
+  function stepTick() {
+    if (!ST || !stEl) return clearInterval(tmI);
+    const left = ST.lim - (Date.now() - ST.t0) / 1000, el = stEl.querySelector(".rm-tm");
+    if (el) { el.textContent = mmss(left); el.classList.toggle("lo", left < 30); }
+    if (left <= 0) { clearInterval(tmI); toast("Vaxt bitdi"); rmFinish(); }
+  }
+  const SRC = { e: "Sınaqda səhv etdiyin", q: "Təkrarda səhv etdiyin", n: "Yeni sual" };
+  function renderStep() {
+    const S = ST; if (!S || !stEl) return;
+    const it = S.items[S.i], q = it.q, a = S.ans[S.i], n = S.items.length, done = S.ans.filter(Boolean).length;
+    const L = "ABCDE", letters = (q.options || []).every((o, k) => String(o).trim() === L[k]);
+    let body;
+    if (q.type === "open") {
+      body = a ? `<div class="pq-fb ${a.ok ? "ok" : "no"}">${a.ok ? "Düzdür!" : `Səhv. Düzgün cavab: <b>${esc(q.correctAnswer || "")}</b>`}</div>`
+        : `<div class="field" style="margin-top:14px"><input type="text" id="rm-open" placeholder="Cavabını yaz" autocomplete="off" style="font-size:16px;padding:14px" /></div>`;
+    } else {
+      body = `<div class="pq-opts">${(q.options || L.split("")).map((o, k) => { let c = ""; if (a) c = k === q.correctIndex ? "r" : k === a.s ? "w" : "dim"; return `<button type="button" class="pq-opt ${c}" ${a ? "disabled" : ""} onclick="rmPick(${k})"><b>${L[k]}</b>${letters ? "" : `<span class="pq-ot">${esc(o)}</span>`}</button>`; }).join("")}</div>`
+        + (a ? `<div class="pq-fb ${a.ok ? "ok" : "no"}">${a.ok ? ["Əla! Düzdür", "Afərin!", "Düz cavab!"][S.i % 3] : a.s < 0 ? `Keçdin. Düzgün cavab: <b>${L[q.correctIndex]}</b>` : `Səhv. Düzgün cavab: <b>${L[q.correctIndex]}</b>`}</div>` : "");
+    }
+    stEl.innerHTML = `<div class="pq-shead"><button class="pq-x" onclick="rmQuit()" aria-label="Bağla">✕</button>
+        <div class="pq-bar"><i style="width:${done / n * 100}%"></i></div><div class="pq-cnt">${S.i + 1} / ${n}</div><span class="rm-tm">${mmss(S.lim - (Date.now() - S.t0) / 1000)}</span></div>
+      <div class="pq-sbody"><div class="pq-pills"><span class="pq-ok">${S.ok} düz</span><span class="pq-lb">${esc(it.t)}</span></div>
+        <div class="pq-card pq-qc"><span class="pq-meta">${it.slow ? "Yavaş həll etdiyin" : SRC[it.src]}</span>
+          <div class="pq-qt">${esc(q.text || "")}</div>
+          ${q.imageBase64 ? `<img class="pq-qimg" src="${q.imageBase64}" onclick="openImageLightbox(this.src)" alt="">` : ""}
+          ${body}</div></div>
+      <div class="pq-sfoot">${a ? `<button class="pq-go" onclick="rmNext()">${S.i + 1 < n ? "Növbəti sual →" : "Addımı bitir →"}</button>`
+        : q.type === "open" ? `<button class="pq-ghost" onclick="rmPick(-1)">Bilmirəm</button><button class="pq-go" onclick="rmOpen()">Yoxla</button>` : `<button class="pq-ghost" onclick="rmPick(-1)">Bilmirəm, keç</button>`}</div>`;
+    ttmTeX(stEl);
+    const inp = $("rm-open"); if (inp) inp.addEventListener("keydown", e => { if (e.key === "Enter") rmOpen(); });
+  }
+  function answer(k, val) {
+    const S = ST; if (!S || S.ans[S.i]) return;
+    const it = S.items[S.i], q = it.q;
+    const ok = q.type === "open" ? (val != null && checkOpenAnswer(val, q.correctAnswer)) : k === q.correctIndex;
+    S.ans[S.i] = { s: k, ok }; if (ok) S.ok++;
+    S.tms[S.i] = Math.round((Date.now() - S.ts) / 1000);
+    rmRecord(it.key, ok, { t: it.t, src: it.src === "e" ? "e" : "q" });
+    if (it.key.startsWith("q:")) {
+      const st = window._PQ.stats, tt = st.topics[it.t] = st.topics[it.t] || { done: 0, correct: 0, best: 0, hist: [] };
+      tt.done++; st.done = (st.done || 0) + 1; if (ok) { tt.correct++; st.correct = (st.correct || 0) + 1; } else st.wrong[it.key.slice(2)] = Date.now();
+    }
+    ttmSound(ok ? "ok" : "no"); ttmBuzz(ok ? 25 : [35, 40, 35]);
+    renderStep();
+  }
+  window.rmPick = k => answer(k, null);
+  window.rmOpen = () => { const v = ($("rm-open") || {}).value || ""; if (!v.trim()) { toast("Cavabını yaz"); return; } answer(null, v.trim()); };
+  window.rmNext = () => { const S = ST; if (!S) return; if (S.i + 1 < S.items.length) { S.i++; S.ts = Date.now(); renderStep(); const b = stEl.querySelector(".pq-sbody"); if (b) b.scrollTop = 0; } else rmFinish(); };
+  window.rmQuit = async () => {
+    if (!ST) return closeStage();
+    const n = ST.ans.filter(Boolean).length;
+    if (n && !(await ttmConfirm("Addımı yarımçıq saxlayırsan?\nCavabladığın " + n + " sual yadda qalacaq, amma xal və seriya üçün addımı bitirmək lazımdır."))) return;
+    closeStage(); save(true); rmHome();
+  };
+  function rmFinish() {
+    const S = ST, s = window._PQ.stats, r = RM(s); if (!S) return;
+    clearInterval(tmI);
+    const n = S.ans.filter(Boolean).length, gain = S.ok * 10 + (n === S.items.length ? 10 : 5);
+    const L0 = lvl(r.xp);
+    r.xp += gain;
+    let newStreak = false;
+    if (r.last !== today()) { r.streak = r.last === yday() ? r.streak + 1 : 1; r.last = today(); newStreak = true; }
+    r.today.steps++; r.today.qs += n;
+    save(true);
+    const L1 = lvl(r.xp), bank = Object.values(r.it).filter(v => !v.m && !v.s).length;
+    const tt = S.tms.filter(Boolean), avg = tt.length ? tt.reduce((a, b) => a + b, 0) / tt.length : 0;
+    ttmSound("done"); ttmBuzz([20, 60, 20]);
+    CUR = null;
+    stEl.innerHTML = `<div class="pq-shead"><button class="pq-x" onclick="rmClose()" aria-label="Bağla">✕</button><div style="flex:1"></div></div>
+      <div class="pq-sbody"><div class="rm-win">
+        <div class="rm-check"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></div>
+        <h2>${S.ok === S.items.length ? "Mükəmməl addım!" : S.ok ? "Addım tamamlandı!" : "Addım bitdi — səhvlər yenə qayıdacaq"}</h2>
+        <div class="rs-m">${esc(S.t)} · ${S.ok}/${S.items.length} düz · orta ${mmss(avg)} / sual</div>
+        <div class="rm-xpg">+${gain} xal</div>
+        ${L1.i > L0.i ? `<div class="rm-lvup">Yeni səviyyə: ${L1.i + 1} · ${L1.name}!</div>` : ""}
+        <div class="rm-wt"><div><b>${r.streak} gün</b><span>${newStreak ? "seriya artdı" : "seriya"}</span></div><div><b>${S.s0.bank} → ${bank}</b><span>səhv bankı</span></div><div><b>${r.today.steps}</b><span>bu gün addım</span></div></div>
+      </div></div>
+      <div class="pq-sfoot" style="flex-direction:column"><button class="pq-go" onclick="rmStartNext()">Növbəti addım →</button><button class="pq-ghost" onclick="rmClose()">Yol xəritəsinə qayıt</button></div>`;
+    ST = null;
+  }
+  window.rmStartNext = async () => { if (stEl) stageMsg("Növbəti addım hazırlanır..."); const s = await getStats(); await sync(s); CUR = (await nextPlan(s))[0] || null; window.rmStart(); };
+  window.rmClose = () => { closeStage(); rmHome(); };
+})();
+
+</script>
 </body>
 </html>
