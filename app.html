@@ -1347,7 +1347,7 @@ function ensureLib(n){
       <div class="card"><h3>Mənim elanlarım</h3><div id="an-list"><div class="empty-state">Yüklənir...</div></div></div>
     </div>
     <div class="tab-panel" id="tab-more"><div class="card"><div class="v2-sec-head"><h3>Daha çox</h3></div><div id="a-more-list"></div></div></div>
-    <div class="tab-panel" id="tab-settings"><div class="card"><h3>Parametrlər</h3><div class="list-item"><div class="list-item-info"><div class="list-item-title" id="a-set-name">—</div><div class="list-item-sub">Hesab</div></div></div><button class="btn-small" id="a-set-logout" style="width:100%;background:var(--color-danger);margin-top:8px;">Çıxış</button><div class="muted-note">Əlavə parametrlər tezliklə.</div></div></div>
+    <div class="tab-panel" id="tab-settings"><div class="card"><h3>Parametrlər</h3><div class="list-item"><div class="list-item-info"><div class="list-item-title" id="a-set-name">—</div><div class="list-item-sub">Hesab</div></div></div><button class="btn-small" id="a-set-logout" style="width:100%;background:var(--color-danger);margin-top:8px;">Çıxış</button><a href="delete-account.html" class="btn-outline" style="display:block;text-align:center;text-decoration:none;margin-top:8px;color:var(--color-danger);border-color:var(--color-danger);">Hesabı sil</a><div class="muted-note">Əlavə parametrlər tezliklə.</div></div></div>
     <div class="tab-panel active" id="tab-students">
       <div class="card">
         <h3 id="student-form-title">Yeni şagird əlavə et</h3>
@@ -2063,6 +2063,7 @@ function ensureLib(n){
           <div class="v2-more-row" onclick="v2Tab('stab-roadmap')"><span class="v2-more-ico" style="background:#6366f1;">🎯</span><div style="flex:1;min-width:0;"><div class="v2-more-t">Yol xəritəm</div><div class="v2-more-s">Nəticələrinə əsasən fərdi tövsiyələr</div></div><span class="v2-chev">›</span></div>
           <div class="v2-more-row" onclick="tvOpen()"><span class="v2-more-ico" style="background:#ef4444;">🎓</span><div style="flex:1;min-width:0;"><div class="v2-more-t">Təlim videoları</div><div class="v2-more-s">Proqramdan istifadə qaydası</div></div><span class="v2-chev">›</span></div>
           <div class="v2-more-row" onclick="v2Tab('stab-race')"><span class="v2-more-ico" style="background:#f59e0b;">🏆</span><div style="flex:1;min-width:0;"><div class="v2-more-t">Yarış</div><div class="v2-more-s">Sürətli təkrar yarışı</div></div><span class="v2-chev">›</span></div>
+          <a class="v2-more-row" href="delete-account.html" style="text-decoration:none;"><span class="v2-more-ico" style="background:#dc2626;">🗑️</span><div style="flex:1;min-width:0;"><div class="v2-more-t">Hesabı sil</div><div class="v2-more-s">Hesabının və məlumatlarının silinməsi</div></div><span class="v2-chev">›</span></a>
         </div>
       </div>
       <div class="tab-panel" id="stab-tv"><div class="v2-backrow"><button class="v2-back" onclick="v2Tab('stab-more')">←</button><div class="v2-backtitle">Təlim videoları</div></div><div class="card"><div id="tv-s-box"></div></div></div>
