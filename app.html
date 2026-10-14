@@ -1377,6 +1377,38 @@ function fmtAz(s){var m=String(s||"").match(/^(\d{4})-(\d{2})-(\d{2})/);return m
 function ttmConfirm(msg){return new Promise(function(res){var m=document.createElement("div"),bad=/sil|rədd|deaktiv|çıxar/i.test(msg);m.className="pq-cf";m.innerHTML='<div class="pq-cfb"><div class="pq-cfi" style="background:'+(bad?'#FEE2E2':'#E0F2FE')+'"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="'+(bad?'#DC2626':'#0B3C5D')+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(bad?'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>':'<circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/>')+'</svg></div><p style="white-space:pre-line;font-size:15px;color:#1c2530;font-weight:600;line-height:1.5"></p><div class="pq-cfa"><button class="pq-cfn">Ləğv et</button><button class="pq-cfy">Təsdiqlə</button></div></div>';m.querySelector("p").textContent=msg;if(!bad)m.querySelector(".pq-cfy").style.background="linear-gradient(135deg,#14507d,#072a42)";document.body.appendChild(m);requestAnimationFrame(function(){m.classList.add("on")});function done(v){m.classList.remove("on");m.classList.add("off");setTimeout(function(){m.remove()},240);res(v);}m.querySelector(".pq-cfn").onclick=function(){done(false)};m.querySelector(".pq-cfy").onclick=function(){done(true)};m.addEventListener("click",function(e){if(e.target===m)done(false)});});}
 </script>
 
+<style id="u15b-css">
+*{-webkit-tap-highlight-color:transparent}
+/* alt menyu: dairəvi mavi işıq */
+.v2-nav-btn{position:relative;transition:color .2s}
+.v2-nav-btn:before{content:"";position:absolute;left:50%;top:15px;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;background:rgba(29,111,214,.18);transform:scale(0);opacity:0;pointer-events:none}
+.v2-nav-btn.rp:before{animation:navRp .5s cubic-bezier(.2,.8,.2,1)}
+@keyframes navRp{0%{transform:scale(.2);opacity:1}100%{transform:scale(1.15);opacity:0}}
+.v2-nav-btn svg{transition:transform .25s cubic-bezier(.2,1.5,.4,1)}
+.v2-nav-btn.active svg{transform:translateY(-1px) scale(1.08)}
+.v2-nav-btn.rp svg{transform:scale(.88)}
+/* digər düymələr: toxunuş dalğası */
+.ttm-rp{position:absolute;border-radius:50%;background:rgba(29,111,214,.22);transform:scale(0);pointer-events:none;animation:ttmRp .55s ease-out forwards}
+.btn-small .ttm-rp,.pq-go .ttm-rp,.xl-go .ttm-rp,.a-qc .ttm-rp,.v2-cta .ttm-rp{background:rgba(255,255,255,.35)}
+@keyframes ttmRp{to{transform:scale(1);opacity:0}}
+/* Sınaqlar siyahısı */
+#exam-view-list>.card{background:none!important;box-shadow:none!important;border:0!important;padding:0!important}
+#exam-view-list>.card>h3{font-size:18px;font-weight:800;color:#0B3C5D;margin:6px 4px 12px}
+.xl-card{display:flex;align-items:center;gap:14px;background:#fff;border:1.5px solid #0B3C5D;border-radius:22px;padding:14px;margin-bottom:10px;box-shadow:0 10px 24px rgba(11,60,93,.1);animation:rsIn .45s cubic-bezier(.2,.9,.25,1) both}
+.xl-ic{width:56px;height:56px;border-radius:18px;background:#0B3C5D;display:flex;align-items:center;justify-content:center;flex:none}
+.xl-mid{flex:1;min-width:0}
+.xl-t{font-weight:800;font-size:15px;color:#14212E;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.xl-m{font-size:12px;color:#5B6878;margin-top:3px}
+.xl-tag{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;color:#15803D;background:#DCFCE7;padding:3px 9px;border-radius:999px;margin-top:6px}
+.xl-tag i{width:6px;height:6px;border-radius:50%;background:#16A34A;animation:xlPulse 1.4s infinite}
+@keyframes xlPulse{50%{opacity:.3}}
+.xl-go{position:relative;overflow:hidden;height:46px;padding:0 18px;border-radius:14px;background:#0B3C5D;color:#fff;font-weight:800;font-size:14px;flex:none}
+.xl-card.soon{border:1px solid #E4EAF0;box-shadow:none}
+.xl-card.soon .xl-ic{background:#F1F5F9}
+.xl-card.soon .xl-tag{color:#92400E;background:#FEF3C7}
+.xl-card.soon .xl-tag i{background:#F59E0B;animation:none}
+.xl-empty{background:#fff;border:1px dashed #CBD5E1;border-radius:20px;padding:22px;text-align:center;color:#5B6878;font-size:13.5px;margin-bottom:10px}
+</style>
 </head>
 <body>
 
@@ -12176,6 +12208,66 @@ function homeExtra(){
   window.rmClose = () => { closeStage(); rmHome(); };
 })();
 
+</script>
+<script>
+/* ===== Sınaqlar siyahısı (yeni görünüş) + toxunuş dalğası ===== */
+(function () {
+  const $ = id => document.getElementById(id);
+  // toxunuş dalğası
+  document.addEventListener("pointerdown", e => {
+    const nb = e.target.closest(".v2-nav-btn");
+    if (nb) { nb.classList.remove("rp"); void nb.offsetWidth; nb.classList.add("rp"); setTimeout(() => nb.classList.remove("rp"), 520); return; }
+    const b = e.target.closest(".btn-small,.btn-outline,.pq-go,.pq-ghost,.xl-go,.rs-row,.a-qc,.v2-more-row,.v2-cta,.rm-bank,.v2-sc,.sq-subj,.pq-tc");
+    if (!b || b.disabled) return;
+    const cs = getComputedStyle(b);
+    if (cs.position === "static") b.style.position = "relative";
+    if (cs.overflow !== "hidden") b.style.overflow = "hidden";
+    const r = b.getBoundingClientRect(), d = Math.max(r.width, r.height) * 2.2, s = document.createElement("span");
+    s.className = "ttm-rp";
+    s.style.cssText = `width:${d}px;height:${d}px;left:${e.clientX - r.left - d / 2}px;top:${e.clientY - r.top - d / 2}px`;
+    b.appendChild(s); setTimeout(() => s.remove(), 600);
+  }, { passive: true });
+
+  // Sınaqlar siyahısı
+  const ic = (p, c) => `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${p}"/></svg>`;
+  const DOC = "M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M9 14l2 2 4-4", CLK = "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2";
+  const p2 = n => String(n).padStart(2, "0");
+  const fdt = iso => { const d = new Date(iso); return isNaN(d) ? "" : p2(d.getDate()) + "." + p2(d.getMonth() + 1) + "." + d.getFullYear() + ", " + p2(d.getHours()) + ":" + p2(d.getMinutes()); };
+  const ms = a => a.submittedAt && a.submittedAt.toMillis ? a.submittedAt.toMillis() : 0;
+  const col = p => p >= 75 ? ["#E8F8EE", "#15803D"] : p >= 50 ? ["#FFF4E5", "#B45309"] : ["#FDECEC", "#B91C1C"];
+  function cnt(a) {
+    let ok = 0, bad = 0, bl = 0, pe = 0;
+    (a.perQuestion || []).forEach(q => {
+      if (!q) return;
+      if (q.type === "detailed") { if (q.points == null) pe++; else if (q.points >= (q.maxPoints ?? 1)) ok++; else bad++; return; }
+      if (q.isCorrect) ok++; else if (q.selected == null || q.selected === "") bl++; else bad++;
+    });
+    return { ok, bad, bl, pe };
+  }
+  function meta(ex) { return [`${ex.questionCount || 0} sual`, `${ex.timeLimitMinutes} dəq`, ex.topic, ex._teacherName].filter(Boolean).map(esc).join(" · "); }
+  function render() {
+    const L = $("s-exams-list"), H = $("s-exam-history"); if (!L || !H) return;
+    const now = new Date(), done = new Set(studentAttemptsCache.map(a => a.examId));
+    const av = studentExamsCache.filter(e => new Date(e.activationAt) <= now && !done.has(e.id));
+    const up = studentExamsCache.filter(e => new Date(e.activationAt) > now).sort((a, b) => new Date(a.activationAt) - new Date(b.activationAt));
+    L.innerHTML = (!av.length && !up.length) ? `<div class="xl-empty">Hazırda aktiv sınaq yoxdur. Müəllim sınaq açanda burada görünəcək.</div>` :
+      av.map((ex, i) => `<div class="xl-card" style="animation-delay:${i * 50}ms"><div class="xl-ic">${ic(DOC, "#fff")}</div><div class="xl-mid"><div class="xl-t">${esc(ex.title)}</div><div class="xl-m">${meta(ex)}</div><span class="xl-tag"><i></i>Aktiv</span></div><button type="button" class="xl-go" onclick="startExam('${ex.id}')">Başla</button></div>`).join("") +
+      up.map(ex => `<div class="xl-card soon"><div class="xl-ic">${ic(CLK, "#94A3B8")}</div><div class="xl-mid"><div class="xl-t">${esc(ex.title)}</div><div class="xl-m">${meta(ex)}</div><span class="xl-tag"><i></i>${fdt(ex.activationAt)}</span></div></div>`).join("");
+    const past = studentAttemptsCache.slice().sort((a, b) => ms(b) - ms(a));
+    H.innerHTML = !past.length ? `<div class="xl-empty">Hələ sınaq işləməmisiniz</div>` : past.map((a, i) => {
+      const ex = studentExamsCache.find(e => e.id === a.examId), sc = computeAttemptStats(a.perQuestion).score, c = cnt(a), n = c.ok + c.bad + c.bl + c.pe || 1, w = v => (v / n * 100).toFixed(1) + "%", k = col(sc);
+      const d = ms(a) ? new Date(ms(a)) : null;
+      return `<button type="button" class="rs-row" style="animation-delay:${Math.min(i, 6) * 50}ms" onclick="viewPastResult('${a.id}')">
+        <div class="rs-sc" style="background:${k[0]};color:${k[1]}">${sc}<small>%</small></div>
+        <div class="rs-mid"><div class="rs-t">${ex ? esc(ex.title) : "Sınaq"}</div><div class="rs-m">${esc(a.topic || "")}${d ? " · " + p2(d.getDate()) + "." + p2(d.getMonth() + 1) + "." + d.getFullYear() : ""}</div>
+        <div class="rs-seg"><i style="width:${w(c.ok)};background:#22C55E"></i><i style="width:${w(c.bad)};background:#EF4444"></i><i style="width:${w(c.pe)};background:#F59E0B"></i></div>
+        <div class="rs-m">${c.ok} düz · ${c.bad} səhv · ${c.bl} boş${c.pe ? ` · ${c.pe} yoxlanılır` : ""}</div></div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0B3C5D" stroke-width="2.4" stroke-linecap="round" style="flex:none" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>`;
+    }).join("");
+  }
+  const o = window.renderStudentExamList;
+  window.renderStudentExamList = function () { o.apply(this, arguments); try { render(); } catch (e) { console.error(e); } };
+})();
 </script>
 </body>
 </html>
