@@ -1409,6 +1409,90 @@ function ttmConfirm(msg){return new Promise(function(res){var m=document.createE
 .xl-card.soon .xl-tag i{background:#F59E0B;animation:none}
 .xl-empty{background:#fff;border:1px dashed #CBD5E1;border-radius:20px;padding:22px;text-align:center;color:#5B6878;font-size:13.5px;margin-bottom:10px}
 </style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap">
+<style id="nx-css">
+/* ===== Yeni neon giriş (16.10) — yalnız görünüş, giriş məntiqi dəyişməyib ===== */
+#view-login.nx{--navy:#0B3C5D;--navy2:#14507D;--deep:#072A42;--ac:#1D6FD6;--hi:#4AA3FF;
+  background:#04182b;padding:12px;min-height:100vh;min-height:100dvh;align-items:center}
+#view-login.nx .login-card{--ac:#1D6FD6;--hi:#4AA3FF;position:relative;overflow:hidden;max-width:430px;width:100%;
+  min-height:calc(100vh - 24px);min-height:calc(100dvh - 24px);padding:250px 28px 26px;border-radius:26px;color:#fff;
+  font-family:"Montserrat",var(--font-family,system-ui),sans-serif;display:flex;flex-direction:column;
+  background:radial-gradient(120% 80% at 50% 100%,var(--navy2) 0,var(--navy) 60%);
+  border:1.5px solid color-mix(in srgb,var(--ac) 50%,transparent);
+  box-shadow:0 0 18px color-mix(in srgb,var(--ac) 30%,transparent),inset 0 0 40px rgba(0,0,0,.25);
+  transition:border-color .6s,box-shadow .6s;animation:none}
+#view-login.nx .login-card[data-role="s"]{--ac:#10B981;--hi:#6EE7B7}
+#view-login.nx .login-card.reg{padding-top:178px}
+#view-login.nx .login-header,#view-login.nx .auth-switch-link{display:none!important}
+.nx-shape{position:absolute;left:-40%;width:180%;height:400px;top:-170px;will-change:transform;transform-origin:50% 100%;pointer-events:none;
+  background:linear-gradient(160deg,#072A42 0%,color-mix(in srgb,var(--ac) 55%,#0B3C5D) 45%,var(--ac) 100%);
+  transform:rotate(-13deg);transition:transform .95s cubic-bezier(.65,0,.35,1) .1s}
+.nx-shape:after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--hi);box-shadow:0 0 11px 3px color-mix(in srgb,var(--ac) 65%,transparent),0 0 26px 6px color-mix(in srgb,var(--ac) 25%,transparent)}
+.login-card.reg .nx-shape{transform:rotate(11deg) translateY(-70px);transition-delay:.05s}
+.nx-beam{position:absolute;left:-60%;width:220%;height:3px;top:50%;opacity:0;pointer-events:none;will-change:transform;
+  background:linear-gradient(90deg,transparent,var(--hi),#fff,var(--hi),transparent);box-shadow:0 0 12px 3px color-mix(in srgb,var(--ac) 70%,transparent)}
+.login-card.nx-sweep .nx-beam{animation:nxBeam 1s cubic-bezier(.65,0,.35,1)}
+@keyframes nxBeam{0%{opacity:0;transform:translateY(55vh) rotate(-24deg)}20%,80%{opacity:1}100%{opacity:0;transform:translateY(-60vh) rotate(-24deg)}}
+.nx-hello{position:absolute;top:28px;z-index:2;font-weight:800;text-transform:uppercase;line-height:1.2;letter-spacing:.5px;color:#fff;
+  transition:transform .6s cubic-bezier(.22,1,.36,1),opacity .45s ease;will-change:transform,opacity}
+.nx-hello h2{font-size:27px;color:#fff;text-shadow:0 2px 16px rgba(0,0,0,.25)}
+.nx-hello p{margin-top:6px;font-size:12.5px;font-weight:500;text-transform:none;letter-spacing:0;color:rgba(255,255,255,.88);max-width:230px}
+.nx-hello .lg{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:12px;background:#fff;color:#0B3C5D;font-weight:800;font-size:14px;margin-bottom:12px;box-shadow:0 8px 20px rgba(0,0,0,.25)}
+.nx-hello.a{right:24px;text-align:right}.nx-hello.a p{margin-left:auto}
+.nx-hello.b{left:24px;top:22px;transform:translate3d(-120%,0,0);opacity:0}
+.login-card.reg .nx-hello.a{transform:translate3d(120%,0,0);opacity:0}
+.login-card.reg .nx-hello.b{transform:none;opacity:1;transition-delay:.3s}
+#view-login.nx .login-card>*:not(.nx-shape):not(.nx-beam){position:relative;z-index:2}
+#view-login.nx .nx-hello{position:absolute!important}
+#view-login.nx h1.nx-t{font-size:26px;font-weight:800;text-align:center;color:#fff;margin:0 0 4px}
+/* sahələr */
+#view-login.nx .form-group{margin:22px 0 0}
+#view-login.nx #teacher-register-form .form-group,#view-login.nx #student-register-form .form-group{margin-top:14px}
+#view-login.nx .fgw{position:relative}
+#view-login.nx .form-group input{height:50px;padding:16px 42px 0 12px;background:rgba(255,255,255,.06);border:0;border-bottom:2px solid rgba(255,255,255,.75);border-radius:10px 10px 0 0;color:#fff;font-size:15px;font-weight:600;box-shadow:none;transition:border-color .4s,background .3s}
+#view-login.nx .form-group input:focus{background:rgba(255,255,255,.1);border-bottom-color:var(--hi);box-shadow:none}
+#view-login.nx .form-group input:not(:placeholder-shown){border-bottom-color:var(--hi)}
+#view-login.nx .form-group label{position:absolute;left:12px;top:15px;margin:0;font-size:14.5px;font-weight:500;color:rgba(255,255,255,.82);pointer-events:none;transition:top .35s,font-size .35s,color .35s}
+#view-login.nx .form-group input:focus~label,#view-login.nx .form-group input:not(:placeholder-shown)~label{top:4px;font-size:11.5px;color:var(--hi)}
+#view-login.nx .nx-ic{position:absolute;right:12px;top:16px;width:20px;height:20px;fill:none;stroke:rgba(255,255,255,.85);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;pointer-events:none;transition:stroke .35s}
+#view-login.nx .form-group input:focus~.nx-ic,#view-login.nx .form-group input:not(:placeholder-shown)~.nx-ic{stroke:var(--hi)}
+#view-login.nx .pw-eye{color:rgba(255,255,255,.85);top:50%;margin-top:3px}
+#view-login.nx .pw-eye svg{stroke:currentColor}
+/* düymə */
+#view-login.nx .btn-primary{position:relative;overflow:hidden;z-index:1;height:50px;margin-top:24px;border-radius:40px;background:transparent;border:2px solid var(--ac);color:#fff;font-weight:700;font-size:15.5px;box-shadow:0 0 10px color-mix(in srgb,var(--ac) 30%,transparent);transition:border-color .5s,box-shadow .5s,transform .15s}
+#view-login.nx .btn-primary:before{content:"";position:absolute;left:0;top:-100%;width:100%;height:300%;z-index:-1;background:linear-gradient(#0B3C5D,var(--ac),#0B3C5D,var(--ac));transition:transform .5s}
+#view-login.nx .btn-primary:hover:before,#view-login.nx .btn-primary:active:before{transform:translateY(33.3%)}
+#view-login.nx .btn-primary *{color:#fff}
+#view-login.nx #login-btn .lg-door,#view-login.nx #login-btn .lg-man{display:none!important}
+.nx-sw{margin-top:18px;text-align:center;font-size:13.5px;color:#B8C7E0;line-height:1.6}
+.nx-sw button{color:var(--hi);font-weight:700;font-size:14px;padding:6px 10px;background:none}
+.nx-tabs{position:relative;display:grid;grid-template-columns:1fr 1fr;height:46px;padding:4px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);display:none}
+.login-card.reg .nx-tabs{display:grid}
+.nx-tabs .pill{position:absolute;top:4px;bottom:4px;left:4px;width:calc(50% - 4px);border-radius:999px;background:var(--ac);box-shadow:0 0 10px color-mix(in srgb,var(--ac) 40%,transparent);will-change:transform;transition:transform .5s cubic-bezier(.22,1,.36,1),background .5s}
+.login-card[data-role="s"] .nx-tabs .pill{transform:translate3d(100%,0,0)}
+.nx-tabs button{position:relative;z-index:1;font-weight:700;font-size:14px;color:rgba(255,255,255,.75);background:none;transition:color .3s}
+.nx-tabs button[aria-pressed="true"]{color:#fff}
+.nx-sw.r{display:none}.login-card.reg .nx-sw.r{display:block}.login-card.reg .nx-sw.l,.login-card.reg h1.nx-t{display:none}
+#view-login.nx .error-box{background:rgba(239,68,68,.15);border-color:rgba(248,113,113,.45);color:#FECACA;margin:14px 0 0}
+#view-login.nx .info-box{background:rgba(74,163,255,.14);border-color:rgba(74,163,255,.4);color:#DBEAFE;margin:14px 0 0}
+#view-login.nx .login-footer{margin-top:auto;padding-top:20px;color:rgba(255,255,255,.5)}
+#view-login.nx #pwa-install-btn{background:rgba(255,255,255,.1)!important;color:#fff!important}
+/* çıxış / giriş animasiyaları (yalnız transform/opacity) */
+.nx-o{animation:nxOut .5s cubic-bezier(.4,0,.2,1) both;animation-delay:calc(var(--i,0)*45ms)}
+.nx-n{animation:nxIn .55s cubic-bezier(.22,1,.36,1) both;animation-delay:calc(var(--i,0)*55ms)}
+@keyframes nxOut{to{opacity:0;transform:translate3d(-120%,0,0)}}
+@keyframes nxIn{from{opacity:0;transform:translate3d(120%,0,0)}}
+.login-card.nx-shake{animation:nxShake .45s}
+@keyframes nxShake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+/* daxil ol → panel örtüyü */
+#nx-cov{position:fixed;z-index:6000;left:-30vw;width:160vw;height:150vh;top:-25vh;pointer-events:none;visibility:hidden;will-change:transform;
+  background:linear-gradient(180deg,var(--c,#1D6FD6) 0%,#14507D 35%,#0B3C5D 100%);transform:translate3d(0,110%,0) rotate(-13deg)}
+#nx-cov:before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:#4AA3FF;box-shadow:0 0 11px 3px rgba(29,111,214,.65),0 0 26px 6px rgba(29,111,214,.25)}
+.nx-enter{animation:nxFade .5s ease both}
+@keyframes nxFade{from{opacity:0}}
+@media (max-height:700px){#view-login.nx .login-card{padding-top:225px}#view-login.nx .form-group{margin-top:16px}}
+@media (prefers-reduced-motion:reduce){.nx-shape,.nx-hello,.nx-o,.nx-n,.nx-beam{animation:none!important;transition:none!important}}
+</style>
 </head>
 <body>
 
@@ -12269,5 +12353,117 @@ function homeExtra(){
   window.renderStudentExamList = function () { o.apply(this, arguments); try { render(); } catch (e) { console.error(e); } };
 })();
 </script>
+<script>
+/* ===== Yeni neon giriş: mövcud formaların üstündən işləyir ===== */
+(function(){
+  const $=id=>document.getElementById(id);
+  const V=$("view-login"); if(!V) return;
+  const C=V.querySelector(".login-card"), LF=$("login-form"), TF=$("teacher-register-form"), SF=$("student-register-form"),
+        TL=$("auth-switch-link"), SL=$("student-switch-link");
+  if(!C||!LF||!TF||!SF||!TL||!SL) return;
+  V.classList.add("nx"); C.dataset.role="t";
+  const buzz=p=>{try{window.ttmBuzz?ttmBuzz(p):navigator.vibrate&&navigator.vibrate(p);}catch(e){}};
+
+  // bəzəklər
+  C.insertAdjacentHTML("afterbegin",`<div class="nx-shape" aria-hidden="true"></div><div class="nx-beam" aria-hidden="true"></div>
+    <div class="nx-hello a"><span class="lg">TTM</span><h2>Xoş gəlmisiniz!</h2><p>TTM Tədris Mərkəzi — Şagird və Müəllim Portalı</p></div>
+    <div class="nx-hello b"><span class="lg">TTM</span><h2>Bizə qoşul!</h2><p id="nx-sub">Müəllim hesabı yaradın</p></div>`);
+  const T=document.createElement("h1"); T.className="nx-t"; T.textContent="Giriş";
+  const eb=$("error-box"); C.insertBefore(T, eb);
+  const TABS=document.createElement("div"); TABS.className="nx-tabs"; TABS.setAttribute("role","group"); TABS.setAttribute("aria-label","Hesab növü");
+  TABS.innerHTML='<span class="pill"></span><button type="button" data-r="t" aria-pressed="true">Müəllim</button><button type="button" data-r="s" aria-pressed="false">Şagird</button>';
+  C.insertBefore(TABS, eb);
+  const SWL=document.createElement("p"); SWL.className="nx-sw l"; SWL.innerHTML='Hesabınız yoxdur?<br><button type="button" id="nx-to-reg">Qeydiyyat</button>';
+  const SWR=document.createElement("p"); SWR.className="nx-sw r"; SWR.innerHTML='Artıq hesabınız var?<br><button type="button" id="nx-to-in">Daxil olun</button>';
+  TL.parentNode.insertBefore(SWL,TL); TL.parentNode.insertBefore(SWR,TL);
+
+  // sahələr: üzən yazı + ikon
+  const IC={u:"M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c0-4 4-6 8-6s8 2 8 6",p:"M5 4h4l2 5-3 2a11 11 0 0 0 5 5l2-3 5 2v4a2 2 0 0 1-2 2A17 17 0 0 1 3 6a2 2 0 0 1 2-2z",b:"M2 4h7a3 3 0 0 1 3 3v14a2 2 0 0 0-2-2H2zM22 4h-7a3 3 0 0 0-3 3v14a2 2 0 0 1 2-2h8z",a:"M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c0-4 4-6 8-6M16 19l2 2 4-4"};
+  const MAP={username:"u","tr-fullname":"u","sr-fullname":"u","tr-phone":"p","tr-subject":"b","tr-username":"a","sr-username":"a"};
+  V.querySelectorAll(".form-group").forEach(g=>{
+    const i=g.querySelector("input"), l=g.querySelector("label"); if(!i||!l) return;
+    const box=i.parentNode.classList.contains("pw-wrap")?i.parentNode:(()=>{const w=document.createElement("div");w.className="fgw";i.parentNode.insertBefore(w,i);w.appendChild(i);return w;})();
+    box.insertBefore(l,i.nextSibling);
+    i.setAttribute("placeholder"," ");
+    if(MAP[i.id]) l.insertAdjacentHTML("afterend",`<svg class="nx-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="${IC[MAP[i.id]]}"/></svg>`);
+  });
+
+  // vəziyyət: mövcud keçid düymələri ilə idarə olunur (köhnə məntiq pozulmur)
+  const vis=el=>el.style.display!=="none"&&getComputedStyle(el).display!=="none";
+  const state=()=>vis(TF)?"t":vis(SF)?"s":"l";
+  function toLogin(){const s=state(); if(s==="t")TL.click(); else if(s==="s")SL.click();}
+  function setState(n){ if(state()===n) return; toLogin(); if(n==="t")TL.click(); else if(n==="s")SL.click(); }
+  function sync(){
+    const s=state();
+    C.classList.toggle("reg",s!=="l");
+    if(s!=="l"){C.dataset.role=s; TABS.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.r===s)); $("nx-sub").textContent=s==="s"?"Şagird hesabı yaradın":"Müəllim hesabı yaradın";}
+    else C.dataset.role="t";
+  }
+  TL.addEventListener("click",()=>setTimeout(sync,0)); SL.addEventListener("click",()=>setTimeout(sync,0));
+
+  function items(){
+    const f=vis(TF)?TF:vis(SF)?SF:LF, out=[];
+    if(state()==="l") out.push(T); else out.push(TABS);
+    out.push(...[...eb.parentNode.querySelectorAll(":scope>.error-box.show,:scope>.info-box.show")]);
+    out.push(...f.children);
+    out.push(state()==="l"?SWL:SWR);
+    return out;
+  }
+  function stag(list,cls){list.forEach((el,k)=>{el.classList.remove("nx-o","nx-n");el.style.setProperty("--i",k);void el.offsetWidth;el.classList.add(cls);});}
+  function clean(){C.querySelectorAll(".nx-o,.nx-n").forEach(el=>el.classList.remove("nx-o","nx-n"));}
+  function sweep(){C.classList.remove("nx-sweep");void C.offsetWidth;C.classList.add("nx-sweep");}
+  let busy=false;
+  function go(n,fromPop){
+    if(busy||state()===n) return; busy=true;
+    const toReg=state()==="l"&&n!=="l", toLog=n==="l";
+    stag(items(),"nx-o"); sweep(); buzz(8);
+    setTimeout(()=>{clean(); setState(n); sync(); stag(items(),"nx-n"); setTimeout(()=>{clean();busy=false;},900);},430);
+    if(toReg){try{history.pushState({nxReg:1},"");}catch(e){}}
+    else if(toLog&&!fromPop){try{if(history.state&&history.state.nxReg)history.back();}catch(e){}}
+  }
+  $("nx-to-reg").onclick=()=>go("t");
+  $("nx-to-in").onclick=()=>go("l");
+  TABS.querySelectorAll("button").forEach(b=>b.onclick=()=>{ if(state()!==b.dataset.r) go(b.dataset.r); });
+  addEventListener("popstate",()=>{ if(vis(V)&&state()!=="l") go("l",true); });
+
+  // Daxil ol → panel: səth aşağıdan qalxır, ekranı örtür, çəkiləndə panel görünür
+  const COV=document.createElement("div"); COV.id="nx-cov"; COV.setAttribute("aria-hidden","true"); document.body.appendChild(COV);
+  const R=" rotate(-13deg)";
+  function cover(up,mid){
+    if(!COV.animate||matchMedia("(prefers-reduced-motion: reduce)").matches){mid();return;}
+    COV.style.visibility="visible";
+    const a=up?"110%":"-110%",b=up?"-110%":"110%";
+    const an=COV.animate([
+      {transform:`translate3d(0,${a},0)`+R,easing:"cubic-bezier(.55,0,.25,1)"},
+      {transform:"translate3d(0,0,0)"+R,offset:.45,easing:"linear"},
+      {transform:"translate3d(0,0,0)"+R,offset:.55,easing:"cubic-bezier(.6,0,.2,1)"},
+      {transform:`translate3d(0,${b},0)`+R}],{duration:900,fill:"both"});
+    setTimeout(mid,450); an.onfinish=()=>{an.cancel();COV.style.visibility="hidden";};
+  }
+  let pending=false;
+  LF.addEventListener("submit",()=>{
+    const lb=$("login-btn"); if(lb) lb.classList.remove("lg-walk","lg-in","lg-bump");
+    if($("username").value.trim()&&$("password").value) pending=true;
+  },true);
+  const prevSV=showView;
+  showView=function(id){
+    if(pending&&(id==="view-admin"||id==="view-student")){
+      pending=false; stag(items(),"nx-o"); sweep(); buzz(10);
+      setTimeout(()=>cover(true,()=>{ prevSV(id); clean(); const el=$(id); if(el){el.classList.remove("nx-enter");void el.offsetWidth;el.classList.add("nx-enter");setTimeout(()=>el.classList.remove("nx-enter"),600);} }),220);
+      return;
+    }
+    const wasHidden=!vis(V);
+    prevSV(id);
+    if(id==="view-login"&&wasHidden){ clean(); sync(); stag(items(),"nx-n"); setTimeout(clean,1000); }
+  };
+  const prevErr=showError;
+  showError=function(){
+    if(pending){pending=false; C.classList.remove("nx-shake");void C.offsetWidth;C.classList.add("nx-shake");buzz([30,40,30]);setTimeout(()=>C.classList.remove("nx-shake"),500);}
+    return prevErr.apply(this,arguments);
+  };
+  sync();
+})();
+</script>
+
 </body>
 </html>
