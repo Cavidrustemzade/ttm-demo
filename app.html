@@ -2,7 +2,7 @@
 <html lang="az">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <title>TTM Tədris Mərkəzi — Giriş</title>
 <link rel="canonical" href="https://tamtedris.az/app.html" />
 <meta name="description" content="TTM Tədris Mərkəzi şagird və müəllim portalı. Daxil olmaq üçün istifadəçi adı və şifrənizi daxil edin." />
@@ -1492,6 +1492,24 @@ function ttmConfirm(msg){return new Promise(function(res){var m=document.createE
 @keyframes nxFade{from{opacity:0}}
 @media (max-height:700px){#view-login.nx .login-card{padding-top:225px}#view-login.nx .form-group{margin-top:16px}}
 @media (prefers-reduced-motion:reduce){.nx-shape,.nx-hello,.nx-o,.nx-n,.nx-beam{animation:none!important;transition:none!important}}
+
+@media (max-width:600px){
+#view-login.nx{padding:0;background:#0B3C5D}
+#view-login.nx .login-card{max-width:none;border-radius:0;border:0;box-shadow:none;min-height:100vh;min-height:100dvh;padding-top:calc(250px + env(safe-area-inset-top,0px));padding-bottom:calc(26px + env(safe-area-inset-bottom,0px))}
+#view-login.nx .login-card.reg{padding-top:calc(178px + env(safe-area-inset-top,0px))}
+#view-login.nx .nx-hello{margin-top:env(safe-area-inset-top,0px)}
+}
+#view-login.nx .form-group input{font-size:16px}
+.ttm-about{position:fixed;inset:0;z-index:7000;background:rgba(7,42,66,.5);display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .25s}
+.ttm-about.on{opacity:1}
+.ttm-about .sh{width:100%;max-width:480px;background:#fff;border-radius:24px 24px 0 0;padding:24px 22px calc(24px + env(safe-area-inset-bottom,0px));text-align:center;transform:translateY(30px);transition:transform .35s cubic-bezier(.22,1,.36,1)}
+.ttm-about.on .sh{transform:none}
+.ttm-about .lg{width:64px;height:64px;border-radius:18px;background:#0B3C5D;color:#fff;font-weight:800;font-size:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+.ttm-about h3{margin:0;color:#0B3C5D;font-size:20px}.ttm-about .v{font-size:12.5px;color:#5B6878;margin-top:2px}
+.ttm-about p{font-size:14px;line-height:1.55;color:#24313F;margin:14px 0}
+.ttm-about .rw{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-top:1px solid #E4EAF0;font-size:13.5px;text-align:left}
+.ttm-about .rw span{color:#5B6878}.ttm-about .rw b{color:#0B3C5D;word-break:break-all;text-align:right}
+.ttm-about .cl{width:100%;height:48px;border-radius:14px;background:#0B3C5D;color:#fff;font-weight:700;margin-top:14px}
 </style>
 </head>
 <body>
@@ -1635,7 +1653,7 @@ function ttmConfirm(msg){return new Promise(function(res){var m=document.createE
       <div class="card"><h3>Mənim elanlarım</h3><div id="an-list"><div class="empty-state">Yüklənir...</div></div></div>
     </div>
     <div class="tab-panel" id="tab-more"><div class="card"><div class="v2-sec-head"><h3>Daha çox</h3></div><div id="a-more-list"></div></div></div>
-    <div class="tab-panel" id="tab-settings"><div class="card"><h3>Parametrlər</h3><div class="list-item"><div class="list-item-info"><div class="list-item-title" id="a-set-name">—</div><div class="list-item-sub">Hesab</div></div></div><button class="btn-small" id="a-set-logout" style="width:100%;background:var(--color-danger);margin-top:8px;">Çıxış</button><a href="delete-account.html" class="btn-outline" style="display:block;text-align:center;text-decoration:none;margin-top:8px;color:var(--color-danger);border-color:var(--color-danger);">Hesabı sil</a></div></div>
+    <div class="tab-panel" id="tab-settings"><div class="card"><h3>Parametrlər</h3><div class="list-item"><div class="list-item-info"><div class="list-item-title" id="a-set-name">—</div><div class="list-item-sub">Hesab</div></div></div><a class="list-item" href="privacy.html" style="text-decoration:none;color:inherit;margin-top:6px;"><div class="list-item-info"><div class="list-item-title">Məxfilik siyasəti</div><div class="list-item-sub">Məlumatlarınız necə qorunur</div></div><span class="v2-chev">›</span></a><button type="button" class="list-item ttm-about-open" style="width:100%;text-align:left;background:none;color:inherit;"><div class="list-item-info"><div class="list-item-title">Tətbiq haqqında</div><div class="list-item-sub">Versiya və əlaqə</div></div><span class="v2-chev">›</span></button><button class="btn-small" id="a-set-logout" style="width:100%;background:var(--color-danger);margin-top:8px;">Çıxış</button><a href="delete-account.html" class="btn-outline" style="display:block;text-align:center;text-decoration:none;margin-top:8px;color:var(--color-danger);border-color:var(--color-danger);">Hesabı sil</a></div></div>
     <div class="tab-panel active" id="tab-students">
       <div class="card">
         <h3 id="student-form-title">Yeni şagird əlavə et</h3>
@@ -2351,6 +2369,8 @@ function ttmConfirm(msg){return new Promise(function(res){var m=document.createE
           <div class="v2-more-row" onclick="v2Tab('stab-roadmap')"><span class="v2-more-ico" style="background:#6366f1;">🎯</span><div style="flex:1;min-width:0;"><div class="v2-more-t">Yol xəritəm</div><div class="v2-more-s">Nəticələrinə əsasən fərdi tövsiyələr</div></div><span class="v2-chev">›</span></div>
           <div class="v2-more-row" onclick="tvOpen()"><span class="v2-more-ico" style="background:#ef4444;">🎓</span><div style="flex:1;min-width:0;"><div class="v2-more-t">Təlim videoları</div><div class="v2-more-s">Proqramdan istifadə qaydası</div></div><span class="v2-chev">›</span></div>
           <div class="v2-more-row" onclick="v2Tab('stab-race')"><span class="v2-more-ico" style="background:#f59e0b;">🏆</span><div style="flex:1;min-width:0;"><div class="v2-more-t">Yarış</div><div class="v2-more-s">Sürətli təkrar yarışı</div></div><span class="v2-chev">›</span></div>
+          <a class="v2-more-row" href="privacy.html" style="text-decoration:none;"><span class="v2-more-ico" style="background:#0B3C5D;"><svg viewBox="0 0 24 24" class="ico-s" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6zM9 12l2 2 4-4"/></svg></span><div style="flex:1;min-width:0;"><div class="v2-more-t">Məxfilik siyasəti</div><div class="v2-more-s">Məlumatların necə qorunur</div></div><span class="v2-chev">›</span></a>
+          <button type="button" class="v2-more-row ttm-about-open" style="width:100%;text-align:left;font-family:inherit;color:inherit;"><span class="v2-more-ico" style="background:#1D6FD6;"><svg viewBox="0 0 24 24" class="ico-s" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 11v6M12 7.5v.5"/></svg></span><div style="flex:1;min-width:0;"><div class="v2-more-t">Tətbiq haqqında</div><div class="v2-more-s">Versiya və əlaqə</div></div><span class="v2-chev">›</span></button>
           <a class="v2-more-row" href="delete-account.html" style="text-decoration:none;"><span class="v2-more-ico" style="background:#dc2626;">🗑️</span><div style="flex:1;min-width:0;"><div class="v2-more-t">Hesabı sil</div><div class="v2-more-s">Hesabının və məlumatlarının silinməsi</div></div><span class="v2-chev">›</span></a>
         </div>
       </div>
@@ -11672,11 +11692,13 @@ function homeExtra(){
       if (AC.state === "suspended") AC.resume();
       const o = AC.createOscillator(), g = AC.createGain(), s = AC.currentTime + t;
       o.type = "sine"; o.frequency.value = f;
-      g.gain.setValueAtTime(0, s); g.gain.linearRampToValueAtTime(v || .045, s + .015); g.gain.exponentialRampToValueAtTime(.0001, s + d);
+      g.gain.setValueAtTime(0, s); g.gain.linearRampToValueAtTime(Math.min(.22, (v || .045) * 2), s + .015); g.gain.exponentialRampToValueAtTime(.0001, s + d);
       o.connect(g); g.connect(AC.destination); o.start(s); o.stop(s + d + .03);
     } catch (e) {}
   }
   const SND = {
+    key: () => tone(1700 + Math.random() * 300, 0, .03, .012),
+    win: () => [523, 659, 784, 1046, 1318].forEach((f, i) => tone(f, i * .07, .32, .035)),
     ok: () => { tone(660, 0, .14); tone(990, .09, .22); },
     no: () => { tone(320, 0, .18, .035); tone(250, .1, .24, .03); },
     done: () => [523, 659, 784, 1046].forEach((f, i) => tone(f, i * .09, .28, .04)),
@@ -12465,5 +12487,40 @@ function homeExtra(){
 })();
 </script>
 
+<script>
+/* ===== 16.10: təsdiq səsi, yazanda yumşaq səs, «Tətbiq haqqında» ===== */
+(function(){
+  const snd=k=>{try{window.ttmSound&&ttmSound(k);}catch(e){}};
+  // yazanda yumşaq səs (giriş və qeydiyyat sahələri)
+  let last=0;
+  document.addEventListener("input",e=>{
+    const t=e.target; if(!t.closest||!t.closest("#view-login")||t.tagName!=="INPUT") return;
+    const n=performance.now(); if(n-last<45) return; last=n; snd("key");
+  });
+  // uğurlu giriş
+  const prevSV=showView;
+  showView=function(id){
+    const lv=document.getElementById("view-login"), was=lv&&lv.style.display!=="none";
+    if(was&&(id==="view-admin"||id==="view-student")) snd("win");
+    return prevSV.apply(this,arguments);
+  };
+  // uğurlu müəllim qeydiyyatı
+  const prevInfo=showInfo;
+  showInfo=function(m){ if(/qəbul edildi/i.test(String(m))) snd("win"); return prevInfo.apply(this,arguments); };
+  // Tətbiq haqqında
+  document.addEventListener("click",e=>{
+    if(!e.target.closest(".ttm-about-open")) return;
+    const m=document.createElement("div"); m.className="ttm-about"; m.setAttribute("role","dialog"); m.setAttribute("aria-modal","true");
+    m.innerHTML='<div class="sh"><div class="lg">TTM</div><h3>Tam Tədris Mərkəzi</h3><div class="v">Versiya 1.0</div>'+
+      '<p>Şagirdlər üçün sınaqlar, təkrar və fərdi yol xəritəsi; müəllimlər üçün qrup, sınaq və nəticə idarəsi — hamısı bir yerdə.</p>'+
+      '<div class="rw"><span>Sayt</span><b>tamtedris.az</b></div><div class="rw"><span>E-poçt</span><b>tamtedrismerkezi@gmail.com</b></div>'+
+      '<div class="rw"><span>Məxfilik</span><b><a href="privacy.html" style="color:#1D6FD6">Məxfilik siyasəti</a></b></div>'+
+      '<button type="button" class="cl">Bağla</button></div>';
+    const close=()=>{m.classList.remove("on");setTimeout(()=>m.remove(),250);};
+    m.addEventListener("click",x=>{if(x.target===m||x.target.closest(".cl"))close();});
+    document.body.appendChild(m); requestAnimationFrame(()=>m.classList.add("on"));
+  });
+})();
+</script>
 </body>
 </html>
