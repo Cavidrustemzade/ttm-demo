@@ -7211,7 +7211,15 @@ window.moveEnrollment = async (id) => {
       const uid = cred.user.uid;
       await db.collection("users").doc(uid).set({ role: "student", fullName, username });
       await db.collection("students").doc(uid).set({ fullName, username, active: true, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-      window.location.reload(); // artıq daxil olub, səhifə yenilənəndə şagird panelinə düşür
+      // Qeydiyyat bitdi: hesabdan çıx, girişə qayıt, istifadəçi adını doldur
+      try { await auth.signOut(); } catch (e3) {}
+      suppressAuthRouting = false;
+      sForm.reset(); setLoad(false);
+      if (open) link.click(); // giriş formasına qayıt
+      const u = document.getElementById("username"), p = document.getElementById("password");
+      if (u) u.value = username;
+      if (p) { p.value = ""; setTimeout(() => { try { p.focus(); } catch (e4) {} }, 600); }
+      showInfo("Qeydiyyat uğurla tamamlandı! İndi istifadəçi adın və şifrənlə daxil ol.");
     } catch (err) {
       console.error(err);
       showError(err.code === "auth/email-already-in-use" ? "Bu istifadəçi adı artıq istifadə olunub, başqasını seçin." : (errAz(err) || "Qeydiyyat zamanı xəta baş verdi."));
@@ -12506,7 +12514,7 @@ function homeExtra(){
   };
   // uğurlu müəllim qeydiyyatı
   const prevInfo=showInfo;
-  showInfo=function(m){ if(/qəbul edildi/i.test(String(m))) snd("win"); return prevInfo.apply(this,arguments); };
+  showInfo=function(m){ if(/qəbul edildi|uğurla tamamlandı/i.test(String(m))) snd("win"); return prevInfo.apply(this,arguments); };
   // Tətbiq haqqında
   document.addEventListener("click",e=>{
     if(!e.target.closest(".ttm-about-open")) return;
