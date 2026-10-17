@@ -13080,7 +13080,7 @@ function homeExtra(){
       <div class="pq-sec">Mövzunu seç</div><div class="pq-tgrid">` + ts.map(([id, o], i) => {
       const k = knCount(id), pc = o.count ? Math.round(k / o.count * 100) : 0;
       return `<div class="pq-tc sq-in" style="animation-delay:${60 + i * 50}ms" onclick="vcTopic('${id}')"><div class="pq-ring" style="background:conic-gradient(#22c55e ${pc * 3.6}deg,#e2e8f0 0)"><span>${pc}%</span></div><div style="flex:1;min-width:0;"><div class="pq-tn">${esc(o.topic)}</div><div class="pq-ts">${o.count} söz · ${k} öyrənilib</div></div><span class="v2-chev">›</span></div>`;
-    }).join("") + `</div>`;
+    }).join("") + `</div>` + (ts.length ? `<button class="pq-go" onclick="vcPdfPick()">📄 PDF hazırla — istədiyin bölməni yüklə</button>` : "");
     window.scrollTo(0, 0);
   };
 
@@ -13092,7 +13092,7 @@ function homeExtra(){
     title(d.topic);
     $("pq-root").innerHTML = `<div class="vc-acts">
         <button style="background:linear-gradient(135deg,#6366f1,#4338ca)" onclick="vcCards()">🃏 Kartlarla öyrən<small>Əvvəl bilmədiklərin</small></button>
-        <button style="background:linear-gradient(135deg,#f59e0b,#b45309)" onclick="vcQuiz()">✅ Söz testi<small>10 sual</small></button></div>
+        <button style="background:linear-gradient(135deg,#f59e0b,#b45309)" onclick="vcQuizPick()">✅ Söz testi<small>Sual sayını seç</small></button></div>
       <div class="pq-chips" id="vc-f" style="margin-bottom:10px">${[["all", "Hamısı"], ["un", "Bilmədiklərim"], ["kn", "Bildiklərim"]].map(x => `<button class="pq-chip ${x[0] === "all" ? "on" : ""}" data-f="${x[0]}">${x[1]}</button>`).join("")}</div>
       <div class="vc-tools"><input type="search" id="vc-q" placeholder="Axtar: ingiliscə və ya azərbaycanca" autocomplete="off"></div>
       <div id="vc-list"></div>`;
@@ -13109,7 +13109,8 @@ function homeExtra(){
         <button class="vc-k ${isKn(V.sel, x.w) ? "on" : ""}" aria-label="Bilirəm">✓</button></div>
         ${x.n ? `<div class="vc-n">📌 ${esc(x.n)}</div>` : ""}
         ${x.ex ? `<div class="vc-ex">${esc(x.ex)}<i>${esc(x.exAz || "")}</i></div>` : ""}</div>`).join("") : `<div class="pq-empty">Söz tapılmadı</div>`) +
-      (L.length > V.lim ? `<button class="pq-ghost" onclick="vcMore()">Daha çox göstər (${L.length - V.lim})</button>` : "");
+      (L.length > V.lim ? `<button class="pq-ghost" onclick="vcMore()">Daha çox göstər (${L.length - V.lim})</button>` : "") +
+      `<button class="pq-go" style="margin-top:14px" onclick="vcPdfPick('${V.sel}')">📄 Bu bölməni PDF et</button>`;
     box.onclick = e => {
       const r = e.target.closest(".vc-row"); if (!r) return;
       if (e.target.closest(".vc-k")) { const on = !isKn(V.sel, r.dataset.w); setKn(V.sel, r.dataset.w, on); e.target.closest(".vc-k").classList.toggle("on", on); try { ttmBuzz(15); } catch (x) {} return; }
@@ -13120,9 +13121,21 @@ function homeExtra(){
 
   // ---- tam ekran ----
   let ov = null;
-  function stage() { if (ov) return ov; ov = document.createElement("div"); ov.className = "pq-stage"; document.body.appendChild(ov); document.body.style.overflow = "hidden"; return ov; }
+  function stage() { if (ov) return ov; ov = document.createElement("div"); ov.className = "pq-stage"; document.body.appendChild(ov); document.body.style.overflow = "hidden"; try { history.pushState({ ttmNav: 1 }, "", location.href); } catch (e) {} return ov; }
+  let asking = false;
+  window.vcExit = async () => {
+    if (asking || !ov) return;
+    let left = 0, done = 0, what = "";
+    if (Q && Q.i < Q.items.length) { done = Q.i + (Q.a != null ? 1 : 0); left = Q.items.length - done; what = "Testdən"; }
+    else if (C && C.i < C.list.length) { done = C.i; left = C.list.length - C.i; what = "Kartlardan"; }
+    if (!left) return vcClose();
+    asking = true;
+    const ok = await ttmConfirm(`${what} çıxmaq istədiyinizə əminsiniz?\n${left} ${what === "Testdən" ? "sual" : "kart"} qalıb.${done ? " Cavabladığınız " + done + " söz yadda qalacaq." : ""}`);
+    asking = false;
+    if (ok) { if (Q) Q.i = Q.items.length; if (C) C.i = C.list.length; vcClose(); }
+  };
   window.vcClose = () => { if (!ov) return; const o = ov; ov = null; o.classList.add("out"); setTimeout(() => o.remove(), 260); document.body.style.overflow = ""; if (V.sel && P().view === "vtopic") vcTopic(V.sel); };
-  const head = (i, n, extra) => `<div class="pq-shead"><button class="pq-x" onclick="vcClose()" aria-label="Bağla">✕</button><div class="pq-bar"><i style="width:${n ? i / n * 100 : 0}%"></i></div><div class="pq-cnt">${Math.min(i + 1, n)} / ${n}</div>${extra || ""}</div>`;
+  const head = (i, n, extra) => `<div class="pq-shead"><button class="pq-x" onclick="vcExit()" aria-label="Bağla">✕</button><div class="pq-bar"><i style="width:${n ? i / n * 100 : 0}%"></i></div><div class="pq-cnt">${Math.min(i + 1, n)} / ${n}</div>${extra || ""}</div>`;
 
   // kartlar
   let C = null;
@@ -13131,7 +13144,7 @@ function homeExtra(){
     const un = sh(d.words.filter(x => !isKn(V.sel, x.w))), k = sh(d.words.filter(x => isKn(V.sel, x.w)));
     const list = un.concat(k).slice(0, 20);
     if (!list.length) return;
-    C = { list, i: 0, ok: 0 }; stage(); card();
+    Q = null; C = { list, i: 0, ok: 0 }; stage(); card();
   };
   function card() {
     const c = C, x = c.list[c.i];
@@ -13152,21 +13165,45 @@ function homeExtra(){
 
   // söz testi
   let Q = null;
-  window.vcQuiz = () => {
+  window.vcQuizPick = () => {
     const d = V.docs[V.sel]; if (!d || d.words.length < 4) { toast("Test üçün azı 4 söz lazımdır"); return; }
-    const pool = sh(d.words.filter(x => !isKn(V.sel, x.w))).concat(sh(d.words.filter(x => isKn(V.sel, x.w))));
-    const items = pool.slice(0, 10).map(x => {
+    const n = d.words.length, un = d.words.filter(x => !isKn(V.sel, x.w)).length;
+    const m = document.createElement("div"); m.className = "pq-ov";
+    m.innerHTML = `<div class="pq-sheet"><div class="pq-sh-h"><b>Söz testi</b><button class="pq-x" aria-label="Bağla">✕</button></div>
+      <div class="pq-lbl">Neçə sual?</div><div class="pq-chips" id="vq-n">${[10, 20, 40].filter(k => k < n).concat(["all"]).map((k, i) => `<button class="pq-chip ${i === 0 ? "on" : ""}" data-n="${k}">${k === "all" ? "Hamısı (" + n + ")" : k}</button>`).join("")}</div>
+      <div class="pq-lbl">Hansı sözlərdən?</div>
+      <button class="pq-mode on" data-m="mix"><i></i><div>Əvvəl bilmədiklərim<small>Sonra qalan sözlər</small></div></button>
+      <button class="pq-mode" data-m="un" ${un ? "" : "disabled"}><i></i><div>Yalnız bilmədiklərim<small>${un} söz</small></div></button>
+      <button class="pq-mode" data-m="rnd"><i></i><div>Bütün sözlərdən təsadüfi<small>Özünü yoxla</small></div></button>
+      <button class="pq-go" id="vq-go">Testə başla →</button></div>`;
+    document.body.appendChild(m);
+    let N = m.querySelector("#vq-n .pq-chip").dataset.n, M = "mix";
+    m.addEventListener("click", e => {
+      if (e.target === m || e.target.closest(".pq-x")) return m.remove();
+      const c = e.target.closest("[data-n]"); if (c) { N = c.dataset.n; m.querySelectorAll("[data-n]").forEach(b => b.classList.toggle("on", b === c)); }
+      const md = e.target.closest("[data-m]"); if (md && !md.disabled) { M = md.dataset.m; m.querySelectorAll("[data-m]").forEach(b => b.classList.toggle("on", b === md)); }
+      if (e.target.closest("#vq-go")) { m.remove(); vcQuiz(N === "all" ? 9999 : +N, M); }
+    });
+  };
+  window.vcQuiz = (cnt, mode) => {
+    const d = V.docs[V.sel]; if (!d || d.words.length < 4) { toast("Test üçün azı 4 söz lazımdır"); return; }
+    cnt = cnt || 10; mode = mode || "mix"; V.lastQ = [cnt, mode];
+    const unk = sh(d.words.filter(x => !isKn(V.sel, x.w)));
+    const pool = mode === "un" ? unk : mode === "rnd" ? sh(d.words.slice()) : unk.concat(sh(d.words.filter(x => isKn(V.sel, x.w))));
+    if (!pool.length) { toast("Bu seçimdə söz yoxdur"); return; }
+    const items = pool.slice(0, cnt).map(x => {
       const wrong = sh(d.words.filter(y => y.w !== x.w && y.az !== x.az)).slice(0, 3).map(y => y.az);
       return { x, opts: sh([x.az].concat(wrong)) };
     });
-    Q = { items, i: 0, ok: 0, a: null }; stage(); quiz();
+    C = null; Q = { items, i: 0, ok: 0, a: null, wrong: [] }; stage(); quiz();
   };
   function quiz() {
     const q = Q, it = q.items[q.i];
     if (!it) {
       const pc = Math.round(q.ok / q.items.length * 100);
-      ov.innerHTML = head(q.items.length, q.items.length) + `<div class="pq-sbody"><div class="pq-card pq-res"><div class="pq-bigring" style="background:conic-gradient(${pc >= 70 ? "#22c55e" : pc >= 40 ? "#f59e0b" : "#ef4444"} ${pc * 3.6}deg,#e2e8f0 0)"><span>${pc}%</span></div><div class="pq-tn" style="font-size:19px;text-align:center">${q.ok} / ${q.items.length} düz</div></div></div>
-        <div class="pq-sfoot" style="flex-direction:column"><button class="pq-go" onclick="vcQuiz()">Yeni test</button><button class="pq-ghost" onclick="vcClose()">Lügətə qayıt</button></div>`;
+      ov.innerHTML = head(q.items.length, q.items.length) + `<div class="pq-sbody"><div class="pq-card pq-res"><div class="pq-bigring" style="background:conic-gradient(${pc >= 70 ? "#22c55e" : pc >= 40 ? "#f59e0b" : "#ef4444"} ${pc * 3.6}deg,#e2e8f0 0)"><span>${pc}%</span></div><div class="pq-tn" style="font-size:19px;text-align:center">${q.ok} / ${q.items.length} düz</div></div>
+        ${q.wrong.length ? `<div class="pq-sec">Səhv etdiyin sözlər (${q.wrong.length})</div>` + q.wrong.map(x => `<div class="vc-row"><div class="vc-top"><button class="vc-say" onclick="vcSay('${esc(x.w).replace(/'/g, "\\'")}',event)">🔊</button><div><span class="vc-w">${esc(x.w)}</span> <span class="vc-p">${esc(x.p || "")}</span><div class="vc-az">${esc(x.az)}</div></div></div>${x.n ? `<div class="vc-n">📌 ${esc(x.n)}</div>` : ""}</div>`).join("") : ""}</div>
+        <div class="pq-sfoot" style="flex-direction:column">${q.wrong.length ? `<button class="pq-go" onclick="vcRetryWrong()">↻ Səhvləri yenidən işlə (${q.wrong.length})</button>` : ""}<button class="${q.wrong.length ? "pq-ghost" : "pq-go"}" onclick="vcQuiz(V_LAST()[0],V_LAST()[1])">Yeni test</button><button class="pq-ghost" onclick="vcClose()">Lügətə qayıt</button></div>`;
       try { ttmSound("done"); } catch (e) {} return;
     }
     const a = q.a;
@@ -13176,8 +13213,76 @@ function homeExtra(){
       ${a != null && it.x.n ? `<div class="vc-n">📌 ${esc(it.x.n)}</div>` : ""}</div></div>
       <div class="pq-sfoot">${a != null ? `<button class="pq-go" onclick="vcNext()">${q.i + 1 < q.items.length ? "Növbəti →" : "Nəticə →"}</button>` : ""}</div>`;
   }
-  window.vcPick = k => { const it = Q.items[Q.i]; if (Q.a != null) return; Q.a = k; const ok = it.opts[k] === it.x.az; if (ok) Q.ok++; setKn(V.sel, it.x.w, ok); try { ttmSound(ok ? "ok" : "no"); ttmBuzz(ok ? 20 : [30, 40, 30]); } catch (e) {} quiz(); };
-  window.vcNext = () => { Q.i++; Q.a = null; quiz(); };
+  window.vcPick = k => { const it = Q.items[Q.i]; if (Q.a != null) return; Q.a = k; const ok = it.opts[k] === it.x.az; if (ok) Q.ok++; else Q.wrong.push(it.x); setKn(V.sel, it.x.w, ok); try { ttmSound(ok ? "ok" : "no"); ttmBuzz(ok ? 20 : [30, 40, 30]); } catch (e) {} quiz(); };
+  window.vcNext = () => { Q.i++; Q.a = null; quiz(); const b = ov && ov.querySelector(".pq-sbody"); if (b) b.scrollTop = 0; };
+  window.V_LAST = () => V.lastQ || [10, "mix"];
+  window.vcRetryWrong = () => {
+    const d = V.docs[V.sel], w = Q.wrong.slice();
+    const items = sh(w).map(x => ({ x, opts: sh([x.az].concat(sh(d.words.filter(y => y.w !== x.w && y.az !== x.az)).slice(0, 3).map(y => y.az))) }));
+    Q = { items, i: 0, ok: 0, a: null, wrong: [] }; quiz();
+  };
+
+  // ---- PDF ----
+  window.vcPdfPick = (id) => {
+    const s = P().vsubj, ts = topicsOf(s);
+    const m = document.createElement("div"); m.className = "pq-ov";
+    m.innerHTML = `<div class="pq-sheet"><div class="pq-sh-h"><b>📄 Lügəti PDF et</b><button class="pq-x" aria-label="Bağla">✕</button></div>
+      <div class="pq-lbl">Bölmə</div><div class="pq-chips" id="vp-t">${ts.map(([tid, o]) => `<button class="pq-chip ${tid === (id || ts[0][0]) ? "on" : ""}" data-t="${tid}">${esc(o.topic)}</button>`).join("")}</div>
+      <div class="pq-lbl">Hansı sözlər?</div>
+      <button class="pq-mode on" data-m="all"><i></i><div>Hamısı</div></button>
+      <button class="pq-mode" data-m="un"><i></i><div>Yalnız bilmədiklərim</div></button>
+      <button class="pq-go" id="vp-go">PDF yüklə</button></div>`;
+    document.body.appendChild(m);
+    let T = id || (ts[0] && ts[0][0]), M = "all";
+    m.addEventListener("click", async e => {
+      if (e.target === m || e.target.closest(".pq-x")) return m.remove();
+      const c = e.target.closest("[data-t]"); if (c) { T = c.dataset.t; m.querySelectorAll("[data-t]").forEach(b => b.classList.toggle("on", b === c)); }
+      const md = e.target.closest("[data-m]"); if (md) { M = md.dataset.m; m.querySelectorAll("[data-m]").forEach(b => b.classList.toggle("on", b === md)); }
+      const g = e.target.closest("#vp-go");
+      if (g) { g.disabled = true; g.textContent = "Hazırlanır..."; try { await vcPdf(T, M); m.remove(); } catch (err) { console.error(err); toast("PDF hazırlanmadı: " + errAz(err)); g.disabled = false; g.textContent = "PDF yüklə"; } }
+    });
+  };
+  async function vcPdf(id, mode) {
+    const d = await getDoc(id);
+    const words = d.words.filter(x => mode !== "un" || !isKn(id, x.w));
+    if (!words.length) { toast("Bilmədiyin söz qalmayıb — afərin!"); return; }
+    await ensureLib("jspdf"); const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    await ensurePdfFont(doc);
+    const W = 210, H = 297, mx = 12, NAVY = [11, 60, 93];
+    const cols = [{ t: "№", w: 9 }, { t: "Söz", w: 36 }, { t: "Növ", w: 18 }, { t: "Tərcümə", w: 50 }, { t: "Qeyd", w: 73 }];
+    doc.setFillColor(...NAVY); doc.rect(0, 0, W, 26, "F");
+    doc.setTextColor(255, 255, 255); setPdfFont(doc); doc.setFontSize(17);
+    boldText(doc, `${d.topic} — lügət`, mx, 13);
+    doc.setFontSize(9.5); doc.text(`${d.subject} · ${words.length} söz${mode === "un" ? " (bilmədiklərim)" : ""}`, mx, 20);
+    doc.text("TTM Tədris Mərkəzi", W - mx, 13, { align: "right" });
+    let y = 34;
+    const headRow = () => {
+      doc.setFillColor(...NAVY); doc.rect(mx, y, W - 2 * mx, 8, "F");
+      doc.setTextColor(255, 255, 255); doc.setFontSize(9); let x = mx;
+      cols.forEach(c => { boldText(doc, c.t, x + 2, y + 5.5); x += c.w; }); y += 8;
+    };
+    headRow();
+    words.forEach((w, i) => {
+      doc.setFontSize(9.5);
+      const wl = doc.splitTextToSize(w.w, cols[1].w - 3), al = doc.splitTextToSize(w.az || "", cols[3].w - 3);
+      doc.setFontSize(8); const nl = w.n ? doc.splitTextToSize(w.n, cols[4].w - 3) : [];
+      const rh = Math.max(7, Math.max(wl.length, al.length) * 4.4 + 3, nl.length * 3.7 + 3);
+      if (y + rh > H - 14) { doc.addPage(); y = 14; headRow(); }
+      if (i % 2) { doc.setFillColor(244, 247, 250); doc.rect(mx, y, W - 2 * mx, rh, "F"); }
+      let x = mx;
+      doc.setTextColor(120, 130, 145); doc.setFontSize(8.5); doc.text(String(i + 1), x + 2, y + 4.8); x += cols[0].w;
+      doc.setTextColor(...NAVY); doc.setFontSize(9.5); boldText(doc, wl, x + 2, y + 4.8); x += cols[1].w;
+      doc.setTextColor(100, 110, 125); doc.setFontSize(8); doc.text(w.p || "", x + 2, y + 4.8); x += cols[2].w;
+      doc.setTextColor(30, 40, 55); doc.setFontSize(9.5); doc.text(al, x + 2, y + 4.8); x += cols[3].w;
+      if (nl.length) { doc.setTextColor(146, 64, 14); doc.setFontSize(8); doc.text(nl, x + 2, y + 4.6); }
+      y += rh;
+    });
+    const tot = doc.internal.getNumberOfPages();
+    for (let p = 1; p <= tot; p++) { doc.setPage(p); doc.setFontSize(8); doc.setTextColor(150, 158, 170); doc.text("tamtedris.az", mx, H - 7); doc.text(`${p} / ${tot}`, W - mx, H - 7, { align: "right" }); }
+    doc.save(`Lugat_${d.topic.replace(/[^\wƏəıİĞğÜüŞşÖöÇç -]/g, "")}.pdf`);
+    toast("PDF hazırdır");
+  }
 
   // Təkrar ana səhifəsi lügət sayını görsün
   const oi = initStudentPanel;
