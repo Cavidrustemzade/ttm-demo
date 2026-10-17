@@ -11219,11 +11219,18 @@ function homeExtra(){
     let h = `<div class="pq-hero sq-in"><h2>Təkrar</h2><p>2019-cu ildən imtahanlarda çıxmış suallarla hazırlaş.</p>
       <div class="pq-hstats"><div><b>${st.done || 0}</b><span>həll edilib</span></div><div><b>${pct(st.correct, st.done)}%</b><span>dəqiqlik</span></div><div><b>${wn}</b><span>səhv bankı</span></div></div></div>`;
     if (wn) h += `<div class="pq-wrongcard sq-in" style="animation-delay:60ms" onclick="pqWrongAll()"><div class="ic">↻</div><div style="flex:1;"><div class="pq-tn">Səhvlərimi təkrarla</div><div class="pq-ts">${wn} sual səni gözləyir — düz cavab verdikcə siyahıdan çıxır</div></div><span class="v2-chev">›</span></div>`;
-    h += `<div class="pq-sec">Fənni seç</div><div class="sq-subjs">` + list.map((s, i) => {
-      const ic = icon(s), n = cnt[s] || 0;
+    const EG = window.ttmEG, g = EG && EG.get();
+    if (!g) {
+      h += `<div class="pq-card sq-in" style="text-align:center"><div class="pq-tn" style="font-size:17px;">İmtahan qrupunu seç</div><div class="pq-ts" style="margin:6px 0 4px;">Təkrar bölməsində yalnız öz qrupunun fənləri görünəcək.</div><button class="pq-go" onclick="ttmEG.pick()">Qrupu seç →</button></div>`;
+      r.innerHTML = h; return;
+    }
+    const sub = EG.subs(g);
+    const card = (s, i) => { const ic = icon(s), n = cnt[s] || 0;
       return `<button class="sq-subj ${n ? "" : "off"}" style="--c:${ic.bg};animation-delay:${80 + i * 45}ms" onclick="${n ? `pqSubject(${js(s)})` : `toast('${esc(s)} sualları tezliklə əlavə olunacaq')`}">
-        <span class="sq-si" style="background:${ic.bg}">${ic.t}</span><span class="sq-sn">${esc(s)}</span><span class="sq-sc">${n ? n + " sual" : "Tezliklə"}</span></button>`;
-    }).join("") + `</div>`;
+        <span class="sq-si" style="background:${ic.bg}">${ic.t}</span><span class="sq-sn">${esc(s)}</span><span class="sq-sc">${n ? n + " sual" : "Tezliklə"}</span></button>`; };
+    h += `<div class="eg-head"><span>${esc(EG.name(g))}</span><button onclick="ttmEG.pick()">Dəyiş</button></div>`;
+    h += `<div class="pq-sec">Buraxılış fənləri</div><div class="sq-subjs">` + sub.exit.map((s, i) => card(s, i)).join("") + `</div>`;
+    h += `<div class="pq-sec">Blok fənləri</div><div class="sq-subjs">` + sub.block.map((s, i) => card(s, i + 3)).join("") + `</div>`;
     r.innerHTML = h;
   }
   window.pqHome = pqHome;
@@ -11318,7 +11325,7 @@ function homeExtra(){
     try {
       await loadIdx();
       const all = [];
-      for (const t of Object.keys(PQ.idx)) { const qs = await loadTopic(t); qs.forEach(q => { if (st.wrong[q.id]) all.push(q); }); }
+      for (const t of Object.keys(PQ.idx)) { if (window.ttmEG && ttmEG.get() && !ttmEG.allow(subjOf(PQ.idx[t]))) continue; const qs = await loadTopic(t); qs.forEach(q => { if (st.wrong[q.id]) all.push(q); }); }
       if (!all.length) { toast("Səhv suallar tapılmadı"); pqHome(); return; }
       PQ.cfg = null;
       begin(shuffle(all).slice(0, 30), "Səhvlərim", null);
@@ -12840,6 +12847,138 @@ function homeExtra(){
     bypass = true;
     try { gbtn.click(); } finally { bypass = false; }
   }, true);
+})();
+</script>
+
+<style id="eg-css">
+.eg-head{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid rgba(11,60,93,.1);border-radius:16px;padding:10px 14px;margin-bottom:14px;font-weight:800;color:var(--color-primary);font-size:14px}
+.eg-head button{padding:7px 12px;border-radius:10px;background:rgba(11,60,93,.08);color:var(--color-primary);font-weight:800;font-size:12.5px}
+.eg-opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:14px;border-radius:16px;border:2px solid var(--color-gray);background:#fff;margin-bottom:10px;font-family:inherit;color:inherit;transition:transform .15s,border-color .2s}
+.eg-opt:active{transform:scale(.98)}
+.eg-opt.on{border-color:var(--color-primary);background:rgba(11,60,93,.05)}
+.eg-n{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,var(--color-primary-light),var(--color-primary-dark));color:#fff;font-weight:900;font-size:17px;display:flex;align-items:center;justify-content:center;flex:none}
+.eg-t{font-weight:800;font-size:15px}
+.eg-s{font-size:12px;color:var(--color-text-muted);margin-top:3px;line-height:1.4}
+.eg-sel{padding:6px 8px;border-radius:8px;border:1.5px solid var(--color-gray);font-size:12px;background:#fff;max-width:118px}
+</style>
+<script>
+/* ===== İmtahan qrupu: şagird seçir, müəllim dəyişir, Təkrar yalnız qrupun fənlərini göstərir ===== */
+(function () {
+  const $ = id => document.getElementById(id);
+  const EXIT = ["Riyaziyyat", "Azərbaycan dili", "İngilis dili"];
+  const G = {
+    "1RK": ["I qrup (RK)", ["Fizika", "Kimya"]], "1RI": ["I qrup (Rİ)", ["Fizika", "İnformatika"]],
+    "2": ["II qrup", ["Coğrafiya", "Tarix"]],
+    "3DT": ["III qrup (DT)", ["Tarix", "Ədəbiyyat"]], "3TC": ["III qrup (TC)", ["Tarix", "Coğrafiya"]],
+    "4": ["IV qrup", ["Biologiya", "Kimya", "Fizika"]]
+  };
+  const MAIN = [["1", "I qrup", "Riyaziyyat, Fizika + Kimya və ya İnformatika", [["1RK", "RK — Riyaziyyat-Kimya", "Fizika, Kimya"], ["1RI", "Rİ — Riyaziyyat-İnformatika", "Fizika, İnformatika"]]],
+    ["2", "II qrup", "Riyaziyyat, Coğrafiya, Tarix", null],
+    ["3", "III qrup", "Tarix + Ədəbiyyat və ya Coğrafiya", [["3DT", "DT — Dil-Tarix", "Tarix, Ədəbiyyat"], ["3TC", "TC — Tarix-Coğrafiya", "Tarix, Coğrafiya"]]],
+    ["4", "IV qrup", "Biologiya, Kimya, Fizika", null]];
+  const nrm = x => { try { return v2Norm(x); } catch (e) { return String(x || "").toLowerCase(); } };
+  let cur = null;
+  const EG = window.ttmEG = {
+    get: () => cur,
+    name: g => G[g] ? G[g][0] : "—",
+    subs: g => ({ exit: EXIT.slice(), block: G[g] ? G[g][1].slice() : [] }),
+    allow: s => { if (!cur || !G[cur]) return true; const n = nrm(s); return EXIT.concat(G[cur][1]).some(x => nrm(x) === n); },
+    opts: () => Object.keys(G).map(k => [k, G[k][0]]),
+    pick
+  };
+
+  async function load(uid) {
+    let g = null;
+    try { const d = await db.collection("students").doc(uid).get(); if (d.exists) g = d.data().examGroup || null; } catch (e) {}
+    if (!g) { try { const d = await db.collection("practiceStats").doc(uid).get(); if (d.exists) g = d.data().examGroup || null; } catch (e) {} }
+    cur = G[g] ? g : null;
+    paint();
+    return cur;
+  }
+  async function save(g) {
+    const uid = currentStudentUid;
+    let ok = false;
+    try { await db.collection("students").doc(uid).set({ examGroup: g }, { merge: true }); ok = true; } catch (e) { console.warn("students examGroup:", e); }
+    try {
+      const P = window._PQ; if (P && P.stats && P.uid === uid) P.stats.examGroup = g;
+      await db.collection("practiceStats").doc(uid).set({ examGroup: g }, { merge: true }); ok = true;
+    } catch (e) { console.warn("practiceStats examGroup:", e); }
+    return ok;
+  }
+  function paint() {
+    const b = $("s-eg-badge"); if (b) b.innerHTML = cur ? `İmtahan qrupun: <b style="color:var(--color-primary)">${EG.name(cur)}</b>` : `<a style="color:#1d6fd6;font-weight:700;cursor:pointer" onclick="ttmEG.pick()">İmtahan qrupunu seç ›</a>`;
+    const m = $("eg-more-s"); if (m) m.textContent = cur ? EG.name(cur) + " · dəyişmək üçün toxun" : "Hələ seçilməyib";
+    const pn = $("stab-practice"); if (pn && pn.classList.contains("active") && window._PQ && !window._PQ.sess && window._PQ.view === "home" && window.pqHome) pqHome();
+  }
+
+  function pick() {
+    const ov = document.createElement("div"); ov.className = "pq-ov";
+    ov.innerHTML = `<div class="pq-sheet"></div>`;
+    document.body.appendChild(ov); document.body.style.overflow = "hidden";
+    const close = () => { ov.remove(); document.body.style.overflow = ""; };
+    ov.addEventListener("click", e => { if (e.target === ov) close(); });
+    const box = ov.firstElementChild;
+    const step1 = () => {
+      box.innerHTML = `<div class="pq-sh-h"><b>İmtahan qrupunu seç</b><button class="pq-x" aria-label="Bağla">✕</button></div>
+        <div class="pq-ts" style="margin-bottom:12px">Buraxılış fənləri hamı üçün eynidir: Riyaziyyat, Azərbaycan dili, İngilis dili.</div>` +
+        MAIN.map(m => `<button class="eg-opt ${cur && cur[0] === m[0] ? "on" : ""}" data-m="${m[0]}"><span class="eg-n">${m[1].split(" ")[0]}</span><div><div class="eg-t">${m[1]}</div><div class="eg-s">${m[2]}</div></div></button>`).join("") +
+        `<button class="pq-ghost" data-later>Sonra seçərəm</button>`;
+      box.querySelector(".pq-x").onclick = close; box.querySelector("[data-later]").onclick = close;
+      box.querySelectorAll("[data-m]").forEach(b => b.onclick = () => { const m = MAIN.find(x => x[0] === b.dataset.m); m[3] ? step2(m) : done(m[0]); });
+    };
+    const step2 = m => {
+      box.innerHTML = `<div class="pq-sh-h"><button class="pq-x" data-back aria-label="Geri">←</button><b>${m[1]} — altqrup</b><button class="pq-x" data-x aria-label="Bağla">✕</button></div>` +
+        m[3].map(s => `<button class="eg-opt ${cur === s[0] ? "on" : ""}" data-g="${s[0]}"><span class="eg-n">${s[0].slice(1)}</span><div><div class="eg-t">${s[1]}</div><div class="eg-s">Blok: ${s[2]}</div></div></button>`).join("");
+      box.querySelector("[data-back]").onclick = step1; box.querySelector("[data-x]").onclick = close;
+      box.querySelectorAll("[data-g]").forEach(b => b.onclick = () => done(b.dataset.g));
+    };
+    const done = async g => {
+      box.innerHTML = `<div class="pq-empty">Yadda saxlanılır...</div>`;
+      const ok = await save(g);
+      if (!ok) { toast("Qrup yadda saxlanmadı, interneti yoxlayın"); step1(); return; }
+      cur = g; close(); paint(); toast(EG.name(g) + " seçildi");
+      try { ttmSound && ttmSound("ok"); } catch (e) {}
+    };
+    step1();
+  }
+
+  // ---- şagird paneli ----
+  const badge = $("s-group-badge");
+  if (badge) badge.insertAdjacentHTML("afterend", `<div id="s-eg-badge" class="muted-note" style="margin-top:6px;"></div>`);
+  const del = document.querySelector('#stab-more a[href="delete-account.html"]');
+  if (del) del.insertAdjacentHTML("beforebegin", `<div class="v2-more-row" onclick="ttmEG.pick()"><span class="v2-more-ico" style="background:#0B3C5D;"><svg viewBox="0 0 24 24" class="ico-s" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5zM6 11v5c3 2 9 2 12 0v-5"/></svg></span><div style="flex:1;min-width:0;"><div class="v2-more-t">İmtahan qrupum</div><div class="v2-more-s" id="eg-more-s">Yüklənir...</div></div><span class="v2-chev">›</span></div>`);
+  const oi = initStudentPanel;
+  initStudentPanel = function (uid) {
+    const r = oi.apply(this, arguments);
+    load(uid).then(g => { if (!g) setTimeout(() => { if (!cur && !document.querySelector(".pq-ov") && !document.getElementById("ttm-intro")) pick(); }, 1600); });
+    return r;
+  };
+
+  // ---- müəllim: şagird siyahısında qrup seçimi ----
+  const fetched = {};
+  async function fetchEG(s) {
+    if (fetched[s.id]) return; fetched[s.id] = 1;
+    try { const d = await db.collection("students").doc(s.id).get(); if (d.exists && d.data().examGroup) { s.examGroup = d.data().examGroup; const el = document.querySelector(`.eg-sel[data-id="${s.id}"]`); if (el) el.value = s.examGroup; } } catch (e) {}
+  }
+  const orl = renderStudentsList;
+  renderStudentsList = function () {
+    const r = orl.apply(this, arguments);
+    try {
+      const act = studentsCache.filter(s => s.active !== false), rows = document.querySelectorAll("#students-list > .list-item");
+      rows.forEach((row, i) => {
+        const s = act[i], a = row.querySelector(".list-item-actions"); if (!s || !a) return;
+        a.insertAdjacentHTML("afterbegin", `<select class="eg-sel" data-id="${s.id}" title="İmtahan qrupu"><option value="">İmtahan qrupu</option>${EG.opts().map(o => `<option value="${o[0]}" ${s.examGroup === o[0] ? "selected" : ""}>${o[1]}</option>`).join("")}</select>`);
+        if (s._enrolled && !s.examGroup) fetchEG(s);
+      });
+    } catch (e) { console.error(e); }
+    return r;
+  };
+  document.addEventListener("change", async e => {
+    const el = e.target.closest && e.target.closest(".eg-sel"); if (!el || !el.value) return;
+    const s = studentsCache.find(x => x.id === el.dataset.id); if (!s) return;
+    try { await db.collection("students").doc(s.id).set({ examGroup: el.value }, { merge: true }); s.examGroup = el.value; toast(`${s.fullName}: ${EG.name(el.value)}`); }
+    catch (err) { console.error(err); toast(err.code === "permission-denied" ? "İcazə yoxdur — Firestore qaydasına examGroup əlavə olunmalıdır" : "Xəta: " + errAz(err)); el.value = s.examGroup || ""; }
+  });
 })();
 </script>
 
