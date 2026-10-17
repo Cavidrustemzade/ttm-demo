@@ -896,7 +896,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" media="print" onload="this.media='all'">
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script>
-var TTM_LIBS={jspdf:"https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",xlsx:"https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js",pdfjs:"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"},TTM_LP={};
+var TTM_LIBS={h2c:"https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js",jspdf:"https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",xlsx:"https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js",pdfjs:"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"},TTM_LP={};
 function ensureLib(n){
   if(TTM_LP[n])return TTM_LP[n];
   TTM_LP[n]=new Promise(function(res,rej){
@@ -4425,14 +4425,14 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
         const lines = doc.splitTextToSize(q.text, colWidth - 8);
         h += lines.length * 4.8;
       } else {
-        h += 5;
+        h += q._r ? -3.2 : 5;
       }
       if (q.imageBase64) {
         try {
           const imgProps = doc.getImageProperties(q.imageBase64);
           const maxW = colWidth - 7;
           let imgH = (imgProps.height / imgProps.width) * maxW;
-          if (imgH > 55) imgH = 55;
+          { const cap = q._r ? 150 : 55; if (imgH > cap) imgH = cap; }
           h += imgH + 3;
         } catch (e) { /* şəkil oxuna bilmədi, ölçüyə təsir etməsin */ }
       }
@@ -4456,7 +4456,7 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
         doc.text(lines, x + 7, yy);
         yy += lines.length * 4.8;
       } else {
-        yy += 5;
+        yy += q._r ? -3.2 : 5;
       }
 
       if (q.imageBase64) {
@@ -4464,7 +4464,7 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
           const imgProps = doc.getImageProperties(q.imageBase64);
           const maxW = colWidth - 7;
           let imgW = maxW, imgH = (imgProps.height / imgProps.width) * imgW;
-          if (imgH > 55) { imgH = 55; imgW = (imgProps.width / imgProps.height) * imgH; }
+          { const cap = q._r ? 150 : 55; if (imgH > cap) { imgH = cap; imgW = (imgProps.width / imgProps.height) * imgH; } }
           doc.addImage(q.imageBase64, "JPEG", x + 7, yy, imgW, imgH);
           yy += imgH + 3;
         } catch (e) { console.error("Şəkil PDF-ə əlavə edilə bilmədi:", e); }
@@ -6625,6 +6625,7 @@ function openResultQuestionDetail(i) {
   if (!box || !window._resultDetailHtml) return;
   window._resultExpandedIndex = i;
   box.innerHTML = window._resultDetailHtml[i] || "";
+  try { ttmTeX(box); } catch (e) {}
   const _c = window._aiCache && window._aiCache[i], _o = document.getElementById("ai-out-" + i);
   if (_c && _o) _o.innerHTML = esc(_c).replace(/\n/g, "<br>");
   if (window._practiceCache && window._practiceCache[i]) renderPracticeBox(i);
@@ -12530,5 +12531,317 @@ function homeExtra(){
   });
 })();
 </script>
+<style id="bq-css">
+.bq-card{grid-column:1/-1;align-items:center;gap:14px;text-align:left!important;border:none;width:100%;padding:14px!important}
+.bq-card .upload-choice-icon{margin:0!important;flex:none;background:linear-gradient(135deg,#0ea5e9,#0369a1)}
+.bq-sheet{padding:0!important;display:flex;flex-direction:column;max-height:92vh}
+.bq-hd{display:flex;align-items:center;gap:10px;padding:16px 16px 10px;border-bottom:1px solid #eef2f6}
+.bq-hd b{flex:1;font-size:16.5px;color:var(--color-primary);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bq-body{flex:1;overflow-y:auto;padding:12px 16px;-webkit-overflow-scrolling:touch}
+.bq-ft{display:flex;gap:8px;padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid #eef2f6;background:#fff}
+.bq-ft .pq-go{margin:0;flex:1;padding:14px}
+.bq-ft .pq-ghost{margin:0;width:auto;padding:14px 16px}
+.bq-it{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:13px;border-radius:16px;background:#fff;border:1px solid var(--color-gray);margin-bottom:8px;font-family:inherit;color:inherit}
+.bq-it:active{transform:scale(.98)}
+.bq-it .ic{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;flex:none}
+.bq-it .t{font-weight:800;font-size:14.5px}
+.bq-it .s{font-size:12px;color:var(--color-text-muted);margin-top:2px}
+.bq-it .n{margin-left:auto;font-size:11px;font-weight:800;background:#22c55e;color:#fff;padding:3px 8px;border-radius:999px}
+.bq-tools{display:flex;gap:8px;align-items:center;margin:10px 0}
+.bq-tools input{flex:1;min-width:0;padding:10px 12px;border:1.5px solid var(--color-gray);border-radius:12px;font-size:14px}
+.bq-all{padding:10px 12px;border-radius:12px;background:rgba(11,60,93,.08);color:var(--color-primary);font-weight:800;font-size:12.5px;white-space:nowrap}
+.bq-row{display:flex;gap:10px;align-items:flex-start;padding:11px;border-radius:14px;border:1.5px solid var(--color-gray);background:#fff;margin-bottom:8px;cursor:pointer;transition:border-color .15s,background .15s}
+.bq-row.on{border-color:var(--color-primary);background:rgba(11,60,93,.05)}
+.bq-row.added{opacity:.55;cursor:default}
+.bq-row input{width:20px;height:20px;margin-top:2px;flex:none;accent-color:#0B3C5D}
+.bq-main{flex:1;min-width:0}
+.bq-meta{font-size:11px;font-weight:800;color:#0369a1;margin-bottom:3px}
+.bq-txt{font-size:13.5px;line-height:1.6;max-height:6.4em;overflow:hidden;white-space:pre-line;overflow-wrap:anywhere}
+.bq-op{font-size:12px;color:var(--color-text-muted);margin-top:4px;overflow-wrap:anywhere}
+.bq-op b{color:#15803d}
+.bq-th{width:54px;height:54px;border-radius:8px;object-fit:cover;flex:none;border:1px solid var(--color-gray)}
+.bq-prev{margin-top:8px;padding:10px;border-radius:10px;background:#fff;border:1px dashed var(--color-gray);font-size:13.5px;line-height:1.6;white-space:pre-line;overflow-wrap:anywhere}
+.bq-prev .o{margin-top:4px}
+.bq-xopts{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.bq-xopt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:11px 13px;border-radius:13px;border:2px solid var(--color-gray);background:#fff;font-size:15px;font-weight:600;color:var(--color-text);font-family:inherit}
+.bq-xopt b{width:32px;height:32px;border-radius:10px;background:var(--color-light-gray);display:flex;align-items:center;justify-content:center;color:var(--color-primary);flex:none}
+.bq-xopt.on{border-color:var(--color-primary);background:rgba(11,60,93,.06)}
+.bq-xopt.on b{background:var(--color-primary);color:#fff}
+.bq-xopt span{overflow-wrap:anywhere;min-width:0}
+</style>
+<script>
+/* ===== Sual bazasından sınağa əlavə + düsturlu PDF (yalnız admin) ===== */
+(function () {
+  const $ = id => document.getElementById(id), L = "ABCDE";
+  const TEX = /\$|\\\(|\\\[/;
+  const isLetters = q => Array.isArray(q.options) && q.options.every((o, k) => String(o).trim() === L[k]);
+  const isMcq = q => !q.type || q.type === "mcq";
+  const isRich = q => !!q && q.type !== "detailed" && ((isMcq(q) && Array.isArray(q.options) && !isLetters(q)) || TEX.test(q.text || ""));
+  const icon = s => { try { return v2Icon(s); } catch (e) { return { t: "📘", bg: "#0B3C5D" }; } };
+  const meta = q => [q.year, q.no ? "№" + q.no : "", q.exam].filter(Boolean).join(" · ");
+
+  // ---------- kart ----------
+  const grid = document.querySelector("#tab-exams .upload-choice-grid");
+  if (grid) grid.insertAdjacentHTML("beforeend", `<button type="button" class="upload-choice-card bq-card" id="bq-card" style="display:none" onclick="bqOpen()">
+    <div class="upload-choice-icon"><svg class="ttm-i" viewBox="0 0 24 24"><ellipse cx="12" cy="5.5" rx="8" ry="2.8"/><path d="M4 5.5v6c0 1.6 3.6 2.8 8 2.8s8-1.2 8-2.8v-6M4 11.5v6c0 1.6 3.6 2.8 8 2.8s8-1.2 8-2.8v-6"/></svg></div>
+    <div style="flex:1;min-width:0;"><div class="upload-choice-title">Bazadan əlavə et</div><div class="upload-choice-sub">Fənn → mövzu → sualları seç (tək və ya hamısı)</div></div><span class="v2-chev">›</span></button>`);
+  const oi = initAdminPanel;
+  initAdminPanel = function (uid, sa) {
+    const r = oi.apply(this, arguments);
+    const c = $("bq-card"); if (c) c.style.display = sa ? "flex" : "none";
+    const b = $("bq-frombank"); if (b) b.style.display = sa ? "" : "none";
+    return r;
+  };
+
+  // ---------- məlumat ----------
+  const BQ = { idx: null, qs: {}, sel: new Map(), view: "subj", subj: null, topic: null, year: "all", q: "" };
+  const sortQ = a => a.sort((x, y) => (x.year || 0) - (y.year || 0) || (x.no || 0) - (y.no || 0));
+  async function getIdx() {
+    if (BQ.idx) return BQ.idx;
+    try { const d = await db.collection("qbankMeta").doc("index").get(); if (d.exists && d.data().topics) return (BQ.idx = d.data().topics); } catch (e) { console.warn(e); }
+    const s = await db.collection("questions").get(), t = {};
+    s.forEach(x => {
+      const q = { id: x.id, ...x.data() }, k = q.topic || "Digər", o = t[k] = t[k] || { count: 0, years: [], subject: q.subject || "" };
+      o.count++; if (q.year && !o.years.includes(q.year)) o.years.push(q.year);
+      (BQ.qs[k] = BQ.qs[k] || []).push(q);
+    });
+    Object.values(BQ.qs).forEach(sortQ);
+    return (BQ.idx = t);
+  }
+  async function topicQs(t) {
+    if (BQ.qs[t]) return BQ.qs[t];
+    const s = await db.collection("questions").where("topic", "==", t).get();
+    return (BQ.qs[t] = sortQ(s.docs.map(d => ({ id: d.id, ...d.data() }))));
+  }
+  const added = () => new Set(examQuestions.map(q => q.bankId).filter(Boolean));
+
+  // ---------- pəncərə ----------
+  let ov = null;
+  function close() { if (!ov) return; ov.remove(); ov = null; document.body.style.overflow = ""; }
+  window.bqOpen = async (topic) => {
+    if (!window._ttmSA) { toast("Bu bölmə hələlik yalnız admin üçündür"); return; }
+    close();
+    BQ.sel = new Map(); BQ.year = "all"; BQ.q = "";
+    ov = document.createElement("div"); ov.className = "pq-ov";
+    ov.innerHTML = `<div class="pq-sheet bq-sheet"></div>`;
+    ov.addEventListener("click", e => { if (e.target === ov) close(); });
+    document.body.appendChild(ov); document.body.style.overflow = "hidden";
+    if (topic) {
+      sheet("Yüklənir...", `<div class="pq-sk"></div><div class="pq-sk"></div>`);
+      try { const I = await getIdx(); BQ.subj = (I[topic] || {}).subject || "Riyaziyyat"; } catch (e) {}
+      return bqTopic(topic);
+    }
+    bqSubjects();
+  };
+  function sheet(title, body, foot, back) {
+    if (!ov) return;
+    ov.firstElementChild.innerHTML = `<div class="bq-hd">${back ? `<button class="pq-x" onclick="${back}" aria-label="Geri">←</button>` : ""}<b>${title}</b><button class="pq-x" onclick="bqClose()" aria-label="Bağla">✕</button></div>
+      <div class="bq-body" id="bq-body">${body}</div>${foot ? `<div class="bq-ft" id="bq-ft">${foot}</div>` : ""}`;
+  }
+  window.bqClose = close;
+  const footHtml = () => {
+    const n = BQ.sel.size;
+    return `${n ? `<button class="pq-ghost" onclick="bqClear()">Təmizlə</button>` : ""}<button class="pq-go" ${n ? "" : "disabled"} onclick="bqAdd()">${n ? n + " sual əlavə et" : "Sual seçin"}</button>`;
+  };
+  function updFoot() { const f = $("bq-ft"); if (f) f.innerHTML = footHtml(); }
+
+  async function bqSubjects() {
+    BQ.view = "subj";
+    sheet("Bazadan əlavə et", `<div class="pq-sk"></div><div class="pq-sk"></div>`, footHtml());
+    let I;
+    try { I = await getIdx(); } catch (e) { sheet("Bazadan əlavə et", `<div class="pq-empty">Baza yüklənmədi: ${esc(errAz(e))}</div>`); return; }
+    const cnt = {};
+    Object.values(I).forEach(o => { const s = o.subject || "Riyaziyyat"; cnt[s] = (cnt[s] || 0) + o.count; });
+    const subs = Object.keys(cnt).sort((a, b) => a.localeCompare(b, "az"));
+    sheet("Fənni seçin", subs.length ? subs.map(s => { const ic = icon(s); return `<button class="bq-it" onclick='bqSubj(${JSON.stringify(s).replace(/'/g, "&#39;")})'><span class="ic" style="background:${ic.bg}">${ic.t}</span><div><div class="t">${esc(s)}</div><div class="s">${cnt[s]} sual</div></div><span class="v2-chev" style="margin-left:auto">›</span></button>`; }).join("") : `<div class="pq-empty">Baza boşdur. «Sual bazası» bölməsindən JSON yükləyin.</div>`, footHtml());
+  }
+  window.bqSubj = async (s) => {
+    BQ.subj = s; BQ.view = "topics";
+    const I = await getIdx();
+    const ts = Object.keys(I).filter(t => (I[t].subject || "Riyaziyyat") === s).sort((a, b) => a.localeCompare(b, "az"));
+    const selBy = {}; BQ.sel.forEach(q => { selBy[q.topic] = (selBy[q.topic] || 0) + 1; });
+    sheet(esc(s), ts.map(t => {
+      const o = I[t], y = (o.years || []).slice().sort();
+      return `<button class="bq-it" onclick='bqTopic(${JSON.stringify(t).replace(/'/g, "&#39;")})'><div style="min-width:0"><div class="t">${esc(t)}</div><div class="s">${o.count} sual${y.length ? " · " + (y[0] === y[y.length - 1] ? y[0] : y[0] + "–" + y[y.length - 1]) : ""}</div></div>${selBy[t] ? `<span class="n">${selBy[t]} seçilib</span>` : `<span class="v2-chev" style="margin-left:auto">›</span>`}</button>`;
+    }).join(""), footHtml(), "bqSubjects()");
+  };
+  window.bqSubjects = bqSubjects;
+
+  window.bqTopic = async (t) => {
+    BQ.topic = t; BQ.view = "qs"; BQ.year = "all"; BQ.q = "";
+    sheet(esc(t), `<div class="pq-sk"></div><div class="pq-sk"></div>`, footHtml(), BQ.subj ? `bqSubj(${JSON.stringify(BQ.subj).replace(/"/g, "&quot;")})` : "bqSubjects()");
+    let qs;
+    try { qs = await topicQs(t); } catch (e) { $("bq-body").innerHTML = `<div class="pq-empty">Xəta: ${esc(errAz(e))}</div>`; return; }
+    const years = [...new Set(qs.map(q => q.year).filter(Boolean))].sort();
+    $("bq-body").innerHTML = `<div class="pq-chips" id="bq-years">${["all"].concat(years).map(y => `<button class="pq-chip ${y === "all" ? "on" : ""}" data-y="${y}">${y === "all" ? "Bütün illər" : y}</button>`).join("")}</div>
+      <div class="bq-tools"><input type="search" id="bq-search" placeholder="Axtar: mətn və ya №" autocomplete="off"><button class="bq-all" id="bq-all">Hamısını seç</button></div>
+      <div id="bq-list"></div>`;
+    $("bq-years").onclick = e => { const b = e.target.closest("[data-y]"); if (!b) return; BQ.year = b.dataset.y; $("bq-years").querySelectorAll(".pq-chip").forEach(c => c.classList.toggle("on", c === b)); list(); };
+    let st = 0; $("bq-search").oninput = e => { clearTimeout(st); st = setTimeout(() => { BQ.q = e.target.value.trim().toLowerCase(); list(); }, 200); };
+    $("bq-all").onclick = () => {
+      const vis = visible().filter(q => !added().has(q.id)), all = vis.length && vis.every(q => BQ.sel.has(q.id));
+      vis.forEach(q => { if (all) BQ.sel.delete(q.id); else BQ.sel.set(q.id, q); });
+      list(); updFoot();
+    };
+    list();
+  };
+  function visible() {
+    const qs = BQ.qs[BQ.topic] || [], s = BQ.q.replace(/^№/, "");
+    return qs.filter(q => (BQ.year === "all" || String(q.year) === String(BQ.year)) && (!s || (q.text || "").toLowerCase().includes(s) || String(q.no || "") === s));
+  }
+  function list() {
+    const box = $("bq-list"); if (!box) return;
+    const vis = visible(), ad = added(), free = vis.filter(q => !ad.has(q.id));
+    const allOn = free.length && free.every(q => BQ.sel.has(q.id));
+    const ab = $("bq-all"); if (ab) ab.textContent = allOn ? "Seçimi sil" : `Hamısını seç (${free.length})`;
+    box.innerHTML = vis.length ? vis.map(q => {
+      const isAd = ad.has(q.id), on = BQ.sel.has(q.id);
+      const ops = isMcq(q) && Array.isArray(q.options) && !isLetters(q) ? q.options.map((o, k) => k === q.correctIndex ? `<b>${L[k]}) ${esc(o)}</b>` : `${L[k]}) ${esc(o)}`).join("&nbsp;&nbsp; ") : `Düz cavab: <b>${L[q.correctIndex] || "?"}</b>`;
+      return `<label class="bq-row ${on ? "on" : ""} ${isAd ? "added" : ""}"><input type="checkbox" data-id="${esc(q.id)}" ${on || isAd ? "checked" : ""} ${isAd ? "disabled" : ""}>
+        <div class="bq-main"><div class="bq-meta">${esc(meta(q))}${isAd ? " · artıq əlavə edilib" : ""}</div><div class="bq-txt">${esc(q.text || "(şəkilli sual)")}</div><div class="bq-op">${ops}</div></div>
+        ${q.imageBase64 ? `<img class="bq-th" src="${q.imageBase64}" alt="">` : ""}</label>`;
+    }).join("") : `<div class="pq-empty">Bu seçimdə sual yoxdur</div>`;
+    box.onchange = e => {
+      const i = e.target.closest("input[data-id]"); if (!i) return;
+      const q = (BQ.qs[BQ.topic] || []).find(x => x.id === i.dataset.id); if (!q) return;
+      if (i.checked) BQ.sel.set(q.id, q); else BQ.sel.delete(q.id);
+      i.closest(".bq-row").classList.toggle("on", i.checked);
+      const fr = visible().filter(x => !added().has(x.id)), all = fr.length && fr.every(x => BQ.sel.has(x.id));
+      const ab2 = $("bq-all"); if (ab2) ab2.textContent = all ? "Seçimi sil" : `Hamısını seç (${fr.length})`;
+      updFoot();
+    };
+    ttmTeX(box);
+  }
+  window.bqClear = () => { BQ.sel.clear(); if (BQ.view === "qs") list(); else if (BQ.view === "topics") bqSubj(BQ.subj); updFoot(); };
+  window.bqAdd = () => {
+    const arr = [...BQ.sel.values()]; if (!arr.length) return;
+    arr.forEach(q => examQuestions.push({
+      type: "mcq", text: q.text || "", imageBase64: q.imageBase64 || "",
+      options: (Array.isArray(q.options) && q.options.length === 5 ? q.options : L.split("")).map(String),
+      correctIndex: Number(q.correctIndex) || 0, correctAnswer: "", textId: "",
+      topic: q.topic || "", bankId: q.id, year: q.year || "", exam: q.exam || ""
+    }));
+    const tp = $("exam-topic"); if (tp && !tp.value.trim() && arr[0].topic) tp.value = arr[0].topic;
+    renderQuestionBuilder();
+    close();
+    toast(`${arr.length} sual əlavə edildi`);
+  };
+
+  // Sual bazasında qısa yol
+  const ql = $("qb-list");
+  if (ql) ql.insertAdjacentHTML("beforebegin", `<button class="btn-small" id="bq-frombank" style="width:100%;margin-bottom:12px;display:none" onclick="bqFromBank()">Bu mövzudan sınaq / PDF hazırla</button>`);
+  window.bqFromBank = () => {
+    const t = ($("qb-ft") || {}).value;
+    if (!t) { toast("Əvvəlcə yuxarıdan mövzu seçin"); return; }
+    adminNewExam();
+    setTimeout(() => { try { wzGo(2, true); } catch (e) {} bqOpen(t); }, 80);
+  };
+
+  // ---------- sınaq yaradanda ön baxış ----------
+  const orb = renderQuestionBuilder;
+  renderQuestionBuilder = function () {
+    const r = orb.apply(this, arguments);
+    try {
+      const items = document.querySelectorAll("#exam-questions-builder .q-builder-item");
+      items.forEach((it, qi) => {
+        const q = examQuestions[qi]; if (!q || !q.bankId || it.querySelector(".bq-prev")) return;
+        const tag = it.querySelector(".q-item-tag"); if (tag) tag.textContent = "Baza";
+        const ops = isMcq(q) && !isLetters(q) ? `<div class="o">${q.options.map((o, k) => `${k === q.correctIndex ? "<b style='color:#15803d'>" : ""}${L[k]}) ${esc(o)}${k === q.correctIndex ? "</b>" : ""}`).join("&nbsp;&nbsp; ")}</div>` : "";
+        it.querySelector(".q-item-header").insertAdjacentHTML("afterend", `<div class="bq-prev"><div style="font-size:11px;font-weight:800;color:#0369a1">${esc([q.topic, q.year, q.exam].filter(Boolean).join(" · "))}</div>${esc(q.text || "")}${ops}</div>`);
+      });
+      const b = $("exam-questions-builder"); if (b && examQuestions.some(q => q.bankId)) ttmTeX(b);
+    } catch (e) { console.error(e); }
+    return r;
+  };
+
+  // ---------- şagirdin sınaq ekranında variant mətnləri ----------
+  const orq = renderExamQuestion;
+  renderExamQuestion = function () {
+    const r = orq.apply(this, arguments);
+    try {
+      const q = currentExam && currentExam.questions[currentExamIndex], box = $("exam-question-box");
+      if (q && box && isMcq(q) && Array.isArray(q.options) && !isLetters(q)) {
+        const row = box.querySelector(".exam-opt-row"), sel = currentExamAnswers[currentExamIndex];
+        if (row) row.outerHTML = `<div class="bq-xopts">${q.options.map((o, k) => `<button type="button" class="bq-xopt ${sel === k ? "on" : ""}" onclick="selectExamOption(${k})"><b>${L[k]}</b><span>${esc(o)}</span></button>`).join("")}</div>`;
+      }
+      if (q && box && TEX.test((q.text || "") + (q.options || []).join(" "))) ttmTeX(box);
+    } catch (e) { console.error(e); }
+    return r;
+  };
+
+  // ---------- PDF: düsturlu sualları şəkil kimi çək ----------
+  const gbtn = $("pdf-generate-btn");
+  if (!gbtn) return;
+  const cache = new Map();
+  let bypass = false;
+  const katexReady = () => new Promise(res => {
+    try { ttmTeX(document.createElement("div")); } catch (e) {}
+    const t0 = Date.now();
+    (function w() { if (window.katex && window.katex.render) return res(); if (Date.now() - t0 > 8000) return res(); setTimeout(w, 80); })();
+  });
+  function build(q, wPx, color) {
+    const d = document.createElement("div");
+    d.style.cssText = `width:${wPx}px;background:#fff;color:#1e1e1e;font:13.5px/1.6 Arial,"Segoe UI",sans-serif;padding:2px 0`;
+    let h = q.text ? `<div style="white-space:pre-line;overflow-wrap:anywhere">${esc(q.text)}</div>` : "";
+    if (q.imageBase64) h += `<img src="${q.imageBase64}" style="display:block;max-width:100%;max-height:230px;margin:6px 0">`;
+    if (isMcq(q) && Array.isArray(q.options) && !isLetters(q)) {
+      const plain = q.options.map(o => String(o).replace(/\\[a-zA-Z]+|[$\\{}^_]/g, "").trim());
+      const mx = Math.max(...plain.map(p => p.length)), need = mx * 7.4 + 30;
+      const per = [5, 3, 2, 1].find(p => need * p + 10 * (p - 1) <= wPx) || 1;
+      h += `<div style="display:grid;grid-template-columns:repeat(${per},minmax(0,1fr));gap:5px 10px;margin-top:7px">` +
+        q.options.map((o, k) => `<div style="overflow-wrap:anywhere"><b style="color:${color}">${L[k]})</b> ${esc(o)}</div>`).join("") + `</div>`;
+    }
+    d.innerHTML = h;
+    return d;
+  }
+  async function renderAll() {
+    await ensureLib("h2c"); await katexReady();
+    const cols = Number(($("pdf-columns-field") || {}).value) || 2;
+    const colW = cols === 2 ? (210 - 24 - 8) / 2 : 210 - 24, PX = 4, wPx = Math.round((colW - 7) * PX);
+    const color = ($("pdf-color-field") || {}).value || "#0B3C5D";
+    const host = document.createElement("div");
+    host.id = "bq-host"; host.style.cssText = "position:fixed;left:0;top:0;background:#fff;z-index:-9999;opacity:0;pointer-events:none";
+    document.body.appendChild(host);
+    try {
+      const out = [];
+      for (const q of examQuestions) {
+        if (!isRich(q)) { out.push(q); continue; }
+        const key = JSON.stringify([q.text, q.options, q.imageBase64 ? q.imageBase64.length : 0, wPx, color]);
+        let img = cache.get(key);
+        if (!img) {
+          const el = build(q, wPx, color);
+          host.innerHTML = ""; host.appendChild(el);
+          ttmTeX(el);
+          try { await document.fonts.ready; } catch (e) {}
+          await Promise.all([...el.querySelectorAll("img")].map(i => i.decode ? i.decode().catch(() => {}) : null));
+          const c = await window.html2canvas(el, { scale: 3, backgroundColor: "#ffffff", logging: false, useCORS: true, onclone: d => { const h = d.getElementById("bq-host"); if (h) h.style.opacity = "1"; } });
+          img = c.toDataURL("image/jpeg", 0.92); cache.set(key, img);
+        }
+        out.push({ ...q, text: "", imageBase64: img, _r: true });
+      }
+      return out;
+    } finally { host.remove(); }
+  }
+  gbtn.addEventListener("click", async e => {
+    if (bypass || !examQuestions.some(isRich)) return;
+    e.stopImmediatePropagation(); e.preventDefault();
+    if (gbtn.disabled) return;
+    gbtn.disabled = true; toast("Düsturlar hazırlanır...");
+    let rendered = null;
+    try { rendered = await renderAll(); } catch (err) { console.error(err); toast("Düsturlar çəkilmədi, mətn kimi çıxacaq"); }
+    gbtn.disabled = false;
+    const orig = examQuestions;
+    if (rendered) {
+      examQuestions = rendered;
+      const mo = new MutationObserver(() => { if (!gbtn.disabled) { mo.disconnect(); examQuestions = orig; } });
+      mo.observe(gbtn, { attributes: true, attributeFilter: ["disabled"] });
+      setTimeout(() => { mo.disconnect(); if (examQuestions === rendered) examQuestions = orig; }, 120000);
+    }
+    bypass = true;
+    try { gbtn.click(); } finally { bypass = false; }
+  }, true);
+})();
+</script>
+
 </body>
 </html>
