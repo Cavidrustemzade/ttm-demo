@@ -12859,7 +12859,7 @@ function homeExtra(){
 .eg-n{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,var(--color-primary-light),var(--color-primary-dark));color:#fff;font-weight:900;font-size:17px;display:flex;align-items:center;justify-content:center;flex:none}
 .eg-t{font-weight:800;font-size:15px}
 .eg-s{font-size:12px;color:var(--color-text-muted);margin-top:3px;line-height:1.4}
-.eg-sel{padding:6px 8px;border-radius:8px;border:1.5px solid var(--color-gray);font-size:12px;background:#fff;max-width:118px}
+.eg-sel{display:block;margin-top:8px;width:100%;max-width:240px;padding:8px 10px;border-radius:10px;border:1.5px solid var(--color-gray);font-size:13px;font-weight:600;color:var(--color-primary);background:#fff}
 </style>
 <script>
 /* ===== İmtahan qrupu: şagird seçir, müəllim dəyişir, Təkrar yalnız qrupun fənlərini göstərir ===== */
@@ -12966,8 +12966,8 @@ function homeExtra(){
     try {
       const act = studentsCache.filter(s => s.active !== false), rows = document.querySelectorAll("#students-list > .list-item");
       rows.forEach((row, i) => {
-        const s = act[i], a = row.querySelector(".list-item-actions"); if (!s || !a) return;
-        a.insertAdjacentHTML("afterbegin", `<select class="eg-sel" data-id="${s.id}" title="İmtahan qrupu"><option value="">İmtahan qrupu</option>${EG.opts().map(o => `<option value="${o[0]}" ${s.examGroup === o[0] ? "selected" : ""}>${o[1]}</option>`).join("")}</select>`);
+        const s = act[i], a = row.querySelector(".list-item-info"); if (!s || !a) return;
+        a.insertAdjacentHTML("beforeend", `<select class="eg-sel" data-id="${s.id}" title="İmtahan qrupu"><option value="">İmtahan qrupu</option>${EG.opts().map(o => `<option value="${o[0]}" ${s.examGroup === o[0] ? "selected" : ""}>${o[1]}</option>`).join("")}</select>`);
         if (s._enrolled && !s.examGroup) fetchEG(s);
       });
     } catch (e) { console.error(e); }
