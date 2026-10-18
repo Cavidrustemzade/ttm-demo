@@ -13708,6 +13708,7 @@ function homeExtra(){
 .st-item img{width:96px;aspect-ratio:16/9;object-fit:cover;border-radius:10px;flex:none}
 .st-item b{display:block;font-size:15px}.st-item .s{font-size:12px;color:var(--color-text-muted,#64748b)}
 .st-w{display:grid;gap:12px}
+.st-top{position:sticky;top:114px;z-index:8;display:grid;gap:8px;background:var(--color-light-gray,#f1f5f9);margin:-6px -14px 0;padding:6px 14px 8px;box-shadow:0 8px 14px -12px rgba(11,60,93,.25)}
 .st-scr{position:relative;aspect-ratio:16/9;max-width:100%;border-radius:14px;overflow:hidden;background:#000}
 .st-scr img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1s}
 .st-scr img.on{opacity:1;animation:stkb 30s ease-in-out infinite alternate;transform-origin:70% 45%}
@@ -13804,16 +13805,16 @@ function homeExtra(){
     const lemma = w => { w = w.toLowerCase(); return D.dict[w] ? w : (D.forms[w] || w); };
 
     root().innerHTML = `<div class="st-w">
-      <div class="st-scr" id="st-scr">${D.scenes.map((sc, i) => `<img src="${base + sc.img}" alt="Scene ${i + 1}">`).join("")}
+      <div class="st-top" id="st-top"><div class="st-scr" id="st-scr">${D.scenes.map((sc, i) => `<img src="${base + sc.img}" alt="Scene ${i + 1}">`).join("")}
         <div class="st-fx st-rain"></div><div class="st-fx st-flash"></div><div class="st-fx st-glow"></div><canvas id="st-lv"></canvas>
         <div class="st-tag" id="st-tag"></div><div class="st-sub" id="st-sub"></div></div>
       <div class="st-bar">
         <button id="st-prev" aria-label="Əvvəlki səhnə">⏮</button><button class="main" id="st-play">▶ Dinlə</button>
         <button id="st-again">↺ Təkrar</button><button id="st-next" aria-label="Növbəti səhnə">⏭</button>
         <select id="st-rate" aria-label="Sürət"><option value="0.75">0.75×</option><option value="0.9">0.9×</option><option value="1" selected>1×</option><option value="1.15">1.15×</option></select>
-        <button id="st-subb"></button><button id="st-hide">Mətni gizlət</button></div>
+        <button id="st-subb"></button><button id="st-hide">Mətni gizlət</button></div></div>
       <div class="st-page" id="st-page"></div>
-      <p class="st-hint">Sözə toxun: tərcümə, tələffüz və səs açılacaq.</p>
+      <p class="st-hint" id="st-hint">Sözə toxun: tərcümə, tələffüz və səs açılacaq.</p>
       <button class="st-go" id="st-toq">Suallara keç →</button>
       <div id="st-qs" class="st-w" hidden><div class="st-h"><b>Mətn üzrə suallar</b></div><div id="st-ql" class="st-w"></div>
         <div class="st-h"><b>Söz ehtiyatı</b></div><div class="st-card" id="st-voc"></div>
@@ -13868,14 +13869,16 @@ function homeExtra(){
     }
     const playB = $("st-play"), rateEl = $("st-rate");
     function setPlay(v) { playing = v; playB.textContent = v ? "❚❚ Dayan" : "▶ Dinlə"; if (v) { au.playbackRate = +rateEl.value; au.play().catch(() => setPlay(false)); } else au.pause(); }
-    au.onended = () => { setPlay(false); clearNow(); S.time = 0; S.done = true; save(); $("st-toq").scrollIntoView({ behavior: "smooth", block: "center" }); };
+    au.onended = () => { setPlay(false); clearNow(); S.time = 0; S.done = true; save(); if (!$("st-toq").hidden) $("st-toq").scrollIntoView({ behavior: "smooth", block: "center" }); };
     playB.onclick = () => setPlay(!playing);
     function seek(t) { au.currentTime = Math.max(0, t - 0.05); last = -1; clearNow(); showSent(wSent[wordAt(t)]); }
     $("st-again").onclick = () => { seek(TM.words[SENTS[curS].ws.length ? ALLW.indexOf(SENTS[curS].ws[0]) : 0][1]); setPlay(true); };
     $("st-prev").onclick = () => seek(TM.scenes[Math.max(0, cur - 1)]);
     $("st-next").onclick = () => seek(TM.scenes[Math.min(D.scenes.length - 1, cur + 1)]);
     rateEl.onchange = () => au.playbackRate = +rateEl.value;
-    $("st-hide").onclick = e => { const h = page.classList.toggle("hide"); e.target.textContent = h ? "Mətni göstər" : "Mətni gizlət"; };
+    const qs = $("st-qs"), toq = $("st-toq");
+    const toQs = () => { qs.hidden = false; qs.style.scrollMarginTop = (114 + $("st-top").offsetHeight + 8) + "px"; qs.scrollIntoView({ behavior: "smooth" }); };
+    $("st-hide").onclick = e => { const h = !page.hidden; page.hidden = h; $("st-hint").hidden = h; toq.hidden = h; e.target.textContent = h ? "Mətni göstər" : "Mətni gizlət"; if (h) toQs(); };
     const subB = $("st-subb");
     const subSet = off => { S.nosub = off; save(); scr.classList.toggle("nosub", off); subB.textContent = off ? "Altyazını aç" : "Altyazını bağla"; };
     subB.onclick = () => subSet(!S.nosub);
@@ -13953,7 +13956,7 @@ function homeExtra(){
       };
       if (q.open) c.querySelector("[data-show]").onclick = () => { fb.className = "st-fb"; fb.textContent = "Nümunə: " + q.open; };
     });
-    $("st-toq").onclick = () => { setPlay(false); $("st-qs").hidden = false; $("st-qs").scrollIntoView({ behavior: "smooth" }); };
+    toq.onclick = () => { setPlay(false); toQs(); };
 
     // söz tapşırığı
     const POOL = Object.keys(D.dict).filter(k => k.length > 3 && D.dict[k][1].length > 2);
