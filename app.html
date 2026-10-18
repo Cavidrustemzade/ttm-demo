@@ -12994,7 +12994,7 @@ function homeExtra(){
 .vx-hero.red{background:linear-gradient(135deg,#9f1239,#e11d48)}
 .vx-sec{display:flex;justify-content:space-between;align-items:baseline;margin:6px 2px 10px}
 .vx-sec b{font-size:16px;font-weight:800;color:var(--color-text)}.vx-sec span{font-size:12.5px;color:#1d6fd6;font-weight:700;cursor:pointer}
-.vx-mod{display:flex;gap:14px;align-items:center;width:100%;background:#fff;border-radius:22px;padding:16px;margin-bottom:10px;box-shadow:0 6px 22px rgba(15,23,42,.06);text-align:left;font-family:inherit;color:var(--color-text);animation:sqIn .45s cubic-bezier(.2,.9,.25,1) both}
+.vx-mod{box-sizing:border-box;display:flex;gap:14px;align-items:center;width:100%;background:#fff;border-radius:22px;padding:16px;margin-bottom:10px;box-shadow:0 6px 22px rgba(15,23,42,.06);text-align:left;font-family:inherit;color:var(--color-text);animation:sqIn .45s cubic-bezier(.2,.9,.25,1) both}
 .vx-mod:active{transform:scale(.98)}
 .vx-mod .ic{width:54px;height:54px;border-radius:17px;display:flex;align-items:center;justify-content:center;font-size:26px;flex:none}
 .vx-mod .tx{flex:1;min-width:0}.vx-mod b{display:block;font-size:15.5px}
@@ -13108,6 +13108,7 @@ function homeExtra(){
   const slug = x => String(x || "").toLowerCase().replace(/ə/g, "e").replace(/ı/g, "i").replace(/ö/g, "o").replace(/ü/g, "u").replace(/ş/g, "s").replace(/ç/g, "c").replace(/ğ/g, "g").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   const nrm = x => { try { return v2Norm(x); } catch (e) { return String(x || "").toLowerCase(); } };
   const q = s => String(s).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+  const js = s => esc(JSON.stringify(s));
   const STG = 50;
   const V = { idx: null, p: null, docs: {}, sel: null };
   const P = () => window._PQ || {};
@@ -13227,10 +13228,11 @@ function homeExtra(){
     return oBack.apply(this, arguments);
   };
   const setView = (v, t) => { const p = P(); p.view = v; p.cfg = null; if (t) title(t); window.scrollTo(0, 0); };
+  const guard = f => async function () { try { return await f.apply(this, arguments); } catch (e) { console.error(e); const r = root(); if (r) r.innerHTML = `<div class="pq-card pq-empty">Yüklənmədi: ${esc(errAz(e))}</div><button class="pq-ghost" onclick="pqHome()">Geri</button>`; } };
   const skel = () => { root().innerHTML = `<div class="pq-sk" style="height:150px"></div><div class="pq-sk"></div><div class="pq-sk"></div>`; };
 
   // ---------- 1) İNGİLİS DİLİ MƏRKƏZİ ----------
-  async function vxHub(s) {
+  async function vxHub_(s) {
     const p = P(); p.vsubj = s; p.fromHub = false; setView("vhub", s); skel();
     await Promise.all([loadIdx(), vpLoad()]);
     let gq = 0; try { const ix = p.idx || {}; Object.values(ix).forEach(o => { if (isEng(o.subject || "")) gq += o.count || 0; }); } catch (e) {}
@@ -13249,11 +13251,12 @@ function homeExtra(){
       <button class="vx-rk" onclick="vxBoard()"><div class="med">🏆</div><div style="flex:1" id="vx-rkt"><b style="font-size:15px">Reytinq yüklənir…</b><div class="pq-ts">Bu həftənin liderləri</div></div><span style="font-size:22px;color:#b45309">›</span></button>`;
     myRank().then(r => { const e = $("vx-rkt"); if (!e) return; e.innerHTML = r.rank ? `<b style="font-size:15px">Bu həftə ${r.rank}-cisən</b><div class="pq-ts">${r.gap ? `Növbəti yerə ${fmt(r.gap)} ⭐ qalıb` : "Liderlər cədvəlinin başındasan 👑"}</div>` : `<b style="font-size:15px">Bu həftə hələ xal yoxdur</b><div class="pq-ts">İlk testi işlə — cədvələ düş</div>`; });
   }
+  const vxHub = guard(vxHub_);
   window.vxHub = vxHub;
   window.vxGrammar = s => { P().vxGrammar = true; pqSubject(s); };
 
   // ---------- 2) LÜĞƏT MÖVZULARI ----------
-  async function vxTopics(s) {
+  async function vxTopics_(s) {
     setView("vtopics", "Lügət"); skel();
     await Promise.all([loadIdx(), vpLoad()]);
     const ts = topicsOf(s);
@@ -13263,10 +13266,11 @@ function homeExtra(){
         : `<div class="pq-card pq-empty">Hələ lügət yoxdur.</div>`) +
       `<p class="pq-ts" style="text-align:center;margin-top:10px">Yeni mövzular əlavə olunduqca burada görünəcək</p>`;
   }
+  const vxTopics = guard(vxTopics_);
   window.vxTopics = vxTopics;
 
   // ---------- 3) XƏRİTƏ ----------
-  async function vxMap(id) {
+  async function vxMap_(id) {
     const p = P(); V.sel = id; setView("vmap"); skel();
     let d; try { [d] = await Promise.all([getDoc(id), vpLoad(), loadIdx()]); } catch (e) { root().innerHTML = `<div class="pq-empty">${esc(errAz(e))}</div>`; return; }
     if (!p.vsubj) p.vsubj = d.subject;
@@ -13297,6 +13301,7 @@ function homeExtra(){
       </div>`;
     requestAnimationFrame(() => { const el = root().querySelector(".vx-node.c") || root().querySelectorAll(".vx-node.d")[lastDone]; if (el) el.scrollIntoView({ block: "center" }); });
   }
+  const vxMap = guard(vxMap_);
   window.vxMap = vxMap;
 
   // ---------- AYARLAR PƏNCƏRƏSİ ----------
