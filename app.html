@@ -13708,7 +13708,8 @@ function homeExtra(){
 .st-item img{width:96px;aspect-ratio:16/9;object-fit:cover;border-radius:10px;flex:none}
 .st-item b{display:block;font-size:15px}.st-item .s{font-size:12px;color:var(--color-text-muted,#64748b)}
 .st-w{display:grid;gap:12px}
-.st-top{position:sticky;top:114px;z-index:8;display:grid;gap:8px;background:var(--color-light-gray,#f1f5f9);margin:-6px -14px 0;padding:6px 14px 8px;box-shadow:0 8px 14px -12px rgba(11,60,93,.25)}
+.st-top::before{content:"";position:absolute;left:0;right:0;bottom:100%;height:60px;background:inherit}
+.st-top{position:sticky;top:114px;z-index:8;transform:translateZ(0);will-change:transform;display:grid;gap:8px;background:var(--color-light-gray,#f1f5f9);margin:-6px -14px 0;padding:6px 14px 8px;box-shadow:0 8px 14px -12px rgba(11,60,93,.25)}
 .st-scr{position:relative;aspect-ratio:16/9;max-width:100%;border-radius:14px;overflow:hidden;background:#000}
 .st-scr img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1s}
 .st-scr img.on{opacity:1;animation:stkb 30s ease-in-out infinite alternate;transform-origin:70% 45%}
@@ -13877,8 +13878,32 @@ function homeExtra(){
     $("st-next").onclick = () => seek(TM.scenes[Math.min(D.scenes.length - 1, cur + 1)]);
     rateEl.onchange = () => au.playbackRate = +rateEl.value;
     const qs = $("st-qs"), toq = $("st-toq");
-    const toQs = () => { qs.hidden = false; qs.style.scrollMarginTop = (114 + $("st-top").offsetHeight + 8) + "px"; qs.scrollIntoView({ behavior: "smooth" }); };
-    $("st-hide").onclick = e => { const h = !page.hidden; page.hidden = h; $("st-hint").hidden = h; toq.hidden = h; e.target.textContent = h ? "Mətni göstər" : "Mətni gizlət"; if (h) toQs(); };
+    const top = $("st-top");
+    // paneli öz yerində sabitlə: heç yuxarı sürüşməsin
+    const pin = () => { top.style.top = Math.round(top.getBoundingClientRect().top + window.scrollY) + "px"; };
+    requestAnimationFrame(() => requestAnimationFrame(pin));
+    const under = el => el.getBoundingClientRect().top + window.scrollY - (parseFloat(top.style.top) || 114) - top.offsetHeight - 10;
+    const goTo = el => window.scrollTo({ top: Math.max(0, under(el)), behavior: "smooth" });
+    const anim = (el, from, to, ms) => el.animate ? el.animate([from, to], { duration: ms, easing: "cubic-bezier(.22,.8,.25,1)" }).finished.catch(() => {}) : Promise.resolve();
+    const IN = [{ opacity: 0, transform: "translateY(18px) scale(.985)", filter: "blur(4px)" }, { opacity: 1, transform: "none", filter: "blur(0)" }];
+    const OUT = [{ opacity: 1, transform: "none", filter: "blur(0)" }, { opacity: 0, transform: "translateY(-12px) scale(.985)", filter: "blur(4px)" }];
+    const toQs = () => { const fresh = qs.hidden; qs.hidden = false; if (fresh) anim(qs, IN[0], IN[1], 420); goTo(qs); };
+    let busy = false;
+    $("st-hide").onclick = async e => {
+      if (busy) return; busy = true; const h = !page.hidden, btn = e.target;
+      if (h) {
+        await anim(page, OUT[0], OUT[1], 260);
+        page.hidden = true; $("st-hint").hidden = true; toq.hidden = true; btn.textContent = "Mətni göstər";
+        qs.hidden = false; window.scrollTo({ top: Math.max(0, under(qs)), behavior: "instant" in document.documentElement.style ? "instant" : "auto" });
+        await anim(qs, IN[0], IN[1], 420);
+      } else {
+        await anim(qs, OUT[0], OUT[1], 220);
+        page.hidden = false; $("st-hint").hidden = false; toq.hidden = false; btn.textContent = "Mətni gizlət";
+        window.scrollTo({ top: Math.max(0, under(page)), behavior: "auto" });
+        await Promise.all([anim(page, IN[0], IN[1], 420), anim(qs, { opacity: 0 }, { opacity: 1 }, 420)]);
+      }
+      busy = false;
+    };
     const subB = $("st-subb");
     const subSet = off => { S.nosub = off; save(); scr.classList.toggle("nosub", off); subB.textContent = off ? "Altyazını aç" : "Altyazını bağla"; };
     subB.onclick = () => subSet(!S.nosub);
