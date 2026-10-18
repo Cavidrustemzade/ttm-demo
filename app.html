@@ -13206,6 +13206,7 @@ function homeExtra(){
   const sayBtn = (w, cls) => `<button class="vx-say ${cls || ""}" onclick="vcSay('${q(esc(w))}',event)" aria-label="Səsləndir">🔊</button>`;
   const chips = () => `<div class="vx-chips"><span class="vx-chip" style="background:#fff1e6;color:#ea580c">🔥 ${VP.d.lastDay === today() || VP.d.lastDay === yday() ? (VP.d.streak || 0) : 0}</span><span class="vx-chip" style="background:#fef3c7;color:#b45309">⭐ ${fmt(VP.d.xp)}</span></div>`;
 
+  window.ttmVoc = { load: vpLoad, d: () => VP.d, addXp, save, chips, touch: touchDay };
   // ---------- TƏKRAR inteqrasiyası ----------
   const oSub = window.pqSubject;
   window.pqSubject = async function (s) {
@@ -13662,6 +13663,165 @@ function homeExtra(){
   };
   const qbTab = document.querySelector('.tab-btn[data-tab="tab-qbank"]');
   if (qbTab) qbTab.addEventListener("click", () => adminList());
+})();
+</script>
+
+<style id="gr-css">
+.gx-lv{display:flex;gap:14px;align-items:center;width:100%;background:#fff;border-radius:22px;padding:16px;margin-bottom:10px;box-shadow:0 6px 22px rgba(15,23,42,.06);text-align:left;font-family:inherit;color:var(--color-text);animation:sqIn .45s cubic-bezier(.2,.9,.25,1) both}
+.gx-lv:active{transform:scale(.98)}
+.gx-lv .md{width:58px;height:58px;border-radius:18px;font-size:30px;display:flex;align-items:center;justify-content:center;flex:none}
+.gx-lv b{display:block;font-size:16px}
+.gx-st{display:flex;gap:3px;margin-top:6px}.gx-s{font-size:17px;color:#d6dde6;line-height:1}.gx-s.on{color:#f59e0b}
+.gx-big{justify-content:center;gap:6px;margin:6px 0 4px}.gx-big .gx-s{font-size:46px}
+.gx-big .gx-s.on{animation:gxPop .55s cubic-bezier(.2,1.6,.4,1) both;text-shadow:0 4px 14px rgba(245,158,11,.45)}
+@keyframes gxPop{0%{transform:scale(.2) rotate(-40deg)}100%{transform:none}}
+.gx-exp{background:#fff;border-radius:14px;padding:10px 12px;font-size:13.5px;color:var(--color-text);margin-top:8px;text-align:left;line-height:1.5;font-weight:500}
+.gx-rec{display:inline-block;background:#dcfce7;color:#15803d;font-weight:800;font-size:13px;padding:5px 12px;border-radius:999px;margin-top:8px}
+</style>
+<script>
+/* ===== Qrammatika testləri: mövzu → 3 səviyyə (ulduz) → test → nəticə ===== */
+(function () {
+  const $ = id => document.getElementById(id), P = () => window._PQ || {}, VX = () => window.ttmVoc;
+  const sh = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const nrm = x => { try { return v2Norm(x); } catch (e) { return String(x || "").toLowerCase(); } };
+  const js = s => esc(JSON.stringify(s));
+  const ORD = ["Noun", "Articles", "Pronouns", "Adjectives", "Adverbs", "Tense Forms", "Passive Voice", "Modal Verbs", "Conjunctions", "Agreement of the Predicate"];
+  const LV = [null, ["🥉", "Bürünc", "Asan suallar", "#fef3c7"], ["🥈", "Gümüş", "Orta suallar", "#e2e8f0"], ["🥇", "Qızıl", "Çətin suallar", "#fef9c3"]];
+  const G = { idx: null, qs: {} };
+  const starsOf = p => p >= 100 ? 5 : p >= 90 ? 4 : p >= 75 ? 3 : p >= 50 ? 2 : 1;
+  const stars = (n, big) => `<div class="gx-st ${big ? "gx-big" : ""}">${[0, 1, 2, 3, 4].map(i => `<span class="gx-s ${!big && i < n ? "on" : ""}">★</span>`).join("")}</div>`;
+  const gd = t => { const d = VX().d(), g = (d.gram = d.gram || {})[t] = d.gram[t] || {}; g.best = g.best || {}; g.stars = g.stars || {}; g.wrong = g.wrong || {}; return g; };
+  const sum = t => { const g = gd(t); return [1, 2, 3].reduce((n, l) => n + (g.stars[l] || 0), 0); };
+  const root = () => $("pq-root");
+  const view = (v, t) => { const p = P(); p.view = v; p.cfg = null; const e = $("pq-title"); if (e) e.textContent = t; window.scrollTo(0, 0); };
+  const skel = () => { root().innerHTML = `<div class="pq-sk" style="height:120px"></div><div class="pq-sk"></div><div class="pq-sk"></div>`; };
+
+  async function topics() {
+    if (G.idx) return G.idx;
+    const d = await db.collection("qbankMeta").doc("index").get(), t = d.exists && d.data().topics || {};
+    const o = k => { const i = ORD.indexOf(k); return i < 0 ? 99 : i; };
+    return (G.idx = Object.keys(t).filter(k => nrm(t[k].subject) === nrm("İngilis dili")).sort((a, b) => o(a) - o(b)).map(k => [k, t[k]]));
+  }
+  async function qs(t) {
+    if (G.qs[t]) return G.qs[t];
+    const s = await db.collection("questions").where("topic", "==", t).get();
+    return (G.qs[t] = s.docs.map(x => ({ id: x.id, ...x.data() })).filter(q => q.subject === "İngilis dili").sort((a, b) => (a.no || 0) - (b.no || 0)));
+  }
+  const fail = e => { console.error(e); root().innerHTML = `<div class="pq-card pq-empty">Yüklənmədi: ${esc(errAz(e))}</div>`; };
+
+  // ---------- 1) Mövzular ----------
+  window.gTopics = async (s) => {
+    const p = P(); p.vsubj = s || p.vsubj; view("gtopics", "Qrammatika testləri"); skel();
+    try {
+      const [L] = await Promise.all([topics(), VX().load()]);
+      root().innerHTML = `<div class="vx-top"><div class="pq-ts">Hər mövzuda 3 səviyyə · 15 ulduz</div>${VX().chips()}</div>` +
+        (L.length ? L.map(([t, o], i) => { const n = sum(t);
+          return `<button class="vx-tp" style="animation-delay:${40 + i * 50}ms" onclick='gLevels(${js(t)})'><div class="vx-ring" style="background:conic-gradient(#f59e0b ${n / 15 * 360}deg,#e8edf3 0)"><i>${n}★</i></div><div style="flex:1;min-width:0"><b style="font-size:15.5px">${esc(t)}</b><div class="pq-ts">${o.count} sual · ${n} / 15 ulduz${Object.keys(gd(t).wrong).length ? ` · <span style="color:#e11d48;font-weight:700">${Object.keys(gd(t).wrong).length} səhv</span>` : ""}</div></div><span class="v2-chev">›</span></button>`; }).join("")
+          : `<div class="pq-card pq-empty">Hələ qrammatika testi yoxdur.</div>`);
+    } catch (e) { fail(e); }
+  };
+
+  // ---------- 2) Səviyyələr ----------
+  window.gLevels = async (t) => {
+    P().gtopic = t; view("glevels", t); skel();
+    let A; try { [A] = await Promise.all([qs(t), VX().load()]); } catch (e) { return fail(e); }
+    const g = gd(t), w = A.filter(q => g.wrong[q.id]).length, n = sum(t);
+    root().innerHTML = `<div class="vx-mh" style="text-align:center"><div class="pq-ts">Ümumi</div><b style="font-size:26px;color:#0B3C5D">${n} / 15 ★</b><div class="vx-bar" style="margin-top:8px"><i style="width:${n / 15 * 100}%;background:linear-gradient(90deg,#fbbf24,#f59e0b)"></i></div></div>` +
+      [1, 2, 3].map(l => { const L = LV[l], c = A.filter(q => (q.level || 1) === l).length, b = g.best[l];
+        return `<button class="gx-lv" style="animation-delay:${l * 60}ms" ${c ? `onclick='gStart(${js(t)},${l})'` : "disabled style='opacity:.5'"}><span class="md" style="background:${L[3]}">${L[0]}</span><div style="flex:1;min-width:0"><b>${L[1]}</b><div class="pq-ts">${L[2]} · ${c} sual${b != null ? ` · ən yaxşı ${b}%` : ""}</div>${stars(g.stars[l] || 0)}</div><span class="v2-chev">›</span></button>`; }).join("") +
+      (w ? `<button class="vx-mod" onclick='gWrong(${js(t)})'><div class="ic" style="background:#ffe4e9">↻</div><div class="tx"><b>Səhvlərim</b><div class="s" style="margin:0">${w} sual · düz cavab verdikcə çıxır · +15 ⭐</div></div></button>` : "") +
+      `<p class="pq-ts" style="text-align:center;margin-top:8px">İstədiyin səviyyədən başla. 100% → 5 ★</p>`;
+  };
+
+  // ---------- 3) Test ----------
+  let ov = null, T = null, adv = 0;
+  const open = () => { if (ov) return; ov = document.createElement("div"); ov.className = "pq-stage"; document.body.appendChild(ov); document.body.style.overflow = "hidden"; };
+  const close = () => { clearTimeout(adv); if (!ov) return; const o = ov; ov = null; T = null; o.classList.add("out"); setTimeout(() => o.remove(), 260); document.body.style.overflow = ""; gLevels(P().gtopic); };
+  function begin(t, lv, list) {
+    if (!list.length) return toast("Sual yoxdur");
+    T = { t, lv, items: list.map(q => ({ q, ord: sh([0, 1, 2, 3, 4]) })), i: 0, ok: 0, a: null, xp: 0, wrong: [] };
+    open(); q();
+  }
+  window.gStart = async (t, lv) => begin(t, lv, sh((await qs(t)).filter(x => (x.level || 1) === lv)));
+  window.gWrong = async (t) => { const g = gd(t); begin(t, 0, sh((await qs(t)).filter(x => g.wrong[x.id]))); };
+  function q() {
+    const t = T; if (!t || !ov) return;
+    if (t.i >= t.items.length) return done();
+    const it = t.items[t.i], x = it.q, a = t.a, n = t.items.length, right = a != null && it.ord[a] === x.correctIndex;
+    ov.innerHTML = `<div class="pq-shead"><button class="pq-x" onclick="gExit()" aria-label="Bağla">✕</button><div class="pq-bar"><i style="width:${(t.i + (a != null)) / n * 100}%;background:linear-gradient(90deg,#fbbf24,#f59e0b)"></i></div><div class="pq-cnt">${t.i + 1} / ${n}</div></div>
+      <div class="pq-sbody"><div class="vx-pills"><span style="background:#dcfce7;color:#16a34a">✓ ${t.ok}</span><span style="background:#ffe4e9;color:#e11d48">✗ ${t.wrong.length}</span><span style="background:#eaf2fc;color:#0B3C5D">${t.lv ? LV[t.lv][0] + " " + LV[t.lv][1] : "Səhvlərim"}</span></div>
+        <div class="pq-card" style="padding:18px"><div class="pq-qt" style="margin-bottom:14px">${esc(x.text)}</div>
+          ${it.ord.map((k, j) => { let c = ""; if (a != null) c = k === x.correctIndex ? "ok" : j === a ? "no" : "dim"; return `<button class="vx-ans ${c}" ${a != null ? "disabled" : ""} onclick="gPick(${j})"><i>${"ABCDE"[j]}</i>${esc(x.options[k])}</button>`; }).join("")}
+        </div></div>
+      <div class="pq-sfoot" style="${a == null ? "" : right ? "background:#dcfce7" : "background:#ffe4e9"}">${a == null ? `<button class="pq-ghost" style="margin:0" onclick="gPick(-1)">Bilmirəm</button>`
+        : right ? `<div class="vx-fb ok"><b>✓ Əla!${t.last ? ` +${t.last} ⭐` : ""}</b></div>`
+        : `<div class="vx-fb no"><b>✗ Düzgün: ${esc(x.options[x.correctIndex])}</b>${x.explain ? `<div class="gx-exp">💡 ${esc(x.explain)}</div>` : ""}<button class="pq-go" style="background:#e11d48;margin:10px 0 0" onclick="gNext()">Başa düşdüm →</button></div>`}</div>`;
+  }
+  function xpFor(id, fix) {
+    const d = VX().d(), n = new Date(), day = n.getFullYear() + "-" + String(n.getMonth() + 1).padStart(2, "0") + "-" + String(n.getDate()).padStart(2, "0");
+    if (!d.xpDay || d.xpDay.d !== day) d.xpDay = { d: day, w: {} };
+    if (d.xpDay.w["g:" + id]) return 0;
+    d.xpDay.w["g:" + id] = 1; const v = fix ? 15 : 10; VX().addXp(v); return v;
+  }
+  window.gPick = j => {
+    const t = T; if (!t || t.a != null) return;
+    const it = t.items[t.i], x = it.q, ok = j >= 0 && it.ord[j] === x.correctIndex, g = gd(t.t), was = !!g.wrong[x.id];
+    t.a = j < 0 ? 99 : j; t.last = 0;
+    if (ok) { t.ok++; delete g.wrong[x.id]; t.last = xpFor(x.id, was); t.xp += t.last; } else { g.wrong[x.id] = 1; t.wrong.push(x); VX().touch(); }
+    VX().save();
+    try { ttmSound(ok ? "ok" : "no"); ttmBuzz(ok ? 15 : [25, 30, 25]); } catch (e) {}
+    q();
+    if (ok) { clearTimeout(adv); adv = setTimeout(() => { if (T === t && t.a != null) gNext(); }, 800); }
+  };
+  window.gNext = () => { const t = T; if (!t) return; clearTimeout(adv); t.i++; t.a = null; q(); };
+  window.gExit = async () => {
+    const t = T; if (!t || t.fin) return close();
+    const dn = t.i + (t.a != null ? 1 : 0);
+    if (!dn) return close();
+    if (await ttmConfirm(`Testdən çıxırsan?\nCavablar yadda qaldı, amma ulduz üçün səviyyəni sona qədər işləmək lazımdır.`)) { VX().save(true); close(); }
+  };
+
+  // ---------- 4) Nəticə + ulduzlar ----------
+  function done() {
+    const t = T; t.fin = true;
+    const n = t.items.length, p = Math.round(t.ok / n * 100), st = starsOf(p), g = gd(t.t);
+    let prev = 0, rec = false;
+    if (t.lv) {
+      prev = g.stars[t.lv] || 0;
+      if (st > prev) { g.stars[t.lv] = st; rec = prev > 0; if (st === 5) { VX().addXp(30); t.xp += 30; } }
+      g.best[t.lv] = Math.max(g.best[t.lv] || 0, p);
+    }
+    VX().save(true);
+    const nx = t.lv && t.lv < 3 ? t.lv + 1 : 0;
+    ov.innerHTML = `<div class="pq-shead"><button class="pq-x" onclick="gExit()" aria-label="Bağla">✕</button><div style="flex:1;font-weight:800;color:#0B3C5D">${t.lv ? LV[t.lv][0] + " " + LV[t.lv][1] : "Səhvlərim"}</div></div>
+      <div class="pq-sbody"><div class="pq-card vx-win" id="gx-win">
+        ${t.lv ? stars(st, true) : `<div class="em">🧹</div>`}
+        <div style="font-size:23px;font-weight:900;color:#0B3C5D;margin:8px 0 4px">${st === 5 ? "Səhvsiz! Möhtəşəm!" : p >= 75 ? "Əla nəticə!" : p >= 50 ? "Yaxşıdır, davam et!" : "Səhvləri təkrarla, alınacaq!"}</div>
+        <div class="pq-ts">${t.ok} / ${n} düz · ${p}%</div>
+        ${rec ? `<div class="gx-rec">Yeni rekord! ${prev} → ${st} ★</div>` : ""}
+        ${t.xp ? `<div class="vx-xp" style="margin-top:14px">⭐ +${t.xp} XP</div>` : ""}
+      </div>
+      ${t.wrong.length ? `<div class="vx-sec"><b>Səhv etdiyin suallar</b><span style="color:#e11d48;cursor:default">${t.wrong.length}</span></div>` + t.wrong.map(x => `<div class="vx-row" style="cursor:default;display:block"><div style="font-weight:700;font-size:14px">${esc(x.text)}</div><div class="az" style="color:#15803d;font-weight:700;margin-top:4px">✓ ${esc(x.options[x.correctIndex])}</div>${x.explain ? `<div class="gx-exp" style="background:#f8fafc">💡 ${esc(x.explain)}</div>` : ""}</div>`).join("") : ""}
+      </div>
+      <div class="pq-sfoot" style="flex-direction:column">${t.wrong.length ? `<button class="pq-go" style="margin:0" onclick="gRetry()">↻ Səhvləri yenidən işlə (${t.wrong.length})</button>` : ""}${nx ? `<button class="${t.wrong.length ? "pq-ghost" : "pq-go"}" style="margin:0" onclick='gGo(${nx})'>${LV[nx][0]} ${LV[nx][1]} səviyyəsinə keç →</button>` : ""}<button class="pq-ghost" style="margin:0" onclick="gExit()">Səviyyələrə qayıt</button></div>`;
+    if (t.lv) ov.querySelectorAll(".gx-big .gx-s").forEach((s, i) => { if (i < st) setTimeout(() => { s.classList.add("on"); try { ttmSound("key"); ttmBuzz(12); } catch (e) {} }, 300 + i * 320); });
+    setTimeout(() => {
+      try { ttmSound(st === 5 ? "win" : "done"); } catch (e) {}
+      if (st === 5 && t.lv) { const w = $("gx-win"), cs = ["#f59e0b", "#22c55e", "#3b82f6", "#e11d48", "#a855f7"]; if (w) for (let i = 0; i < 28; i++) { const c = document.createElement("i"); c.className = "vx-conf"; c.style.left = Math.random() * 100 + "%"; c.style.background = cs[i % 5]; c.style.animationDelay = Math.random() * 2 + "s"; w.appendChild(c); } }
+    }, 300 + st * 320);
+  }
+  window.gRetry = () => { const t = T; if (!t) return; const w = sh(t.wrong.slice()); begin(t.t, 0, w); };
+  window.gGo = lv => { const t = T.t; T = null; if (ov) { ov.remove(); ov = null; } gStart(t, lv); };
+
+  // ---------- qoşulma ----------
+  window.vxGrammar = s => gTopics(s);
+  const ob = window.pqBack;
+  window.pqBack = function () {
+    const p = P();
+    if (!p.sess && p.view === "glevels") return gTopics();
+    if (!p.sess && p.view === "gtopics") return vxHub(p.vsubj);
+    return ob.apply(this, arguments);
+  };
 })();
 </script>
 
