@@ -13199,7 +13199,9 @@ function homeExtra(){
     } else touchDay();
     save(); return xp;
   }
-  const stages = d => { const a = []; for (let i = 0; i < d.words.length; i += STG) a.push(d.words.slice(i, i + STG)); return a; };
+  const stages = d => { if (d.units && d.units.length) return d.units.map(u => d.words.filter(x => x.u === u.n)); const a = []; for (let i = 0; i < d.words.length; i += STG) a.push(d.words.slice(i, i + STG)); return a; };
+  const SN = (d, i) => d && d.units && d.units[i] ? "Unit " + d.units[i].n : "Mərhələ " + (i + 1);
+  const STT = (d, i) => d && d.units && d.units[i] ? d.units[i].title : "";
   const sDone = (id, ws) => ws.every(x => isKn(id, x.w));
   const curStage = (id, S) => { const i = S.findIndex(ws => !sDone(id, ws)); return i < 0 ? S.length - 1 : i; };
   window.vcSay = (w, ev) => { if (ev) ev.stopPropagation(); try { const u = new SpeechSynthesisUtterance(w); u.lang = "en-GB"; u.rate = .9; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) { toast("Səsləndirmə bu cihazda işləmir"); } };
@@ -13243,7 +13245,7 @@ function homeExtra(){
     const target = `<svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" fill="rgba(255,255,255,.12)"/><circle cx="60" cy="60" r="38" fill="rgba(255,255,255,.18)"/><circle cx="60" cy="60" r="24" fill="#fff"/><circle cx="60" cy="60" r="12" fill="#e11d48"/><path d="M60 60 L100 22" stroke="#fde68a" stroke-width="5" stroke-linecap="round"/><path d="M96 16l10 2-2 10z" fill="#fde68a"/></svg>`;
     root().innerHTML = `<div class="vx-top"><div class="pq-ts">Bu gün nə öyrənirik?</div>${chips()}</div>
       ${bad ? `<div class="vx-hero red sq-in" onclick="vxMist('${worst[0]}')"><h2>Səhvlərini təmizlə</h2><p>${bad} söz səni gözləyir. Hər düz cavab +15 ⭐</p><span class="cta">Başla →</span>${target}</div>`
-        : `<div class="vx-hero sq-in" onclick="${ts.length ? `vxMap('${ts[0][0]}')` : ""}"><h2>${kn ? "Davam edək!" : "Lügətə başla"}</h2><p>${kn ? `${kn} söz öyrənmisən. Hər gün bir az — zirvəyə doğru!` : "İmtahanda düşən sözləri mərhələ-mərhələ öyrən."}</p><span class="cta">${kn ? "Davam et →" : "Başla →"}</span>${target}</div>`}
+        : `<div class="vx-hero sq-in" onclick="${ts.length ? `vxMap('${ts[0][0]}')` : ""}"><h2>${kn ? "Davam edək!" : "Lügətə başla"}</h2><p>${kn ? `${kn} söz öyrənmisən. Hər gün bir az — zirvəyə doğru!` : "Sinif dərsliyinin sözlərini unit-unit öyrən."}</p><span class="cta">${kn ? "Davam et →" : "Başla →"}</span>${target}</div>`}
       <div class="vx-sec"><b>Bölmələr</b></div>
       <button class="vx-mod" style="animation-delay:40ms" onclick="vxTopics(${js(s)})"><div class="ic" style="background:#eaf2fc">📖</div><div class="tx"><b>Lügət</b><div class="s">${ts.length} mövzu · ${kn} / ${tot} söz</div><div class="vx-bar"><i style="width:${tot ? kn / tot * 100 : 0}%"></i></div></div></button>
       <button class="vx-mod ${gq ? "" : "soon"}" style="animation-delay:90ms" ${gq ? `onclick="vxGrammar(${js(s)})"` : ""}><div class="ic" style="background:#ede9fe">📝</div><div class="tx"><b>Qrammatika testləri</b><div class="s" style="margin-bottom:0">${gq ? gq + " sual · mövzular üzrə" : "Noun · Articles · Tenses…"}</div></div>${gq ? `<span class="v2-chev">›</span>` : `<span class="vx-tag" style="background:#f1f5f9;color:var(--color-text-muted)">Tezliklə</span>`}</button>
@@ -13262,9 +13264,9 @@ function homeExtra(){
     setView("vtopics", "Lügət"); skel();
     await Promise.all([loadIdx(), vpLoad()]);
     const ts = topicsOf(s);
-    root().innerHTML = `<div class="vx-top"><div class="pq-ts">İmtahan testlərindəki sözlər, mövzular üzrə</div>${chips()}</div>` +
+    root().innerHTML = `<div class="vx-top"><div class="pq-ts">Dərslik sözləri — sinif seç</div>${chips()}</div>` +
       (ts.length ? ts.map(([id, o], i) => { const k = knN(id), pc = o.count ? Math.round(k / o.count * 100) : 0, nS = Math.ceil(o.count / STG);
-        return `<button class="vx-tp" style="animation-delay:${40 + i * 50}ms" onclick="vxMap('${id}')"><div class="vx-ring" style="background:conic-gradient(${pc >= 100 ? "#16a34a" : "#1d6fd6"} ${pc * 3.6}deg,#e8edf3 0)"><i>${pc}%</i></div><div style="flex:1;min-width:0"><b style="font-size:15.5px">${esc(o.topic)}</b><div class="pq-ts">${o.count} söz · ${nS} mərhələ${badN(id) ? ` · <span style="color:#e11d48;font-weight:700">${badN(id)} səhv</span>` : ""}</div></div><span class="v2-chev">›</span></button>`; }).join("")
+        return `<button class="vx-tp" style="animation-delay:${40 + i * 50}ms" onclick="vxMap('${id}')"><div class="vx-ring" style="background:conic-gradient(${pc >= 100 ? "#16a34a" : "#1d6fd6"} ${pc * 3.6}deg,#e8edf3 0)"><i>${pc}%</i></div><div style="flex:1;min-width:0"><b style="font-size:15.5px">${esc(o.topic)}</b><div class="pq-ts">${o.count} söz · ${o.units ? o.units + " unit" : nS + " mərhələ"}${badN(id) ? ` · <span style="color:#e11d48;font-weight:700">${badN(id)} səhv</span>` : ""}</div></div><span class="v2-chev">›</span></button>`; }).join("")
         : `<div class="pq-card pq-empty">Hələ lügət yoxdur.</div>`) +
       `<p class="pq-ts" style="text-align:center;margin-top:10px">Yeni mövzular əlavə olunduqca burada görünəcək</p>`;
   }
@@ -13286,10 +13288,10 @@ function homeExtra(){
     const lastDone = (() => { let k = -1; S.forEach((ws, i) => { if (sDone(id, ws)) k = i; }); return k; })();
     const nodes = S.map((ws, i) => {
       const dn = sDone(id, ws), cur = i === c && !allDone, k = knN(id, ws);
-      return `<button class="vx-node ${dn ? "d" : cur ? "c" : "n"}" style="left:${pts[i][0]}%;top:${pts[i][1]}px" onclick="vxSheet(${i})">${dn ? "✓" : i + 1}<span class="l">${cur ? "Mərhələ " + (i + 1) : dn ? "Mərhələ " + (i + 1) : k ? k + " / " + ws.length : ""}</span></button>`;
+      return `<button class="vx-node ${dn ? "d" : cur ? "c" : "n"}" style="left:${pts[i][0]}%;top:${pts[i][1]}px" onclick="vxSheet(${i})">${dn ? "✓" : i + 1}<span class="l">${cur || dn || d.units ? SN(d, i) : k ? k + " / " + ws.length : ""}</span></button>`;
     }).join("");
     const cp = pts[c], right = cp[0] < 50;
-    root().innerHTML = `<div class="vx-fix"><div class="vx-top"><div class="pq-ts">${S.length} mərhələ · hər biri ${STG} söz</div>${chips()}</div>
+    root().innerHTML = `<div class="vx-fix"><div class="vx-top"><div class="pq-ts">${d.units ? S.length + " unit · toxun — test başla" : S.length + " mərhələ · hər biri " + STG + " söz"}</div>${chips()}</div>
       <div class="vx-mh"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px"><div><b style="font-size:24px;font-weight:900;color:#0B3C5D">${kn}</b> <span class="pq-ts">/ ${n} söz öyrənilib</span></div><b style="color:#1d6fd6;font-size:14px">${n ? Math.round(kn / n * 100) : 0}%</b></div><div class="vx-bar"><i style="width:${n ? kn / n * 100 : 0}%"></i></div></div>
       <div class="vx-qk"><button onclick="vxCards()"><b>🃏</b>Kartlar</button><button onclick="vxList('${id}')"><b>📖</b>Söz siyahısı</button><button onclick="vxMist('${id}')"><b>↻</b>Səhvlərim${bad ? `<span class="vx-bdg">${bad}</span>` : ""}</button></div></div>
       <div class="vx-wrap">
@@ -13299,7 +13301,7 @@ function homeExtra(){
           ${nodes}
           ${allDone ? "" : `<div class="vx-start ${right ? "r" : ""}" style="top:${cp[1] - 16}px;${right ? `left:calc(${cp[0]}% + 50px)` : `right:calc(${100 - cp[0]}% + 50px)`}">Başla</div>`}
         </div>
-        <div class="vx-foot"><button class="vx-go" onclick="vxSheet(${c})"><span class="pi">▶</span><div><b>${allDone ? "Təkrar et — istənilən mərhələ" : (knN(id, S[c]) ? "Davam et" : "Başla") + " — Mərhələ " + (c + 1)}</b><span>${allDone ? "Bütün sözləri bilirsən 🎉" : `${knN(id, S[c])} / ${S[c].length} söz bitib · ~${Math.max(1, Math.round((S[c].length - knN(id, S[c])) * 7 / 60))} dəqiqə`}</span></div></button></div>
+        <div class="vx-foot"><button class="vx-go" onclick="vxSheet(${c})"><span class="pi">▶</span><div><b>${allDone ? "Təkrar et — istənilən mərhələ" : (knN(id, S[c]) ? "Davam et" : "Başla") + " — " + SN(d, c)}</b><span>${allDone ? "Bütün sözləri bilirsən 🎉" : `${knN(id, S[c])} / ${S[c].length} söz bitib · ~${Math.max(1, Math.round((S[c].length - knN(id, S[c])) * 7 / 60))} dəqiqə`}</span></div></button></div>
       </div>`;
     requestAnimationFrame(() => { const el = root().querySelector(".vx-node.c") || root().querySelectorAll(".vx-node.d")[lastDone]; if (!el) return; const fx = root().querySelector(".vx-fix"), top = fx ? fx.getBoundingClientRect().bottom : 60, bot = innerHeight - 170, r = el.getBoundingClientRect(); window.scrollTo(0, Math.max(0, scrollY + r.top + r.height / 2 - (top + bot) / 2)); });
   }
@@ -13313,8 +13315,8 @@ function homeExtra(){
     const S = stages(d), ws = S[si], left = ws.filter(x => !isKn(id, x.w)).length, extra = Math.min(3, badN(id) - ws.filter(x => isBad(id, x.w)).length);
     const m = document.createElement("div"); m.className = "pq-ov";
     const sel = left ? TS.m : (TS.m === "stage" ? "count" : TS.m);
-    m.innerHTML = `<div class="pq-sheet"><div class="pq-sh-h"><div style="display:flex;align-items:center;gap:12px"><span class="vx-node ${sDone(id, ws) ? "d" : "c"}" style="position:static;margin:0;width:46px;height:46px;font-size:17px;animation:none">${sDone(id, ws) ? "✓" : si + 1}</span><div><b style="font-size:18px;color:#0B3C5D">Mərhələ ${si + 1}</b><div class="pq-ts">${ws.length - left} / ${ws.length} söz bitib</div></div></div><button class="pq-x" aria-label="Bağla">✕</button></div>
-      <button class="vx-opt ${sel === "stage" ? "on" : ""}" data-m="stage" ${left ? "" : "disabled style='opacity:.5'"}><span class="rd"></span><div><b>Mərhələni bitir</b><span>${left ? `Qalan ${left} söz · ~${Math.max(1, Math.round(left * 7 / 60))} dəq` : "Bu mərhələ bitib ✓"}</span></div></button>
+    m.innerHTML = `<div class="pq-sheet"><div class="pq-sh-h"><div style="display:flex;align-items:center;gap:12px"><span class="vx-node ${sDone(id, ws) ? "d" : "c"}" style="position:static;margin:0;width:46px;height:46px;font-size:17px;animation:none">${sDone(id, ws) ? "✓" : si + 1}</span><div><b style="font-size:18px;color:#0B3C5D">${SN(d, si)}</b><div class="pq-ts">${STT(d, si) ? esc(STT(d, si)) + " · " : ""}${ws.length - left} / ${ws.length} söz bitib</div></div></div><button class="pq-x" aria-label="Bağla">✕</button></div>
+      <button class="vx-opt ${sel === "stage" ? "on" : ""}" data-m="stage" ${left ? "" : "disabled style='opacity:.5'"}><span class="rd"></span><div><b>${d.units ? "Unit-i bitir" : "Mərhələni bitir"}</b><span>${left ? `Qalan ${left} söz · ~${Math.max(1, Math.round(left * 7 / 60))} dəq` : "Bu mərhələ bitib ✓"}</span></div></button>
       <button class="vx-opt ${sel === "count" ? "on" : ""}" data-m="count"><span class="rd"></span><div><b>Sual sayı seç</b><span>Bu gün nə qədər istəsən</span></div></button>
       <div class="vx-ch ${sel === "count" ? "show" : ""}" data-c="count">${[20, 40, 100, "all"].map(k => `<button class="${TS.n === k ? "on" : ""}" data-n="${k}">${k === "all" ? "Hamısı" : k}</button>`).join("")}</div>
       <button class="vx-opt ${sel === "time" ? "on" : ""}" data-m="time"><span class="rd"></span><div><b>⏱ Vaxta qarşı</b><span>Vaxt bitənə qədər nə qədər bacarsan</span></div></button>
@@ -13377,7 +13379,7 @@ function homeExtra(){
     ov.innerHTML = `<div class="pq-shead"><button class="pq-x" onclick="vxExit()" aria-label="Bağla">✕</button>
         <div class="pq-bar"><i style="width:${t.timed ? Math.min(100, (Date.now() - t.t0) / (t.end - t.t0) * 100) : dn / n * 100}%;background:linear-gradient(90deg,#22c55e,#16a34a)"></i></div>
         <div class="pq-cnt">${t.timed ? dn : Math.min(t.i + 1, n) + " / " + n}</div></div>
-      <div class="pq-sbody"><div class="vx-pills"><span style="background:#dcfce7;color:#16a34a">✓ ${t.ok}</span><span style="background:#ffe4e9;color:#e11d48">✗ ${t.bad}</span>${t.stage >= 0 ? `<span style="background:#eaf2fc;color:#0B3C5D">Mərhələ ${t.stage + 1}</span>` : t.label ? `<span style="background:#eaf2fc;color:#0B3C5D">${t.label}</span>` : ""}<span class="vx-tm" style="margin-left:auto;background:#fff;color:var(--color-text-muted)">⏱</span></div>
+      <div class="pq-sbody"><div class="vx-pills"><span style="background:#dcfce7;color:#16a34a">✓ ${t.ok}</span><span style="background:#ffe4e9;color:#e11d48">✗ ${t.bad}</span>${t.stage >= 0 ? `<span style="background:#eaf2fc;color:#0B3C5D">${SN(t.d, t.stage)}</span>` : t.label ? `<span style="background:#eaf2fc;color:#0B3C5D">${t.label}</span>` : ""}<span class="vx-tm" style="margin-left:auto;background:#fff;color:var(--color-text-muted)">⏱</span></div>
         <div class="pq-card" style="padding:18px"><div class="pq-ts" style="text-align:center;font-weight:600">Tərcüməni seç</div>
           <div class="vx-qw"><span class="w">${esc(x.w)}</span>${sayBtn(x.w)}<div class="pq-ts" style="margin-top:6px">${esc(x.p || "")}</div></div>
           ${t.opts.map((o, k) => { let c = ""; if (a != null) c = o === x.az ? "ok" : k === a ? "no" : "dim"; return `<button class="vx-ans ${c}" ${a != null ? "disabled" : ""} onclick="vxPick(${k})"><i>${"ABCD"[k]}</i>${esc(o)}</button>`; }).join("")}
@@ -13422,7 +13424,7 @@ function homeExtra(){
         <div class="vx-bring" style="background:conic-gradient(${pc >= 70 ? "#22c55e" : pc >= 40 ? "#f59e0b" : "#ef4444"} ${pc * 3.6}deg,#e8edf3 0)"><b>${pc}%<small>dəqiqlik</small></b></div>
         <div class="vx-st3"><div style="background:#dcfce7;color:#16a34a"><b>${t.ok}</b><span>düz</span></div><div style="background:#ffe4e9;color:#e11d48"><b>${t.bad}</b><span>səhv</span></div><div style="background:#eaf2fc;color:#0B3C5D"><b>${mmss(sec)}</b><span>vaxt</span></div></div>
         ${t.xp ? `<div class="vx-xp">⭐ +${fmt(t.xp)} XP qazandın</div>` : ""}
-        <div style="text-align:left"><div style="display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;margin-bottom:6px"><span>Mərhələ ${si + 1}</span><span style="color:var(--color-text-muted)">${k} / ${ws.length}</span></div><div class="vx-bar g"><i style="width:${k / ws.length * 100}%"></i></div><div class="pq-ts" style="margin-top:6px">${k >= ws.length ? "Mərhələ bitib ✓" : `Mərhələni bitirmək üçün daha ${ws.length - k} söz`}</div></div>
+        <div style="text-align:left"><div style="display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;margin-bottom:6px"><span>${SN(t.d, si)}</span><span style="color:var(--color-text-muted)">${k} / ${ws.length}</span></div><div class="vx-bar g"><i style="width:${k / ws.length * 100}%"></i></div><div class="pq-ts" style="margin-top:6px">${k >= ws.length ? "Mərhələ bitib ✓" : `Mərhələni bitirmək üçün daha ${ws.length - k} söz`}</div></div>
       </div>
       ${t.wrong.length ? `<div class="vx-sec"><b>Səhv etdiyin sözlər</b><span style="color:#e11d48;cursor:default">${t.wrong.length}</span></div>` + t.wrong.slice(0, 40).map(x => `<div class="vx-row" style="cursor:default">${sayBtn(x.w)}<div style="flex:1;min-width:0"><span class="w">${esc(x.w)}</span><span class="vx-ps">${esc(x.p || "")}</span><div class="az">${esc(x.az)}</div>${x.n ? `<div class="vx-pin" style="margin-top:6px;padding:5px 9px">📌 ${esc(x.n)}</div>` : ""}</div></div>`).join("") : ""}
       </div>
@@ -13435,12 +13437,12 @@ function homeExtra(){
       ov.innerHTML = `<div class="pq-shead"><button class="pq-x" onclick="vxExit()" aria-label="Bağla">✕</button><div style="flex:1"></div></div>
         <div class="pq-sbody"><div class="pq-card vx-win" id="vx-win">
           <div class="em">${all ? "🏆" : "🏅"}</div>
-          <div style="font-size:24px;font-weight:900;color:#0B3C5D;margin:6px 0 4px">${all ? esc(t.d.topic) + " bitdi!" : "Mərhələ " + (si + 1) + " bitdi!"}</div>
-          <div class="pq-ts">${all ? "Zirvəyə çatdın — bütün sözləri bilirsən" : STG + " sözün hamısını bilirsən"}</div>
+          <div style="font-size:24px;font-weight:900;color:#0B3C5D;margin:6px 0 4px">${all ? esc(t.d.topic) + " bitdi!" : SN(t.d, si) + " bitdi!"}</div>
+          <div class="pq-ts">${all ? "Zirvəyə çatdın — bütün sözləri bilirsən" : S[si].length + " sözün hamısını bilirsən"}</div>
           <div class="vx-xp" style="margin:16px 0">⭐ +${50 * newly.length} bonus XP</div>
           <div class="pq-ts" style="margin-bottom:6px">${kn} / ${t.d.words.length} söz · ${Math.round(kn / t.d.words.length * 100)}%</div>
         </div></div>
-        <div class="pq-sfoot" style="flex-direction:column">${all ? "" : `<button class="pq-go" style="margin:0" onclick="vxNextStage(${nx})">Mərhələ ${nx + 1}-ə keç →</button>`}<button class="${all ? "pq-go" : "pq-ghost"}" style="margin:0" onclick="vxShowRes()">Nəticəyə bax</button></div>`;
+        <div class="pq-sfoot" style="flex-direction:column">${all ? "" : `<button class="pq-go" style="margin:0" onclick="vxNextStage(${nx})">Növbəti: ${SN(t.d, nx)} →</button>`}<button class="${all ? "pq-go" : "pq-ghost"}" style="margin:0" onclick="vxShowRes()">Nəticəyə bax</button></div>`;
       const w = $("vx-win"), cs = ["#f59e0b", "#22c55e", "#3b82f6", "#e11d48", "#a855f7"];
       for (let i = 0; i < 26; i++) { const c = document.createElement("i"); c.className = "vx-conf"; c.style.left = Math.random() * 100 + "%"; c.style.background = cs[i % 5]; c.style.animationDelay = Math.random() * 2.2 + "s"; c.style.animationDuration = 2 + Math.random() * 1.4 + "s"; w.appendChild(c); }
     } else { try { ttmSound("done"); } catch (e) {} ov.innerHTML = resHtml(); }
@@ -13609,7 +13611,7 @@ function homeExtra(){
         ${top.length ? `<div class="vx-pod">${pod(1)}${pod(0)}${pod(2)}</div>` : `<div style="text-align:center;padding:26px 10px 30px"><div style="font-size:44px">🏁</div><b>Hələ heç kim xal qazanmayıb</b><div style="font-size:13px;opacity:.85;margin-top:4px">İlk ol — testə başla!</div></div>`}</div>
       ${L_.slice(3, 50).map((x, i) => row(x, i + 3)).join("")}
       ${me >= 50 ? row(L_[me], me) : me < 0 ? `<div class="vx-lr me"><span class="no">—</span><div class="vx-av" style="background:#eaf2fc;color:#0B3C5D">${ini(VP.name)}</div><div><b style="font-size:14px">${esc(VP.name)} (sən)</b><div class="pq-ts">Hələ xal yoxdur</div></div><span class="x">0 ⭐</span></div>` : ""}
-      <div class="pq-card" style="margin-top:10px;font-size:12.5px;color:var(--color-text-muted);line-height:1.6"><b style="color:var(--color-text)">Xal necə qazanılır?</b><br>Testdə düz cavab +10 ⭐ · Səhvi düzəltmək +15 ⭐ · Mərhələni bitirmək +50 ⭐<br>Eyni sözə gündə yalnız 1 dəfə xal verilir.</div>`;
+      <div class="pq-card" style="margin-top:10px;font-size:12.5px;color:var(--color-text-muted);line-height:1.6"><b style="color:var(--color-text)">Xal necə qazanılır?</b><br>Testdə düz cavab +10 ⭐ · Səhvi düzəltmək +15 ⭐ · Unit/mərhələ bitirmək +50 ⭐<br>Eyni sözə gündə yalnız 1 dəfə xal verilir.</div>`;
   };
 
   // Təkrar ana səhifəsi lügət sayını görsün
@@ -13625,8 +13627,8 @@ function homeExtra(){
   const qbList = $("qb-list");
   const qbCard = qbList && qbList.closest(".card");
   if (qbCard) qbCard.insertAdjacentHTML("beforebegin", `<div class="card" id="vc-admin"><h3>📖 Lügət</h3>
-    <p class="muted-note" style="margin-bottom:10px">Claude-un hazırladığı lügət JSON faylını seçin. Eyni mövzu yenidən yüklənsə, köhnəsi yenilənir.</p>
-    <label class="btn-small" style="display:inline-block;cursor:pointer">📥 Lügət JSON yüklə<input type="file" accept=".json,application/json" style="display:none" onchange="vcImport(this)"></label>
+    <p class="muted-note" style="margin-bottom:10px">lugat_sinif_5…11.json fayllarını seçin (birdən çox seçmək olar). Eyni sinif yenidən yüklənsə, köhnəsi yenilənir.</p>
+    <label class="btn-small" style="display:inline-block;cursor:pointer">📥 Lügət JSON yüklə<input type="file" accept=".json,application/json" multiple style="display:none" onchange="vcImport(this)"></label>
     <div id="vc-alist" style="margin-top:12px"></div></div>`);
   async function adminList() {
     const box = $("vc-alist"); if (!box) return;
@@ -13642,18 +13644,33 @@ function homeExtra(){
     V.idx = t; V.p = Promise.resolve(t);
   }
   window.vcImport = async inp => {
-    const f = inp.files[0]; inp.value = ""; if (!f) return;
-    let d;
-    try { d = JSON.parse(await f.text()); } catch (e) { toast("Fayl oxunmadı"); return; }
-    const words = (d.words || []).filter(x => x && x.w && x.az).map(x => ({ w: String(x.w), p: x.p || "", az: String(x.az), n: x.n || "", ex: x.ex || "", exAz: x.exAz || "", f: Number(x.f) || 0 }));
-    if (!d.topic || !words.length) { toast("Faylda mövzu və ya söz yoxdur"); return; }
-    const subject = d.subject || "İngilis dili", id = slug(subject + "-" + d.topic);
-    if (!(await ttmConfirm(`«${d.topic}» (${subject}) — ${words.length} söz yüklənsin?`))) return;
+    const fs = [...(inp.files || [])]; inp.value = ""; if (!fs.length) return;
+    const ok = [];
+    for (const f of fs) {
+      let d; try { d = JSON.parse(await f.text()); } catch (e) { toast(f.name + ": oxunmadı"); continue; }
+      const words = (d.words || []).filter(x => x && x.w && x.az).map(x => { const o = { w: String(x.w), p: x.p || "", az: String(x.az), n: x.n || "", ex: x.ex || "", exAz: x.exAz || "", f: Number(x.f) || 0 }; if (x.u != null) o.u = Number(x.u); return o; });
+      if (!d.topic || !words.length) { toast(f.name + ": mövzu və ya söz yoxdur"); continue; }
+      const units = Array.isArray(d.units) ? d.units.map(u => ({ n: Number(u.n), title: String(u.title || "") })).filter(u => words.some(x => x.u === u.n)) : null;
+      ok.push({ d, words, units, subject: d.subject || "İngilis dili" });
+    }
+    if (!ok.length) return;
+    if (!(await ttmConfirm(`${ok.length} fayl yüklənsin?\n` + ok.map(o => `«${o.d.topic}» — ${o.words.length} söz${o.units ? ", " + o.units.length + " unit" : ""}`).join("\n")))) return;
     try {
-      await db.collection("vocab").doc(id).set({ topic: d.topic, subject, words, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
-      await saveIdx(t => { t[id] = { topic: d.topic, subject, count: words.length, order: d.order || (t[id] && t[id].order) || Object.keys(t).length + 1 }; });
-      delete V.docs[id];
-      toast(`✅ ${words.length} söz yükləndi`); adminList();
+      for (const o of ok) {
+        const id = slug(o.subject + "-" + o.d.topic), doc = { topic: o.d.topic, subject: o.subject, words: o.words, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+        if (o.units) { doc.units = o.units; doc.grade = Number(o.d.grade) || null; }
+        await db.collection("vocab").doc(id).set(doc);
+        await saveIdx(t => { t[id] = { topic: o.d.topic, subject: o.subject, count: o.words.length, order: o.d.order || (t[id] && t[id].order) || Object.keys(t).length + 1 }; if (o.units) { t[id].units = o.units.length; t[id].grade = Number(o.d.grade) || null; } });
+        delete V.docs[id];
+      }
+      toast(`✅ ${ok.length} lügət yükləndi`);
+      const old = Object.entries(V.idx || {}).filter(([, x]) => !x.grade);
+      if (ok.some(o => o.units) && old.length && await ttmConfirm(`Köhnə mövzu lügətləri silinsin?\n${old.map(([, x]) => x.topic).join(", ")}`)) {
+        for (const [id] of old) await db.collection("vocab").doc(id).delete();
+        await saveIdx(t => { old.forEach(([id]) => delete t[id]); });
+        toast("Köhnə lügətlər silindi");
+      }
+      adminList();
     } catch (e) { console.error(e); toast(e.code === "permission-denied" ? "İcazə yoxdur — Firestore qaydasına vocab əlavə edin" : "Xəta: " + errAz(e)); }
   };
   window.vcDel = async id => {
