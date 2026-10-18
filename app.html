@@ -13702,7 +13702,7 @@ function homeExtra(){
   const sh = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const nrm = x => { try { return v2Norm(x); } catch (e) { return String(x || "").toLowerCase(); } };
   const js = s => esc(JSON.stringify(s));
-  const ORD = ["Noun", "Articles", "Pronouns", "Adjectives", "Adverbs", "Tense Forms", "Passive Voice", "Modal Verbs", "Conjunctions", "Agreement of the Predicate"];
+  const ORD = ["Noun", "Articles", "Pronouns", "Adjectives and Adverbs", "Adjectives", "Adverbs", "Tense Forms", "Passive Voice", "Modal Verbs", "Conjunctions", "Agreement of the Predicate", "Mixed Tests"];
   const LV = [null, ["🥉", "Bürünc", "Asan suallar", "#fef3c7"], ["🥈", "Gümüş", "Orta suallar", "#e2e8f0"], ["🥇", "Qızıl", "Çətin suallar", "#fef9c3"]];
   const G = { idx: null, qs: {} };
   const starsOf = p => p >= 100 ? 5 : p >= 90 ? 4 : p >= 75 ? 3 : p >= 50 ? 2 : 1;
