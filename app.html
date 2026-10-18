@@ -13249,6 +13249,7 @@ function homeExtra(){
       <div class="vx-sec"><b>Bölmələr</b></div>
       <button class="vx-mod" style="animation-delay:40ms" onclick="vxTopics(${js(s)})"><div class="ic" style="background:#eaf2fc">📖</div><div class="tx"><b>Lügət</b><div class="s">${ts.length} mövzu · ${kn} / ${tot} söz</div><div class="vx-bar"><i style="width:${tot ? kn / tot * 100 : 0}%"></i></div></div></button>
       <button class="vx-mod ${gq ? "" : "soon"}" style="animation-delay:90ms" ${gq ? `onclick="vxGrammar(${js(s)})"` : ""}><div class="ic" style="background:#ede9fe">📝</div><div class="tx"><b>Qrammatika testləri</b><div class="s" style="margin-bottom:0">${gq ? gq + " sual · mövzular üzrə" : "Noun · Articles · Tenses…"}</div></div>${gq ? `<span class="v2-chev">›</span>` : `<span class="vx-tag" style="background:#f1f5f9;color:var(--color-text-muted)">Tezliklə</span>`}</button>
+      <button class="vx-mod" style="animation-delay:115ms" onclick="vxStories(${js(s)})"><div class="ic" style="background:#fef3c7">🎬</div><div class="tx"><b>Animasiyalı hekayələr</b><div class="s" style="margin-bottom:0">İzlə, dinlə, sözləri öyrən</div></div><span class="v2-chev">›</span></button>
       <div class="vx-mod soon" style="animation-delay:140ms"><div class="ic" style="background:#fce7f3">🎧</div><div class="tx"><b>Dinləmə</b><div class="s" style="margin-bottom:0">Mətni dinlə, sualları cavabla</div></div><span class="vx-tag" style="background:#f1f5f9;color:var(--color-text-muted)">Tezliklə</span></div>
       <div class="vx-mod soon" style="animation-delay:190ms"><div class="ic" style="background:#e0f2fe">✍️</div><div class="tx"><b>Esse</b><div class="s" style="margin-bottom:0">Yaz — süni intellekt yoxlasın</div></div><span class="vx-tag" style="background:#f1f5f9;color:var(--color-text-muted)">Tezliklə</span></div>
       <div class="vx-sec" style="margin-top:14px"><b>Reytinq</b><span onclick="vxBoard()">Hamısı ›</span></div>
@@ -13680,6 +13681,322 @@ function homeExtra(){
   };
   const qbTab = document.querySelector('.tab-btn[data-tab="tab-qbank"]');
   if (qbTab) qbTab.addEventListener("click", () => adminList());
+})();
+</script>
+<script>
+/* ===== İngilis dili: Animasiyalı hekayələr (stories/<id>/story.json + şəkillər + səs) ===== */
+(function () {
+  const STORIES = [
+    { id: "kara", title: "The Last Light of Kara Island", level: "B1", cover: "stories/kara/scene1.webp" }
+  ];
+  const $ = id => document.getElementById(id);
+  const P = () => window._PQ || {};
+  const root = () => $("pq-root");
+  const title = t => { const e = $("pq-title"); if (e) e.textContent = t; };
+  const setView = (v, t) => { const p = P(); p.view = v; p.cfg = null; title(t); window.scrollTo(0, 0); };
+  const E = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const ld = k => { try { return JSON.parse(localStorage.getItem(k) || "{}"); } catch (e) { return {}; } };
+  const sv = (k, o) => { try { localStorage.setItem(k, JSON.stringify(o)); } catch (e) {} };
+  let ST = null; // aktiv oxutma (audio, raf)
+
+  function css() {
+    if ($("st-css")) return;
+    const s = document.createElement("style"); s.id = "st-css";
+    s.textContent = `
+.st-list{display:grid;gap:12px}
+.st-item{display:flex;gap:12px;align-items:center;background:var(--color-surface,#fff);border:1px solid var(--color-border,#e5e7eb);border-radius:16px;padding:10px;cursor:pointer;text-align:left;width:100%;font:inherit;color:inherit}
+.st-item img{width:96px;aspect-ratio:16/9;object-fit:cover;border-radius:10px;flex:none}
+.st-item b{display:block;font-size:15px}.st-item .s{font-size:12px;color:var(--color-text-muted,#64748b)}
+.st-w{display:grid;gap:12px}
+.st-scr{position:relative;aspect-ratio:16/9;max-width:100%;border-radius:14px;overflow:hidden;background:#000}
+.st-scr img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1s}
+.st-scr img.on{opacity:1;animation:stkb 30s ease-in-out infinite alternate;transform-origin:70% 45%}
+.st-scr.calm img.on{animation-duration:40s}
+@keyframes stkb{from{transform:scale(1)}to{transform:scale(1.13)}}
+.st-fx{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity 1s}
+.st-rain{background:repeating-linear-gradient(105deg,transparent 0 9px,rgba(200,220,255,.18) 9px 10px);background-size:60px 60px;animation:strain .45s linear infinite}
+@keyframes strain{to{background-position:-20px 60px}}
+.st-flash{background:#dfe8ff;animation:stfl 7s infinite}
+@keyframes stfl{0%,88%,92%,100%{opacity:0}89%{opacity:.35}91%{opacity:.15}}
+.st-glow{background:radial-gradient(circle at 60% 50%,rgba(255,190,90,.35),transparent 30%);animation:stfk 1.6s infinite}
+@keyframes stfk{0%,100%{opacity:.75}40%{opacity:1}60%{opacity:.6}}
+.st-scr.f-rain .st-rain,.st-scr.f-flash .st-flash,.st-scr.f-glow .st-glow,.st-scr.f-leaves canvas{opacity:1}
+.st-scr canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0;transition:opacity 1.5s}
+.st-sub{position:absolute;left:0;right:0;bottom:0;padding:26px 12px 9px;background:linear-gradient(transparent,rgba(5,10,20,.85));font-family:Georgia,serif;font-size:clamp(13px,3.4vw,17px);line-height:1.4;text-align:center;color:#fff}
+.st-tag{position:absolute;top:8px;left:8px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:rgba(5,10,20,.6);color:#fff;padding:3px 8px;border-radius:6px}
+.st-scr.nosub .st-sub,.st-scr.nosub .st-tag{display:none}
+.st-bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.st-bar button,.st-bar select{font:inherit;font-size:14px;border:0;border-radius:10px;padding:9px 12px;background:#eef2f7;color:#1e293b;cursor:pointer}
+.st-bar .main{background:#f2b544;color:#241a05;font-weight:600;min-width:104px}
+.st-page{background:#f8f2e4;color:#2a2418;border-radius:14px;padding:16px;font-family:Georgia,serif;font-size:clamp(16px,4.2vw,18px);line-height:1.75}
+.st-page.hide .st-p{filter:blur(6px);user-select:none}
+.st-p{margin:0 0 12px;padding-left:24px;position:relative}
+.st-p b{position:absolute;left:0;top:2px;font:500 12px system-ui;color:#8a7a55}
+.st-wd{cursor:pointer;border-radius:4px;padding:0 1px}
+.st-s.cur{background:rgba(242,181,68,.2);border-radius:4px}
+.st-wd.now{background:#f2b544!important;color:#241a05}
+.st-wd.learn{text-decoration:underline 2px #d98a1c;text-underline-offset:4px}
+.st-wd.known{color:#5b6b4a}
+.st-hint{font-size:12px;color:var(--color-text-muted,#64748b);margin:-4px 2px 0}
+.st-sheet{position:fixed;left:0;right:0;bottom:0;z-index:9999;background:#15233a;color:#e9e4d8;border-radius:18px 18px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.4);padding:16px 18px calc(16px + env(safe-area-inset-bottom,0px))}
+.st-sheet .in{max-width:520px;margin:0 auto;display:grid;gap:9px}
+.st-sheet .top{display:flex;align-items:center;gap:12px}
+.st-sheet h3{margin:0;font:400 26px Georgia,serif;color:#fff}
+.st-sheet .ipa{color:#9aa6bb}.st-sheet .az{font-size:18px;font-weight:600;color:#f2b544}
+.st-sheet .ex{font-family:Georgia,serif;font-size:15px;opacity:.85;border-left:3px solid #24375a;padding-left:10px}
+.st-sheet .ex strong{color:#f2b544}
+.st-sheet button{font:inherit;border:0;border-radius:10px;cursor:pointer}
+.st-sheet .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.st-sheet .two button{padding:12px;font-weight:600}
+.st-k{background:#4fc28a;color:#06210f}.st-l{background:#f2b544;color:#241a05}
+.st-x{margin-left:auto;background:transparent;color:#9aa6bb;font-size:22px;padding:4px 10px}
+.st-spk{background:#24375a;color:#fff;border-radius:50%!important;width:42px;height:42px;font-size:18px}
+.st-card{background:var(--color-surface,#fff);border:1px solid var(--color-border,#e5e7eb);border-radius:14px;padding:14px;display:grid;gap:9px}
+.st-card h4{margin:0;font-size:15px;font-weight:600;line-height:1.4}
+.st-card em{font-family:Georgia,serif;color:#b7791f}
+.st-opts{display:grid;gap:6px}
+.st-opts button{text-align:left;font:inherit;border:1px solid var(--color-border,#e5e7eb);background:#f8fafc;color:inherit;border-radius:10px;padding:9px 11px;cursor:pointer}
+.st-opts button.right{background:#4fc28a;color:#06210f;border-color:#4fc28a}.st-opts button.wrong{background:#e2685c;color:#2a0905;border-color:#e2685c}
+.st-nums{margin:0;padding-left:18px;font-size:14px}
+.st-fb{font-size:13px;color:var(--color-text-muted,#64748b)}.st-fb.good{color:#15803d}.st-fb.bad{color:#b91c1c}
+.st-card input,.st-card textarea{font:inherit;width:100%;box-sizing:border-box;border:1px solid var(--color-border,#e5e7eb);border-radius:10px;padding:9px}
+.st-card textarea{min-height:84px}
+.st-row{display:flex;gap:8px;flex-wrap:wrap}
+.st-row button{font:inherit;border:0;border-radius:10px;padding:9px 12px;background:#eef2f7;cursor:pointer}
+.st-go{font:inherit;border:0;border-radius:12px;padding:12px;background:#f2b544;color:#241a05;font-weight:600;cursor:pointer}
+.st-h{font-size:18px;margin:6px 0 0}
+.st-score{font:600 34px Georgia,serif;color:#b7791f;line-height:1}
+.st-chips{display:flex;flex-wrap:wrap;gap:6px}.st-chips span{background:#eef2f7;border-radius:999px;padding:3px 10px;font-size:13px}
+@media (prefers-reduced-motion:reduce){.st-scr img.on,.st-rain,.st-flash,.st-glow{animation:none}}`;
+    document.head.appendChild(s);
+  }
+
+  function stop() {
+    if (!ST) return;
+    try { ST.au.pause(); } catch (e) {}
+    cancelAnimationFrame(ST.raf); cancelAnimationFrame(ST.lraf);
+    const sh = $("st-sheet"); if (sh) sh.remove();
+    ST = null;
+  }
+
+  // ---------- Siyahı ----------
+  window.vxStories = function (s) {
+    stop(); css();
+    const p = P(); if (s) p.vsubj = s;
+    setView("vstories", "Animasiyalı hekayələr");
+    root().innerHTML = `<div class="st-list">${STORIES.map(o => {
+      const d = ld("st_" + o.id), pr = d.done ? "✅ Bitib" : d.time ? "Davam et" : "Yeni";
+      return `<button class="st-item" onclick="vxStory('${o.id}')"><img src="${o.cover}" alt="" loading="lazy"><div><b>${E(o.title)}</b><div class="s">${o.level} · ${pr}</div></div></button>`;
+    }).join("")}</div>`;
+  };
+
+  // ---------- Oxutma ----------
+  window.vxStory = async function (id) {
+    stop(); css();
+    const meta = STORIES.find(o => o.id === id); if (!meta) return;
+    setView("vstory", meta.title);
+    root().innerHTML = `<div class="pq-sk" style="height:200px"></div>`;
+    let D;
+    try { const r = await fetch(`stories/${id}/story.json`, { cache: "no-cache" }); if (!r.ok) throw new Error(r.status); D = await r.json(); }
+    catch (e) { root().innerHTML = `<div class="pq-card pq-empty">Hekayə yüklənmədi. İnterneti yoxlayın.</div>`; return; }
+    if (P().view !== "vstory") return;
+    const base = `stories/${id}/`, KEY = "st_" + id, S = Object.assign({ time: 0, known: [], learn: [], nosub: false }, ld(KEY));
+    const save = () => sv(KEY, S);
+    const lemma = w => { w = w.toLowerCase(); return D.dict[w] ? w : (D.forms[w] || w); };
+
+    root().innerHTML = `<div class="st-w">
+      <div class="st-scr" id="st-scr">${D.scenes.map((sc, i) => `<img src="${base + sc.img}" alt="Scene ${i + 1}">`).join("")}
+        <div class="st-fx st-rain"></div><div class="st-fx st-flash"></div><div class="st-fx st-glow"></div><canvas id="st-lv"></canvas>
+        <div class="st-tag" id="st-tag"></div><div class="st-sub" id="st-sub"></div></div>
+      <div class="st-bar">
+        <button id="st-prev" aria-label="Əvvəlki səhnə">⏮</button><button class="main" id="st-play">▶ Dinlə</button>
+        <button id="st-again">↺ Təkrar</button><button id="st-next" aria-label="Növbəti səhnə">⏭</button>
+        <select id="st-rate" aria-label="Sürət"><option value="0.75">0.75×</option><option value="0.9">0.9×</option><option value="1" selected>1×</option><option value="1.15">1.15×</option></select>
+        <button id="st-subb"></button><button id="st-hide">Mətni gizlət</button></div>
+      <div class="st-page" id="st-page"></div>
+      <p class="st-hint">Sözə toxun: tərcümə, tələffüz və səs açılacaq.</p>
+      <button class="st-go" id="st-toq">Suallara keç →</button>
+      <div id="st-qs" class="st-w" hidden><div class="st-h"><b>Mətn üzrə suallar</b></div><div id="st-ql" class="st-w"></div>
+        <div class="st-h"><b>Söz ehtiyatı</b></div><div class="st-card" id="st-voc"></div>
+        <div class="st-h"><b>Nəticə</b></div><div class="st-card" id="st-res"></div></div></div>`;
+
+    // mətn
+    const page = $("st-page"), SENTS = [];
+    D.scenes.forEach((sc, si) => {
+      const p = document.createElement("p"); p.className = "st-p"; p.innerHTML = `<b>${si + 1}</b>`;
+      sc.text.split(/(?<=[.!?][”’"]?)\s+/).forEach(s => {
+        const sp = document.createElement("span"); sp.className = "st-s"; const ws = [];
+        s.split(/([A-Za-z][A-Za-z’'-]*)/).forEach((part, k) => {
+          if (k % 2) { const w = document.createElement("span"); w.className = "st-wd"; w.textContent = part; w.dataset.l = lemma(part); ws.push(w); sp.appendChild(w); }
+          else sp.appendChild(document.createTextNode(part));
+        });
+        p.appendChild(sp); p.appendChild(document.createTextNode(" ")); SENTS.push({ scene: si, text: s, el: sp, ws });
+      });
+      page.appendChild(p);
+    });
+    const ALLW = [...page.querySelectorAll(".st-wd")], TM = D.timing, OK = ALLW.length === TM.words.length;
+    const wSent = []; SENTS.forEach((s, i) => s.ws.forEach(w => wSent[ALLW.indexOf(w)] = i));
+    const marks = () => ALLW.forEach(w => { w.classList.toggle("known", S.known.includes(w.dataset.l)); w.classList.toggle("learn", S.learn.includes(w.dataset.l)); });
+    marks();
+
+    const scr = $("st-scr"), imgs = [...scr.querySelectorAll("img")], au = new Audio(base + D.audio);
+    au.preload = "auto";
+    ST = { au, raf: 0, lraf: 0 };
+    let cur = -1, curS = -1, last = -1, playing = false;
+    const clearNow = () => page.querySelectorAll(".st-wd.now").forEach(e => e.classList.remove("now"));
+    function showSent(i) {
+      if (i < 0 || i >= SENTS.length) i = 0;
+      const s = SENTS[i];
+      if (cur !== s.scene) {
+        cur = s.scene; imgs.forEach((im, k) => im.classList.toggle("on", k === cur));
+        const fx = D.scenes[cur].fx || [];
+        scr.className = "st-scr" + fx.map(f => " f-" + f).join("") + (fx.includes("leaves") ? " calm" : "") + (S.nosub ? " nosub" : "");
+        $("st-tag").textContent = `Scene ${cur + 1} · ${D.scenes[cur].title}`;
+      }
+      if (curS !== i) { curS = i; page.querySelectorAll(".st-s.cur").forEach(e => e.classList.remove("cur")); s.el.classList.add("cur"); $("st-sub").textContent = s.text; }
+    }
+    const wordAt = t => { let k = 0; while (k + 1 < TM.words.length && TM.words[k + 1][1] <= t) k++; return k; };
+    function tick() {
+      if (!ST || ST.au !== au) return;
+      if (!document.getElementById("st-scr")) { stop(); return; }
+      const t = au.currentTime;
+      if (OK && !au.paused) {
+        let k = last >= 0 && TM.words[last][1] <= t ? last : 0;
+        while (k + 1 < TM.words.length && TM.words[k + 1][1] <= t) k++;
+        if (k !== last) { last = k; showSent(wSent[k]); clearNow(); ALLW[k].classList.add("now"); S.time = t; save(); }
+      }
+      ST.raf = requestAnimationFrame(tick);
+    }
+    const playB = $("st-play"), rateEl = $("st-rate");
+    function setPlay(v) { playing = v; playB.textContent = v ? "❚❚ Dayan" : "▶ Dinlə"; if (v) { au.playbackRate = +rateEl.value; au.play().catch(() => setPlay(false)); } else au.pause(); }
+    au.onended = () => { setPlay(false); clearNow(); S.time = 0; S.done = true; save(); $("st-toq").scrollIntoView({ behavior: "smooth", block: "center" }); };
+    playB.onclick = () => setPlay(!playing);
+    function seek(t) { au.currentTime = Math.max(0, t - 0.05); last = -1; clearNow(); showSent(wSent[wordAt(t)]); }
+    $("st-again").onclick = () => { seek(TM.words[SENTS[curS].ws.length ? ALLW.indexOf(SENTS[curS].ws[0]) : 0][1]); setPlay(true); };
+    $("st-prev").onclick = () => seek(TM.scenes[Math.max(0, cur - 1)]);
+    $("st-next").onclick = () => seek(TM.scenes[Math.min(D.scenes.length - 1, cur + 1)]);
+    rateEl.onchange = () => au.playbackRate = +rateEl.value;
+    $("st-hide").onclick = e => { const h = page.classList.toggle("hide"); e.target.textContent = h ? "Mətni göstər" : "Mətni gizlət"; };
+    const subB = $("st-subb");
+    const subSet = off => { S.nosub = off; save(); scr.classList.toggle("nosub", off); subB.textContent = off ? "Altyazını aç" : "Altyazını bağla"; };
+    subB.onclick = () => subSet(!S.nosub);
+    if (S.time && OK) { au.currentTime = S.time; showSent(wSent[wordAt(S.time)]); } else showSent(0);
+    subSet(!!S.nosub);
+    ST.raf = requestAnimationFrame(tick);
+
+    // payız yarpaqları (sakit səhnələr)
+    (function () {
+      const cv = $("st-lv"); if (!cv || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      const cx = cv.getContext("2d"), C = ["#d9822b", "#c4562a", "#e8b04a", "#a8452a", "#d99a3c"]; let W = 0, H = 0, lt = 0;
+      const mk = top => ({ x: Math.random(), y: top ? -0.1 - Math.random() * 0.6 : Math.random(), vy: 0.018 + Math.random() * 0.02, ph: Math.random() * 6.3, amp: 0.02 + Math.random() * 0.03, r: Math.random() * 6.3, vr: (Math.random() - .5) * 1.2, s: 0.012 + Math.random() * 0.012, c: C[Math.floor(Math.random() * C.length)] });
+      const L = Array.from({ length: 7 }, () => mk(false));
+      const size = () => { const r = cv.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1); W = cv.width = r.width * d; H = cv.height = r.height * d; };
+      size(); if (window.ResizeObserver) new ResizeObserver(size).observe(cv);
+      function loop(ts) {
+        if (!ST || ST.au !== au) return;
+        const t = ts / 1000, dt = Math.min(0.05, t - lt || 0); lt = t; cx.clearRect(0, 0, W, H);
+        if (scr.classList.contains("f-leaves")) L.forEach((l, i) => {
+          l.y += l.vy * dt * (au.paused ? 0.6 : 1); l.r += l.vr * dt; if (l.y > 1.1) L[i] = l = mk(true);
+          const x = (l.x + Math.sin(t * 0.9 + l.ph) * l.amp) * W, y = l.y * H, s = l.s * W;
+          cx.save(); cx.translate(x, y); cx.rotate(l.r + Math.sin(t * 1.3 + l.ph) * 0.6); cx.scale(1, 0.55 + 0.45 * Math.abs(Math.cos(t * 1.1 + l.ph)));
+          cx.fillStyle = l.c; cx.globalAlpha = 0.85; cx.beginPath(); cx.moveTo(-s, 0); cx.quadraticCurveTo(0, -s * 0.75, s, 0); cx.quadraticCurveTo(0, s * 0.75, -s, 0); cx.fill();
+          cx.strokeStyle = "rgba(80,40,10,.5)"; cx.lineWidth = Math.max(1, s * 0.08); cx.beginPath(); cx.moveTo(-s * 1.25, 0); cx.lineTo(s * 0.8, 0); cx.stroke(); cx.restore();
+        });
+        ST.lraf = requestAnimationFrame(loop);
+      }
+      ST.lraf = requestAnimationFrame(loop);
+    })();
+
+    // söz pəncərəsi
+    const tts = t => { try { const sy = window.speechSynthesis; sy.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang = "en-GB"; u.rate = .85; sy.speak(u); } catch (e) {} };
+    let sel = null, selI = -1, sayT = 0;
+    function sayWord() {
+      if (!OK || selI < 0) return tts(sel || "");
+      const [, a, b] = TM.words[selI], back = au.currentTime; setPlay(false);
+      au.currentTime = Math.max(0, a - 0.04); au.playbackRate = 1; au.play().catch(() => {});
+      clearTimeout(sayT); sayT = setTimeout(() => { au.pause(); au.currentTime = back; au.playbackRate = +rateEl.value; }, (b - a + 0.12) * 1000);
+    }
+    page.addEventListener("click", e => {
+      const w = e.target.closest(".st-wd"); if (!w || page.classList.contains("hide")) return;
+      setPlay(false); sel = w.dataset.l; selI = ALLW.indexOf(w); const d = D.dict[sel];
+      let sh = $("st-sheet"); if (sh) sh.remove();
+      const ex = E(w.closest(".st-s").textContent).replace(new RegExp("\\b" + w.textContent.replace(/[-’']/g, ".") + "\\b"), m => `<strong>${m}</strong>`);
+      document.body.insertAdjacentHTML("beforeend", `<div class="st-sheet" id="st-sheet" role="dialog"><div class="in">
+        <div class="top"><button class="st-spk" id="st-spk" aria-label="Səsləndir">🔊</button><div><h3>${E(w.textContent)}</h3><div class="ipa">${d ? "/" + E(d[0]) + "/" : ""}</div></div><button class="st-x" id="st-sx" aria-label="Bağla">×</button></div>
+        <div class="az">${d ? E(d[1]) : "Tərcümə hələ əlavə olunmayıb"}</div><div class="ex">${ex}</div>
+        <div class="two"><button class="st-k" id="st-sk">Bilirəm</button><button class="st-l" id="st-sl">Öyrən</button></div></div></div>`);
+      const close = () => { const x = $("st-sheet"); if (x) x.remove(); };
+      $("st-spk").onclick = sayWord; $("st-sx").onclick = close;
+      const mark = (a, b) => { S[a] = [...new Set([...S[a], sel])]; S[b] = S[b].filter(x => x !== sel); save(); marks(); close(); buildVocab(); };
+      $("st-sk").onclick = () => mark("known", "learn"); $("st-sl").onclick = () => mark("learn", "known");
+      sayWord();
+    });
+
+    // suallar
+    const Q = D.questions, A = {}, LT = "ABCDE", ql = $("st-ql");
+    Q.forEach((q, i) => {
+      const c = document.createElement("div"); c.className = "st-card";
+      let h = `<h4>${i + 1}. ${E(q.t)}${q.sub ? `<br><em>${E(q.sub)}</em>` : ""}</h4>`;
+      if (q.nums) h += `<ol class="st-nums">${q.nums.map(n => `<li>${E(n)}</li>`).join("")}</ol>`;
+      if (q.o) h += `<div class="st-opts">${q.o.map((o, k) => `<button data-k="${k}">${LT[k]}) ${E(o)}</button>`).join("")}</div>`;
+      if (q.fill) h += `<div class="st-row"><input type="text" placeholder="Cavabı yaz" autocomplete="off" style="flex:1;min-width:0"><button data-chk>Yoxla</button></div>`;
+      if (q.open) h += `<textarea placeholder="Cavabını yaz"></textarea><div class="st-row"><button data-show>Nümunə cavab</button></div>`;
+      c.innerHTML = h + `<div class="st-fb"></div>`; ql.appendChild(c);
+      const fb = c.querySelector(".st-fb");
+      if (q.o) c.querySelectorAll(".st-opts button").forEach(b => b.onclick = () => {
+        if (i in A) return; const k = +b.dataset.k; A[i] = k === q.a;
+        c.querySelectorAll(".st-opts button").forEach((x, j) => { x.disabled = true; if (j === q.a) x.classList.add("right"); else if (j === k) x.classList.add("wrong"); });
+        fb.className = "st-fb " + (A[i] ? "good" : "bad"); fb.textContent = (A[i] ? "Düzdür. " : "Səhvdir. Düzgün cavab: " + LT[q.a] + ". ") + q.why; result();
+      });
+      if (q.fill) c.querySelector("[data-chk]").onclick = () => {
+        const v = c.querySelector("input").value.trim().toLowerCase(); if (!v) return;
+        A[i] = q.fill.includes(v); fb.className = "st-fb " + (A[i] ? "good" : "bad"); fb.textContent = (A[i] ? "Düzdür. " : "Səhvdir. Cavab: " + q.fill[0] + ". ") + q.why; result();
+      };
+      if (q.open) c.querySelector("[data-show]").onclick = () => { fb.className = "st-fb"; fb.textContent = "Nümunə: " + q.open; };
+    });
+    $("st-toq").onclick = () => { setPlay(false); $("st-qs").hidden = false; $("st-qs").scrollIntoView({ behavior: "smooth" }); };
+
+    // söz tapşırığı
+    const POOL = Object.keys(D.dict).filter(k => k.length > 3 && D.dict[k][1].length > 2);
+    let V = { list: [], i: 0, ok: 0 };
+    function buildVocab() { V = { list: (S.learn.length ? S.learn : D.vocabDefault).filter(w => D.dict[w]).slice(0, 10), i: 0, ok: 0 }; vq(); }
+    function vq() {
+      const box = $("st-voc"); if (!box) return;
+      if (V.i >= V.list.length) { box.innerHTML = `<h4>Söz tapşırığı bitdi: ${V.ok} / ${V.list.length}</h4><div class="st-row"><button id="st-vr">Yenidən</button></div>`; $("st-vr").onclick = buildVocab; result(); return; }
+      const w = V.list[V.i], dir = V.i % 2, opts = [w];
+      while (opts.length < 4) { const r = POOL[Math.floor(Math.random() * POOL.length)]; if (!opts.includes(r)) opts.push(r); }
+      opts.sort(() => Math.random() - .5);
+      box.innerHTML = `<h4>${V.i + 1}/${V.list.length} · ${dir ? "Azərbaycan → İngilis" : "İngilis → Azərbaycan"}</h4>
+        <div style="font:400 24px Georgia,serif">${E(dir ? D.dict[w][1].split(/[;,]/)[0] : w)}</div>
+        <div class="st-opts">${opts.map(o => `<button data-w="${E(o)}">${E(dir ? o : D.dict[o][1])}</button>`).join("")}</div>`;
+      box.querySelectorAll(".st-opts button").forEach(b => b.onclick = () => {
+        if (b.dataset.w === w) V.ok++;
+        box.querySelectorAll(".st-opts button").forEach(x => { x.disabled = true; if (x.dataset.w === w) x.classList.add("right"); else if (x === b) x.classList.add("wrong"); });
+        tts(w); setTimeout(() => { V.i++; vq(); }, 1100);
+      });
+    }
+    function result() {
+      const auto = Q.map((q, i) => (q.o || q.fill) ? i : -1).filter(i => i >= 0), done = auto.filter(i => i in A).length, ok = auto.filter(i => A[i]).length;
+      const r = $("st-res"); if (!r) return;
+      r.innerHTML = `<div class="st-row" style="align-items:flex-end;gap:18px"><div><div class="st-score">${ok}/${auto.length}</div><div class="st-fb">Mətn sualları (${done}/${auto.length})</div></div>
+        <div><div class="st-score">${V.i >= V.list.length ? V.ok + "/" + V.list.length : "–"}</div><div class="st-fb">Söz tapşırığı</div></div></div>
+        ${S.learn.length ? `<div class="st-fb">Təkrar ediləcək sözlər:</div><div class="st-chips">${S.learn.map(w => `<span>${E(w)} – ${D.dict[w] ? E(D.dict[w][1].split(/[;,]/)[0]) : ""}</span>`).join("")}</div>` : `<div class="st-fb">“Öyrən” basdığın sözlər burada toplanacaq.</div>`}`;
+    }
+    buildVocab(); result();
+  };
+
+  // Geri düyməsi: hekayə → siyahı → İngilis dili mərkəzi
+  const oBack = window.pqBack;
+  window.pqBack = function () {
+    const p = P();
+    if (!p.sess) {
+      if (p.view === "vstory") { stop(); return window.vxStories(); }
+      if (p.view === "vstories") { stop(); return window.vxHub(p.vsubj); }
+    }
+    return oBack.apply(this, arguments);
+  };
+  // başqa səhifəyə keçəndə səsi dayandır
+  const oHome = window.pqHome;
+  if (typeof oHome === "function") window.pqHome = function () { stop(); return oHome.apply(this, arguments); };
 })();
 </script>
 
