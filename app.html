@@ -14229,5 +14229,89 @@ function homeExtra(){
 #stab-practice .vx-fix{top:114px;margin:0 -20px;padding:8px 20px 10px}
 @media(max-width:480px){#stab-practice>.v2-backrow{margin:-8px -14px 6px;padding:8px 14px}#stab-practice .vx-fix{margin:0 -14px;padding:8px 14px 10px}}
 </style>
+<script>
+/* ===== 19.10: real səs faylları (sfx/ qovluğu) ===== */
+(function(){
+  const VOL={tap:.45,key:.5,tick:.6,back:.7,saved:.8};
+  const MAP={door:"win"}; // giriş = təbrik səsi
+  const on=()=>{try{return localStorage.getItem("ttm_sound")!=="0";}catch(e){return true;}};
+  let AC=null; const BUF={}, LAST={}; let tapSrc=null, lastAny=0;
+  function ctx(){ if(!AC){ const C=window.AudioContext||window.webkitAudioContext; if(!C) return null; AC=new C(); } if(AC.state==="suspended") AC.resume(); return AC; }
+  function load(n){
+    if(BUF[n]) return BUF[n];
+    return BUF[n]=fetch("sfx/"+n+".mp3").then(r=>r.arrayBuffer()).then(b=>new Promise((ok,no)=>ctx().decodeAudioData(b,ok,no))).catch(()=>{delete BUF[n];return null;});
+  }
+  function play(k){
+    if(!on()) return;
+    const n=MAP[k]||k, now=Date.now();
+    if(LAST[n] && now-LAST[n]<250) return; // eyni səs ikiqat çalmasın
+    LAST[n]=now;
+    if(k!=="tap" && tapSrc){ try{tapSrc.stop();}catch(e){} tapSrc=null; }
+    if(k!=="tap" && k!=="key" && k!=="tick") lastAny=now;
+    const c=ctx(); if(!c) return;
+    Promise.resolve(load(n)).then(buf=>{
+      if(!buf || (k==="tap" && lastAny>=now)) return; // düymə başqa səs çaldırıbsa, tık çalmasın
+      const s=c.createBufferSource(), g=c.createGain(); g.gain.value=VOL[k]||1;
+      s.buffer=buf; s.connect(g); g.connect(c.destination); s.start();
+      if(k==="tap") tapSrc=s;
+    });
+  }
+  window.ttmSound=play;
+  // köhnə yarış oyunu səsləri də eyni sistemdən (Səs düyməsinə tabe)
+  window.playCorrectSound=()=>play("ok"); window.playWrongSound=()=>play("no"); window.playWinSound=()=>play("win");
+  try{ playCorrectSound=window.playCorrectSound; playWrongSound=window.playWrongSound; playWinSound=window.playWinSound; }catch(e){}
+  // ilk toxunuşda bütün səsləri hazırla
+  addEventListener("pointerdown",function pre(){ removeEventListener("pointerdown",pre,true); if(!ctx()) return;
+    ["tap","key","back","win","logout","start","ok","no","tick","timeup","done","lose","notify","saved"].forEach(load); },true);
+
+  // düymələr: geri/bağla, çıxış, adi düymə
+  const BACK=/^(←|‹|✕|×|✖|Geri|Bağla|Ləğv et|Imtina|İmtina)$/;
+  document.addEventListener("click",e=>{
+    const b=e.target.closest&&e.target.closest("button,a.btn-small,.a-qc,.v2-more-row,.rs-row,.pq-tc,.sq-subj,.v2-sc,.v2-trow,.door-card");
+    if(!b || b.disabled || b.closest(".tg[data-k]")) return;
+    if(/^logout-btn-/.test(b.id)) return play("logout");
+    const t=(b.textContent||"").trim(), cls=(b.className||"")+" "+(b.id||"");
+    if(BACK.test(t) || /back/i.test(cls) || /^←/.test(t)) return play("back");
+    play("tap");
+  },true);
+  addEventListener("popstate",()=>play("back"));
+
+  // sınaq: başlama, son 10 saniyə, vaxt bitdi
+  if(typeof startExamTimer==="function"){
+    const o=startExamTimer; let iv=null;
+    startExamTimer=function(){
+      const r=o.apply(this,arguments);
+      play("start"); clearInterval(iv); let ls=-1;
+      iv=setInterval(()=>{
+        const box=document.getElementById("exam-timer-box");
+        if(!box||!box.offsetParent||typeof examEndTime==="undefined"||!examEndTime){clearInterval(iv);return;}
+        const rem=examEndTime-Date.now(), sec=Math.ceil(rem/1000);
+        if(rem<=0){clearInterval(iv);play("timeup");return;}
+        if(sec<=10&&sec!==ls){ls=sec;play("tick");}
+      },200);
+      return r;
+    };
+  }
+  // yarış: uduzdu
+  if(typeof endRace==="function"){
+    const o=endRace; endRace=function(){ try{ if(racePosition<=0) play("lose"); }catch(e){} return o.apply(this,arguments); };
+  }
+  // yadda saxlandı / xəta bildirişləri
+  if(typeof toast==="function"){
+    const o=toast; toast=function(m){ const s=String(m||"");
+      if(/alınmadı|xəta|yoxlayın|uğursuz/i.test(s)) play("no");
+      else if(/saxlan|göndərildi|əlavə edildi|yeniləndi|silindi|kopyalandı/i.test(s)) play("saved");
+      return o.apply(this,arguments); };
+  }
+  // yeni bildiriş (zəngdə qırmızı nöqtə yananda)
+  const t0=Date.now();
+  ["nt-dot","a-bell-dot"].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return; let was=el.style.display==="block";
+    new MutationObserver(()=>{ const now=el.style.display==="block";
+      if(now&&!was&&Date.now()-t0>1500){ const w=Math.max(0,1500-(Date.now()-lastAny)); setTimeout(()=>play("notify"),w); }
+      was=now; }).observe(el,{attributes:true,attributeFilter:["style"]});
+  });
+})();
+</script>
 </body>
 </html>
