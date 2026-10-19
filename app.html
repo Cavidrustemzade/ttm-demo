@@ -13687,7 +13687,8 @@ function homeExtra(){
 /* ===== İngilis dili: Animasiyalı hekayələr (stories/<id>/story.json + şəkillər + səs) ===== */
 (function () {
   const STORIES = [
-    { id: "kara", title: "The Last Light of Kara Island", level: "B1", cover: "stories/kara/scene1.webp" }
+    { id: "kara", title: "The Last Light of Kara Island", level: "B1", cover: "stories/kara/scene1.webp" },
+    { id: "holmes", title: "The Case of the Blue Ink", level: "B1", cover: "stories/holmes/scene1.webp" }
   ];
   const $ = id => document.getElementById(id);
   const P = () => window._PQ || {};
@@ -13720,7 +13721,13 @@ function homeExtra(){
 @keyframes strain{to{background-position:-20px 60px}}
 .st-flash{background:#dfe8ff;animation:stfl 7s infinite}
 @keyframes stfl{0%,88%,92%,100%{opacity:0}89%{opacity:.35}91%{opacity:.15}}
-.st-glow{background:radial-gradient(circle at 60% 50%,rgba(255,190,90,.35),transparent 30%);animation:stfk 1.6s infinite}
+.st-glow{background:radial-gradient(circle at var(--gx,60%) var(--gy,50%),rgba(255,190,90,.35),transparent 30%);animation:stfk 1.6s infinite}
+.st-fire{background:radial-gradient(ellipse 34% 46% at var(--fx,95%) var(--fy,50%),rgba(255,140,50,.42),rgba(255,120,40,.12) 55%,transparent 75%);mix-blend-mode:screen;animation:stfire 2.3s infinite}
+@keyframes stfire{0%,100%{opacity:.7}18%{opacity:.95}35%{opacity:.62}52%{opacity:1}70%{opacity:.75}86%{opacity:.9}}
+.st-fog{background:radial-gradient(ellipse 45% 30% at 20% 65%,rgba(205,212,225,.30),transparent 70%),radial-gradient(ellipse 50% 28% at 75% 30%,rgba(205,212,225,.24),transparent 70%),radial-gradient(ellipse 60% 25% at 50% 90%,rgba(200,208,222,.28),transparent 70%);background-size:200% 100%;animation:stfog 26s ease-in-out infinite alternate}
+@keyframes stfog{from{background-position:0 0,0 0,0 0}to{background-position:60% 0,-50% 0,35% 0}}
+.st-vig{background:radial-gradient(ellipse at center,transparent 55%,rgba(10,5,0,.45))}
+.st-scr.f-fire .st-fire,.st-scr.f-fog .st-fog,.st-scr.f-vignette .st-vig,.st-scr.f-dust canvas{opacity:1}
 @keyframes stfk{0%,100%{opacity:.75}40%{opacity:1}60%{opacity:.6}}
 .st-scr.f-rain .st-rain,.st-scr.f-flash .st-flash,.st-scr.f-glow .st-glow,.st-scr.f-leaves canvas{opacity:1}
 .st-scr canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0;transition:opacity 1.5s}
@@ -13768,7 +13775,7 @@ function homeExtra(){
 .st-h{font-size:18px;margin:6px 0 0}
 .st-score{font:600 34px Georgia,serif;color:#b7791f;line-height:1}
 .st-chips{display:flex;flex-wrap:wrap;gap:6px}.st-chips span{background:#eef2f7;border-radius:999px;padding:3px 10px;font-size:13px}
-@media (prefers-reduced-motion:reduce){.st-scr img.on,.st-rain,.st-flash,.st-glow{animation:none}}`;
+@media (prefers-reduced-motion:reduce){.st-scr img.on,.st-rain,.st-flash,.st-glow,.st-fire,.st-fog{animation:none}}`;
     document.head.appendChild(s);
   }
 
@@ -13807,7 +13814,7 @@ function homeExtra(){
 
     root().innerHTML = `<div class="st-w">
       <div class="st-top" id="st-top"><div class="st-scr" id="st-scr">${D.scenes.map((sc, i) => `<img src="${base + sc.img}" alt="Scene ${i + 1}">`).join("")}
-        <div class="st-fx st-rain"></div><div class="st-fx st-flash"></div><div class="st-fx st-glow"></div><canvas id="st-lv"></canvas>
+        <div class="st-fx st-rain"></div><div class="st-fx st-flash"></div><div class="st-fx st-glow"></div><div class="st-fx st-fire"></div><div class="st-fx st-fog"></div><div class="st-fx st-vig"></div><canvas id="st-lv"></canvas>
         <div class="st-tag" id="st-tag"></div><div class="st-sub" id="st-sub"></div></div>
       <div class="st-bar">
         <button id="st-prev" aria-label="Əvvəlki səhnə">⏮</button><button class="main" id="st-play">▶ Dinlə</button>
@@ -13824,7 +13831,9 @@ function homeExtra(){
     // mətn
     const page = $("st-page"), SENTS = [];
     D.scenes.forEach((sc, si) => {
-      const p = document.createElement("p"); p.className = "st-p"; p.innerHTML = `<b>${si + 1}</b>`;
+      const pn = sc.para || si + 1, prev = page.lastElementChild;
+      const p = prev && prev.dataset.para == pn ? prev : document.createElement("p");
+      if (p !== prev) { p.className = "st-p"; p.dataset.para = pn; p.innerHTML = `<b>${pn}</b>`; }
       sc.text.split(/(?<=[.!?][”’"]?)\s+/).forEach(s => {
         const sp = document.createElement("span"); sp.className = "st-s"; const ws = [];
         s.split(/([A-Za-z][A-Za-z’'-]*)/).forEach((part, k) => {
@@ -13851,7 +13860,12 @@ function homeExtra(){
       if (cur !== s.scene) {
         cur = s.scene; imgs.forEach((im, k) => im.classList.toggle("on", k === cur));
         const fx = D.scenes[cur].fx || [];
-        scr.className = "st-scr" + fx.map(f => " f-" + f).join("") + (fx.includes("leaves") ? " calm" : "") + (S.nosub ? " nosub" : "");
+        const sc = D.scenes[cur], slow = sc.slow != null ? sc.slow : fx.includes("leaves");
+        scr.className = "st-scr" + fx.map(f => " f-" + f).join("") + (slow ? " calm" : "") + (S.nosub ? " nosub" : "");
+        const g = sc.glow || [60, 50], fp = sc.fire || [95, 50], fo = sc.focus || [70, 45];
+        scr.style.setProperty("--gx", g[0] + "%"); scr.style.setProperty("--gy", g[1] + "%");
+        scr.style.setProperty("--fx", fp[0] + "%"); scr.style.setProperty("--fy", fp[1] + "%");
+        imgs[cur].style.transformOrigin = fo[0] + "% " + fo[1] + "%";
         $("st-tag").textContent = `Scene ${cur + 1} · ${D.scenes[cur].title}`;
       }
       if (curS !== i) { curS = i; page.querySelectorAll(".st-s.cur").forEach(e => e.classList.remove("cur")); s.el.classList.add("cur"); $("st-sub").textContent = s.text; }
@@ -13917,6 +13931,8 @@ function homeExtra(){
       const cx = cv.getContext("2d"), C = ["#d9822b", "#c4562a", "#e8b04a", "#a8452a", "#d99a3c"]; let W = 0, H = 0, lt = 0;
       const mk = top => ({ x: Math.random(), y: top ? -0.1 - Math.random() * 0.6 : Math.random(), vy: 0.018 + Math.random() * 0.02, ph: Math.random() * 6.3, amp: 0.02 + Math.random() * 0.03, r: Math.random() * 6.3, vr: (Math.random() - .5) * 1.2, s: 0.012 + Math.random() * 0.012, c: C[Math.floor(Math.random() * C.length)] });
       const L = Array.from({ length: 7 }, () => mk(false));
+      const mkD = () => ({ x: Math.random(), y: Math.random(), vx: (Math.random() - .5) * 0.008, vy: -0.002 - Math.random() * 0.006, ph: Math.random() * 6.3, r: 0.6 + Math.random() * 1.6, a: 0.25 + Math.random() * 0.45 });
+      const DU = Array.from({ length: 34 }, mkD);
       const size = () => { const r = cv.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1); W = cv.width = r.width * d; H = cv.height = r.height * d; };
       size(); if (window.ResizeObserver) new ResizeObserver(size).observe(cv);
       function loop(ts) {
@@ -13929,6 +13945,13 @@ function homeExtra(){
           cx.fillStyle = l.c; cx.globalAlpha = 0.85; cx.beginPath(); cx.moveTo(-s, 0); cx.quadraticCurveTo(0, -s * 0.75, s, 0); cx.quadraticCurveTo(0, s * 0.75, -s, 0); cx.fill();
           cx.strokeStyle = "rgba(80,40,10,.5)"; cx.lineWidth = Math.max(1, s * 0.08); cx.beginPath(); cx.moveTo(-s * 1.25, 0); cx.lineTo(s * 0.8, 0); cx.stroke(); cx.restore();
         });
+        if (scr.classList.contains("f-dust")) DU.forEach((p, i) => {
+          p.x += (p.vx + Math.sin(t * 0.5 + p.ph) * 0.0025) * dt * 4; p.y += p.vy * dt * 4;
+          if (p.y < -0.05 || p.x < -0.05 || p.x > 1.05) { DU[i] = p = mkD(); p.y = 1.02; }
+          const tw = 0.55 + 0.45 * Math.sin(t * 1.7 + p.ph), rr = p.r * Math.min(2, devicePixelRatio || 1);
+          cx.globalAlpha = p.a * tw; cx.fillStyle = "#ffd9a0"; cx.beginPath(); cx.arc(p.x * W, p.y * H, rr, 0, 6.283); cx.fill();
+        });
+        cx.globalAlpha = 1;
         ST.lraf = requestAnimationFrame(loop);
       }
       ST.lraf = requestAnimationFrame(loop);
