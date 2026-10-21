@@ -14509,7 +14509,19 @@ function homeExtra(){
   const $=id=>document.getElementById(id);
   const gs=$("gr-group"), es=$("grading-exam-select"); if(!gs||!es) return;
   let busy=false;
-  function fillG(){ const v=gs.value; gs.innerHTML='<option value="">Bütün qruplar</option>'+(groupsCache||[]).map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join(""); gs.value=v; }
+  const NM={};
+  function fillG(){
+    const m={}; (groupsCache||[]).forEach(g=>m[g.id]=g.name);
+    (examsCache||[]).forEach(e=>(e.groupIds||(e.groupId?[e.groupId]:[])).forEach(id=>{ if(!(id in m)) m[id]=NM[id]; }));
+    const miss=Object.keys(m).filter(id=>m[id]===undefined&&!(id in NM));
+    miss.forEach(id=>{ NM[id]=null; db.collection("groups").doc(id).get().then(d=>{ const x=d.exists?d.data():null; NM[id]=(x&&x.teacherId===currentTeacherId)?(x.name||"Qrup"):null; if(NM[id]) fillG(); }).catch(()=>{ NM[id]=null; }); });
+    const ids=Object.keys(m).filter(id=>m[id]);
+    if(ids.length===gs.options.length-1) return;
+    const v=gs.value;
+    gs.innerHTML='<option value="">Bütün qruplar</option>'+ids.sort((a,b)=>String(m[a]).localeCompare(String(m[b]),"az")).map(id=>`<option value="${id}">${esc(m[id])}</option>`).join("");
+    gs.value=v;
+  }
+  setInterval(()=>{ try{ fillG(); }catch(e){} },1500);
   function filt(){
     if(busy) return; busy=true;
     const g=gs.value, v=es.value;
