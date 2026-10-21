@@ -5756,7 +5756,7 @@ function loadStudentExams(uid, groupId) {
   }, err => console.error("exams xətası:", err));
 
   db.collection("examAttempts").where("studentId", "==", uid).onSnapshot(snap => {
-    studentAttemptsCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    studentAttemptsCache = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(a => !(a.source === "paper" && a.confirmed === false));
     renderStudentExamList();
   }, err => console.error("examAttempts xətası:", err));
 }
@@ -9790,7 +9790,7 @@ function homeExtra(){
       <div class="pr-chips">${[["all", "Hamısı", all.length], ["man", "Əl ilə", manual], ["det", "Ətraflı", all.filter(x => x.q.det).length], ["ready", "Hazır", all.filter(x => !x.p.n && !x.p.miss && !x.e.saved).length], ["saved", "Saxlanılıb", saved]].map(c => `<button class="${F.st === c[0] ? "on" : ""}" onclick="ppF('st','${c[0]}')">${c[1]} ${c[2]}</button>`).join("")}</div>
       <div class="pr-grid">${list.length ? list.map((x, i) => {
         const e = x.e, q = x.q, p = x.p;
-        const st = e.saved ? ["Saxlanılıb", "g"] : p.miss ? [p.miss + " səhifə çatmır", "w"] : (p.n ? [p.n + " təsdiq lazım", "w"] : ["Hazır", "b"]);
+        const st = e.saved ? (e.conf ? ["Təsdiqlənib", "g"] : ["Saxlanılıb · ilkin", "b"]) : p.miss ? [p.miss + " səhifə çatmır", "w"] : (p.n ? [p.n + " təsdiq lazım", "w"] : ["Hazır", "b"]);
         return `<div class="pr-c" style="animation-delay:${Math.min(i, 8) * 35}ms">
           <div class="pr-ct"><span class="pr-av">${e.stu ? ini(e.stu.fullName) : "?"}</span><div style="flex:1;min-width:0"><b>${e.stu ? esc(e.stu.fullName) : "Naməlum şagird"}</b>
             <div class="pr-s">${e.stu ? groupName(e.stu.groupId) + " · " + OMR.numCode(e.stu.id) : "Kod oxunmadı — şagirdi seçin"}</div></div>
@@ -9804,10 +9804,16 @@ function homeExtra(){
         <div class="pr-s" style="margin:8px 0 4px">Ən çox səhv edilən</div>${top(W, 5).map(([i, c]) => `<div class="pr-bar"><span>${+i + 1}. sual</span><i><em style="width:${c / known.length * 100}%"></em></i><span>${c}</span></div>`).join("") || `<div class="pr-s">Yoxdur</div>`}
         <div class="pr-s" style="margin:10px 0 4px">Ən çox boş buraxılan</div>${top(Bk, 3).map(([i, c]) => `<div class="pr-bar"><span>${+i + 1}. sual</span><i><em style="width:${c / known.length * 100}%;background:#94A3B8"></em></i><span>${c}</span></div>`).join("") || `<div class="pr-s">Yoxdur</div>`}
         <div class="pr-s" style="margin:10px 0 4px">Nəticə paylanması</div><div class="pr-dist">${["0–25%", "25–50%", "50–75%", "75–100%"].map((l, i) => `<div><i style="height:${known.length ? dist[i] / known.length * 60 + 4 : 4}px"></i><b>${dist[i]}</b><span>${l}</span></div>`).join("")}</div></div>` : ""}
+      ${all.some(x => x.e.saved && !x.e.conf) ? `<button class="pq-go" style="margin:0;background:linear-gradient(135deg,#16A34A,#15803D)" onclick="ppConfirm()">Nəticələri təsdiqlə — şagirdlərə göstər</button>` : ""}
       ${all.some(x => x.e.saved && x.q.det) ? `<button class="pq-ghost" onclick="ppClose();adminGo('tab-scores','grading')">Ətraflı sualları yoxla →</button>` : ""}
       ${all.some(x => !x.e.saved && !x.p.n && !x.p.miss && x.e.stu) ? `<div class="pr-foot"><button class="pq-go" style="margin:0" onclick="ppSaveAll()">Hazır olanları saxla</button></div>` : ""}
     </div>`;
   }
+  window.ppConfirm = async () => {
+    if (!S) return;
+    const n = await ttmConfirmExam(S.ex.id);
+    if (n !== null) { Object.values(S.list).forEach(e => { if (e.saved) e.conf = true; }); ppRenderList(); }
+  };
   window.ppF = (k, v) => { if (!S) return; S.f[k] = v; ppRenderList(); if (k === "q") { const i = document.querySelector(".pr-tools input"); if (i) { i.focus(); i.setSelectionRange(v.length, v.length); } } };
 
   // ---------- baxış / təsdiq ekranı ----------
@@ -9922,7 +9928,7 @@ function homeExtra(){
       examId: ex.id, studentId: e.stu.id, groupId: e.stu.groupId || null, topic: ex.topic || "", teacherId: currentTeacherId,
       answers: b.answers, perQuestion: b.pq, correctCount: b.correct, totalCount: b.total, score: b.score,
       detailedCount: b.det, detailedGradedCount: b.detG, pendingGrading: b.detG < b.det,
-      source: "paper", autoSubmitted: false, submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+      source: "paper", confirmed: false, autoSubmitted: false, submittedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     for (const ph of b.photos) {
       await db.collection("detailedAnswers").doc(`${attId}_${ph.i}`).set({
@@ -9931,7 +9937,7 @@ function homeExtra(){
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
     }
-    e.saved = true;
+    e.saved = true; e.conf = false;
     return true;
   }
   const errMsg = err => err && err.code === "permission-denied" ? "Firestore icazəsi yoxdur (qaydalara müəllim yazısı əlavə olunmalıdır)" : (errAz(err) || err);
@@ -10018,6 +10024,10 @@ function homeExtra(){
       <div class="a-qc" style="background:linear-gradient(135deg,#10b981,#047857);" onclick="adminGo('tab-scores','grading')"><div class="ic">✍️</div><div><b>Ətraflı yoxlanış</b><span>Yazılmış həllərə bal ver</span></div></div>
       <div class="a-qc" style="background:linear-gradient(135deg,#6366f1,#4338ca);" onclick="document.getElementById('ey-codes').scrollIntoView({behavior:'smooth'})"><div class="ic">🔢</div><div><b>Şagird kodları</b><span>Ümumi kart üçün 6 rəqəm</span></div></div>
     </div>
+    <div class="card" id="ey-conf"><h3>Nəticələri təsdiqlə</h3>
+      <p class="muted-note" style="margin-bottom:10px;">Kağız nəticələri əvvəl ilkin olur — şagird görmür. Təsdiqləyəndən sonra şagirdin panelində görünür.</p>
+      <div class="field" style="margin-bottom:10px;"><select id="ey-cex" onchange="eyConfInfo()"></select></div>
+      <div id="ey-cinfo" class="muted-note"></div></div>
     <div class="card" id="ey-codes"><h3>Şagird kodları</h3>
       <p class="muted-note" style="margin-bottom:10px;">Ümumi cavab kartında şagird bu kodu yazıb kodlaşdırır, sistem vərəqin kimə aid olduğunu özü tapır. Kod şagirdin öz panelində də görünür.</p>
       <div class="field" style="margin-bottom:10px;"><select id="ey-group" onchange="eyCodes()"></select></div>
@@ -14509,7 +14519,9 @@ function homeExtra(){
   }
   new MutationObserver(filt).observe(es,{childList:true});
   window.grGroup=()=>{ filt(); const q=$("grading-question-select"); if(q&&q.value!=="") q.dispatchEvent(new Event("change")); };
-  const o=fillGroupSelects; fillGroupSelects=function(){ const r=o.apply(this,arguments); try{fillG();}catch(e){} return r; };
+  const o=fillGroupSelects; fillGroupSelects=function(){ try{fillG();}catch(e){} return o.apply(this,arguments); };
+  ["focus","pointerdown","mousedown"].forEach(ev=>gs.addEventListener(ev,()=>{ if(gs.options.length<=1) fillG(); }));
+  new MutationObserver(()=>{ if(gs.options.length<=1) fillG(); }).observe(es,{childList:true});
   fillG();
 })();
 </script>
@@ -14518,5 +14530,40 @@ function homeExtra(){
 .gr-q{background:#F8FAFC;border:1px solid var(--color-gray);border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:14px;line-height:1.5}.gr-q b{display:block;color:var(--color-primary);font-size:12.5px;margin-bottom:4px}.gr-q img{display:block;max-width:100%;max-height:220px;margin-top:6px;border-radius:8px;cursor:zoom-in}
 .gr-nav button:disabled{opacity:.4}
 </style>
+<script>
+/* ===== Kağız nəticələrinin təsdiqi ===== */
+(function(){
+  const $=id=>document.getElementById(id);
+  async function paperOf(examId){
+    const sn=await db.collection("examAttempts").where("examId","==",examId).get();
+    return sn.docs.filter(d=>d.data().source==="paper");
+  }
+  // null = ləğv edildi, rəqəm = təsdiqlənən say
+  window.ttmConfirmExam=async(examId)=>{
+    let docs;
+    try{ docs=(await paperOf(examId)).filter(d=>d.data().confirmed===false); }catch(e){ toast("Xəta: "+errAz(e)); return null; }
+    if(!docs.length){ toast("Təsdiq gözləyən nəticə yoxdur"); return 0; }
+    const pend=docs.filter(d=>d.data().pendingGrading).length;
+    const msg=`${docs.length} şagirdin nəticəsi təsdiqlənsin?\nTəsdiqdən sonra şagirdlər öz nəticələrini görəcək.`+(pend?`\n\nDiqqət: ${pend} şagirdin ətraflı sualları hələ yoxlanılmayıb. Yoxladıqdan sonra bal avtomatik yenilənəcək.`:"");
+    if(!(await ttmConfirm(msg))) return null;
+    try{
+      for(let i=0;i<docs.length;i+=400){ const b=db.batch(); docs.slice(i,i+400).forEach(d=>b.update(d.ref,{confirmed:true,confirmedAt:firebase.firestore.FieldValue.serverTimestamp()})); await b.commit(); }
+      toast(`${docs.length} nəticə təsdiqləndi`); return docs.length;
+    }catch(e){ console.error(e); toast(e.code==="permission-denied"?"İcazə yoxdur — Firestore qaydasını yoxlayın":"Xəta: "+errAz(e)); return null; }
+  };
+  function fill(){ const s=$("ey-cex"); if(!s) return; const v=s.value; s.innerHTML='<option value="">— Sınaq seçin —</option>'+examsCache.map(e=>`<option value="${e.id}">${esc(e.title)}</option>`).join(""); s.value=v; }
+  window.eyConfInfo=async()=>{
+    const id=$("ey-cex").value, box=$("ey-cinfo"); if(!id){ box.innerHTML=""; return; }
+    box.textContent="Yüklənir...";
+    try{
+      const d=(await paperOf(id)).map(x=>x.data()), un=d.filter(a=>a.confirmed===false), pe=d.filter(a=>a.pendingGrading).length;
+      box.innerHTML=`Kağız nəticəsi: <b>${d.length}</b> · təsdiq gözləyir: <b>${un.length}</b>${pe?` · ətraflı yoxlanmayıb: <b style="color:#B45309">${pe}</b>`:""}`+
+        (un.length?`<button class="btn-small" style="width:100%;margin-top:10px;background:#16A34A" onclick="eyConfGo()">Nəticələri təsdiqlə (${un.length})</button>`:`<div style="margin-top:6px;color:#15803D;font-weight:700">Hamısı təsdiqlənib</div>`);
+    }catch(e){ box.textContent="Xəta: "+errAz(e); }
+  };
+  window.eyConfGo=async()=>{ const n=await ttmConfirmExam($("ey-cex").value); if(n!==null) eyConfInfo(); };
+  const t=document.querySelector('.tab-btn[data-tab="tab-eyani"]'); if(t) t.addEventListener("click",fill);
+})();
+</script>
 </body>
 </html>
