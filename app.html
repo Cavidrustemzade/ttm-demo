@@ -9564,14 +9564,14 @@ function homeExtra(){
   window.ppScanOpen = (examId) => {
     modal(`<h3 style="color:var(--color-primary);margin-bottom:6px;">Kağız vərəqləri yoxla</h3>
       <p class="muted-note" style="margin-bottom:12px;">Hər vərəqin 1 şəklini çəkin: 4 qara künc görünsün, kölgə az olsun. Bir dəfəyə çox şəkil seçə bilərsiniz.</p>
-      <div class="field" style="margin-bottom:10px;"><label>Sınaq</label><select id="pp-sex">${examOpts(examId)}</select></div>
+      <div class="field" style="margin-bottom:10px;"><label>Sınaq</label><select id="pp-sex">${examOpts(examId).replace("— Sınaq seçin —","Avtomatik tanı (tövsiyə)")}</select></div>
       <div class="upload-choice-grid">
         <label class="upload-choice-card"><div class="upload-choice-icon"><svg class="ttm-i" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg></div><div class="upload-choice-title">Kamera</div><div class="upload-choice-sub">Vərəqi çək</div><input type="file" accept="image/*" capture="environment" onchange="ppFiles(this)"></label>
         <label class="upload-choice-card"><div class="upload-choice-icon"><svg class="ttm-i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg></div><div class="upload-choice-title">Qalereya</div><div class="upload-choice-sub">Çox şəkil seç</div><input type="file" accept="image/*" multiple onchange="ppFiles(this)"></label>
       </div>
       <div id="pp-prog" class="muted-note"></div>
       <div id="pp-list"></div>`);
-    S = null;
+    S = null; const pm = $("pp-modal"); if (pm) pm.classList.remove("wide");
   };
   function grayOf(img, max) {
     const f = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
@@ -9591,20 +9591,59 @@ function homeExtra(){
   }
   const loadImg = f => new Promise((res, rej) => { const u = URL.createObjectURL(f), i = new Image(); i.onload = () => { URL.revokeObjectURL(u); res(i); }; i.onerror = () => { URL.revokeObjectURL(u); rej(new Error("Şəkil açılmadı (JPG/PNG seçin)")); }; i.src = u; });
 
-  window.ppFiles = async (inp) => {
-    const files = Array.from(inp.files || []); inp.value = "";
-    const id = $("pp-sex").value;
-    if (!id) { toast("Əvvəlcə sınaq seçin"); return; }
-    if (!files.length) return;
-    const ex = examsCache.find(e => e.id === id);
-    if (!S || S.ex.id !== id) {
-      const qs = await examQs(id);
-      S = { ex, qs, L: { n: OMR.layout(qs), g: OMR.layout(qs, { generic: true }) }, list: {}, errs: [], unk: 0 };
-    }
+  // ---------- skan ekranı (real emal statusu) ----------
+  const SCN = { busy: false, stop: false };
+  const IC_ST = { wait: ["Gözləyir", "#94A3B8"], read: ["Oxunur", "#1D6FD6"], ok: ["Oxundu", "#16A34A"], man: ["Əl ilə yoxla", "#D97706"], err: ["Səhv", "#DC2626"] };
+  window.addEventListener("beforeunload", e => { if (SCN.busy) { e.preventDefault(); e.returnValue = ""; } });
+  function scanStage(files, exTitle) {
+    const ov = document.createElement("div"); ov.className = "ps-ov";
+    const urls = files.map(f => URL.createObjectURL(f));
+    ov.innerHTML = `<div class="ps-box"><div class="ps-hd"><div><div class="ps-k">Kağız sınaq</div><b class="ps-t" id="ps-t">${esc(exTitle || "Sınaq tanınır...")}</b></div><button class="ps-x" id="ps-stop">Dayandır</button></div>
+      <div class="ps-card"><div class="ps-row"><span id="ps-msg">Vərəqlər oxunur...</span><b id="ps-n">0 / ${files.length}</b></div>
+      <div class="ps-bar"><i id="ps-bar"></i></div>
+      <div class="ps-grid">${urls.map((u, i) => `<div class="ps-it" id="ps-it${i}"><img src="${u}" alt=""><span class="ps-s" style="--c:${IC_ST.wait[1]}">${IC_ST.wait[0]}</span></div>`).join("")}</div></div>
+      <div class="ps-ft" id="ps-ft"></div></div>`;
+    document.body.appendChild(ov); document.body.style.overflow = "hidden";
+    ov.querySelector("#ps-stop").onclick = async () => {
+      if (!SCN.busy) return close();
+      if (await ttmConfirm("Emal dayandırılsın? Oxunmuş vərəqlər saxlanılır.")) SCN.stop = true;
+    };
+    function close() { urls.forEach(u => URL.revokeObjectURL(u)); ov.classList.add("out"); setTimeout(() => ov.remove(), 220); document.body.style.overflow = ""; }
+    return {
+      set(i, k, note) { const it = ov.querySelector("#ps-it" + i); if (!it) return; it.className = "ps-it " + k; const s = it.querySelector(".ps-s"); s.style.setProperty("--c", IC_ST[k][1]); s.textContent = note || IC_ST[k][0]; if (k === "read") it.scrollIntoView({ block: "nearest" }); },
+      prog(d, t) { ov.querySelector("#ps-n").textContent = d + " / " + t; ov.querySelector("#ps-bar").style.width = (d / t * 100) + "%"; },
+      title(t) { ov.querySelector("#ps-t").textContent = t; },
+      done(sum) {
+        ov.querySelector("#ps-msg").textContent = "Emal bitdi";
+        ov.querySelector("#ps-stop").textContent = "Bağla";
+        ov.querySelector("#ps-ft").innerHTML = `<div class="ps-sum">${sum}</div><button class="pq-go" id="ps-go" style="margin:0">Nəticələrə keç →</button>`;
+        ov.querySelector("#ps-go").onclick = close;
+      },
+      close
+    };
+  }
+  function stuIdx(ex) {
     const byHash = {}, byNum = {}, dupNum = {};
     exStudents(ex).forEach(s => { byHash[OMR.stuHash(s.id)] = s; const c = OMR.numCode(s.id); if (byNum[c]) dupNum[c] = 1; byNum[c] = s; });
+    return { byHash, byNum, dupNum };
+  }
+  async function initS(id) {
+    const ex = examsCache.find(e => e.id === id), qs = await examQs(id);
+    S = { ex, qs, L: { n: OMR.layout(qs), g: OMR.layout(qs, { generic: true }) }, list: {}, errs: [], unk: 0, ix: stuIdx(ex), f: { q: "", st: "all", sort: "score" } };
+    const sel = $("pp-sex"); if (sel) sel.value = id;
+  }
+
+  window.ppFiles = async (inp) => {
+    const files = Array.from(inp.files || []); inp.value = "";
+    if (!files.length || SCN.busy) return;
+    let id = $("pp-sex").value || (S && S.ex.id) || "";
+    if (id && (!S || S.ex.id !== id)) await initS(id);
+    SCN.busy = true; SCN.stop = false;
+    const UI = scanStage(files, S ? S.ex.title : "");
+    let done = 0, okN = 0, manN = 0, errN = 0;
     for (let k = 0; k < files.length; k++) {
-      $("pp-prog").textContent = `Oxunur: ${k + 1}/${files.length}...`;
+      if (SCN.stop) { for (let j = k; j < files.length; j++) UI.set(j, "wait", "Dayandırıldı"); break; }
+      UI.set(k, "read");
       await new Promise(r => setTimeout(r, 30));
       const f = files[k];
       try {
@@ -9612,14 +9651,19 @@ function homeExtra(){
         const r = OMR.locate(src.g, src.w, src.h);
         if (!r || r.err) throw new Error("4 qara künc tapılmadı — vərəqin hamısı kadrda olsun");
         if (!r.code) throw new Error("Vərəqin kodu oxunmadı (alt hissədəki qara zolaq görünsün)");
-        if (r.code.ex !== OMR.exHash(id) && r.code.ex !== 0) throw new Error("Bu vərəq başqa sınağa aiddir");
+        // sınağı avtomatik tanı
+        if (!S) {
+          const m = r.code.ex ? examsCache.filter(e => OMR.exHash(e.id) === r.code.ex) : [];
+          if (m.length !== 1) throw new Error(m.length ? "Bir neçə sınaq uyğun gəlir — yuxarıdan sınağı seçin" : "Sınaq tanınmadı — yuxarıdan sınağı seçin");
+          await initS(m[0].id); UI.title(S.ex.title);
+        } else if (r.code.ex !== OMR.exHash(S.ex.id) && r.code.ex !== 0) throw new Error("Bu vərəq başqa sınağa aiddir");
         const kind = r.code.stu === OMR.GEN ? "g" : "n";
         const page = S.L[kind][r.code.page];
         if (!page) throw new Error("Səhifə nömrəsi uyğun deyil");
-        const sh = r.sheet;
+        const sh = r.sheet, ix = S.ix;
         let stu = null, idRead = null;
-        if (kind === "n") { stu = byHash[r.code.stu]; if (!stu) throw new Error("Şagird tapılmadı (bu sınağın qruplarında yoxdur)"); }
-        else { idRead = OMR.readId(sh, page); if (idRead && !dupNum[idRead]) stu = byNum[idRead] || null; }
+        if (kind === "n") { stu = ix.byHash[r.code.stu]; if (!stu) throw new Error("Şagird tapılmadı (bu sınağın qruplarında yoxdur)"); }
+        else { idRead = OMR.readId(sh, page); if (idRead && !ix.dupNum[idRead]) stu = ix.byNum[idRead] || null; }
         const res = OMR.readPage(sh, page);
         const K = OMR.K, full = { w: sh.w, h: sh.h, g: sh.g };
         const crop = (rc, hi) => {
@@ -9631,7 +9675,7 @@ function homeExtra(){
         const rows = {};
         res.forEach(a => {
           const it = page.items.find(i => i.q === a.q);
-          if (a.t === "mcq" && a.st !== "ok" && a.st !== "blank") a.img = crop({ x: it.lx - 1, y: it.b[0].y - 4, w: 42, h: 8 });
+          if (a.t === "mcq") a.img = crop({ x: it.lx - 1, y: it.b[0].y - 4, w: 42, h: 8 }); // düzəliş üçün həmişə saxlanır
           if (a.t === "num" && a.st !== "blank") a.img = crop({ x: it.x, y: it.y, w: it.w, h: it.h });
           if (a.t === "wr" && a.st !== "blank") a.img = crop({ x: it.x, y: it.y, w: it.w, h: it.h }, true);
           if (a.t === "det" && a.st !== "blank") a.img = crop({ x: it.x, y: it.y, w: it.w, h: it.h }, true);
@@ -9640,15 +9684,26 @@ function homeExtra(){
         const key = stu ? stu.id : "u" + (++S.unk);
         const e = S.list[key] || (S.list[key] = { stu, kind, pages: {}, rv: {}, saved: false });
         if (e.kind !== kind) throw new Error(`${stu.fullName}: həm adlı, həm ümumi vərəq yükləndi — birini seçin`);
+        const dup = !!e.pages[r.code.page];
         e.pages[r.code.page] = { rows, sheet: toURL(sh.w, sh.h, sh.g, 0.6) };
         if (page.id) { e.idImg = crop({ x: page.id.x, y: page.id.y, w: page.id.w, h: page.id.h }); e.idRead = idRead; }
         e.saved = false;
+        if (dup) e.dupNote = true;
+        const need = !stu || res.some(needs);
+        if (need) manN++; else okN++;
+        UI.set(k, need ? "man" : "ok", dup ? "Təkrar vərəq" : (stu ? (stu.fullName || "").split(" ")[0] : "Şagird?"));
       } catch (err) {
-        console.error(err);
-        S.errs.push(`${f.name || "şəkil"}: ${errAz(err)}`);
+        console.error(err); errN++;
+        S && S.errs.push(`${f.name || "şəkil"}: ${errAz(err)}`);
+        if (!S) toast(errAz(err));
+        UI.set(k, "err");
       }
+      done++; UI.prog(done, files.length);
     }
-    $("pp-prog").textContent = "";
+    SCN.busy = false;
+    try { ttmSound && ttmSound(errN ? "no" : "done"); } catch (e) {}
+    UI.done(`<span style="color:#16A34A">${okN} oxundu</span> · <span style="color:#D97706">${manN} əl ilə</span> · <span style="color:#DC2626">${errN} səhv</span>`);
+    const m = $("pp-modal"); if (m) m.classList.add("wide");
     ppRenderList();
   };
 
@@ -9670,20 +9725,83 @@ function homeExtra(){
     let n = e.stu ? 0 : 1; S.qs.forEach((q, i) => { if (needs(rows[i]) && !(i in e.rv)) n++; });
     return { n, miss };
   }
+  // ---------- nəticə paneli ----------
+  function quick(e) { // ilkin hesab (şübhəli cavab düz sayılmır)
+    const rows = merged(e), wr = [], bl = [];
+    let ok = 0, bad = 0, blank = 0, un = 0, det = 0;
+    S.qs.forEach((q, i) => {
+      const a = rows[i], rv = e.rv[i];
+      if (!a) { un++; return; }
+      if (q.type === "detailed") { if (rv ? rv.ink : a.st === "ink") det++; else if (!rv && a.st === "unsure") un++; return; }
+      if (needs(a) && !rv) { un++; return; }
+      if (q.type === "mcq") {
+        const v = rv ? rv.v : (a.st === "ok" ? a.v : null);
+        if (v === null) { blank++; bl.push(i); } else if (v === q.correctIndex) ok++; else { bad++; wr.push(i); }
+      } else {
+        const txt = rv ? (rv.blank ? "" : (rv.txt ?? (a.t === "num" ? a.v : ""))) : (a.st === "blank" ? "" : a.v);
+        const good = rv && rv.ok !== undefined ? rv.ok : (txt ? checkOpenAnswer(txt, q.correctAnswer) : false);
+        if (good) ok++; else if (!txt) { blank++; bl.push(i); } else { bad++; wr.push(i); }
+      }
+    });
+    const n = S.qs.length;
+    return { ok, bad, blank, un, det, n, pct: n ? Math.round(ok / n * 100) : 0, wr, bl };
+  }
+  const ini = n => String(n || "?").trim().split(/\s+/).slice(0, 2).map(w => w[0] || "").join("").toUpperCase();
   function ppRenderList() {
     const box = $("pp-list"); if (!box || !S) return;
-    const nm = e => e.stu ? e.stu.fullName || "" : "";
-    const ents = Object.entries(S.list).sort((a, b) => (a[1].stu ? 1 : 0) - (b[1].stu ? 1 : 0) || nm(a[1]).localeCompare(nm(b[1]), "az"));
-    box.innerHTML = (S.errs.length ? `<div class="card" style="background:#fff6f6;border:1px solid #f3b9b9;box-shadow:none;margin-top:10px;"><b style="color:var(--color-danger);font-size:13px;">Oxunmayan şəkillər — yenidən çəkin:</b>${S.errs.map(x => `<div class="muted-note">• ${esc(x)}</div>`).join("")}</div>` : "") +
-      ents.map(([key, e]) => {
-        const p = pending(e);
-        const tag = e.saved ? `<span class="v2-tag">Saxlanıldı</span>` : p.miss ? `<span class="v2-tag wait">${p.miss} səhifə çatmır</span>` : p.n ? `<span class="v2-tag wait">${p.n} təsdiq lazım</span>` : `<span class="v2-tag">Hazır</span>`;
-        const who = e.stu ? esc(e.stu.fullName) : `Naməlum şagird`;
-        const sub = e.stu ? `Kod: ${OMR.numCode(e.stu.id)}${e.kind === "g" ? " · ümumi kart" : ""}` : `Kod oxunmadı${e.idRead ? " (" + e.idRead + ")" : ""} — toxunub şagirdi seçin`;
-        return `<div class="list-item" style="cursor:pointer;${e.stu ? "" : "background:#fffbef;"}" onclick="ppReview('${key}')"><div class="list-item-info"><div class="list-item-title">${who} ${tag}</div><div class="list-item-sub">${sub}</div></div><span class="v2-chev">›</span></div>`;
-      }).join("") +
-      (ents.map(x => x[1]).some(e => !e.saved && !pending(e).n && !pending(e).miss) ? `<button class="btn-small" style="width:100%;margin-top:8px;background:#2e9e6b;" onclick="ppSaveAll()">✅ Hazır olanların hamısını saxla</button>` : "");
+    const all = Object.entries(S.list).map(([key, e]) => ({ key, e, q: quick(e), p: pending(e) }));
+    const known = all.filter(x => x.e.stu);
+    const avg = known.length ? Math.round(known.reduce((s, x) => s + x.q.pct, 0) / known.length) : 0;
+    const manual = all.filter(x => x.p.n || x.p.miss).length, detN = all.reduce((s, x) => s + x.q.det, 0);
+    const saved = all.filter(x => x.e.saved).length, sheets = all.reduce((s, x) => s + Object.keys(x.e.pages).length, 0);
+    const grp = [...new Set(exGroups(S.ex))].map(groupName).join(", ");
+    // eyni bal = eyni yer
+    const rk = known.slice().sort((a, b) => b.q.pct - a.q.pct);
+    rk.forEach(x => { x.rank = 1 + rk.filter(y => y.q.pct > x.q.pct).length; });
+    const prelim = detN > 0 || manual > 0;
+    // sual statistikası
+    const W = {}, Bk = {}; known.forEach(x => { x.q.wr.forEach(i => W[i] = (W[i] || 0) + 1); x.q.bl.forEach(i => Bk[i] = (Bk[i] || 0) + 1); });
+    const top = (o, n) => Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, n);
+    const dist = [0, 0, 0, 0]; known.forEach(x => dist[Math.min(3, Math.floor(x.q.pct / 25.01))]++);
+    // filtr
+    const F = S.f, s = F.q.trim().toLowerCase();
+    let list = all.filter(x => (!s || (x.e.stu ? x.e.stu.fullName : "naməlum").toLowerCase().includes(s) || (x.e.stu && OMR.numCode(x.e.stu.id).includes(s)))
+      && (F.st === "all" || (F.st === "man" ? (x.p.n || x.p.miss || !x.e.stu) : F.st === "det" ? x.q.det > 0 : F.st === "ready" ? (!x.p.n && !x.p.miss && !x.e.saved) : x.e.saved)));
+    list.sort((a, b) => (a.e.stu ? 1 : 0) - (b.e.stu ? 1 : 0) || (F.sort === "name" ? (a.e.stu ? a.e.stu.fullName : "").localeCompare(b.e.stu ? b.e.stu.fullName : "", "az") : b.q.pct - a.q.pct));
+    const med = r => r === 1 ? "#F59E0B" : r === 2 ? "#94A3B8" : "#B45309";
+    box.innerHTML = `<div class="pr-wrap">
+      <div class="pr-head"><div class="ps-k">${esc(grp || "Qrup")}</div><div class="pr-t">${esc(S.ex.title || "Sınaq")} — nəticə</div>
+        <span class="pr-tag ${prelim ? "w" : "g"}">${prelim ? "İlkin nəticə" : "Yoxlama tamamlandı"}</span></div>
+      <div class="pr-kpi">
+        <div><b>${known.length}</b><span>İştirakçı</span></div><div><b>${sheets}</b><span>Vərəq oxundu</span></div>
+        <div class="${manual ? "w" : ""}"><b>${manual}</b><span>Əl ilə yoxla</span></div><div class="${detN ? "v" : ""}"><b>${detN}</b><span>Ətraflı gözləyir</span></div>
+        <div><b>${avg}%</b><span>Orta nəticə</span></div><div><b>${saved}/${all.length}</b><span>Saxlanılıb</span></div></div>
+      ${S.errs.length ? `<details class="pr-err"><summary>Oxunmayan şəkillər: ${S.errs.length} — yenidən çəkin</summary>${S.errs.map(x => `<div>• ${esc(x)}</div>`).join("")}</details>` : ""}
+      ${rk.length ? `<div class="pr-pod">${rk.slice(0, 3).map(x => `<div><span class="pr-md" style="background:${med(x.rank)}">${x.rank}</span><b>${esc(x.e.stu.fullName)}</b><em>${x.q.ok}/${x.q.n} · ${x.q.pct}%</em></div>`).join("")}</div>` : ""}
+      <div class="pr-tools"><input type="search" placeholder="Ad və ya kod" value="${esc(F.q)}" oninput="ppF('q',this.value)">
+        <select onchange="ppF('sort',this.value)"><option value="score" ${F.sort === "score" ? "selected" : ""}>Bala görə</option><option value="name" ${F.sort === "name" ? "selected" : ""}>Ada görə</option></select></div>
+      <div class="pr-chips">${[["all", "Hamısı", all.length], ["man", "Əl ilə", manual], ["det", "Ətraflı", all.filter(x => x.q.det).length], ["ready", "Hazır", all.filter(x => !x.p.n && !x.p.miss && !x.e.saved).length], ["saved", "Saxlanılıb", saved]].map(c => `<button class="${F.st === c[0] ? "on" : ""}" onclick="ppF('st','${c[0]}')">${c[1]} ${c[2]}</button>`).join("")}</div>
+      <div class="pr-grid">${list.length ? list.map((x, i) => {
+        const e = x.e, q = x.q, p = x.p;
+        const st = e.saved ? ["Saxlanılıb", "g"] : p.miss ? [p.miss + " səhifə çatmır", "w"] : (p.n ? [p.n + " təsdiq lazım", "w"] : ["Hazır", "b"]);
+        return `<div class="pr-c" style="animation-delay:${Math.min(i, 8) * 35}ms">
+          <div class="pr-ct"><span class="pr-av">${e.stu ? ini(e.stu.fullName) : "?"}</span><div style="flex:1;min-width:0"><b>${e.stu ? esc(e.stu.fullName) : "Naməlum şagird"}</b>
+            <div class="pr-s">${e.stu ? groupName(e.stu.groupId) + " · " + OMR.numCode(e.stu.id) : "Kod oxunmadı — şagirdi seçin"}</div></div>
+            <div class="pr-sc">${q.ok}/${q.n}<small>${q.pct}%</small></div></div>
+          <div class="pr-seg"><i style="flex:${q.ok};background:#22C55E"></i><i style="flex:${q.bad};background:#EF4444"></i><i style="flex:${q.blank};background:#CBD5E1"></i><i style="flex:${q.un + q.det};background:#F59E0B"></i></div>
+          <div class="pr-s">${q.ok} düz · ${q.bad} səhv · ${q.blank} boş${q.un ? ` · ${q.un} oxunmadı` : ""}${q.det ? ` · ${q.det} ətraflı` : ""}${e.dupNote ? " · təkrar vərəq" : ""}</div>
+          <div class="pr-a"><span class="pr-st ${st[1]}">${st[0]}</span><button onclick="ppReview('${x.key}')">${p.n || !e.stu ? "Yoxla" : "Bax / düzəlt"}</button>
+            ${!e.saved && !p.n && !p.miss && e.stu ? `<button class="pr-sv" onclick="ppSave('${x.key}')">Saxla</button>` : ""}</div></div>`;
+      }).join("") : `<div class="empty-state">Bu filtrdə şagird yoxdur</div>`}</div>
+      ${known.length ? `<div class="pr-stat"><b>Sual statistikası</b>
+        <div class="pr-s" style="margin:8px 0 4px">Ən çox səhv edilən</div>${top(W, 5).map(([i, c]) => `<div class="pr-bar"><span>${+i + 1}. sual</span><i><em style="width:${c / known.length * 100}%"></em></i><span>${c}</span></div>`).join("") || `<div class="pr-s">Yoxdur</div>`}
+        <div class="pr-s" style="margin:10px 0 4px">Ən çox boş buraxılan</div>${top(Bk, 3).map(([i, c]) => `<div class="pr-bar"><span>${+i + 1}. sual</span><i><em style="width:${c / known.length * 100}%;background:#94A3B8"></em></i><span>${c}</span></div>`).join("") || `<div class="pr-s">Yoxdur</div>`}
+        <div class="pr-s" style="margin:10px 0 4px">Nəticə paylanması</div><div class="pr-dist">${["0–25%", "25–50%", "50–75%", "75–100%"].map((l, i) => `<div><i style="height:${known.length ? dist[i] / known.length * 60 + 4 : 4}px"></i><b>${dist[i]}</b><span>${l}</span></div>`).join("")}</div></div>` : ""}
+      ${all.some(x => x.e.saved && x.q.det) ? `<button class="pq-ghost" onclick="ppClose();adminGo('tab-scores','grading')">Ətraflı sualları yoxla →</button>` : ""}
+      ${all.some(x => !x.e.saved && !x.p.n && !x.p.miss && x.e.stu) ? `<div class="pr-foot"><button class="pq-go" style="margin:0" onclick="ppSaveAll()">Hazır olanları saxla</button></div>` : ""}
+    </div>`;
   }
+  window.ppF = (k, v) => { if (!S) return; S.f[k] = v; ppRenderList(); if (k === "q") { const i = document.querySelector(".pr-tools input"); if (i) { i.focus(); i.setSelectionRange(v.length, v.length); } } };
 
   // ---------- baxış / təsdiq ekranı ----------
   window.ppReview = (sid) => {
@@ -9789,6 +9907,8 @@ function homeExtra(){
     if (!old.empty) {
       const o = old.docs[0];
       if (o.data().source !== "paper" && !(await ttmConfirm(`${e.stu.fullName} bu sınağı onlayn işləyib. Kağız nəticəsi onun yerinə yazılsın?`))) return false;
+      if (o.data().source === "paper" && !e._ow && !(await ttmConfirm(`${e.stu.fullName} üçün bu sınağın kağız nəticəsi artıq saxlanılıb (${computeAttemptStats(o.data().perQuestion).score}%). Yeni vərəqlə əvəz edilsin?`))) return false;
+      e._ow = true;
       attId = o.id;
     }
     await db.collection("examAttempts").doc(attId).set({
@@ -14313,5 +14433,59 @@ function homeExtra(){
   });
 })();
 </script>
+<style id="ps-css">
+#pp-modal.wide>div{max-width:980px!important}
+.ps-ov{position:fixed;inset:0;z-index:5200;background:#0B2236;display:flex;align-items:stretch;justify-content:center;animation:psIn .3s ease}
+.ps-ov.out{animation:psIn .22s ease reverse forwards}
+@keyframes psIn{from{opacity:0}}
+.ps-box{width:100%;max-width:760px;display:flex;flex-direction:column;padding:calc(14px + env(safe-area-inset-top,0px)) 16px calc(14px + env(safe-area-inset-bottom,0px));color:#fff;min-height:0}
+.ps-hd{display:flex;align-items:center;gap:12px;margin-bottom:14px}.ps-hd>div{flex:1;min-width:0}
+.ps-k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.65;font-weight:700}
+.ps-t{display:block;font-size:20px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ps-x{padding:9px 14px;border-radius:12px;background:rgba(255,255,255,.12);color:#fff;font-weight:700}
+.ps-card{flex:1;min-height:0;display:flex;flex-direction:column;background:#0F3352;border-radius:22px;padding:16px}
+.ps-row{display:flex;justify-content:space-between;align-items:baseline;font-size:14px}.ps-row b{font-size:22px}
+.ps-bar{height:8px;border-radius:9px;background:rgba(255,255,255,.12);margin:10px 0 14px;overflow:hidden}.ps-bar i{display:block;height:100%;width:0;background:#38BDF8;border-radius:9px;transition:width .35s ease}
+.ps-grid{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;align-content:start}
+.ps-it{position:relative;aspect-ratio:3/4;border-radius:12px;overflow:hidden;background:#fff;opacity:.55;transition:opacity .25s,transform .25s}
+.ps-it img{width:100%;height:100%;object-fit:cover}
+.ps-it.read{opacity:1;transform:scale(1.03);box-shadow:0 0 0 3px #38BDF8}
+.ps-it.read:after{content:"";position:absolute;left:0;right:0;height:3px;background:#38BDF8;box-shadow:0 0 10px #38BDF8;animation:psScan 1.1s ease-in-out infinite}
+@keyframes psScan{0%{top:4%}50%{top:94%}100%{top:4%}}
+.ps-it.ok,.ps-it.man,.ps-it.err{opacity:1}
+.ps-s{position:absolute;left:5px;right:5px;bottom:5px;font-size:10.5px;font-weight:800;text-align:center;background:#fff;color:var(--c);border-radius:8px;padding:3px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:inset 0 0 0 1.5px var(--c)}
+.ps-ft{padding-top:12px}.ps-sum{text-align:center;font-weight:700;font-size:13.5px;background:#fff;border-radius:12px;padding:9px;margin-bottom:10px}
+.pr-wrap{display:grid;gap:12px;margin-top:10px}
+.pr-head{display:grid;gap:2px}.pr-head .ps-k{color:var(--color-text-muted)}
+.pr-t{font-size:20px;font-weight:800;color:var(--color-primary)}
+.pr-tag{justify-self:start;font-size:11.5px;font-weight:800;padding:4px 10px;border-radius:999px;margin-top:4px}.pr-tag.w{background:#FEF3C7;color:#B45309}.pr-tag.g{background:#DCFCE7;color:#15803D}
+.pr-kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media(min-width:700px){.pr-kpi{grid-template-columns:repeat(6,1fr)}}
+.pr-kpi div{background:var(--color-light-gray);border-radius:14px;padding:10px}.pr-kpi b{display:block;font-size:20px;color:var(--color-primary)}.pr-kpi span{font-size:11.5px;color:var(--color-text-muted)}
+.pr-kpi .w{background:#FFF7ED}.pr-kpi .w b{color:#C2410C}.pr-kpi .v{background:#F5F3FF}.pr-kpi .v b{color:#6D28D9}
+.pr-err{background:#FEF2F2;border-radius:12px;padding:10px 12px;font-size:12.5px;color:#B91C1C}.pr-err summary{font-weight:700;cursor:pointer}
+.pr-pod{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pr-pod div{background:#fff;border:1px solid var(--color-gray);border-radius:14px;padding:10px;text-align:center;min-width:0}
+.pr-pod b{display:block;font-size:13px;margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pr-pod em{font-style:normal;font-size:12px;color:var(--color-text-muted)}
+.pr-md{display:inline-flex;width:30px;height:30px;border-radius:10px;color:#fff;font-weight:900;align-items:center;justify-content:center}
+.pr-tools{display:flex;gap:8px}.pr-tools input{flex:1;min-width:0}.pr-tools input,.pr-tools select{padding:10px 12px;border:1.5px solid var(--color-gray);border-radius:12px;font-size:14px;background:#fff}
+.pr-chips{display:flex;gap:6px;overflow-x:auto}.pr-chips::-webkit-scrollbar{display:none}
+.pr-chips button{flex:none;padding:7px 12px;border-radius:999px;background:var(--color-light-gray);font-size:12.5px;font-weight:700;color:var(--color-text)}.pr-chips button.on{background:var(--color-primary);color:#fff}
+.pr-grid{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:700px){.pr-grid{grid-template-columns:1fr 1fr}}
+.pr-c{background:#fff;border:1px solid var(--color-gray);border-radius:16px;padding:12px;display:grid;gap:7px;animation:sqIn .35s ease both}
+.pr-ct{display:flex;align-items:center;gap:10px}.pr-ct b{display:block;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pr-av{width:40px;height:40px;border-radius:50%;background:#E0EAF4;color:var(--color-primary);font-weight:800;display:flex;align-items:center;justify-content:center;flex:none}
+.pr-sc{text-align:right;font-weight:900;font-size:18px;color:var(--color-primary);line-height:1.1}.pr-sc small{display:block;font-size:11px;color:var(--color-text-muted);font-weight:700}
+.pr-s{font-size:12px;color:var(--color-text-muted)}
+.pr-seg{display:flex;height:6px;border-radius:6px;overflow:hidden;background:#EEF2F6}
+.pr-a{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.pr-a button{padding:7px 12px;border-radius:10px;background:var(--color-light-gray);color:var(--color-primary);font-weight:700;font-size:12.5px}.pr-a .pr-sv{background:#16A34A;color:#fff}
+.pr-st{font-size:11px;font-weight:800;padding:3px 8px;border-radius:999px;margin-right:auto}.pr-st.g{background:#DCFCE7;color:#15803D}.pr-st.w{background:#FEF3C7;color:#B45309}.pr-st.b{background:#E0F2FE;color:#0369A1}
+.pr-stat{background:#fff;border:1px solid var(--color-gray);border-radius:16px;padding:14px}
+.pr-bar{display:flex;align-items:center;gap:8px;font-size:12.5px;margin-bottom:5px}.pr-bar span:first-child{width:56px}.pr-bar i{flex:1;height:8px;border-radius:8px;background:#EEF2F6;overflow:hidden}.pr-bar em{display:block;height:100%;background:#EF4444;border-radius:8px}
+.pr-dist{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;align-items:end;text-align:center}.pr-dist i{display:block;background:var(--color-primary);border-radius:6px 6px 2px 2px;margin:0 auto;width:60%}.pr-dist b{display:block;font-size:13px}.pr-dist span{font-size:10.5px;color:var(--color-text-muted)}
+.pr-foot{position:sticky;bottom:0;background:linear-gradient(transparent,#fff 30%);padding-top:14px}
+@media (prefers-reduced-motion:reduce){.ps-ov,.pr-c,.ps-it.read:after{animation:none}}
+</style>
 </body>
 </html>
