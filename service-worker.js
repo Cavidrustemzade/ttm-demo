@@ -1,6 +1,6 @@
 // TTM Tədris Mərkəzi - Service Worker
-// Sadə "cache-first, sonra şəbəkə" strategiyası: sayt bir dəfə açılandan sonra
-// zəif internetdə də sürətli açılır, tam offline halda əsas səhifə yenə görünür.
+// Səhifələr (HTML): əvvəl internet — yeniliklər dərhal görünsün; internet yoxdursa keşdən.
+// Digər fayllar (şəkil, ikon): əvvəl keş, arxada yenilənir.
 
 const CACHE_NAME = "ttm-cache-v3";
 const APP_SHELL = [
@@ -30,6 +30,21 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   // Firebase və xarici API sorğularına toxunmuruq - onlar həmişə birbaşa şəbəkəyə getsin
   if (event.request.method !== "GET" || event.request.url.includes("firestore") || event.request.url.includes("googleapis")) {
+    return;
+  }
+  const isPage = event.request.mode === "navigate" || /\.html(\?|$)/.test(new URL(event.request.url).pathname);
+  if (isPage) {
+    event.respondWith(
+      fetch(event.request)
+        .then((resp) => {
+          if (resp && resp.status === 200) {
+            const clone = resp.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return resp;
+        })
+        .catch(() => caches.match(event.request).then((c) => c || caches.match("./app.html")))
+    );
     return;
   }
   event.respondWith(
