@@ -1770,7 +1770,7 @@ function ttmConfirm(msg){return new Promise(function(res){var m=document.createE
         <h3>Ətraflı sualların yoxlanışı</h3>
         <p class="muted-note" style="margin-bottom:10px;">Sınaq və sual seçin — həmin suala cavab verən şagirdlərin cavabları (adları gizli) bir-bir göstəriləcək.</p>
         <div class="field-row">
-          <div class="field"><label>Qrup</label><select id="gr-group" onchange="grGroup()"><option value="">Bütün qruplar</option></select></div>
+          <div class="field"><label>Qrup</label><select id="grd-group" onchange="grGroup()"><option value="">Bütün qruplar</option></select></div>
           <div class="field"><label>Sınaq seçin</label><select id="grading-exam-select"><option value="">— Seçin —</option></select></div>
           <div class="field"><label>Sual seçin</label><select id="grading-question-select"><option value="">— Əvvəlcə sınaq seçin —</option></select></div>
         </div>
@@ -5368,7 +5368,7 @@ document.getElementById("grading-question-select").addEventListener("change", as
     const dupMap = {};
     attemptsSnap.forEach(d => {
       const a = d.data();
-      const gf = (document.getElementById("gr-group") || {}).value; if (gf && a.groupId !== gf) return;
+      const gf = (document.getElementById("grd-group") || {}).value; if (gf && a.groupId !== gf) return;
       const pq = (a.perQuestion || [])[gradingQIndex];
       if (!pq || pq.type !== "detailed") return;
       const done = pq.points !== null && pq.points !== undefined;
@@ -14507,7 +14507,7 @@ function homeExtra(){
 <script>
 (function(){
   const $=id=>document.getElementById(id);
-  const gs=$("gr-group"), es=$("grading-exam-select"); if(!gs||!es) return;
+  const gs=$("grd-group"), es=$("grading-exam-select"); if(!gs||!es) return;
   let busy=false;
   const NM={};
   function fillG(){
