@@ -1770,6 +1770,7 @@ function ttmConfirm(msg){return new Promise(function(res){var m=document.createE
         <h3>Ətraflı sualların yoxlanışı</h3>
         <p class="muted-note" style="margin-bottom:10px;">Sınaq və sual seçin — həmin suala cavab verən şagirdlərin cavabları (adları gizli) bir-bir göstəriləcək.</p>
         <div class="field-row">
+          <div class="field"><label>Qrup</label><select id="gr-group" onchange="grGroup()"><option value="">Bütün qruplar</option></select></div>
           <div class="field"><label>Sınaq seçin</label><select id="grading-exam-select"><option value="">— Seçin —</option></select></div>
           <div class="field"><label>Sual seçin</label><select id="grading-question-select"><option value="">— Əvvəlcə sınaq seçin —</option></select></div>
         </div>
@@ -5334,7 +5335,7 @@ document.getElementById("grading-exam-select").addEventListener("change", async 
   qSel.innerHTML = `<option value="">Yüklənir...</option>`;
   try {
     const qSnap = await db.collection("exams").doc(examId).collection("questions").orderBy("order").get();
-    const questions = qSnap.docs.map(d => d.data());
+    const questions = qSnap.docs.map(d => d.data()); window._grQs = questions;
     const detailed = questions.map((q, i) => ({ q, i })).filter(x => x.q.type === "detailed");
     if (detailed.length === 0) {
       qSel.innerHTML = `<option value="">— Bu sınaqda ətraflı sual yoxdur —</option>`;
@@ -5367,6 +5368,7 @@ document.getElementById("grading-question-select").addEventListener("change", as
     const dupMap = {};
     attemptsSnap.forEach(d => {
       const a = d.data();
+      const gf = (document.getElementById("gr-group") || {}).value; if (gf && a.groupId !== gf) return;
       const pq = (a.perQuestion || [])[gradingQIndex];
       if (!pq || pq.type !== "detailed") return;
       const done = pq.points !== null && pq.points !== undefined;
@@ -5379,6 +5381,7 @@ document.getElementById("grading-question-select").addEventListener("change", as
       gradingQueue.push(it);
     });
     gradingIndex = 0;
+    try { const L = JSON.parse(localStorage.getItem("ttm_gr_last") || "{}"); if (L.e === examId && L.q === gradingQIndex && L.m === gradingMode && L.i > 0 && L.i < gradingQueue.length) { gradingIndex = L.i; toast("Qaldığın yerdən davam: " + (L.i + 1) + "/" + gradingQueue.length); } } catch (e) {}
     renderGradingPanel();
   } catch (err) {
     console.error(err);
@@ -5392,8 +5395,12 @@ function renderGradingPanel() {
   if (gradingQueue.length === 0) { panel.innerHTML = `<div class="empty-state">${gm ? "Bu sual üzrə hələ yoxlanılmış cavab yoxdur" : "✅ Bu sual üzrə yoxlanılası cavab yoxdur (hamısı yoxlanılıb və ya heç kim cavab verməyib)"}</div>`; return; }
   if (gradingIndex >= gradingQueue.length) { panel.innerHTML = `<div class="empty-state">✅ ${gm ? "Sonuncu cavab idi" : "Bütün cavablar yoxlanıldı!"}</div>` + (gm ? `<div class="gr-nav"><button onclick="gradingNav(-1)">← Geri</button><button onclick="gradingIndex=0;renderGradingPanel()">Əvvələ qayıt</button></div>` : ""); return; }
   const item = gradingQueue[gradingIndex];
+  try { localStorage.setItem("ttm_gr_last", JSON.stringify({ e: document.getElementById("grading-exam-select").value, q: gradingQIndex, m: gradingMode, i: gradingIndex })); } catch (e) {}
+  const gq = (window._grQs || [])[gradingQIndex] || {}, done = gradingQueue.filter(x => x.points !== null && x.points !== undefined).length;
   panel.innerHTML = `
-    <div class="muted-note" style="margin-bottom:10px;">Yoxlanılır: ${gradingIndex + 1} / ${gradingQueue.length} (şagird adı gizlidir)${item.ids && item.ids.length > 1 ? " · eyni cavab " + item.ids.length + " dəfə göndərilib (birlikdə qiymətlənir)" : ""}${gm ? " · cari bal: <b>" + String(item.points).replace(".", ",") + "</b>" : ""}</div>
+    <div class="gr-prog"><i style="width:${done / gradingQueue.length * 100}%"></i></div>
+    <div class="gr-q"><b>${gradingQIndex + 1}-ci sual · maks. 1 bal</b>${gq.text ? `<div>${esc(gq.text)}</div>` : ""}${gq.imageBase64 ? `<img src="${gq.imageBase64}" onclick="openImageLightbox(this.src)" alt="">` : ""}</div>
+    <div class="muted-note" style="margin-bottom:10px;">Yoxlanılır: ${gradingIndex + 1} / ${gradingQueue.length} (şagird adı gizlidir)${item.ids && item.ids.length > 1 ? " · eyni cavab " + item.ids.length + " dəfə göndərilib (birlikdə qiymətlənir)" : ""}${item.points !== null && item.points !== undefined ? " · cari bal: <b>" + String(item.points).replace(".", ",") + "</b>" : ""} · yoxlanıb: ${done}/${gradingQueue.length}</div>
     ${item.text ? `<div class="field"><label>Yazdığı cavab</label><div style="padding:10px; background:var(--color-light-gray); border-radius:8px; font-size:14px;">${esc(item.text)}</div></div>` : ""}
     ${item.lost ? `<div class="muted-note" style="color:var(--color-danger);font-weight:700;">⚠️ Şagird bu suala şəkil əlavə edib, amma şəkil serverə çatmayıb.</div>` : ""}
     ${item.photo ? `<img src="${item.photo}" style="max-width:100%; border-radius:10px; margin-top:10px; border:1px solid var(--color-gray); cursor:pointer;" onclick="openImageLightbox(this.src)" />` : (!item.text ? `<div class="empty-state">Cavab göndərilməyib</div>` : "")}
@@ -5402,7 +5409,7 @@ function renderGradingPanel() {
       <button class="btn-small" style="flex:1; background:#d99a2b;" onclick="gradeCurrentAnswer(0.5)">0,5 bal</button>
       <button class="btn-small" style="flex:1; background:#2e9e6b;" onclick="gradeCurrentAnswer(1)">1 bal</button>
     </div>
-    ${gm ? `<div class="gr-nav"><button onclick="gradingNav(-1)">← Əvvəlki</button><button onclick="gradingNav(1)">Növbəti →</button></div>` : ""}
+    <div class="gr-nav"><button onclick="gradingNav(-1)" ${gradingIndex ? "" : "disabled"}>← Əvvəlki</button><button onclick="gradingNav(1)">Növbəti →</button></div>
   `;
 }
 
@@ -14486,6 +14493,30 @@ function homeExtra(){
 .pr-dist{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;align-items:end;text-align:center}.pr-dist i{display:block;background:var(--color-primary);border-radius:6px 6px 2px 2px;margin:0 auto;width:60%}.pr-dist b{display:block;font-size:13px}.pr-dist span{font-size:10.5px;color:var(--color-text-muted)}
 .pr-foot{position:sticky;bottom:0;background:linear-gradient(transparent,#fff 30%);padding-top:14px}
 @media (prefers-reduced-motion:reduce){.ps-ov,.pr-c,.ps-it.read:after{animation:none}}
+</style>
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const gs=$("gr-group"), es=$("grading-exam-select"); if(!gs||!es) return;
+  let busy=false;
+  function fillG(){ const v=gs.value; gs.innerHTML='<option value="">Bütün qruplar</option>'+(groupsCache||[]).map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join(""); gs.value=v; }
+  function filt(){
+    if(busy) return; busy=true;
+    const g=gs.value, v=es.value;
+    [...es.options].forEach(o=>{ if(!o.value) return; const ex=examsCache.find(e=>e.id===o.value); const gids=ex?(ex.groupIds||(ex.groupId?[ex.groupId]:[])):[]; o.hidden=!!g&&!gids.includes(g); });
+    if(v&&es.selectedOptions[0]&&es.selectedOptions[0].hidden){ es.value=""; es.dispatchEvent(new Event("change")); }
+    busy=false;
+  }
+  new MutationObserver(filt).observe(es,{childList:true});
+  window.grGroup=()=>{ filt(); const q=$("grading-question-select"); if(q&&q.value!=="") q.dispatchEvent(new Event("change")); };
+  const o=fillGroupSelects; fillGroupSelects=function(){ const r=o.apply(this,arguments); try{fillG();}catch(e){} return r; };
+  fillG();
+})();
+</script>
+<style>
+.gr-prog{height:6px;border-radius:6px;background:#EEF2F6;overflow:hidden;margin-bottom:10px}.gr-prog i{display:block;height:100%;background:#16A34A;transition:width .3s}
+.gr-q{background:#F8FAFC;border:1px solid var(--color-gray);border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:14px;line-height:1.5}.gr-q b{display:block;color:var(--color-primary);font-size:12.5px;margin-bottom:4px}.gr-q img{display:block;max-width:100%;max-height:220px;margin-top:6px;border-radius:8px;cursor:zoom-in}
+.gr-nav button:disabled{opacity:.4}
 </style>
 </body>
 </html>
