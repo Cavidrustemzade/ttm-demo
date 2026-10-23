@@ -9403,6 +9403,177 @@ function homeExtra(){
 })(typeof window !== "undefined" ? window : this);
 
 </script>
+<style id="kf-css">
+/* ===== Kağız yoxlama axını (yeni dizayn) ===== */
+.kf{--kink:#101d3d;--kmut:#7886a5;--kline:#e9edf6;--kbg:#f5f7fc;--kblue:#0866f5;--kgreen:#16a66a;--kgbg:#e8f8f0;--kamb:#ed9f20;--kabg:#fff5df;--kred:#e34e5b;--krbg:#fff0f2;
+  position:fixed;inset:0;z-index:5200;background:radial-gradient(ellipse at top,#edf4ff 0,#f7f9fd 42%,#f2f5fb 100%);color:var(--kink);display:flex;flex-direction:column;animation:kfIn .25s ease;-webkit-font-smoothing:antialiased}
+.kf.out{opacity:0;transition:opacity .2s}
+@keyframes kfIn{from{opacity:0;transform:translateY(8px)}}
+.kf *{box-sizing:border-box}
+.kf button{cursor:pointer;border:0;font-family:inherit;transition:transform .15s,box-shadow .15s,background .15s}
+.kf button:active{transform:scale(.97)}
+.kf button:focus-visible,.kf input:focus-visible{outline:3px solid #82b3ff;outline-offset:2px}
+.kf-top{flex-shrink:0;display:flex;align-items:center;gap:12px;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 12px;background:#ffffffd9;backdrop-filter:blur(16px);border-bottom:1px solid #ebeff7}
+.kf-ib{width:40px;height:40px;border-radius:14px;background:#f0f4fc;color:#1649c7;font-size:20px;display:grid;place-items:center;flex-shrink:0}
+.kf-hc{flex:1;min-width:0}.kf-hc b{display:block;font-size:17px;letter-spacing:-.4px;font-weight:820;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.kf-hc small{display:block;font-size:11px;color:var(--kmut);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kf-main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.kf-in-w{width:min(100%,560px);margin:0 auto;padding:18px 16px 110px}
+.kf-nav{flex-shrink:0;display:grid;grid-template-columns:repeat(3,1fr);padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));background:#ffffffe6;backdrop-filter:blur(18px);border-top:1px solid #e9edf5}
+.kf-nav button{background:none;color:#93a0b8;font-size:10px;font-weight:750;display:grid;justify-items:center;gap:3px;padding:4px}
+.kf-nav button svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.kf-nav button.on{color:#0d64ee}
+.kf-eb{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;font-weight:850;color:#8a99b8}
+.kf-h2{font-size:21px;letter-spacing:-.6px;font-weight:850;margin:4px 0}
+.kf-sub{font-size:12px;line-height:1.45;color:var(--kmut);margin:0}
+.kf-pri{width:100%;min-height:49px;border-radius:17px;color:#fff;background:linear-gradient(110deg,#1478ff,#0756e8);font-size:13.5px;font-weight:820;box-shadow:0 9px 22px #1267f329;margin-top:16px}
+.kf-pri:disabled{opacity:.45;box-shadow:none;cursor:default}
+.kf-pri.g{background:linear-gradient(110deg,#1bb174,#0e8f58);box-shadow:0 9px 22px #16a66a29}
+.kf-sec{width:100%;min-height:45px;border-radius:15px;background:#edf3ff;color:#1755c9;font-size:12.5px;font-weight:800;margin-top:9px}
+.kf-lnk{background:none;color:var(--kblue);font-size:12px;font-weight:800;padding:8px 0}
+.kf-cardb{background:#fff;border:1px solid var(--kline);border-radius:22px;box-shadow:0 16px 45px #20396a0c;padding:15px}
+.kf-pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:6px 10px;font-size:10px;font-weight:800;white-space:nowrap;background:#f1f4fa;color:#7885a1}
+.kf-pill.w{background:var(--kabg);color:#a46c04}.kf-pill.r{background:var(--krbg);color:#c53c4c}.kf-pill.g{background:var(--kgbg);color:#138252}.kf-pill.b{background:#e9f1ff;color:#155ce2}
+.kf-mut{font-size:11px;color:var(--kmut)}
+/* emal */
+.kf-stage{border-radius:26px;background:radial-gradient(ellipse at 50% 35%,#174f95 0,#0b2855 42%,#091632 100%);color:#fff;padding:18px 18px 16px;text-align:center;position:relative;overflow:hidden}
+.kf-stage .kf-eb{color:#91d8ff}
+.kf-lot{width:100%;height:190px;margin:4px auto}
+.kf-stage h2{font-size:20px;margin:0 0 4px;letter-spacing:-.5px}
+.kf-stage p{font-size:11.5px;color:#bbd9f7;margin:0}
+.kf-bar{height:6px;background:#ffffff20;border-radius:20px;margin:14px 2px 12px;overflow:hidden}.kf-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#38bfff,#5ef4ff);border-radius:20px;transition:width .3s}
+.kf-steps{display:grid;gap:10px;text-align:left}
+.kf-step{display:flex;align-items:center;gap:10px;font-size:11.5px;color:#c8ddf6}
+.kf-step i{font-style:normal;width:25px;height:25px;border-radius:9px;display:grid;place-items:center;background:#ffffff12;color:#62dcff;font-weight:850;font-size:10px}
+.kf-step.on{color:#fff}.kf-step.on i{background:#1f6fff;color:#fff}.kf-step.ok i{background:#19b982;color:#fff}
+.kf-leg{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.kf-th{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.kf-ti{position:relative;aspect-ratio:3/4;max-width:100%;border-radius:12px;overflow:hidden;background:#fff;border:1.5px solid var(--kline);opacity:.55;transition:opacity .3s,border-color .3s,transform .3s}
+.kf-ti img{width:100%;height:100%;object-fit:cover}
+.kf-ti.read{opacity:1;border-color:#22d3ee;transform:scale(1.03);box-shadow:0 0 0 3px #22d3ee55}
+.kf-ti.read::after{content:"";position:absolute;left:0;right:0;height:3px;background:#22d3ee;box-shadow:0 0 12px #22d3ee;animation:kfSweep 1s ease-in-out infinite}
+@keyframes kfSweep{0%,100%{top:6%}50%{top:90%}}
+.kf-ti.ok,.kf-ti.man,.kf-ti.err,.kf-ti.wait2{opacity:1}.kf-ti.ok{border-color:#86efac}.kf-ti.man{border-color:#fcd34d}.kf-ti.err{border-color:#fca5a5}
+.kf-ti span{position:absolute;left:5px;right:5px;bottom:5px;font-size:10px;font-weight:800;text-align:center;border-radius:8px;padding:3px 2px;background:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 2px 6px #0002}
+/* problem kartları */
+.kf-prog{display:flex;justify-content:space-between;font-size:11px;color:var(--kmut)}
+.kf-gbar{height:6px;border-radius:20px;background:#edf2fa;margin-top:9px;overflow:hidden}.kf-gbar i{display:block;height:100%;background:linear-gradient(90deg,#58d6a1,#13a86a);border-radius:20px;transition:width .4s}
+.kf-card{background:#fff;border:1px solid var(--kline);border-radius:20px;padding:13px;margin-top:10px;box-shadow:0 10px 30px #20396a0a;transition:opacity .3s,transform .3s,max-height .35s,padding .35s,margin .35s;max-height:1200px;overflow:hidden}
+.kf-card.gone{opacity:0;transform:scale(.96);max-height:0;padding-block:0;margin-top:0;border-width:0}
+.kf-ch-h{display:flex;align-items:center;gap:10px}
+.kf-qn{min-width:30px;height:30px;padding:0 6px;border-radius:10px;background:var(--kamb);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:900;flex-shrink:0}.kf-qn.r{background:var(--kred)}.kf-qn.b{background:var(--kblue)}
+.kf-ct{flex:1;min-width:0}.kf-ct b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.kf-ct small{display:block;font-size:10.5px;color:var(--kmut);margin-top:2px}
+.kf-crop{display:block;width:100%;max-height:220px;object-fit:contain;background:#f6f8fc;border:1px solid #e6eaf2;border-radius:14px;margin-top:11px;cursor:zoom-in}
+.kf-ask{font-size:11.5px;font-weight:800;margin-top:12px;color:#4f6283}
+.kf-ch{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:8px}
+.kf-ch button{min-height:42px;border-radius:13px;background:#f0f4fb;color:#3f5175;font-weight:850;font-size:13px}
+.kf-ch button.on{background:#0967f7;color:#fff;box-shadow:0 6px 13px #0d65ef32}
+.kf-ch button.e{font-size:11px}
+.kf-ch.c3{grid-template-columns:repeat(3,1fr)}.kf-ch.c2{grid-template-columns:repeat(2,1fr)}
+.kf-ch.c3 button,.kf-ch.c2 button{font-size:12px}
+.kf-ch .ok.on{background:var(--kgreen);box-shadow:none}.kf-ch .no.on{background:var(--kred);box-shadow:none}
+.kf-row{display:flex;gap:8px;margin-top:8px}
+.kf-in{width:100%;min-width:0;border:1px solid #e3e9f4;background:#f6f8fd;border-radius:14px;padding:11px 12px;font-size:14px;outline:0;color:var(--kink);font-family:inherit}
+.kf-in:focus{border-color:#82b3ff;background:#fff}
+.kf-row button{flex-shrink:0;padding:0 14px;border-radius:14px;background:#eef4ff;color:#145ee4;font-weight:850;font-size:12px}
+.kf-key{font-size:11px;color:var(--kmut);margin-top:9px}
+.kf-pick{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:#f6f8fd;border:1px solid #edf0f7;border-radius:15px;padding:9px 10px;margin-top:7px;color:var(--kink)}
+.kf-av{width:38px;height:38px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#e5edff,#bad0fa);font-weight:850;color:#2a508e;font-size:13px}
+.kf-chev{color:#9aabc8;font-size:20px}
+.kf-res{display:flex;align-items:center;gap:10px;padding:2px 6px 2px 0}
+.kf-res .kf-rl{width:56px;height:56px;flex-shrink:0;display:grid;place-items:center;font-size:26px;font-weight:900}
+.kf-res b{display:block;font-size:13px}.kf-res small{font-size:10.5px;color:var(--kmut)}
+.kf-empty{text-align:center;padding:8px 0 4px}.kf-empty .kf-rl{width:110px;height:110px;margin:0 auto;display:grid;place-items:center;font-size:44px;color:var(--kgreen)}
+.kf-empty b{font-size:14px}
+/* yazılı */
+.kf-wq{font-size:12px;color:#4f6283;background:#f4f7fd;border-radius:12px;padding:9px 11px;margin-bottom:10px;line-height:1.5}
+.kf-wq img{display:block;max-width:100%;max-height:140px;margin-top:6px;border-radius:8px}
+.kf-wimg{display:block;width:100%;max-height:52vh;object-fit:contain;background:#fff;border:1px solid #e1e8f5;border-radius:16px;cursor:zoom-in}
+.kf-grade{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 0}
+.kf-grade button{border-radius:14px;padding:14px 5px;background:#f1f4fa;color:#5d6b88;font-weight:850;font-size:13px;border:1.5px solid transparent}
+.kf-grade button.on{background:#e9f2ff;color:#0c62ea;border-color:#82b3ff;box-shadow:0 4px 12px #1464ec11}
+.kf-foot{display:flex;justify-content:space-between;margin-top:12px;font-size:10.5px;color:var(--kmut)}
+/* nəticələr */
+.kf-pub{display:flex;align-items:center;gap:11px;border-radius:18px;padding:12px;margin-top:14px;border:1px solid}
+.kf-pub.ok{background:var(--kgbg);border-color:#bfead4;color:#138252}.kf-pub.w{background:var(--kabg);border-color:#f6dfaa;color:#8a5a04}.kf-pub.i{background:#eef4ff;border-color:#d3e2fb;color:#2b56a6}
+.kf-pub .pi{width:34px;height:34px;border-radius:11px;background:#fff;display:grid;place-items:center;font-weight:900;flex-shrink:0}
+.kf-pub>div{flex:1;min-width:0}.kf-pub b{display:block;font-size:12.5px;color:var(--kink)}.kf-pub small{font-size:10.5px}
+.kf-pub button{flex-shrink:0;height:34px;padding:0 12px;border-radius:11px;background:#fff;color:#145ee4;font-size:11.5px;font-weight:850}
+.kf-tabs{display:flex;padding:4px;background:#f0f3fa;border-radius:14px;gap:4px;margin-top:14px}
+.kf-tabs button{flex:1;border-radius:11px;padding:10px 5px;background:transparent;color:#7784a1;font-size:11px;font-weight:800}
+.kf-tabs button.on{background:#fff;color:#145be5;box-shadow:0 3px 9px #223d7510}
+.kf-podw{background:radial-gradient(ellipse at 50% 40%,#fff9e8 0,#fff 52%,#f2f6ff 100%);border:1px solid #eef1f8;border-radius:25px;padding:18px 10px 12px;overflow:hidden;position:relative;margin-top:12px}
+.kf-conf{position:absolute;inset:0;pointer-events:none;z-index:3}
+.kf-pod{display:flex;align-items:flex-end;justify-content:center;gap:6px;position:relative;z-index:1;min-height:240px}
+.kf-p{display:flex;flex-direction:column;align-items:center;min-width:0;flex:1;cursor:pointer}
+.kf-per{width:70px;height:70px;border-radius:50%;padding:4px;background:linear-gradient(135deg,#d9e7fa,#9bbcec);box-shadow:0 7px 20px #6f98cc25;margin-bottom:8px;position:relative}
+.kf-p.p1 .kf-per{width:90px;height:90px;background:linear-gradient(135deg,#ffe28d,#e6a919)}.kf-p.p3 .kf-per{background:linear-gradient(135deg,#ffd3c0,#cf836e)}
+.kf-pa{width:100%;height:100%;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#e9f2ff,#adc9f3);color:#31538b;font-weight:900;font-size:20px;border:3px solid #fff}
+.kf-p.p1 .kf-pa{background:linear-gradient(145deg,#fff1c6,#f4cc73);color:#8e6116;font-size:24px}.kf-p.p3 .kf-pa{background:linear-gradient(145deg,#ffe4d8,#edae95);color:#8f4b37}
+.kf-crown{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:24px;color:#e2a917}
+.kf-pn{font-size:12px;font-weight:850;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kf-ps{font-size:11px;font-weight:800;color:#1a5bdd;background:#eaf2ff;border-radius:999px;padding:5px 10px;margin:5px 0 8px;white-space:nowrap}
+.kf-p.p1 .kf-ps{background:#fff1c8;color:#93600a}.kf-p.p3 .kf-ps{background:#ffede6;color:#a45237}
+.kf-ped{width:100%;border-radius:15px 15px 7px 7px;background:linear-gradient(135deg,#c6d7f1,#7197ce);height:70px;display:grid;place-items:center;color:#fff;font-size:32px;font-weight:900;box-shadow:inset 0 2px 0 #ffffff88}
+.kf-p.p1 .kf-ped{height:105px;background:linear-gradient(135deg,#ffe79b,#df9f1e);font-size:40px}.kf-p.p3 .kf-ped{height:54px;background:linear-gradient(135deg,#efc1a9,#bf7456)}
+.kf-srow{display:flex;gap:8px;margin:12px 0 8px}
+.kf-sbox{flex:1;display:flex;align-items:center;gap:8px;border-radius:15px;background:#f2f5fb;padding:0 12px;min-width:0}
+.kf-sbox span{color:#7890bc;font-size:16px}.kf-sbox input{border:0;background:transparent;outline:0;width:100%;padding:12px 0;color:var(--kink);font-size:13px;font-family:inherit}
+.kf-sort{width:45px;border-radius:15px;background:#f2f5fb;color:#3467bf;font-size:17px}
+.kf-chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 6px}.kf-chips::-webkit-scrollbar{display:none}
+.kf-chips button{flex-shrink:0;background:#f0f3f9;color:#657591;border-radius:999px;padding:8px 12px;font-size:11px;font-weight:800;white-space:nowrap}
+.kf-chips button.on{background:#0968f7;color:#fff;box-shadow:0 5px 12px #0865f52b}
+.kf-sr{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:#fff;border:1px solid #edf0f7;border-radius:17px;padding:10px;margin-top:8px;color:var(--kink)}
+.kf-rk{width:29px;height:29px;border-radius:11px;background:#edf3ff;color:#135adc;display:grid;place-items:center;font-size:12px;font-weight:900;flex-shrink:0}.kf-rk.gd{background:#fff2ce;color:#9e700d}
+.kf-sc{padding:8px 9px;border-radius:12px;background:var(--kgbg);color:#087947;font-size:12px;font-weight:900;white-space:nowrap;text-align:center;line-height:1.15}
+.kf-sc small{display:block;font-size:9.5px;font-weight:800;opacity:.8}
+.kf-sc.m{background:var(--kabg);color:#a46c04}.kf-sc.l{background:var(--krbg);color:#c53c4c}
+/* şagird */
+.kf-prof{background:linear-gradient(145deg,#f1f6ff,#fff);border:1px solid #e4ebf8;border-radius:24px;padding:18px;text-align:center}
+.kf-pav{width:80px;height:80px;margin:0 auto 10px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#d9e7ff,#91b9f3);border:4px solid #fff;box-shadow:0 6px 20px #315aa01b;font-size:25px;font-weight:900;color:#244982}
+.kf-prof h2{margin:0;font-size:20px;letter-spacing:-.5px}.kf-prof p{margin:5px 0 10px;color:var(--kmut);font-size:11px}
+.kf-big{font-size:30px;letter-spacing:-1px;font-weight:900;color:#0d5ce7;margin-bottom:8px}.kf-big span{font-size:13px;color:#8190ad;letter-spacing:0}
+.kf-m3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.kf-m3 div{padding:12px 6px;border-radius:16px;text-align:center;background:#fff;border:1px solid #edf1f8}
+.kf-m3 b{display:block;font-size:20px}.kf-m3 small{font-size:10px;color:var(--kmut)}
+.kf-qg{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}
+.kf-q{aspect-ratio:1;max-width:100%;border-radius:13px;background:#e8f7ef;color:#137c50;font-size:13px;font-weight:850;display:grid;place-items:center;position:relative;padding:0}
+.kf-q small{position:absolute;bottom:3px;left:2px;right:2px;font-size:8.5px;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kf-q.no{background:var(--krbg);color:#c83d4c}.kf-q.bl{background:#f0f2f7;color:#7e8aa2}.kf-q.hf{background:var(--kabg);color:#a46c04}
+.kf-q.pd{background:#f1ecff;color:#6d45d9;outline:2px dashed #b9a5f5;outline-offset:-2px}
+.kf-key2{display:flex;gap:10px;flex-wrap:wrap;font-size:10px;color:#71809b;margin-top:8px}.kf-key2 i{display:inline-block;width:8px;height:8px;border-radius:3px;margin-right:4px}
+.kf-pages{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.kf-pages button{padding:8px 12px;border-radius:11px;background:#eef4ff;color:#145ee4;font-size:11.5px;font-weight:800}
+/* statistika */
+.kf-bi{display:grid;grid-template-columns:62px 1fr 44px;gap:8px;align-items:center;margin:13px 0}
+.kf-bi label{font-size:10.5px;font-weight:750;color:#61718f}.kf-bi b{font-size:10.5px;text-align:right}
+.kf-bt{height:9px;border-radius:99px;background:#edf1f8;overflow:hidden}.kf-bt i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#68d9a6,#18aa6a)}
+.kf-bt i.m{background:linear-gradient(90deg,#ffd978,#f0a522)}.kf-bt i.l{background:linear-gradient(90deg,#ff9c9e,#e34c5b)}
+.kf-don{display:flex;align-items:center;gap:20px;padding:12px 0 4px;flex-wrap:wrap}
+.kf-dn{width:120px;height:120px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;position:relative}
+.kf-dn::after{content:"";position:absolute;inset:17px;background:#fff;border-radius:50%}
+.kf-dn div{position:relative;z-index:1;text-align:center}.kf-dn strong{font-size:21px;display:block}.kf-dn small{font-size:9px;color:var(--kmut)}
+.kf-lg{display:grid;gap:9px;font-size:11px;color:#697996}.kf-lg i{display:inline-block;width:8px;height:8px;border-radius:3px;margin-right:6px}
+.kf-rep{display:flex;align-items:center;gap:12px;padding:12px 2px;border-bottom:1px solid #eff2f8}.kf-rep:last-child{border:0}
+.kf-ri{width:43px;height:46px;border-radius:12px;background:#fff0f1;color:#d63d48;display:grid;place-items:center;font-size:12px;font-weight:900;flex-shrink:0}.kf-ri.x{background:#e9f8f0;color:#0c9758}
+.kf-rep>div{flex:1;min-width:0}.kf-rep b{font-size:12.5px;display:block}.kf-rep small{font-size:10.5px;color:var(--kmut)}
+.kf-rep button{height:34px;padding:0 12px;border-radius:11px;background:#eef4ff;color:#145ee4;font-size:11.5px;font-weight:850}
+/* vərəqlər */
+.kf-add{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.kf-add label{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border-radius:15px;background:#edf3ff;color:#1755c9;font-size:12.5px;font-weight:800;cursor:pointer}
+.kf-add svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.kf-add input{display:none}
+/* alt pəncərə və bitdi ekranı */
+.kf-sheet{position:fixed;inset:0;z-index:5300;background:#0b18334d;display:flex;align-items:flex-end;justify-content:center;animation:kfFade .2s}
+.kf-sbx{width:min(100%,560px);max-height:88vh;overflow-y:auto;background:#fff;border-radius:26px 26px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom,0px));animation:kfUp .35s cubic-bezier(.2,1,.3,1)}
+.kf-sbx .kf-card{margin-top:6px;box-shadow:none;border:0;padding:0}
+.kf-shd{display:flex;align-items:center;justify-content:space-between;gap:10px}.kf-shd b{font-size:16px}
+.kf-x{width:34px;height:34px;border-radius:50%;background:#f0f3fa;color:#6b7a96;font-size:14px}
+.kf-done{position:fixed;inset:0;z-index:5400;background:#ffffffee;display:grid;place-content:center;justify-items:center;text-align:center;gap:6px;padding:20px;animation:kfFade .2s}
+.kf-done .kf-rl{width:150px;height:150px;display:grid;place-items:center;font-size:60px;color:var(--kgreen)}
+.kf-done b{font-size:19px;letter-spacing:-.4px;color:var(--kink)}
+@keyframes kfFade{from{opacity:0}}@keyframes kfUp{from{transform:translateY(40px);opacity:0}}
+@media (prefers-reduced-motion:reduce){.kf *,.kf{animation:none!important;transition:none!important}}
+</style>
 <script>
 /* ===== KAĞIZ SINAQ: cavab vərəqi çapı + bir şəkillə avtomatik yoxlama ===== */
 (function () {
@@ -9572,6 +9743,7 @@ function homeExtra(){
     modal(`<h3 style="color:var(--color-primary);margin-bottom:6px;">Kağız vərəqləri yoxla</h3>
       <p class="muted-note" style="margin-bottom:12px;">Hər vərəqin 1 şəklini çəkin: 4 qara künc görünsün, kölgə az olsun. Bir dəfəyə çox şəkil seçə bilərsiniz.</p>
       <div class="field" style="margin-bottom:10px;"><label>Sınaq</label><select id="pp-sex">${examOpts(examId).replace("— Sınaq seçin —","Avtomatik tanı (tövsiyə)")}</select></div>
+      <div id="pp-camlot" style="height:150px;margin:0 0 12px;border-radius:18px;background:linear-gradient(160deg,#0B3C5D,#072A42)"></div>
       <div class="upload-choice-grid">
         <label class="upload-choice-card"><div class="upload-choice-icon"><svg class="ttm-i" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg></div><div class="upload-choice-title">Kamera</div><div class="upload-choice-sub">Vərəqi çək</div><input type="file" accept="image/*" capture="environment" onchange="ppFiles(this)"></label>
         <label class="upload-choice-card"><div class="upload-choice-icon"><svg class="ttm-i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg></div><div class="upload-choice-title">Qalereya</div><div class="upload-choice-sub">Çox şəkil seç</div><input type="file" accept="image/*" multiple onchange="ppFiles(this)"></label>
@@ -9579,6 +9751,7 @@ function homeExtra(){
       <div id="pp-prog" class="muted-note"></div>
       <div id="pp-list"></div>`);
     S = null; const pm = $("pp-modal"); if (pm) pm.classList.remove("wide");
+    lplay($("pp-camlot"), LT.cam(), true);
   };
   function grayOf(img, max) {
     const f = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
@@ -9602,33 +9775,6 @@ function homeExtra(){
   const SCN = { busy: false, stop: false };
   const IC_ST = { wait: ["Gözləyir", "#94A3B8"], read: ["Oxunur", "#1D6FD6"], ok: ["Oxundu", "#16A34A"], man: ["Əl ilə yoxla", "#D97706"], err: ["Səhv", "#DC2626"] };
   window.addEventListener("beforeunload", e => { if (SCN.busy) { e.preventDefault(); e.returnValue = ""; } });
-  function scanStage(files, exTitle) {
-    const ov = document.createElement("div"); ov.className = "ps-ov";
-    const urls = files.map(f => URL.createObjectURL(f));
-    ov.innerHTML = `<div class="ps-box"><div class="ps-hd"><div><div class="ps-k">Kağız sınaq</div><b class="ps-t" id="ps-t">${esc(exTitle || "Sınaq tanınır...")}</b></div><button class="ps-x" id="ps-stop">Dayandır</button></div>
-      <div class="ps-card"><div class="ps-row"><span id="ps-msg">Vərəqlər oxunur...</span><b id="ps-n">0 / ${files.length}</b></div>
-      <div class="ps-bar"><i id="ps-bar"></i></div>
-      <div class="ps-grid">${urls.map((u, i) => `<div class="ps-it" id="ps-it${i}"><img src="${u}" alt=""><span class="ps-s" style="--c:${IC_ST.wait[1]}">${IC_ST.wait[0]}</span></div>`).join("")}</div></div>
-      <div class="ps-ft" id="ps-ft"></div></div>`;
-    document.body.appendChild(ov); document.body.style.overflow = "hidden";
-    ov.querySelector("#ps-stop").onclick = async () => {
-      if (!SCN.busy) return close();
-      if (await ttmConfirm("Emal dayandırılsın? Oxunmuş vərəqlər saxlanılır.")) SCN.stop = true;
-    };
-    function close() { urls.forEach(u => URL.revokeObjectURL(u)); ov.classList.add("out"); setTimeout(() => ov.remove(), 220); document.body.style.overflow = ""; }
-    return {
-      set(i, k, note) { const it = ov.querySelector("#ps-it" + i); if (!it) return; it.className = "ps-it " + k; const s = it.querySelector(".ps-s"); s.style.setProperty("--c", IC_ST[k][1]); s.textContent = note || IC_ST[k][0]; if (k === "read") it.scrollIntoView({ block: "nearest" }); },
-      prog(d, t) { ov.querySelector("#ps-n").textContent = d + " / " + t; ov.querySelector("#ps-bar").style.width = (d / t * 100) + "%"; },
-      title(t) { ov.querySelector("#ps-t").textContent = t; },
-      done(sum) {
-        ov.querySelector("#ps-msg").textContent = "Emal bitdi";
-        ov.querySelector("#ps-stop").textContent = "Bağla";
-        ov.querySelector("#ps-ft").innerHTML = `<div class="ps-sum">${sum}</div><button class="pq-go" id="ps-go" style="margin:0">Nəticələrə keç →</button>`;
-        ov.querySelector("#ps-go").onclick = close;
-      },
-      close
-    };
-  }
   function stuIdx(ex) {
     const byHash = {}, byNum = {}, dupNum = {};
     exStudents(ex).forEach(s => { byHash[OMR.stuHash(s.id)] = s; const c = OMR.numCode(s.id); if (byNum[c]) dupNum[c] = 1; byNum[c] = s; });
@@ -9643,7 +9789,7 @@ function homeExtra(){
   window.ppFiles = async (inp) => {
     const files = Array.from(inp.files || []); inp.value = "";
     if (!files.length || SCN.busy) return;
-    let id = $("pp-sex").value || (S && S.ex.id) || "";
+    let id = ($("pp-sex") || {}).value || (S && S.ex.id) || "";
     if (id && (!S || S.ex.id !== id)) await initS(id);
     SCN.busy = true; SCN.stop = false;
     const UI = scanStage(files, S ? S.ex.title : "");
@@ -9709,9 +9855,7 @@ function homeExtra(){
     }
     SCN.busy = false;
     try { ttmSound && ttmSound(errN ? "no" : "done"); } catch (e) {}
-    UI.done(`<span style="color:#16A34A">${okN} oxundu</span> · <span style="color:#D97706">${manN} əl ilə</span> · <span style="color:#DC2626">${errN} səhv</span>`);
-    const m = $("pp-modal"); if (m) m.classList.add("wide");
-    ppRenderList();
+    UI.done(okN, manN, errN);
   };
 
   // hər sual üçün yekun vəziyyət (müəllim düzəlişi nəzərə alınır)
@@ -9895,7 +10039,7 @@ function homeExtra(){
       if (q.type === "detailed") {
         det++;
         const ink = rv ? rv.ink : a.st === "ink";
-        if (ink) { photos.push({ i, img: a.img }); answers.push(null); return { selected: null, correct: null, isCorrect: null, type: q.type, points: null, maxPoints: 1, hasPhoto: true }; }
+        if (ink) { const g = e.dg && e.dg[i] != null ? e.dg[i] : null; if (g !== null) detG++; photos.push({ i, img: a.img, g }); answers.push(null); return { selected: null, correct: null, isCorrect: null, type: q.type, points: g, maxPoints: 1, hasPhoto: true }; }
         detG++; answers.push(null);
         return { selected: null, correct: null, isCorrect: null, type: q.type, points: 0, maxPoints: 1, hasPhoto: false, blank: true };
       }
@@ -9933,7 +10077,8 @@ function homeExtra(){
     for (const ph of b.photos) {
       await db.collection("detailedAnswers").doc(`${attId}_${ph.i}`).set({
         attemptId: attId, examId: ex.id, studentId: e.stu.id, groupId: e.stu.groupId || null, teacherId: currentTeacherId,
-        questionIndex: ph.i, photoBase64: ph.img, points: null, maxPoints: 1, source: "paper",
+        questionIndex: ph.i, photoBase64: ph.img, points: ph.g ?? null, maxPoints: 1, source: "paper",
+        ...(ph.g != null ? { gradedAt: firebase.firestore.FieldValue.serverTimestamp() } : {}),
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
     }
@@ -9957,6 +10102,622 @@ function homeExtra(){
     toast(`${n} şagirdin nəticəsi saxlanıldı. Ətraflı həllər «Ətraflı yoxlanış» bölməsində`);
     ppRenderList();
   };
+
+
+  // ================= YENİ YOXLAMA AXINI: emal → problemlər → yazılı → nəticələr =================
+  if (typeof TTM_LIBS !== "undefined" && !TTM_LIBS.lottie) TTM_LIBS.lottie = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js";
+  // --- Lottie animasiyaları (JSON kodla qurulur, fayl lazım deyil) ---
+  const LT = (() => {
+    const S0 = v => ({ a: 0, k: v });
+    const EZ = { i: { x: [.3], y: [1] }, o: { x: [.6], y: [0] } };
+    const K = fr => ({ a: 1, k: fr.map(([t, s], j) => j < fr.length - 1 ? Object.assign({ t, s: [].concat(s) }, EZ) : { t, s: [].concat(s) }) });
+    const C = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255).concat(1);
+    const tr = () => ({ ty: "tr", p: S0([0, 0]), a: S0([0, 0]), s: S0([100, 100]), r: S0(0), o: S0(100), sk: S0(0), sa: S0(0) });
+    const gr = it => ({ ty: "gr", it: it.concat(tr()) });
+    const fl = (h, o) => ({ ty: "fl", c: S0(C(h)), o: o && o.a ? o : S0(o || 100), r: 1 });
+    const sk = (h, w) => ({ ty: "st", c: S0(C(h)), o: S0(100), w: S0(w), lc: 2, lj: 2, ml: 4 });
+    const el = (s, p) => ({ ty: "el", p: S0(p || [0, 0]), s: S0([s, s]), d: 1 });
+    const rc = (w, h, r, p) => ({ ty: "rc", p: S0(p || [0, 0]), s: S0([w, h]), r: S0(r || 0), d: 1 });
+    const pt = v => ({ ty: "sh", ks: S0({ i: v.map(() => [0, 0]), o: v.map(() => [0, 0]), v, c: false }) });
+    const tm = e => ({ ty: "tm", s: S0(0), e, o: S0(0), m: 1 });
+    const LY = (sh, ks) => ({ ddd: 0, ty: 4, sr: 1, ao: 0, ip: 0, st: 0, bm: 0, shapes: sh, ks: Object.assign({ o: S0(100), r: S0(0), p: S0([0, 0, 0]), a: S0([0, 0, 0]), s: S0([100, 100, 100]) }, ks) });
+    const AN = (w, h, op, ls) => { ls.forEach((l, i) => { l.ind = i + 1; l.op = op; }); return { v: "5.7.4", fr: 60, ip: 0, op, w, h, nm: "ttm", ddd: 0, assets: [], layers: ls }; };
+    function res(ok) {
+      const col = ok ? "#16A66A" : "#E34E5B";
+      const mark = ok ? [gr([pt([[-30, 2], [-9, 23], [33, -21]]), sk("#FFFFFF", 13), tm(K([[16, 0], [40, 100]]))])]
+        : [gr([pt([[-22, -22], [22, 22]]), sk("#FFFFFF", 13), tm(K([[16, 0], [30, 100]]))]), gr([pt([[22, -22], [-22, 22]]), sk("#FFFFFF", 13), tm(K([[26, 0], [40, 100]]))])];
+      const pos = ok ? S0([100, 100, 0]) : K([[34, [100, 100, 0]], [40, [90, 100, 0]], [46, [110, 100, 0]], [52, [94, 100, 0]], [58, [100, 100, 0]]]);
+      return AN(200, 200, 80, [LY(mark, { p: pos }), LY([gr([el(120), fl(col)])], { p: pos, s: K([[0, [0, 0, 100]], [13, [112, 112, 100]], [22, [100, 100, 100]]]) }),
+        LY([gr([el(120), sk(col, 5)])], { p: S0([100, 100, 0]), s: K([[8, [100, 100, 100]], [40, [155, 155, 100]]]), o: K([[8, 70], [40, 0]]) })]);
+    }
+    function scan() {
+      const dots = [];
+      for (let r = 0; r < 6; r++) for (let c = 0; c < 5; c++) {
+        const t = 10 + r * 18 + c * 3;
+        dots.push(LY([gr([el(9, [-24 + c * 12, -26 + r * 13]), fl("#0B2855", K([[t, 0], [t + 6, 100]]))]), gr([el(9, [-24 + c * 12, -26 + r * 13]), sk("#94A3B8", 1.2)])], { p: S0([120, 100, 0]) }));
+      }
+      const cn = p => gr([rc(9, 9, 1, p), fl("#0F172A")]);
+      const sheet = LY([cn([-42, -60]), cn([42, -60]), cn([-42, 60]), cn([42, 60]), gr([rc(50, 5, 2, [-14, -46]), fl("#CBD5E1")]), gr([rc(100, 140, 9), fl("#FFFFFF")])], { p: S0([120, 100, 0]), r: K([[0, -3], [75, 3], [150, -3]]) });
+      const laser = LY([gr([rc(140, 3, 1.5), fl("#4CE6FF")]), gr([rc(140, 26, 13), fl("#4CE6FF", 30)])], { p: K([[0, [120, 26, 0]], [75, [120, 174, 0]], [150, [120, 26, 0]]]) });
+      const br = (x, y, a) => gr([pt([[x, y + 12 * a[1]], [x, y], [x + 12 * a[0], y]]), sk("#4CE6FF", 3.5)]);
+      const brk = LY([br(-60, -80, [1, 1]), br(60, -80, [-1, 1]), br(-60, 80, [1, -1]), br(60, 80, [-1, -1])], { p: S0([120, 100, 0]), o: K([[0, 40], [75, 100], [150, 40]]) });
+      return AN(240, 200, 150, [laser, brk].concat(dots, [sheet]));
+    }
+    function cam() {
+      const ln = (w, y, x) => gr([rc(w, 4, 2, [x || 0, y]), fl("#E2E8F0")]);
+      const sheet = LY([gr([rc(9, 9, 1, [-38, -52]), fl("#0F172A")]), gr([rc(9, 9, 1, [38, -52]), fl("#0F172A")]), gr([rc(9, 9, 1, [-38, 52]), fl("#0F172A")]), gr([rc(9, 9, 1, [38, 52]), fl("#0F172A")]),
+        gr([rc(56, 4, 2, [-6, -34]), fl("#CBD5E1")]), ln(70, -20), ln(70, -8), ln(60, 4, -5), ln(70, 16), gr([rc(92, 124, 8), fl("#FFFFFF")])], { p: S0([110, 85, 0]), r: S0(-4) });
+      const phone = LY([gr([rc(84, 150, 14), sk("#4CE6FF", 4)]), gr([rc(24, 4, 2, [0, -66]), fl("#4CE6FF")])], { p: K([[0, [240, 85, 0]], [40, [110, 85, 0]], [110, [110, 85, 0]], [140, [240, 85, 0]]]), o: K([[0, 0], [20, 100], [120, 100], [140, 0]]) });
+      const flash = LY([gr([rc(220, 170, 0), fl("#FFFFFF")])], { p: S0([110, 85, 0]), o: K([[56, 0], [60, 70], [76, 0]]) });
+      const tick = LY([gr([el(34), fl("#16A66A")]), gr([pt([[-8, 0], [-2, 6], [9, -6]]), sk("#FFFFFF", 4), tm(K([[68, 0], [80, 100]]))])], { p: S0([156, 30, 0]), s: K([[62, [0, 0, 100]], [72, [115, 115, 100]], [78, [100, 100, 100]], [118, [100, 100, 100]], [132, [0, 0, 100]]]) });
+      return AN(220, 170, 150, [flash, tick, phone, sheet]);
+    }
+    function conf() {
+      const cols = ["#E8B33D", "#51C8FF", "#16A66A", "#E34E5B", "#A78BFA", "#3185FF"], ls = [];
+      let s = 7; const R = () => (s = (s * 9301 + 49297) % 233280) / 233280;
+      for (let i = 0; i < 34; i++) {
+        const x1 = 40 + R() * 320, y1 = 10 + R() * 80, y2 = y1 + 280 + R() * 80, d = R() * 20;
+        ls.push(LY([gr([rc(7 + R() * 5, 12 + R() * 6, 2), fl(cols[i % 6])])], { p: K([[d, [200, 170, 0]], [d + 30, [x1, y1, 0]], [d + 150, [x1 + (R() - .5) * 60, y2, 0]]]), r: K([[d, 0], [d + 150, (R() - .5) * 720]]), o: K([[d, 0], [d + 4, 100], [d + 120, 100], [d + 150, 0]]) }));
+      }
+      return AN(400, 320, 170, ls);
+    }
+    return { res, scan, cam, conf };
+  })();
+  function lplay(box, data, loop) {
+    if (!box) return;
+    ensureLib("lottie").then(() => {
+      if (!box.isConnected || !window.lottie) return;
+      box.innerHTML = "";
+      try { lottie.loadAnimation({ container: box, renderer: "svg", loop: !!loop, autoplay: true, animationData: data, rendererSettings: { preserveAspectRatio: "xMidYMid meet" } }); } catch (e) { }
+    }).catch(() => { });
+  }
+  const resIcon = ok => `<div class="kf-rl" style="color:${ok ? "#16A66A" : "#E34E5B"}">${ok ? "✓" : "✕"}</div>`;
+
+  // --- vəziyyət ---
+  const KF = { ov: null, stack: [], view: "", pr0: 0, errOk: false, wDone: false, pub: false, saving: false, saveMsg: "", fq: "", fst: "all", asc: false, list: false, stTab: "q", stu: null, wq: [], wi: 0, wsel: null };
+  const IC = {
+    cam: '<svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>',
+    gal: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>',
+    sh: '<svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>',
+    st: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1-4 4-5.5 7-5.5s6 1.5 7 5.5"/></svg>',
+    ch: '<svg viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>'
+  };
+  const kfMain = () => $("kf-main");
+  const known = () => S ? Object.entries(S.list).filter(([, e]) => e.stu) : [];
+  const ready = e => { const p = pending(e); return !!e.stu && !p.n && (!p.miss || e.missOk); };
+  const fmtN = n => Number.isInteger(n) ? String(n) : n.toFixed(1);
+  const ord = n => n + "-" + ({ 1: "ci", 2: "ci", 3: "cü", 4: "cü", 5: "ci", 6: "cı", 7: "ci", 8: "ci", 9: "cu", 0: "cu" })[n % 10];
+  const qType = q => q.type === "mcq" ? "Qapalı" : q.type === "detailed" ? "Ətraflı" : "Açıq";
+
+  function openKF() {
+    if (KF.ov && KF.ov.isConnected) return;
+    const ov = document.createElement("div"); ov.className = "kf"; ov.id = "kf";
+    ov.innerHTML = `<header class="kf-top"><button class="kf-ib" id="kf-back" aria-label="Geri">‹</button><div class="kf-hc"><b id="kf-t"></b><small id="kf-s"></small></div><button class="kf-ib" id="kf-x" aria-label="Bağla" style="font-size:15px">✕</button></header>
+      <main class="kf-main" id="kf-main"></main>
+      <nav class="kf-nav" id="kf-nav" style="display:none"><button data-v="sheets">${IC.sh}Vərəqlər</button><button data-v="results">${IC.st}Şagirdlər</button><button data-v="stats">${IC.ch}Statistika</button></nav>`;
+    document.body.appendChild(ov); document.body.style.overflow = "hidden";
+    KF.ov = ov; KF.pub = false; KF.wDone = false; KF.errOk = false; KF.fq = ""; KF.fst = "all"; KF.list = false;
+    ov.querySelector("#kf-back").onclick = () => kfBack();
+    ov.querySelector("#kf-x").onclick = () => kfTryClose();
+    ov.querySelector("#kf-nav").onclick = e => { const b = e.target.closest("[data-v]"); if (b) kfGo(b.dataset.v, true); };
+  }
+  function kfCloseAll() {
+    const ov = KF.ov; if (!ov) return;
+    (KF.urls || []).forEach(u => URL.revokeObjectURL(u)); KF.urls = [];
+    ov.classList.add("out"); setTimeout(() => ov.remove(), 220);
+    KF.ov = null; document.body.style.overflow = "";
+    if (S && Object.keys(S.list).length) ppClose();
+  }
+  const META = {
+    proc: () => [S ? S.ex.title : "Sınaq tanınır...", "Vərəqlər oxunur"],
+    problems: () => ["Problemli vərəqlər", "Skan zamanı tapılanlar"],
+    wintro: () => ["Yazılı sualların yoxlanması", "İkinci mərhələ"],
+    written: () => ["Ətraflı suallar", "Müəllim qiymətləndirməsi"],
+    results: () => ["Şagird nəticələri", (S ? S.ex.title : "") + " · reytinq"],
+    student: () => ["Şagirdin nəticəsi", "Cavablar və bal"],
+    stats: () => ["Statistika və hesabat", (S ? S.ex.title : "") + " · təhlil"],
+    sheets: () => ["Vərəqlər", (S ? S.ex.title : "")]
+  };
+  const NAVV = { results: "results", student: "results", stats: "stats", sheets: "sheets" };
+  function kfHead() {
+    const m = (META[KF.view] || (() => ["", ""]))();
+    $("kf-t").textContent = m[0]; $("kf-s").textContent = m[1];
+    $("kf-back").style.visibility = KF.stack.length > 1 ? "visible" : "hidden";
+    const nv = NAVV[KF.view], nav = $("kf-nav");
+    nav.style.display = nv ? "grid" : "none";
+    nav.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.v === nv));
+  }
+  function kfGo(v, reset) {
+    if (reset) KF.stack = [v]; else if (KF.stack[KF.stack.length - 1] !== v) KF.stack.push(v);
+    kfShow(v);
+  }
+  function kfBack() { if (KF.stack.length > 1) { KF.stack.pop(); kfShow(KF.stack[KF.stack.length - 1]); } }
+  function kfShow(v) {
+    KF.view = v; kfHead();
+    const R = { problems: vProblems, wintro: vWIntro, written: vWritten, results: vResults, student: vStudent, stats: vStats, sheets: vSheets }[v];
+    if (R) R();
+    const m = kfMain(); if (m) m.scrollTop = 0;
+  }
+  const wrap = h => `<div class="kf-in-w">${h}</div>`;
+
+  // ---------- 1) EMAL (köhnə scanStage əvəzinə) ----------
+  function scanStage(files, exTitle) {
+    openKF();
+    if (S) S.errs = [];
+    KF.errOk = false;
+    const urls = files.map(f => URL.createObjectURL(f)); KF.urls = (KF.urls || []).concat(urls);
+    KF.stack = ["proc"]; KF.view = "proc"; kfHead();
+    if (exTitle) $("kf-t").textContent = exTitle;
+    kfMain().innerHTML = wrap(`<div class="kf-stage"><div class="kf-eb">TTM · SMART SCAN</div><div class="kf-lot" id="kf-slot"></div>
+      <h2 id="kf-pt">Vərəqlər oxunur</h2><p id="kf-pn">0 / ${files.length} vərəq</p><div class="kf-bar"><i id="kf-pb"></i></div>
+      <div class="kf-steps">${["QR kodlar tanınır", "Cavablar oxunur", "Ballar hesablanır"].map((t, i) => `<div class="kf-step" id="kf-st${i}"><i>0${i + 1}</i>${t}</div>`).join("")}</div></div>
+      <div class="kf-leg" id="kf-leg"></div>
+      <div class="kf-th">${urls.map((u, i) => `<div class="kf-ti" id="kf-ti${i}"><img src="${u}" alt=""><span style="color:${IC_ST.wait[1]}">${IC_ST.wait[0]}</span></div>`).join("")}</div>
+      <button class="kf-pri" id="kf-pgo" disabled>Oxunur...</button>
+      <button class="kf-sec" id="kf-pstop">Dayandır</button>`);
+    lplay($("kf-slot"), LT.scan(), true);
+    $("kf-pstop").onclick = async () => { if (SCN.busy && await ttmConfirm("Emal dayandırılsın? Oxunmuş vərəqlər saxlanılır.")) SCN.stop = true; };
+    const steps = p => [0, 1, 2].forEach(i => { const s = $("kf-st" + i); if (!s) return; const ph = p < .4 ? 0 : p < .8 ? 1 : 2; s.className = "kf-step" + (i < ph ? " ok" : i === ph ? " on" : ""); s.querySelector("i").textContent = i < ph ? "✓" : "0" + (i + 1); });
+    steps(0);
+    return {
+      set(i, k, note) {
+        const it = $("kf-ti" + i); if (!it) return;
+        it.className = "kf-ti " + k; const s = it.querySelector("span"); s.style.color = IC_ST[k][1]; s.textContent = note || IC_ST[k][0];
+        if (k === "read") it.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      },
+      prog(d, t) { const p = $("kf-pn"), b = $("kf-pb"); if (p) p.textContent = `${d} / ${t} vərəq`; if (b) b.style.width = (d / t * 100) + "%"; steps(d / t); },
+      title(t) { const x = $("kf-t"); if (x) x.textContent = t; },
+      done(okN, manN, errN) {
+        [0, 1, 2].forEach(i => { const s = $("kf-st" + i); if (s) { s.className = "kf-step ok"; s.querySelector("i").textContent = "✓"; } });
+        $("kf-leg").innerHTML = `<span class="kf-pill g">${okN} oxundu</span><span class="kf-pill w">${manN} təsdiq lazım</span><span class="kf-pill r">${errN} oxunmadı</span>`;
+        const st = $("kf-pstop"); if (st) st.remove();
+        const go = $("kf-pgo");
+        if (!S || !Object.keys(S.list).length) {
+          $("kf-pt").textContent = "Vərəq oxunmadı"; $("kf-pn").textContent = "Şəkildə 4 qara künc və alt kod zolağı görünsün";
+          go.textContent = "Yenidən şəkil seç"; go.disabled = false; go.onclick = () => kfCloseAll(); return;
+        }
+        KF.pr0 = problems().length;
+        $("kf-pt").textContent = "Yoxlama tamamlandı";
+        $("kf-pn").textContent = KF.pr0 ? `${KF.pr0} problem sənin təsdiqini gözləyir` : "Bütün vərəqlər oxundu";
+        go.textContent = KF.pr0 ? "Problemləri həll et →" : "Davam et →"; go.disabled = false; go.onclick = kfNext;
+      },
+      close: kfCloseAll
+    };
+  }
+  function kfNext() {
+    if (problems().length) return kfGo("problems", true);
+    if (!KF.wDone && wItems().length) return kfGo("wintro", true);
+    kfGo("results", true);
+  }
+
+  // ---------- 2) PROBLEMLİ VƏRƏQLƏR (yerində düzəliş) ----------
+  function problems() {
+    if (!S) return [];
+    const r = [];
+    Object.entries(S.list).forEach(([key, e]) => {
+      if (!e.stu) r.push({ k: "who", key });
+      const rows = merged(e);
+      S.qs.forEach((q, i) => { const a = rows[i]; if (a && needs(a) && !(i in e.rv)) r.push({ k: "q", key, i }); });
+      if (pending(e).miss && !e.missOk) r.push({ k: "miss", key });
+    });
+    if (S.errs.length && !KF.errOk) r.push({ k: "err" });
+    return r;
+  }
+  function qCard(key, i, edit) {
+    const e = S.list[key], a = merged(e)[i], q = S.qs[i], rv = e.rv[i] || null, id = `kfc_${key}_${i}`;
+    const nm = e.stu ? esc(e.stu.fullName) : "Naməlum şagird";
+    const img = a && a.img ? `<img class="kf-crop" src="${a.img}" onclick="openImageLightbox(this.src)" alt="Sual ${i + 1}">` : "";
+    let tag = "", body = "";
+    if (a.t === "mcq") {
+      tag = a.st === "multi" ? "Bir neçə işarə" : a.st === "unsure" ? "Zəif işarə" : a.st === "blank" ? "Boş" : "Oxundu: " + LET[a.v];
+      const cur = rv ? (rv.x ? "x" : rv.v) : (a.st === "ok" ? a.v : null);
+      const on = k => edit && cur === k ? "on" : "";
+      body = `<div class="kf-ask">Şagird hansını işarələyib?</div><div class="kf-ch">${[0, 1, 2, 3, 4].map(k => `<button class="${on(k)}" onclick="kfSet('${key}',${i},{v:${k}})">${LET[k]}</button>`).join("")}<button class="e ${on(null)}" onclick="kfSet('${key}',${i},{v:null})">Boş</button></div>
+        <button class="kf-lnk" onclick="kfSet('${key}',${i},{v:null,x:1})">${edit && cur === "x" ? "✓ " : ""}Bir neçə variant işarələnib → səhv say</button>`;
+    } else if (a.t === "num" || a.t === "wr") {
+      tag = a.t === "num" ? (a.st === "unsure" ? "Rəqəm aydın deyil" : "Rəqəmli cavab") : "Yazılı cavab";
+      const val = rv ? (rv.txt ?? "") : (a.t === "num" ? a.v : "");
+      const res = rv && rv.ok !== undefined ? rv.ok : null;
+      body = `<div class="kf-ask">Şagirdin cavabı</div><div class="kf-row"><input class="kf-in" id="kfi_${key}_${i}" value="${esc(val || "")}" placeholder="Cavabı yaz" inputmode="${a.t === "num" ? "decimal" : "text"}"><button onclick="kfTxt('${key}',${i})">Yoxla</button></div>
+        <div class="kf-ch c3"><button class="ok ${edit && res === true ? "on" : ""}" onclick="kfOk('${key}',${i},true)">✓ Düz</button><button class="no ${edit && res === false && !(rv && rv.blank) ? "on" : ""}" onclick="kfOk('${key}',${i},false)">✕ Səhv</button><button class="${edit && rv && rv.blank ? "on" : ""}" onclick="kfSet('${key}',${i},{blank:1})">Boş</button></div>
+        <div class="kf-key">Düzgün cavab: <b>${esc(q.correctAnswer || "")}</b></div>`;
+    } else if (!a.img) {
+      tag = "Ətraflı · boş";
+      body = `<div class="kf-ask">Bu sualın xanasında yazı tapılmadı, ona görə 0 bal sayılır. Vərəqə yuxarıdakı düymə ilə baxa bilərsən.</div>`;
+    } else {
+      tag = "Ətraflı · yazı var?";
+      const ink = rv ? rv.ink : a.st === "ink";
+      body = `<div class="kf-ask">Vərəqdə həll yazılıb?</div><div class="kf-ch c2"><button class="${edit && ink ? "on" : ""}" onclick="kfSet('${key}',${i},{ink:true})">Yazılıb → yoxlanacaq</button><button class="${edit && !ink ? "on" : ""}" onclick="kfSet('${key}',${i},{ink:false})">Boş → 0 bal</button></div>`;
+    }
+    return `<div class="kf-card" id="${id}"><div class="kf-ch-h"><span class="kf-qn ${edit ? "b" : ""}">${i + 1}</span><div class="kf-ct"><b>${nm}</b><small>${i + 1}-ci sual · ${qType(q)}</small></div><span class="kf-pill ${edit ? "b" : "w"}">${tag}</span></div>${img}${body}</div>`;
+  }
+  function whoList(key, s) {
+    s = (s || "").trim().toLocaleLowerCase("az");
+    const L = exStudents(S.ex).filter(x => !s || (x.fullName || "").toLocaleLowerCase("az").includes(s) || OMR.numCode(x.id).includes(s))
+      .sort((a, b) => (S.list[a.id] ? 1 : 0) - (S.list[b.id] ? 1 : 0)).slice(0, 6);
+    return L.map(x => `<button class="kf-pick" onclick="kfAssign('${key}','${x.id}')"><span class="kf-av">${ini(x.fullName)}</span><span class="kf-ct"><b>${esc(x.fullName)}</b><small>${esc(groupName(x.groupId))} · Kod ${OMR.numCode(x.id)}${S.list[x.id] ? " · vərəqi var" : ""}</small></span><span class="kf-chev">›</span></button>`).join("") || `<div class="kf-mut" style="padding:10px 2px">Şagird tapılmadı</div>`;
+  }
+  function whoCard(key) {
+    const e = S.list[key];
+    return `<div class="kf-card" id="kfw_${key}"><div class="kf-ch-h"><span class="kf-qn r">?</span><div class="kf-ct"><b>Naməlum vərəq</b><small>${e.idRead ? "Oxunan kod: " + esc(e.idRead) + " — uyğun şagird yoxdur" : "Şagird kodu oxunmadı"}</small></div><span class="kf-pill r">Tanınmadı</span></div>
+      ${e.idImg ? `<img class="kf-crop" src="${e.idImg}" onclick="openImageLightbox(this.src)" alt="Kod">` : ""}
+      ${Object.keys(e.pages).map(k => `<button class="kf-lnk" onclick="openImageLightbox(S_SHEET('${key}',${k}))">Vərəqə bax (səhifə ${+k + 1}) ↗</button>`).join(" ")}
+      <div class="kf-ask">Bu vərəq kimindir?</div>
+      <input class="kf-in" style="margin-top:8px" placeholder="Ad və ya kod ilə axtar" oninput="kfWho('${key}',this.value)"><div id="kfwl_${key}">${whoList(key, "")}</div></div>`;
+  }
+  function missCard(key) {
+    const e = S.list[key], p = pending(e);
+    return `<div class="kf-card" id="kfm_${key}"><div class="kf-ch-h"><span class="kf-qn r">!</span><div class="kf-ct"><b>${e.stu ? esc(e.stu.fullName) : "Naməlum şagird"}</b><small>${p.miss} səhifə yüklənməyib</small></div><span class="kf-pill r">Səhifə çatmır</span></div>
+      <div class="kf-ask">Çatmayan səhifənin şəklini çək və ya həmin sualları boş say.</div>
+      <div class="kf-add"><label>${IC.cam}Şəkil çək<input type="file" accept="image/*" capture="environment" onchange="ppFiles(this)"></label><button class="kf-sec" style="margin:0" onclick="kfMissBlank('${key}')">Boş say</button></div></div>`;
+  }
+  function errCard() {
+    return `<div class="kf-card" id="kfe"><div class="kf-ch-h"><span class="kf-qn r">${S.errs.length}</span><div class="kf-ct"><b>Oxunmayan şəkillər</b><small>Bu şəkillərdən nəticə çıxmadı</small></div><span class="kf-pill r">Yenidən çək</span></div>
+      <div class="kf-key" style="line-height:1.6">${S.errs.slice(0, 6).map(x => "• " + esc(x)).join("<br>")}</div>
+      <div class="kf-add"><label>${IC.cam}Yenidən çək<input type="file" accept="image/*" capture="environment" multiple onchange="ppFiles(this)"></label><button class="kf-sec" style="margin:0" onclick="kfErrSkip()">Keç</button></div></div>`;
+  }
+  function vProblems() {
+    const P = problems(); if (P.length > KF.pr0) KF.pr0 = P.length;
+    const done = KF.pr0 - P.length, tot = Math.max(KF.pr0, 1);
+    const wN = !KF.wDone ? wItems().length : 0;
+    kfMain().innerHTML = wrap(`<div class="kf-eb">Skan zamanı tapıldı</div><div class="kf-h2">Problemli vərəqlər</div><p class="kf-sub">Sistemin oxuya bilmədiyi yerləri indi düzəlt: şəklə bax və şagirdin cavabını seç.</p>
+      <div class="kf-cardb" style="margin-top:14px;padding:13px"><div class="kf-prog"><span>Həll olunub</span><b style="color:var(--kink)">${done} / ${KF.pr0}</b></div><div class="kf-gbar"><i style="width:${done / tot * 100}%"></i></div></div>
+      <div id="kf-plist">${P.length ? P.map(p => p.k === "who" ? whoCard(p.key) : p.k === "q" ? qCard(p.key, p.i) : p.k === "miss" ? missCard(p.key) : errCard()).join("")
+        : `<div class="kf-cardb kf-empty" style="margin-top:12px"><div class="kf-rl" id="kf-elot">✓</div><b>Hamısı həll olundu</b><p class="kf-sub">Bütün vərəqlər oxundu.</p></div>`}</div>
+      <button class="kf-pri" id="kf-pnext" ${P.length ? "disabled" : ""}>${P.length ? P.length + " problem qalıb" : wN ? "Yazılı cavablara keç →" : "Nəticələrə keç →"}</button>`);
+    if (!P.length) lplay($("kf-elot"), LT.res(true), false);
+    $("kf-pnext").onclick = kfNext;
+  }
+  function kfResolve(card, ok, title, sub, after) {
+    if (!card) return after && after();
+    card.innerHTML = `<div class="kf-res">${resIcon(ok)}<div><b style="color:${ok ? "#138252" : "#c53c4c"}">${title}</b><small>${sub}</small></div></div>`;
+    lplay(card.querySelector(".kf-rl"), LT.res(ok), false);
+    try { ttmSound && ttmSound(ok ? "ok" : "no"); } catch (e) { }
+    setTimeout(() => { card.classList.add("gone"); setTimeout(() => after && after(), 360); }, 1000);
+  }
+  function applyRv(e, i, o) {
+    const r = Object.assign({}, e.rv[i] || {});
+    if ("txt" in o) { r.txt = o.txt; delete r.blank; r.ok = o.txt.trim() ? checkOpenAnswer(o.txt, S.qs[i].correctAnswer) : false; }
+    if (o.blank) { r.blank = 1; r.txt = ""; r.ok = false; }
+    if ("ok" in o) r.ok = o.ok;
+    if ("v" in o) { r.v = o.v; if (o.x) r.x = 1; else delete r.x; }
+    if ("ink" in o) r.ink = o.ink;
+    e.rv[i] = r; e.saved = false;
+  }
+  function afterEdit(key) {
+    if (KF.view === "problems") return vProblems();
+    const sh = document.querySelector(".kf .kf-sheet"); if (sh) sh.remove();
+    const e = S.list[key]; if (e) kfSaveQuiet(e);
+    if (KF.view === "student") vStudent();
+  }
+  window.kfSet = (key, i, o) => {
+    const e = S && S.list[key]; if (!e) return;
+    applyRv(e, i, o);
+    const q = S.qs[i], r = e.rv[i], nm = e.stu ? e.stu.fullName : "Naməlum şagird";
+    let ok = true, t = "";
+    if (q.type === "mcq") { ok = r.v !== null && r.v === q.correctIndex; t = r.x ? "çox işarə → səhv" : r.v === null ? "boş" : LET[r.v] + (ok ? " · düz cavab" : " · səhv cavab"); if (r.v === null) ok = false; }
+    else if (q.type === "detailed") { t = r.ink ? "yazılıb → yoxlanacaq" : "boş → 0 bal"; ok = true; }
+    else { ok = !!r.ok; t = r.blank ? "boş" : (r.txt ? r.txt + " · " : "") + (ok ? "düz" : "səhv"); }
+    kfResolve($(`kfc_${key}_${i}`), ok, `${i + 1}-ci sual: ${esc(t)}`, esc(nm) + " · yadda saxlanıldı", () => afterEdit(key));
+  };
+  window.kfTxt = (key, i) => { const v = ($(`kfi_${key}_${i}`) || {}).value || ""; if (!v.trim()) { toast("Cavabı yaz və ya «Boş» seç"); return; } kfSet(key, i, { txt: v.trim() }); };
+  window.kfOk = (key, i, ok) => { const v = (($(`kfi_${key}_${i}`) || {}).value || "").trim(); kfSet(key, i, v ? { txt: v, ok } : { ok }); };
+  window.kfWho = (key, s) => { const b = $("kfwl_" + key); if (b) b.innerHTML = whoList(key, s); };
+  window.kfAssign = (key, sid) => {
+    const e = S.list[key], stu = exStudents(S.ex).find(s => s.id === sid);
+    if (!e || !stu) return;
+    const t = S.list[sid];
+    if (t && t !== e) {
+      if (t.kind !== e.kind) { toast("Bu şagirdin başqa növ vərəqi artıq var"); return; }
+      Object.assign(t.pages, e.pages); Object.assign(t.rv, e.rv); t.idImg = t.idImg || e.idImg; t.saved = false;
+    } else { e.stu = stu; e.saved = false; S.list[sid] = e; }
+    delete S.list[key];
+    kfResolve($("kfw_" + key), true, esc(stu.fullName), "Vərəq bu şagirdə yazıldı", vProblems);
+  };
+  window.kfMissBlank = key => {
+    const e = S.list[key]; if (!e) return; const rows = merged(e);
+    S.qs.forEach((q, i) => { if (!rows[i] && !(i in e.rv)) e.rv[i] = q.type === "mcq" ? { v: null } : q.type === "detailed" ? { ink: false } : { blank: 1, txt: "", ok: false }; });
+    e.missOk = true; e.saved = false;
+    kfResolve($("kfm_" + key), true, "Çatmayan suallar boş sayıldı", e.stu ? esc(e.stu.fullName) : "", vProblems);
+  };
+  window.kfErrSkip = () => { KF.errOk = true; kfResolve($("kfe"), true, "Oxunmayan şəkillər keçildi", "Onlar nəticəyə düşmür", vProblems); };
+
+  // ---------- 3) YAZILI (ƏTRAFLI) SUALLAR ----------
+  function wItems(all) {
+    const r = [];
+    known().forEach(([key, e]) => {
+      const rows = merged(e);
+      S.qs.forEach((q, i) => {
+        if (q.type !== "detailed") return;
+        const a = rows[i], rv = e.rv[i]; if (!a) return;
+        const ink = rv ? rv.ink : a.st === "ink"; if (!ink || !a.img) return;
+        if (!all && e.dg && e.dg[i] != null) return;
+        r.push({ key, i });
+      });
+    });
+    return r;
+  }
+  function vWIntro() {
+    const n = wItems().length;
+    kfMain().innerHTML = wrap(`<div class="kf-eb">İkinci mərhələ</div><div class="kf-h2">Yazılı sualların yoxlanması</div><p class="kf-sub">Avtomatik yoxlama bitdi. Ətraflı həlləri indi qiymətləndirə və ya sonraya saxlaya bilərsən.</p>
+      <div class="kf-cardb" style="margin-top:18px"><div style="display:flex;align-items:center;gap:14px"><div style="width:52px;height:52px;border-radius:18px;background:#eaf2ff;color:#1265ed;display:grid;place-items:center;font-size:24px">✎</div><div style="flex:1;min-width:0"><b style="font-size:15px">${n} ətraflı cavab</b><div class="kf-sub" style="margin-top:4px">Müəllim qiymətləndirməsi lazımdır</div></div><span class="kf-pill w">Gözləyir</span></div>
+      <p class="kf-sub" style="margin-top:12px">Hər həllin şəklinə bax və 0, 0.5 və ya 1 bal ver. Burada yoxladıqların «Ətraflı yoxlanış» bölməsinə yoxlanılmış kimi düşür. Boş buraxılan həllər avtomatik 0 bal alır.</p></div>
+      <button class="kf-pri" onclick="kfWStart()">Yoxlamağa başla →</button><button class="kf-sec" onclick="kfWSkip()">Sonraya saxla</button>`);
+  }
+  window.kfWStart = (key) => {
+    KF.wq = key ? wItems(true).filter(x => x.key === key) : wItems(); KF.wi = 0; KF.wsel = null; KF.wOne = !!key;
+    if (!KF.wq.length) { toast("Yoxlanacaq həll yoxdur"); return; }
+    kfGo("written");
+  };
+  window.kfWSkip = async () => {
+    const n = wItems().length;
+    if (n && !(await ttmConfirm(`${n} ətraflı cavab hələ yoxlanmayıb.\nSonraya qalsın? Onlar «Ətraflı yoxlanış» bölməsinə düşəcək.`))) return;
+    KF.wDone = true; kfGo("results", true);
+  };
+  function vWritten() {
+    const it = KF.wq[KF.wi]; if (!it) return kfGo("results", true);
+    const e = S.list[it.key], q = S.qs[it.i], a = merged(e)[it.i], cur = KF.wsel ?? (e.dg && e.dg[it.i] != null ? e.dg[it.i] : null);
+    const left = KF.wq.length - KF.wi - 1;
+    kfMain().innerHTML = wrap(`<div class="kf-eb">Ətraflı suallar · ${KF.wi + 1} / ${KF.wq.length}</div><div class="kf-h2">Həlli qiymətləndir</div><p class="kf-sub">Şagirdin həllinə bax və bal ver.</p>
+      <div class="kf-cardb" style="margin-top:14px"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px"><b style="font-size:13px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(e.stu.fullName)} · ${it.i + 1}-ci sual</b><span class="kf-pill b">Maks. 1 bal</span></div>
+        ${q.text || q.imageBase64 ? `<div class="kf-wq">${esc(q.text || "")}${q.imageBase64 ? `<img src="${q.imageBase64}" alt="">` : ""}</div>` : ""}
+        <img class="kf-wimg" src="${a.img}" onclick="openImageLightbox(this.src)" alt="Şagirdin həlli">
+        <div class="kf-grade">${[0, 0.5, 1].map(g => `<button class="${cur === g ? "on" : ""}" onclick="kfWSel(${g})">${g} bal</button>`).join("")}</div></div>
+      <div class="kf-foot"><span>Qiymətləndirilən ${KF.wi + 1} / ${KF.wq.length}</span><span>${left ? left + " həll qalıb" : "Sonuncu həll"}</span></div>
+      <button class="kf-pri" onclick="kfWSave()">${left ? "Yadda saxla və növbəti →" : "Yadda saxla və bitir ✓"}</button>
+      ${KF.wOne ? "" : `<button class="kf-sec" onclick="kfWSkip()">Qalanlarını sonraya saxla</button>`}`);
+  }
+  window.kfWSel = g => { KF.wsel = g; document.querySelectorAll(".kf-grade button").forEach(b => b.classList.toggle("on", parseFloat(b.textContent) === g)); };
+  window.kfWSave = () => {
+    const it = KF.wq[KF.wi];
+    const e = S.list[it.key], g = KF.wsel ?? (e.dg && e.dg[it.i] != null ? e.dg[it.i] : null);
+    if (g === null) { toast("Əvvəlcə bal seç: 0, 0.5 və ya 1"); return; }
+    e.dg = e.dg || {}; e.dg[it.i] = g; e.saved = false; KF.wsel = null; KF.wi++;
+    if (KF.wOne) { kfSaveQuiet(e); kfDone("Bal yadda saxlanıldı", `${e.stu.fullName} · ${fmtN(g)} bal`, () => kfBack()); return; }
+    if (KF.wi < KF.wq.length) { toast(`${e.stu.fullName}: ${fmtN(g)} bal`); vWritten(); kfMain().scrollTop = 0; }
+    else { KF.wDone = true; kfDone("Ətraflı suallar qiymətləndirildi", `${KF.wq.length} həll yadda saxlanıldı`, () => kfGo("results", true)); }
+  };
+
+  // ---------- 4) NƏTİCƏLƏR ----------
+  function rs(e) {
+    const b = build(e), pq = b.pq; let ok = 0, bad = 0, blank = 0, dp = 0, ds = 0;
+    pq.forEach(p => { if (p.type === "detailed") { if (p.points == null) dp++; else ds += p.points; } else if (p.isCorrect) ok++; else if (p.multi || (p.selected != null && p.selected !== "")) bad++; else blank++; });
+    return { pq, ok, bad, blank, dp, ds, pts: ok + ds, n: pq.length, pct: computeAttemptStats(pq).score };
+  }
+  function ranked() {
+    const L = known().filter(([, e]) => ready(e)).map(([key, e]) => Object.assign({ key, e }, rs(e)));
+    L.forEach(x => { x.rank = 1 + L.filter(y => y.pts > x.pts).length; });
+    return L;
+  }
+  async function kfSaveAll() {
+    if (!S || KF.saving) return;
+    const R = Object.values(S.list).filter(e => !e.saved && ready(e)); if (!R.length) return;
+    KF.saving = true; let n = 0;
+    for (const e of R) {
+      KF.saveMsg = `Nəticələr saxlanılır: ${n + 1} / ${R.length}`; kfPub();
+      try { if (await saveOne(e)) n++; } catch (err) { console.error(err); toast(e.stu.fullName + ": " + errMsg(err)); break; }
+    }
+    KF.saving = false; KF.saveMsg = ""; if (n) KF.pub = false; kfPub();
+  }
+  async function kfSaveQuiet(e) {
+    if (!ready(e)) return;
+    try { if (await saveOne(e)) { KF.pub = false; toast("Yeniləndi: " + e.stu.fullName); } } catch (err) { console.error(err); toast(errMsg(err)); }
+    kfPub();
+  }
+  function kfPub() {
+    const box = $("kf-pub"); if (!box || !S) return;
+    const all = known().map(([, e]) => e), uns = all.filter(e => !e.saved && ready(e)).length;
+    const dp = wItems().length;
+    let h = "";
+    if (KF.saving) h = `<div class="kf-pub i"><span class="pi">⟳</span><div><b>${KF.saveMsg}</b><small>Səhifəni bağlama</small></div></div>`;
+    else if (uns) h = `<div class="kf-pub w"><span class="pi">!</span><div><b>${uns} nəticə saxlanmayıb</b><small>İnterneti yoxla və yenidən saxla</small></div><button onclick="kfSaveAllBtn()">Saxla</button></div>`;
+    else if (KF.pub) h = `<div class="kf-pub ok"><span class="pi">✓</span><div><b>Nəticələr dərc olundu</b><small>Şagirdlər öz nəticəsini kabinetdə görür</small></div></div>`;
+    else h = (dp ? `<div class="kf-pub w"><span class="pi">✎</span><div><b>${dp} ətraflı həll yoxlanmayıb</b><small>«Ətraflı yoxlanış» bölməsində gözləyir</small></div><button onclick="kfWStart()">Yoxla</button></div>` : "")
+      + `<button class="kf-pri g" style="margin-top:12px" onclick="kfPublish()">Nəticələri şagirdlərə göstər</button>`;
+    box.innerHTML = h;
+  }
+  window.kfSaveAllBtn = () => kfSaveAll();
+  window.kfPublish = async () => {
+    await kfSaveAll();
+    const n = await ttmConfirmExam(S.ex.id);
+    if (n === null) return;
+    KF.pub = true; Object.values(S.list).forEach(e => { if (e.saved) e.conf = true; });
+    if (n > 0) kfDone("Nəticələr dərc olundu", "Şagirdlər öz nəticəsini kabinetdə görür", kfPub); else kfPub();
+  };
+  function vResults() {
+    const R = ranked().sort((a, b) => b.pts - a.pts), top = R.slice(0, 3), cls = ["p1", "p2", "p3"];
+    kfMain().innerHTML = wrap(`<div class="kf-eb">${esc(S.ex.title || "Sınaq")} · reytinq</div><div class="kf-h2">Şagird nəticələri</div><p class="kf-sub">${R.length} iştirakçı · ${S.qs.length} sual</p>
+      <div id="kf-pub"></div>
+      <div class="kf-tabs"><button class="${KF.list ? "" : "on"}" onclick="kfList(false)">Reytinq</button><button class="${KF.list ? "on" : ""}" onclick="kfList(true)">Siyahı</button><button onclick="kfGo('stats',true)">Statistika ↗</button></div>
+      ${!KF.list && top.length ? `<div class="kf-podw"><div class="kf-conf" id="kf-conf"></div><div class="kf-pod">${[1, 0, 2].map(i => { const x = top[i]; if (!x) return ""; return `<div class="kf-p ${cls[i]}" onclick="kfStu('${x.key}')"><div class="kf-per">${i === 0 ? '<div class="kf-crown">♛</div>' : ""}<div class="kf-pa">${ini(x.e.stu.fullName)}</div></div><div class="kf-pn">${esc((x.e.stu.fullName || "").split(" ")[0])}</div><div class="kf-ps">${fmtN(x.pts)}/${x.n}</div><div class="kf-ped">${x.rank}</div></div>`; }).join("")}</div></div>` : ""}
+      <div class="kf-srow"><label class="kf-sbox"><span>⌕</span><input id="kf-q" placeholder="Ad və ya kod" value="${esc(KF.fq)}" oninput="kfFq(this.value)"></label><button class="kf-sort" onclick="kfSort()" aria-label="Sırala">↕</button></div>
+      <div class="kf-chips" id="kf-chips"></div><div id="kf-rl"></div>`);
+    kfPub(); kfRList();
+    if (!KF.list && top.length) lplay($("kf-conf"), LT.conf(), false);
+    if (!KF.saving && Object.values(S.list).some(e => !e.saved && ready(e))) kfSaveAll();
+  }
+  function kfRList() {
+    const R = ranked(), groups = [...new Set(R.map(x => x.e.stu.groupId))];
+    const pn = R.filter(x => x.dp).length;
+    const F = [["all", "Hamısı · " + R.length], ["det", "Ətraflı gözləyir · " + pn]].concat(groups.map(g => [g, groupName(g)]));
+    $("kf-chips").innerHTML = F.map(f => `<button class="${KF.fst === f[0] ? "on" : ""}" onclick="kfFst('${f[0]}')">${esc(f[1])}</button>`).join("");
+    const s = KF.fq.trim().toLocaleLowerCase("az");
+    const L = R.filter(x => (KF.fst === "all" || (KF.fst === "det" ? x.dp : x.e.stu.groupId === KF.fst)) && (!s || (x.e.stu.fullName || "").toLocaleLowerCase("az").includes(s) || OMR.numCode(x.e.stu.id).includes(s)))
+      .sort((a, b) => KF.asc ? a.pts - b.pts : b.pts - a.pts);
+    $("kf-rl").innerHTML = L.length ? L.map(x => `<button class="kf-sr" onclick="kfStu('${x.key}')"><span class="kf-rk ${x.rank === 1 ? "gd" : ""}">${x.rank}</span><span class="kf-av">${ini(x.e.stu.fullName)}</span><span class="kf-ct"><b>${esc(x.e.stu.fullName)}</b><small>${esc(groupName(x.e.stu.groupId))} · Kod ${OMR.numCode(x.e.stu.id)}${x.dp ? " · " + x.dp + " ətraflı gözləyir" : ""}</small></span><span class="kf-sc ${x.pct >= 70 ? "" : x.pct >= 50 ? "m" : "l"}">${fmtN(x.pts)}/${x.n}<small>${x.pct}%</small></span><span class="kf-chev">›</span></button>`).join("")
+      : `<div class="kf-mut" style="text-align:center;padding:20px 0">Heç kim tapılmadı</div>`;
+  }
+  window.kfList = v => { KF.list = v; vResults(); };
+  window.kfFq = v => { KF.fq = v; kfRList(); };
+  window.kfFst = v => { KF.fst = v; kfRList(); };
+  window.kfSort = () => { KF.asc = !KF.asc; kfRList(); toast(KF.asc ? "Ən aşağı baldan" : "Ən yüksək baldan"); };
+  window.kfStu = key => { KF.stu = key; kfGo("student"); };
+
+  // ---------- şagird ----------
+  function vStudent() {
+    const e = S.list[KF.stu]; if (!e) return kfGo("results", true);
+    const x = rs(e), rk = ranked().find(r => r.key === KF.stu), rows = merged(e);
+    const cells = x.pq.map((p, i) => {
+      let c = "", sm = "";
+      if (p.type === "detailed") { if (p.points == null) { c = "pd"; sm = "?"; } else { c = p.points >= 1 ? "" : p.points > 0 ? "hf" : (p.blank ? "bl" : "no"); sm = p.blank ? "—" : fmtN(p.points); } }
+      else if (p.isCorrect) { sm = p.type === "mcq" ? LET[p.selected] : String(p.selected || ""); }
+      else if (p.multi) { c = "no"; sm = "çox"; }
+      else if (p.selected == null || p.selected === "") { c = "bl"; sm = "—"; }
+      else { c = "no"; sm = p.type === "mcq" ? LET[p.selected] : String(p.selected); }
+      return `<button class="kf-q ${c}" onclick="kfQ(${i})" aria-label="${i + 1}-ci sual">${i + 1}<small>${esc(sm)}</small></button>`;
+    }).join("");
+    kfMain().innerHTML = wrap(`<div class="kf-prof"><div class="kf-pav">${ini(e.stu.fullName)}</div><h2>${esc(e.stu.fullName)}</h2><p>${esc(groupName(e.stu.groupId))} · Kod ${OMR.numCode(e.stu.id)}${rk ? " · " + ord(rk.rank) + " yer" : ""}</p>
+      <div class="kf-big">${fmtN(x.pts)}/${x.n} <span>bal · ${x.pct}%</span></div><span class="kf-pill ${x.dp ? "w" : e.saved ? "g" : "b"}">${x.dp ? x.dp + " ətraflı gözləyir" : e.saved ? "✓ Saxlanılıb" : "Saxlanılır..."}</span></div>
+      <div class="kf-m3"><div><b style="color:#16a66a">${x.ok}</b><small>Düzgün</small></div><div><b style="color:#e34e5b">${x.bad}</b><small>Səhv</small></div><div><b style="color:#8a96ae">${x.blank}</b><small>Boş</small></div></div>
+      <div class="kf-cardb" style="margin-top:12px"><b style="font-size:14px">Cavablar</b><div class="kf-mut" style="margin-top:3px">Sual nömrəsinə toxun: cavaba bax və ya düzəlt.</div>
+        <div class="kf-key2"><span><i style="background:#16a66a"></i>Düz</span><span><i style="background:#e34e5b"></i>Səhv</span><span><i style="background:#a4aec0"></i>Boş</span><span><i style="background:#ed9f20"></i>½ bal</span><span><i style="background:#8b6cf0"></i>Ətraflı gözləyir</span></div>
+        <div class="kf-qg">${cells}</div>
+        <div class="kf-pages">${Object.keys(e.pages).map(k => `<button onclick="openImageLightbox(S_SHEET('${KF.stu}',${k}))">Vərəq ${+k + 1} ↗</button>`).join("")}</div></div>
+      ${x.dp ? `<button class="kf-pri" onclick="kfWStart('${KF.stu}')">Ətraflı həlləri yoxla (${x.dp}) →</button>` : ""}
+      <button class="kf-sec" onclick="kfBack()">Reytinqə qayıt</button>`);
+  }
+  window.kfQ = i => {
+    const key = KF.stu, e = S.list[key], a = merged(e)[i], q = S.qs[i];
+    if (!a) { toast("Bu səhifə yüklənməyib"); return; }
+    let inner;
+    if (q.type === "detailed" && (e.rv[i] ? e.rv[i].ink : a.st === "ink") && a.img) {
+      const g = e.dg && e.dg[i] != null ? e.dg[i] : null;
+      inner = `<div class="kf-card" id="kfd_${i}"><img class="kf-wimg" src="${a.img}" onclick="openImageLightbox(this.src)" alt="">
+        <div class="kf-grade">${[0, 0.5, 1].map(v => `<button class="${g === v ? "on" : ""}" onclick="kfDG(${i},${v})">${v} bal</button>`).join("")}</div>
+        <button class="kf-lnk" onclick="kfSet('${key}',${i},{ink:false})">Həll yoxdur → boş say (0 bal)</button></div>`;
+    } else inner = qCard(key, i, true);
+    const sh = document.createElement("div"); sh.className = "kf-sheet";
+    sh.innerHTML = `<div class="kf-sbx"><div class="kf-shd"><b>${i + 1}-ci sual · ${qType(q)}</b><button class="kf-x" aria-label="Bağla">✕</button></div>
+      ${q.type === "mcq" ? `<div class="kf-key">Düzgün cavab: <b>${LET[q.correctIndex] || "—"}</b></div>` : ""}${inner}</div>`;
+    sh.onclick = ev => { if (ev.target === sh || ev.target.closest(".kf-x")) sh.remove(); };
+    (KF.ov || document.body).appendChild(sh);
+  };
+  window.kfDG = (i, g) => {
+    const e = S.list[KF.stu]; e.dg = e.dg || {}; e.dg[i] = g; e.saved = false;
+    kfResolve($("kfd_" + i), g > 0, `${i + 1}-ci sual: ${fmtN(g)} bal`, "Ətraflı yoxlanışa yoxlanılmış kimi düşür", () => afterEdit(KF.stu));
+  };
+
+  // ---------- 5) STATİSTİKA + İXRAC ----------
+  function qRates(R) {
+    return S.qs.map((q, i) => {
+      let s = 0, n = 0;
+      R.forEach(x => { const p = x.pq[i]; if (!p) return; if (p.type === "detailed") { if (p.points == null) return; s += p.points / (p.maxPoints || 1); } else s += p.isCorrect ? 1 : 0; n++; });
+      return { i, p: n ? s / n : null };
+    });
+  }
+  const barH = (lbl, p, txt, c) => `<div class="kf-bi"><label>${lbl}</label><div class="kf-bt"><i class="${c != null ? c : p >= .7 ? "" : p >= .5 ? "m" : "l"}" style="width:${Math.round(Math.max(0, Math.min(1, p)) * 100)}%"></i></div><b>${txt}</b></div>`;
+  function vStats() {
+    const R = ranked(); let body = "";
+    if (!R.length) { kfMain().innerHTML = wrap(`<div class="kf-cardb kf-empty">Hələ nəticə yoxdur</div>`); return; }
+    if (KF.stTab === "q") {
+      const qs = qRates(R).filter(x => x.p !== null).sort((a, b) => a.p - b.p).slice(0, 6);
+      body = `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b style="font-size:13px">Ən çətin suallar</b><span class="kf-pill b">Düz cavab faizi</span></div>` + qs.map(x => barH(`${x.i + 1}-ci sual`, x.p, Math.round(x.p * 100) + "%")).join("");
+    } else if (KF.stTab === "s") {
+      const B = [[0, 25], [25, 50], [50, 75], [75, 101]], cnt = B.map(b => R.filter(x => x.pct >= b[0] && x.pct < b[1]).length), mx = Math.max(1, ...cnt);
+      body = `<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:13px">Bal bölgüsü</b><span class="kf-pill b">${R.length} şagird</span></div>` + B.map((b, j) => barH(`${b[0]}–${Math.min(b[1], 100)}%`, cnt[j] / mx, cnt[j] + " nəf.", ["l", "l", "m", ""][j])).join("");
+    } else {
+      const G = [...new Set(R.map(x => x.e.stu.groupId))];
+      body = `<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:13px">Qruplar üzrə orta nəticə</b><span class="kf-pill b">${G.length} qrup</span></div>` + G.map(g => { const L = R.filter(x => x.e.stu.groupId === g), a = L.reduce((t, x) => t + x.pct, 0) / L.length; return barH(esc(groupName(g)), a / 100, Math.round(a) + "%"); }).join("");
+    }
+    let ok = 0, bad = 0, bl = 0; R.forEach(x => { ok += x.ok; bad += x.bad; bl += x.blank; });
+    const t = ok + bad + bl || 1, po = Math.round(ok / t * 100), pn = Math.round(bad / t * 100), pb = Math.max(0, 100 - po - pn);
+    const avg = Math.round(R.reduce((s, x) => s + x.pct, 0) / R.length);
+    kfMain().innerHTML = wrap(`<div class="kf-eb">${esc(S.ex.title || "Sınaq")} · təhlil</div><div class="kf-h2">Statistika və hesabat</div><p class="kf-sub">${R.length} iştirakçı · orta nəticə ${avg}%</p>
+      <div class="kf-chips" style="margin-top:12px">${[["q", "Suallar"], ["s", "Bal bölgüsü"], ["g", "Qruplar"]].map(x => `<button class="${KF.stTab === x[0] ? "on" : ""}" onclick="kfStTab('${x[0]}')">${x[1]}</button>`).join("")}</div>
+      <div class="kf-cardb" style="margin-top:6px">${body}</div>
+      <div class="kf-cardb" style="margin-top:12px"><b style="font-size:13px">Cavabların bölgüsü</b><div class="kf-don"><div class="kf-dn" style="background:conic-gradient(#16a66a 0 ${po}%,#e34e5b ${po}% ${po + pn}%,#d9dfeb ${po + pn}% 100%)"><div><strong>${po}%</strong><small>Düzgün cavab</small></div></div>
+        <div class="kf-lg"><span><i style="background:#16a66a"></i>Düzgün · ${po}%</span><span><i style="background:#e34e5b"></i>Səhv · ${pn}%</span><span><i style="background:#d9dfeb"></i>Boş · ${pb}%</span></div></div></div>
+      <div class="kf-h2" style="font-size:16px;margin-top:18px">Hesabatı ixrac et</div>
+      <div class="kf-cardb" style="margin-top:8px;padding:6px 14px">
+        <div class="kf-rep"><span class="kf-ri">PDF</span><div><b>Nəticə hesabatı</b><small>Reytinq cədvəli və sual statistikası</small></div><button onclick="kfPdf(this)">Hazırla</button></div>
+        <div class="kf-rep"><span class="kf-ri x">XLS</span><div><b>Excel cədvəli</b><small>Hər şagirdin bütün cavabları və balı</small></div><button onclick="kfXls(this)">Hazırla</button></div></div>`);
+  }
+  window.kfStTab = t => { KF.stTab = t; vStats(); };
+  const fileBase = () => (S.ex.title || "sinaq").replace(/[^\wƏəıİĞğÜüŞşÖöÇç -]/g, " ").replace(/\s+/g, " ").trim() || "sinaq";
+  const ansTxt = p => p.type === "detailed" ? (p.points == null ? "gözləyir" : p.blank ? "boş" : fmtN(p.points)) : p.multi ? "çox işarə" : p.selected == null || p.selected === "" ? "—" : (p.type === "mcq" ? LET[p.selected] : String(p.selected));
+  window.kfXls = async btn => {
+    btn.disabled = true;
+    try {
+      await ensureLib("xlsx");
+      const R = ranked().sort((a, b) => b.pts - a.pts);
+      const head = ["Yer", "Ad Soyad", "Qrup", "Kod", "Düz", "Səhv", "Boş", "Ətraflı bal", "Ümumi bal", "Faiz"].concat(S.qs.map((q, i) => (i + 1) + "-ci sual"));
+      const rows = [head].concat(R.map(x => [x.rank, x.e.stu.fullName, groupName(x.e.stu.groupId), OMR.numCode(x.e.stu.id), x.ok, x.bad, x.blank, x.ds, x.pts, x.pct].concat(x.pq.map(p => ansTxt(p) + (p.isCorrect ? " ✓" : "")))));
+      const ws = XLSX.utils.aoa_to_sheet(rows); ws["!cols"] = [{ wch: 5 }, { wch: 26 }, { wch: 14 }, { wch: 9 }].concat(head.slice(4).map(() => ({ wch: 10 })));
+      const qr = qRates(R);
+      const ws2 = XLSX.utils.aoa_to_sheet([["Sual", "Növ", "Düzgün cavab", "Düz cavab %"]].concat(S.qs.map((q, i) => [i + 1, qType(q), q.type === "mcq" ? LET[q.correctIndex] : q.type === "detailed" ? "—" : (q.correctAnswer || ""), qr[i].p == null ? "—" : Math.round(qr[i].p * 100)])));
+      ws2["!cols"] = [{ wch: 6 }, { wch: 10 }, { wch: 16 }, { wch: 12 }];
+      const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Nəticələr"); XLSX.utils.book_append_sheet(wb, ws2, "Suallar");
+      XLSX.writeFile(wb, fileBase() + "_neticeler.xlsx");
+      toast("Excel faylı hazırdır");
+    } catch (e) { console.error(e); toast("Excel xətası: " + errAz(e)); }
+    btn.disabled = false;
+  };
+  window.kfPdf = async btn => {
+    btn.disabled = true; toast("PDF hazırlanır...");
+    try {
+      await ensureLib("jspdf");
+      const doc = new window.jspdf.jsPDF({ unit: "mm", format: "a4" });
+      await ensurePdfFont(doc);
+      const R = ranked().sort((a, b) => b.pts - a.pts), avg = R.length ? Math.round(R.reduce((s, x) => s + x.pct, 0) / R.length) : 0;
+      const grp = [...new Set(exGroups(S.ex))].map(groupName).join(", ");
+      doc.setFontSize(16); doc.setTextColor(11, 60, 93); doc.text(S.ex.title || "Sınaq", 14, 17);
+      doc.setFontSize(9); doc.setTextColor(110, 120, 140); doc.text(`${grp} · ${fmtD()} · ${R.length} iştirakçı · orta nəticə ${avg}%`, 14, 23);
+      const X = [14, 24, 92, 122, 140, 152, 164, 177, 192], H = ["Yer", "Ad Soyad", "Qrup", "Kod", "Düz", "Səhv", "Boş", "Bal", "%"];
+      let y = 32;
+      const header = () => { doc.setFillColor(11, 60, 93); doc.rect(12, y - 5, 186, 7.5, "F"); doc.setTextColor(255, 255, 255); doc.setFontSize(9); H.forEach((h, j) => doc.text(h, X[j], y)); y += 8; doc.setTextColor(20, 33, 46); };
+      header();
+      R.forEach((x, k) => {
+        if (y > 282) { doc.addPage(); y = 18; header(); }
+        if (k % 2) { doc.setFillColor(243, 246, 250); doc.rect(12, y - 5, 186, 7, "F"); }
+        const nm = doc.splitTextToSize(x.e.stu.fullName || "", 66)[0], gn = doc.splitTextToSize(groupName(x.e.stu.groupId) || "", 28)[0];
+        [String(x.rank), nm, gn, OMR.numCode(x.e.stu.id), String(x.ok), String(x.bad), String(x.blank), `${fmtN(x.pts)}/${x.n}`, x.pct + "%"].forEach((v, j) => doc.text(v, X[j], y));
+        y += 7;
+      });
+      doc.addPage(); y = 18;
+      doc.setFontSize(13); doc.setTextColor(11, 60, 93); doc.text("Sual statistikası (düz cavab faizi)", 14, y); y += 9; doc.setFontSize(9);
+      qRates(R).forEach(q => {
+        if (y > 284) { doc.addPage(); y = 18; }
+        doc.setTextColor(20, 33, 46); doc.text(`${q.i + 1}-ci sual · ${qType(S.qs[q.i])}`, 14, y);
+        doc.setFillColor(237, 241, 248); doc.rect(60, y - 3.2, 110, 4, "F");
+        if (q.p !== null) { const c = q.p >= .7 ? [22, 166, 106] : q.p >= .5 ? [240, 165, 34] : [227, 76, 91]; doc.setFillColor(c[0], c[1], c[2]); doc.rect(60, y - 3.2, 110 * q.p, 4, "F"); }
+        doc.text(q.p === null ? "—" : Math.round(q.p * 100) + "%", 175, y); y += 7;
+      });
+      doc.save(fileBase() + "_neticeler.pdf");
+      toast("PDF hazırdır");
+    } catch (e) { console.error(e); toast("PDF xətası: " + errAz(e)); }
+    btn.disabled = false;
+  };
+
+  // ---------- vərəqlər ----------
+  function vSheets() {
+    const all = Object.entries(S.list), pr = problems().length;
+    const items = [];
+    all.forEach(([key, e]) => Object.keys(e.pages).forEach(k => items.push({ key, e, k })));
+    kfMain().innerHTML = wrap(`<div class="kf-eb">${esc(S.ex.title || "Sınaq")}</div><div class="kf-h2">Skan edilmiş vərəqlər</div><p class="kf-sub">${items.length} vərəq${S.errs.length ? " · " + S.errs.length + " şəkil oxunmadı" : ""}</p>
+      ${pr ? `<div class="kf-pub w"><span class="pi">!</span><div><b>${pr} problem həll olunmayıb</b><small>Bu vərəqlərin nəticəsi hələ saxlanmayıb</small></div><button onclick="kfGo('problems')">Həll et</button></div>` : ""}
+      <div class="kf-add"><label>${IC.cam}Şəkil çək<input type="file" accept="image/*" capture="environment" onchange="ppFiles(this)"></label><label>${IC.gal}Qalereya<input type="file" accept="image/*" multiple onchange="ppFiles(this)"></label></div>
+      <div class="kf-th" style="margin-top:14px">${items.map(x => { const okk = ready(x.e); return `<div class="kf-ti ${okk ? "ok" : "man"}" style="cursor:zoom-in" onclick="openImageLightbox(S_SHEET('${x.key}',${x.k}))"><img src="${x.e.pages[x.k].sheet}" alt=""><span style="color:${okk ? "#16A34A" : "#D97706"}">${x.e.stu ? esc((x.e.stu.fullName || "").split(" ")[0]) : "Naməlum"}${Object.keys(x.e.pages).length > 1 ? " · " + (+x.k + 1) : ""}</span></div>`; }).join("")}</div>`);
+  }
+
+  // ---------- bitdi ekranı, bağlama ----------
+  function kfDone(title, sub, cb) {
+    const d = document.createElement("div"); d.className = "kf-done";
+    d.innerHTML = `${resIcon(true)}<b>${esc(title)}</b><span class="kf-mut">${esc(sub)}</span>`;
+    (KF.ov || document.body).appendChild(d); lplay(d.querySelector(".kf-rl"), LT.res(true), false);
+    try { ttmSound && ttmSound("done"); } catch (e) { }
+    setTimeout(() => { d.remove(); cb && cb(); }, 1600);
+  }
+  window.kfGo = kfGo;
+  async function kfTryClose() {
+    if (SCN.busy) { if (await ttmConfirm("Emal dayandırılsın? Oxunmuş vərəqlər saxlanılır.")) SCN.stop = true; return; }
+    if (!S || !Object.keys(S.list).length) return kfCloseAll();
+    const pr = problems().filter(p => p.k !== "err").length;
+    if (pr) { if (!(await ttmConfirm(`${pr} problem həll olunmayıb.\nHəmin vərəqlərin nəticəsi saxlanmayacaq. Çıxılsın?`))) return; }
+    else { const n = wItems().length; if (n && !KF.wDone && !(await ttmConfirm(`${n} ətraflı cavab hələ yoxlanmayıb.\nSonraya qalsın? Onlar «Ətraflı yoxlanış» bölməsinə düşəcək.`))) return; }
+    await kfSaveAll();
+    if (Object.values(S.list).some(e => !e.saved && ready(e)) && !(await ttmConfirm("Bəzi nəticələr saxlanmadı. Yenə də çıxılsın?"))) return;
+    kfCloseAll();
+  }
 
   // ---------- düymələr ----------
   const nb = $("ex-new-btn");
