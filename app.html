@@ -15476,5 +15476,27 @@ body.xn-open #xn-bd{opacity:1;pointer-events:auto}
 })();
 </script>
 
+<script>
+/* Nəticə ekranı: bazadan gələn qapalı suallarda variant mətnləri */
+(function(){
+  const L="ABCDE";
+  const o=openResultQuestionDetail;
+  openResultQuestionDetail=function(i){
+    o.apply(this,arguments);
+    try{
+      const c=window._resultCtx, q=c&&c.ex.questions[i], pq=c&&c.attempt.perQuestion[i];
+      if(!q||!pq||(q.type&&q.type!=="mcq")||!Array.isArray(q.options)||q.options.every((x,k)=>String(x).trim()===L[k])) return;
+      const box=document.getElementById("exam-result-question-detail");
+      const row=box&&[...box.querySelectorAll("div")].find(d=>d.children.length===q.options.length&&[...d.children].every((ch,k)=>ch.textContent.trim()===L[k]));
+      if(!row) return;
+      row.outerHTML=`<div class="bq-xopts" style="width:100%">${q.options.map((t,k)=>{
+        const r=k===q.correctIndex, w=k===pq.selected&&!pq.isCorrect;
+        return `<div class="bq-xopt" style="${r?"border-color:#16a34a;background:#dcfce7":w?"border-color:#dc2626;background:#fee2e2":""}"><b style="${r?"background:#16a34a;color:#fff":w?"background:#dc2626;color:#fff":""}">${L[k]}</b><span>${esc(t)}</span></div>`;
+      }).join("")}</div>`;
+      ttmTeX(box);
+    }catch(e){console.error(e);}
+  };
+})();
+</script>
 </body>
 </html>
