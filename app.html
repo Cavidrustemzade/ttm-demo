@@ -15408,5 +15408,73 @@ body.xn-open #xn-bd{opacity:1;pointer-events:auto}
 })();
 </script>
 
+<style id="dt-css">
+.dt-wrap{background:#f5f8fc;border:1px solid #e6edf5;border-radius:20px;padding:14px;margin:4px 0 12px}
+.dt-lbl{font-weight:800;color:var(--color-primary);font-size:14.5px;margin-bottom:10px}
+.dt-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.dt-t{display:flex;flex-direction:column;align-items:center;gap:7px;padding:10px 2px 9px;border-radius:16px;background:transparent;font-family:inherit;font-weight:700;font-size:12.5px;color:var(--color-text);position:relative;transition:transform .25s cubic-bezier(.2,.9,.25,1),background .25s,box-shadow .25s}
+.dt-t i{width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;background:var(--b);box-shadow:inset 0 0 0 1px rgba(255,255,255,.7),0 4px 10px rgba(15,23,42,.06);transition:transform .25s cubic-bezier(.2,.9,.25,1),box-shadow .25s}
+.dt-t svg{width:26px;height:26px;fill:none;stroke:var(--c);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+@media(hover:hover){.dt-t:hover{background:#fff;box-shadow:0 10px 24px rgba(11,60,93,.10)}.dt-t:hover i{transform:translateY(-3px);box-shadow:0 10px 18px var(--s)}}
+.dt-t:active i{transform:scale(.9)}
+.dt-t.on{background:#fff;box-shadow:0 0 0 2px var(--c) inset,0 8px 20px rgba(11,60,93,.1)}
+.dt-t .ok{position:absolute;top:4px;right:10px;width:18px;height:18px;border-radius:50%;background:#16a34a;color:#fff;font-size:11px;font-style:normal;display:none;align-items:center;justify-content:center;font-weight:900}
+.dt-t.has .ok{display:flex}
+.dt-pop{position:relative;margin-top:12px;background:#fff;border:1px solid #e3e9f1;border-radius:18px;padding:12px;box-shadow:0 14px 30px rgba(11,60,93,.12);transform-origin:12% 0;animation:dtIn .3s cubic-bezier(.2,.9,.25,1)}
+.dt-pop:before{content:"";position:absolute;top:-8px;left:calc(12.5% - 8px);width:14px;height:14px;background:#fff;border-left:1px solid #e3e9f1;border-top:1px solid #e3e9f1;transform:rotate(45deg)}
+@keyframes dtIn{from{opacity:0;transform:translateY(-8px) scale(.96)}}
+.dt-pop textarea{width:100%;box-sizing:border-box;min-height:56px;max-height:50vh;resize:none;border:1.5px solid #e3e9f1;border-radius:14px;padding:12px;font:inherit;font-size:15.5px;line-height:1.5;background:#f8fafc;transition:border-color .2s,background .2s,min-height .3s;overflow-y:auto}
+.dt-pop textarea:focus{outline:none;border-color:#1d6fd6;background:#fff;min-height:120px}
+.dt-pf{display:flex;align-items:center;justify-content:space-between;margin-top:10px;gap:10px}
+.dt-pf span{font-size:12px;color:var(--color-text-muted)}
+.dt-pf button{display:flex;align-items:center;gap:6px;padding:10px 18px;border-radius:12px;background:#1d6fd6;color:#fff;font-weight:800;font-size:14px;box-shadow:0 8px 18px rgba(29,111,214,.28)}
+.dt-txt{margin-top:10px;padding:10px 12px;border-radius:14px;background:#fff;border:1px dashed #cbd5e1;font-size:14px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;cursor:pointer}
+.dt-txt b{display:block;font-size:11.5px;color:#16a34a;margin-bottom:3px}
+.dt-hide{display:none!important}
+#dq-slot .dq-main{display:none}
+@media(prefers-reduced-motion:reduce){.dt-t,.dt-t i,.dt-pop{transition:none;animation:none}}
+</style>
+<script>
+/* ===== Ətraflı sual: «Həllini göndər» seçimləri açıq görünür ===== */
+(function(){
+  const $=id=>document.getElementById(id);
+  const IC={
+    txt:'<svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6 10h.01M9 10h.01M12 10h.01M15 10h.01M18 10h.01M7.5 14h9"/></svg>',
+    cam:'<svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>',
+    gal:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>',
+    file:'<svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>'
+  };
+  const T=[["txt","Mətn","#1d6fd6","#e8f1fd","rgba(29,111,214,.25)"],["cam","Şəkil çək","#0284c7","#e0f2fe","rgba(2,132,199,.25)"],["gal","Qalereyadan","#16a34a","#dcfce7","rgba(22,163,74,.25)"],["file","Fayl seç","#7c3aed","#ede9fe","rgba(124,58,237,.25)"]];
+  let open=false;
+  function grow(t){ t.style.height="auto"; t.style.height=Math.min(t.scrollHeight+2,innerHeight*.5)+"px"; }
+  function draw(){
+    const q=currentExam&&currentExam.questions[currentExamIndex], box=$("exam-question-box"), slot=$("dq-slot"), inp=$("exam-detailed-text-input");
+    if(!q||q.type!=="detailed"||!box||!slot||!inp) return;
+    const i=currentExamIndex, a=currentExamAnswers[i]||{}, txt=(a.text||"").trim();
+    inp.closest(".field").classList.add("dt-hide");
+    let w=$("dt-wrap"); if(w) w.remove();
+    slot.insertAdjacentHTML("beforebegin",`<div class="dt-wrap" id="dt-wrap"><div class="dt-lbl">Həllini göndər:</div>
+      <div class="dt-grid">${T.map(t=>`<button type="button" class="dt-t ${t[0]==="txt"&&open?"on":""} ${t[0]==="txt"&&txt?"has":""}" data-k="${t[0]}" style="--c:${t[2]};--b:${t[3]};--s:${t[4]}"><i>${IC[t[0]]}</i>${t[1]}<em class="ok">✓</em></button>`).join("")}</div>
+      ${open?`<div class="dt-pop"><textarea id="dt-ta" placeholder="Həllini bura yaz..." rows="2"></textarea><div class="dt-pf"><span>Yazdıqca sahə böyüyür</span><button type="button" id="dt-ok">✓ Bitir</button></div></div>`
+        :txt?`<div class="dt-txt" id="dt-show"><b>✓ Yazılı həll</b>${esc(txt)}</div>`:""}</div>`);
+    w=$("dt-wrap");
+    const ta=$("dt-ta");
+    if(ta){ ta.value=a.text||""; grow(ta); setTimeout(()=>{ ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length); },60);
+      ta.oninput=()=>{ grow(ta); inp.value=ta.value; inp.dispatchEvent(new Event("input",{bubbles:true})); w.querySelector('[data-k="txt"]').classList.toggle("has",!!ta.value.trim()); };
+      $("dt-ok").onclick=()=>{ open=false; try{saveExamProgress();}catch(e){} draw(); }; }
+    const sh=$("dt-show"); if(sh) sh.onclick=()=>{ open=true; draw(); };
+    w.querySelectorAll(".dt-t").forEach(b=>b.onclick=()=>{
+      const k=b.dataset.k;
+      if(k==="txt"){ open=!open; draw(); return; }
+      dqPick(i);
+      const o=document.querySelector('#dq-sheet .opt[data-k="'+k+'"]'); if(o) o.click();
+    });
+  }
+  const orq=renderExamQuestion;
+  let last=-1;
+  renderExamQuestion=function(){ if(currentExamIndex!==last){ open=false; last=currentExamIndex; } const r=orq.apply(this,arguments); try{draw();}catch(e){console.error(e);} return r; };
+})();
+</script>
+
 </body>
 </html>
