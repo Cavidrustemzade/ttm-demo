@@ -10174,7 +10174,7 @@ function homeExtra(){
   const resIcon = ok => `<div class="kf-rl" style="color:${ok ? "#16A66A" : "#E34E5B"}">${ok ? "✓" : "✕"}</div>`;
 
   // --- vəziyyət ---
-  const KF = { ov: null, stack: [], view: "", pr0: 0, errOk: false, wDone: false, pub: false, saving: false, saveMsg: "", fq: "", fst: "all", asc: false, list: false, stTab: "q", stu: null, wq: [], wi: 0, wsel: null };
+  const KF = { ov: null, stack: [], view: "", pr0: 0, errOk: false, wDone: false, pub: false, saving: false, saveMsg: "", fq: "", fst: "all", asc: false, list: false, stTab: "s", stu: null, wq: [], wi: 0, wsel: null };
   const IC = {
     cam: '<svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>',
     gal: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>',
@@ -10528,7 +10528,7 @@ function homeExtra(){
     const R = ranked().sort((a, b) => b.pts - a.pts), top = R.slice(0, 3), cls = ["p1", "p2", "p3"];
     kfMain().innerHTML = wrap(`<div class="kf-eb">${esc(S.ex.title || "Sınaq")} · reytinq</div><div class="kf-h2">Şagird nəticələri</div><p class="kf-sub">${R.length} iştirakçı · ${S.qs.length} sual</p>
       <div id="kf-pub"></div>
-      <div class="kf-tabs"><button class="${KF.list ? "" : "on"}" onclick="kfList(false)">Reytinq</button><button class="${KF.list ? "on" : ""}" onclick="kfList(true)">Siyahı</button><button onclick="kfGo('stats',true)">Statistika ↗</button></div>
+      <div class="kf-tabs"><button class="${KF.list ? "" : "on"}" onclick="kfList(false)">Reytinq</button><button class="${KF.list ? "on" : ""}" onclick="kfList(true)">Siyahı</button><button onclick="kfGo('stats')">Statistika ↗</button></div>
       ${!KF.list && top.length ? `<div class="kf-podw"><div class="kf-conf" id="kf-conf"></div><div class="kf-pod">${[1, 0, 2].map(i => { const x = top[i]; if (!x) return ""; return `<div class="kf-p ${cls[i]}" onclick="kfStu('${x.key}')"><div class="kf-per">${i === 0 ? '<div class="kf-crown">♛</div>' : ""}<div class="kf-pa">${ini(x.e.stu.fullName)}</div></div><div class="kf-pn">${esc((x.e.stu.fullName || "").split(" ")[0])}</div><div class="kf-ps">${fmtN(x.pts)}/${x.n}</div><div class="kf-ped">${x.rank}</div></div>`; }).join("")}</div></div>` : ""}
       <div class="kf-srow"><label class="kf-sbox"><span>⌕</span><input id="kf-q" placeholder="Ad və ya kod" value="${esc(KF.fq)}" oninput="kfFq(this.value)"></label><button class="kf-sort" onclick="kfSort()" aria-label="Sırala">↕</button></div>
       <div class="kf-chips" id="kf-chips"></div><div id="kf-rl"></div>`);
@@ -10609,10 +10609,7 @@ function homeExtra(){
   function vStats() {
     const R = ranked(); let body = "";
     if (!R.length) { kfMain().innerHTML = wrap(`<div class="kf-cardb kf-empty">Hələ nəticə yoxdur</div>`); return; }
-    if (KF.stTab === "q") {
-      const qs = qRates(R).filter(x => x.p !== null).sort((a, b) => a.p - b.p).slice(0, 6);
-      body = `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b style="font-size:13px">Ən çətin suallar</b><span class="kf-pill b">Düz cavab faizi</span></div>` + qs.map(x => barH(`${x.i + 1}-ci sual`, x.p, Math.round(x.p * 100) + "%")).join("");
-    } else if (KF.stTab === "s") {
+    if (KF.stTab === "s") {
       const B = [[0, 25], [25, 50], [50, 75], [75, 101]], cnt = B.map(b => R.filter(x => x.pct >= b[0] && x.pct < b[1]).length), mx = Math.max(1, ...cnt);
       body = `<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:13px">Bal bölgüsü</b><span class="kf-pill b">${R.length} şagird</span></div>` + B.map((b, j) => barH(`${b[0]}–${Math.min(b[1], 100)}%`, cnt[j] / mx, cnt[j] + " nəf.", ["l", "l", "m", ""][j])).join("");
     } else {
@@ -10623,13 +10620,13 @@ function homeExtra(){
     const t = ok + bad + bl || 1, po = Math.round(ok / t * 100), pn = Math.round(bad / t * 100), pb = Math.max(0, 100 - po - pn);
     const avg = Math.round(R.reduce((s, x) => s + x.pct, 0) / R.length);
     kfMain().innerHTML = wrap(`<div class="kf-eb">${esc(S.ex.title || "Sınaq")} · təhlil</div><div class="kf-h2">Statistika və hesabat</div><p class="kf-sub">${R.length} iştirakçı · orta nəticə ${avg}%</p>
-      <div class="kf-chips" style="margin-top:12px">${[["q", "Suallar"], ["s", "Bal bölgüsü"], ["g", "Qruplar"]].map(x => `<button class="${KF.stTab === x[0] ? "on" : ""}" onclick="kfStTab('${x[0]}')">${x[1]}</button>`).join("")}</div>
+      <div class="kf-chips" style="margin-top:12px">${[["s", "Bal bölgüsü"], ["g", "Qruplar"]].map(x => `<button class="${KF.stTab === x[0] ? "on" : ""}" onclick="kfStTab('${x[0]}')">${x[1]}</button>`).join("")}</div>
       <div class="kf-cardb" style="margin-top:6px">${body}</div>
       <div class="kf-cardb" style="margin-top:12px"><b style="font-size:13px">Cavabların bölgüsü</b><div class="kf-don"><div class="kf-dn" style="background:conic-gradient(#16a66a 0 ${po}%,#e34e5b ${po}% ${po + pn}%,#d9dfeb ${po + pn}% 100%)"><div><strong>${po}%</strong><small>Düzgün cavab</small></div></div>
         <div class="kf-lg"><span><i style="background:#16a66a"></i>Düzgün · ${po}%</span><span><i style="background:#e34e5b"></i>Səhv · ${pn}%</span><span><i style="background:#d9dfeb"></i>Boş · ${pb}%</span></div></div></div>
       <div class="kf-h2" style="font-size:16px;margin-top:18px">Hesabatı ixrac et</div>
       <div class="kf-cardb" style="margin-top:8px;padding:6px 14px">
-        <div class="kf-rep"><span class="kf-ri">PDF</span><div><b>Nəticə hesabatı</b><small>Reytinq cədvəli və sual statistikası</small></div><button onclick="kfPdf(this)">Hazırla</button></div>
+        <div class="kf-rep"><span class="kf-ri">PDF</span><div><b>Nəticə hesabatı</b><small>Şagirdlərin reytinq cədvəli</small></div><button onclick="kfPdf(this)">Hazırla</button></div>
         <div class="kf-rep"><span class="kf-ri x">XLS</span><div><b>Excel cədvəli</b><small>Hər şagirdin bütün cavabları və balı</small></div><button onclick="kfXls(this)">Hazırla</button></div></div>`);
   }
   window.kfStTab = t => { KF.stTab = t; vStats(); };
@@ -10672,15 +10669,6 @@ function homeExtra(){
         const nm = doc.splitTextToSize(x.e.stu.fullName || "", 66)[0], gn = doc.splitTextToSize(groupName(x.e.stu.groupId) || "", 28)[0];
         [String(x.rank), nm, gn, OMR.numCode(x.e.stu.id), String(x.ok), String(x.bad), String(x.blank), `${fmtN(x.pts)}/${x.n}`, x.pct + "%"].forEach((v, j) => doc.text(v, X[j], y));
         y += 7;
-      });
-      doc.addPage(); y = 18;
-      doc.setFontSize(13); doc.setTextColor(11, 60, 93); doc.text("Sual statistikası (düz cavab faizi)", 14, y); y += 9; doc.setFontSize(9);
-      qRates(R).forEach(q => {
-        if (y > 284) { doc.addPage(); y = 18; }
-        doc.setTextColor(20, 33, 46); doc.text(`${q.i + 1}-ci sual · ${qType(S.qs[q.i])}`, 14, y);
-        doc.setFillColor(237, 241, 248); doc.rect(60, y - 3.2, 110, 4, "F");
-        if (q.p !== null) { const c = q.p >= .7 ? [22, 166, 106] : q.p >= .5 ? [240, 165, 34] : [227, 76, 91]; doc.setFillColor(c[0], c[1], c[2]); doc.rect(60, y - 3.2, 110 * q.p, 4, "F"); }
-        doc.text(q.p === null ? "—" : Math.round(q.p * 100) + "%", 175, y); y += 7;
       });
       doc.save(fileBase() + "_neticeler.pdf");
       toast("PDF hazırdır");
@@ -12064,7 +12052,7 @@ function homeExtra(){
     } catch (e) { console.error("qbankMeta:", e); }
     const s = await db.collection("questions").get(), t = {};
     s.forEach(x => {
-      const q = { id: x.id, ...x.data() }, k = q.topic || "Digər";
+      const q = { id: x.id, ...x.data() }, k = q.topic || "Digər"; if (q.set) return;
       const o = t[k] = t[k] || { count: 0, years: [], subject: q.subject || "" };
       o.count++; if (q.year && !o.years.includes(q.year)) o.years.push(q.year);
       (PQ.qs[k] = PQ.qs[k] || []).push(q);
@@ -12074,7 +12062,7 @@ function homeExtra(){
   async function loadTopic(t) {
     if (PQ.qs[t]) return PQ.qs[t];
     const s = await db.collection("questions").where("topic", "==", t).get();
-    PQ.qs[t] = s.docs.map(d => ({ id: d.id, ...d.data() }));
+    PQ.qs[t] = s.docs.map(d => ({ id: d.id, ...d.data() })).filter(q => !q.set);
     return PQ.qs[t];
   }
   const sortQ = a => a.sort((x, y) => (x.year || 0) - (y.year || 0) || (x.no || 0) - (y.no || 0));
@@ -12367,7 +12355,8 @@ function homeExtra(){
 (function () {
   const $ = id => document.getElementById(id);
   const L = "ABCDE";
-  const QB = { all: null, f: { t: "", y: "", s: "" } };
+  const QB = { all: null, f: { t: "", y: "", s: "", d: "" } };
+  const QB_F = { buraxilis: "Buraxılış sınaqları", blok: "Blok sınaqları" };
   const main = document.querySelector("#view-admin .panel-main"), tabs = document.querySelector("#view-admin .tabs");
   if (!main || !tabs) return;
   const tb = document.createElement("button");
@@ -12381,8 +12370,9 @@ function homeExtra(){
       <label><span>📥</span>JSON yüklə<input type="file" accept=".json,application/json" style="display:none" onchange="qbImport(this)"></label>
       <button onclick="qbEdit(null)"><span>➕</span>Yeni sual</button>
       <button onclick="qbExport()"><span>💾</span>Yedək al</button></div>
+    <div class="pq-chips" id="qb-fd" style="margin-bottom:12px"></div>
     <div class="card"><div class="field-row">
-      <div class="field"><label>Mövzu</label><select id="qb-ft" onchange="qbF('t',this.value)"></select></div>
+      <div class="field"><label id="qb-ftl">Mövzu</label><select id="qb-ft" onchange="qbF('t',this.value)"></select></div>
       <div class="field"><label>İl</label><select id="qb-fy" onchange="qbF('y',this.value)"></select></div></div>
       <div class="field" style="margin-bottom:10px;"><input type="text" id="qb-fs" placeholder="Axtar: sual mətni və ya ID" oninput="qbF('s',this.value)"></div>
       <div id="qb-list"><div class="empty-state">Yüklənir...</div></div></div>`;
@@ -12411,9 +12401,14 @@ function homeExtra(){
       render();
     } catch (e) { console.error(e); $("qb-list").innerHTML = `<div class="empty-state">Xəta: ${esc(e.code === "permission-denied" ? "Firestore qaydalarına «questions» əlavə edilməyib" : errAz(e))}</div>`; }
   }
+  function buildSets(list) {
+    const t = {};
+    list.forEach(q => { if (!q.set) return; const o = t[q.set] = t[q.set] || { count: 0, folder: q.folder || "buraxilis", subject: q.subject || "" }; o.count++; });
+    return t;
+  }
   function buildIdx(list) {
     const t = {};
-    list.forEach(q => {
+    list.forEach(q => { if (q.set) return;
       const k = q.topic || "Digər", o = t[k] = t[k] || { count: 0, years: [], subject: q.subject || "" };
       o.count++; if (q.year && !o.years.includes(q.year)) o.years.push(q.year);
     });
@@ -12422,29 +12417,34 @@ function homeExtra(){
   }
   async function saveIdx() {
     const topics = buildIdx(QB.all);
-    await db.collection("qbankMeta").doc("index").set({ topics, total: QB.all.length, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    await db.collection("qbankMeta").doc("index").set({ topics, sets: buildSets(QB.all), total: QB.all.length, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
     if (window._PQ) window._PQ.idx = null;
   }
   function render() {
-    const a = QB.all || [];
+    const all = QB.all || [], fd = QB.f.d, key = q => fd ? q.set : (q.topic || "Digər");
+    const a = all.filter(q => fd ? q.set && (q.folder || "buraxilis") === fd : !q.set);
+    $("qb-fd").innerHTML = [["", "Mövzular", all.filter(q => !q.set).length]].concat(Object.keys(QB_F).map(k => [k, QB_F[k], new Set(all.filter(q => q.set && (q.folder || "buraxilis") === k).map(q => q.set)).size + " sınaq"]))
+      .map(x => `<button class="pq-chip ${fd === x[0] ? "on" : ""}" onclick="qbD('${x[0]}')">📁 ${x[1]} · ${x[2]}</button>`).join("");
+    $("qb-ftl").textContent = fd ? "Sınaq" : "Mövzu";
     $("qb-n").textContent = a.length;
-    $("qb-t").textContent = new Set(a.map(q => q.topic)).size;
+    $("qb-t").textContent = new Set(a.map(key)).size;
     $("qb-i").textContent = a.filter(q => q.imageBase64).length;
-    const topics = [...new Set(a.map(q => q.topic || "Digər"))].sort((x, y) => x.localeCompare(y, "az"));
+    const topics = [...new Set(a.map(key))].sort((x, y) => x.localeCompare(y, "az"));
     const years = [...new Set(a.map(q => q.year).filter(Boolean))].sort();
     $("qb-ft").innerHTML = `<option value="">Hamısı</option>` + topics.map(t => `<option ${QB.f.t === t ? "selected" : ""}>${esc(t)}</option>`).join("");
     $("qb-fy").innerHTML = `<option value="">Hamısı</option>` + years.map(y => `<option ${String(QB.f.y) === String(y) ? "selected" : ""}>${y}</option>`).join("");
     const s = QB.f.s.trim().toLowerCase();
-    const list = a.filter(q => (!QB.f.t || (q.topic || "Digər") === QB.f.t) && (!QB.f.y || String(q.year) === String(QB.f.y)) && (!s || (q.text || "").toLowerCase().includes(s) || q.id.toLowerCase().includes(s)))
-      .sort((x, y) => (x.topic || "").localeCompare(y.topic || "", "az") || (x.year || 0) - (y.year || 0) || (x.no || 0) - (y.no || 0));
+    const list = a.filter(q => (!QB.f.t || key(q) === QB.f.t) && (!QB.f.y || String(q.year) === String(QB.f.y)) && (!s || (q.text || "").toLowerCase().includes(s) || q.id.toLowerCase().includes(s)))
+      .sort((x, y) => String(key(x)).localeCompare(String(key(y)), "az") || (fd ? (x.setOrder || x.no || 0) - (y.setOrder || y.no || 0) : (x.year || 0) - (y.year || 0) || (x.no || 0) - (y.no || 0)));
     $("qb-list").innerHTML = list.length ? `<div class="muted-note" style="margin-bottom:8px;">${list.length} sual</div>` + list.map(q => `<div class="qb-row" onclick="qbEdit('${q.id}')">
       <div class="qb-no">${q.no || "•"}</div>
-      <div style="flex:1;min-width:0;"><div class="qb-txt">${esc(q.text || "(şəkilli sual)")}</div><div class="qb-sub">${esc([q.year, q.exam, q.topic].filter(Boolean).join(" · "))}</div></div>
+      <div style="flex:1;min-width:0;"><div class="qb-txt">${esc(q.text || "(şəkilli sual)")}</div><div class="qb-sub">${esc((fd ? [q.topic, { open: "Açıq (kodlaşdırılan)", detailed: "Yazılı (ətraflı)" }[q.examType]] : [q.year, q.exam, q.topic]).filter(Boolean).join(" · "))}</div></div>
       ${q.imageBase64 ? `<img class="qb-th" src="${q.imageBase64}" alt="">` : ""}
       <span class="qb-ans">${L[q.correctIndex] || "?"}</span></div>`).join("") : `<div class="empty-state">Sual yoxdur. «JSON yüklə» ilə əlavə edin.</div>`;
     ttmTeX($("qb-list"));
   }
   window.qbF = (k, v) => { QB.f[k] = v; render(); };
+  window.qbD = d => { QB.f.d = d; QB.f.t = ""; QB.f.y = ""; render(); };
 
   function sheet(html) {
     const ov = document.createElement("div"); ov.className = "pq-ov";
@@ -12475,7 +12475,7 @@ function homeExtra(){
     const topics = [...new Set(ok.map(q => q.topic))];
     const ov = sheet(`<div class="pq-sh-h"><b>JSON yüklə</b><button class="pq-x" onclick="this.closest('.pq-ov').remove()">✕</button></div>
       <div class="pq-hstats" style="margin:0 0 12px;"><div style="background:#e0f2fe;color:#0369a1;"><b>${ok.length}</b><span>sual</span></div><div style="background:#f1f5f9;color:#334155;"><b>${ok.filter(q => q.imageBase64).length}</b><span>şəkilli</span></div><div style="background:#fef3c7;color:#92400e;"><b>${upd}</b><span>yenilənəcək</span></div></div>
-      <div class="muted-note">Mövzu: <b>${esc(topics.join(", "))}</b></div>
+      <div class="muted-note">${ok.some(q => q.set) ? `Papka: <b>📁 ${esc(QB_F[ok[0].folder] || QB_F.buraxilis)}</b> · Sınaq: <b>${esc([...new Set(ok.map(q => q.set).filter(Boolean))].join(", "))}</b>` : `Mövzu: <b>${esc(topics.join(", "))}</b>`}</div>
       ${bad.length ? `<div class="pq-fb no" style="font-size:12.5px;">Xətalı (${bad.length}), yüklənməyəcək:<br>${bad.slice(0, 8).map(esc).join("<br>")}</div>` : ""}
       <div id="qb-prog" class="muted-note" style="margin-top:8px;"></div>
       <button class="pq-go" id="qb-go" ${ok.length ? "" : "disabled"}>Bazaya yaz →</button>`);
@@ -12977,7 +12977,7 @@ function homeExtra(){
     return ids.map(i => BQ[i]).filter(Boolean);
   }
   const BT = {};
-  const bankTopic = t => BT[t] || (BT[t] = db.collection("questions").where("topic", "==", t).get().then(s => s.docs.map(d => { const q = { id: d.id, ...d.data() }; BQ[q.id] = q; return q; })).catch(() => []));
+  const bankTopic = t => BT[t] || (BT[t] = db.collection("questions").where("topic", "==", t).get().then(s => s.docs.map(d => { const q = { id: d.id, ...d.data() }; BQ[q.id] = q; return q; }).filter(q => !q.set)).catch(() => []));
   let IDX = null;
   async function bankIdx() {
     if (IDX) return IDX;
@@ -13503,10 +13503,12 @@ function homeExtra(){
   const sortQ = a => a.sort((x, y) => (x.year || 0) - (y.year || 0) || (x.no || 0) - (y.no || 0));
   async function getIdx() {
     if (BQ.idx) return BQ.idx;
-    try { const d = await db.collection("qbankMeta").doc("index").get(); if (d.exists && d.data().topics) return (BQ.idx = d.data().topics); } catch (e) { console.warn(e); }
-    const s = await db.collection("questions").get(), t = {};
+    try { const d = await db.collection("qbankMeta").doc("index").get(); if (d.exists && d.data().topics) { BQ.sets = d.data().sets || {}; return (BQ.idx = d.data().topics); } } catch (e) { console.warn(e); }
+    const s = await db.collection("questions").get(), t = {}; BQ.sets = {};
     s.forEach(x => {
-      const q = { id: x.id, ...x.data() }, k = q.topic || "Digər", o = t[k] = t[k] || { count: 0, years: [], subject: q.subject || "" };
+      const q = { id: x.id, ...x.data() };
+      if (q.set) { const so = BQ.sets[q.set] = BQ.sets[q.set] || { count: 0, folder: q.folder || "buraxilis", subject: q.subject || "" }; so.count++; return; }
+      const k = q.topic || "Digər", o = t[k] = t[k] || { count: 0, years: [], subject: q.subject || "" };
       o.count++; if (q.year && !o.years.includes(q.year)) o.years.push(q.year);
       (BQ.qs[k] = BQ.qs[k] || []).push(q);
     });
@@ -13515,8 +13517,12 @@ function homeExtra(){
   }
   async function topicQs(t) {
     if (BQ.qs[t]) return BQ.qs[t];
+    if (t.startsWith("set:")) {
+      const s = await db.collection("questions").where("set", "==", t.slice(4)).get();
+      return (BQ.qs[t] = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((x, y) => (x.setOrder || x.no || 0) - (y.setOrder || y.no || 0)));
+    }
     const s = await db.collection("questions").where("topic", "==", t).get();
-    return (BQ.qs[t] = sortQ(s.docs.map(d => ({ id: d.id, ...d.data() }))));
+    return (BQ.qs[t] = sortQ(s.docs.map(d => ({ id: d.id, ...d.data() })).filter(q => !q.set)));
   }
   const added = () => new Set(examQuestions.map(q => q.bankId).filter(Boolean));
 
@@ -13558,8 +13564,17 @@ function homeExtra(){
     const cnt = {};
     Object.values(I).forEach(o => { const s = o.subject || "Riyaziyyat"; cnt[s] = (cnt[s] || 0) + o.count; });
     const subs = Object.keys(cnt).sort((a, b) => a.localeCompare(b, "az"));
-    sheet("Fənni seçin", subs.length ? subs.map(s => { const ic = icon(s); return `<button class="bq-it" onclick='bqSubj(${JSON.stringify(s).replace(/'/g, "&#39;")})'><span class="ic" style="background:${ic.bg}">${ic.t}</span><div><div class="t">${esc(s)}</div><div class="s">${cnt[s]} sual</div></div><span class="v2-chev" style="margin-left:auto">›</span></button>`; }).join("") : `<div class="pq-empty">Baza boşdur. «Sual bazası» bölməsindən JSON yükləyin.</div>`, footHtml());
+    const SF = { buraxilis: ["Buraxılış sınaqları", "#ef4444"], blok: ["Blok sınaqları", "#6366f1"] }, sets = BQ.sets || {};
+    const fold = Object.keys(SF).map(f => { const n = Object.values(sets).filter(o => (o.folder || "buraxilis") === f).length;
+      return `<button class="bq-it" onclick="bqFolder('${f}')"><span class="ic" style="background:${SF[f][1]}">📁</span><div><div class="t">${SF[f][0]}</div><div class="s">${n ? n + " hazır sınaq · hamısını bir dəfəyə seç" : "Hələ boşdur"}</div></div><span class="v2-chev" style="margin-left:auto">›</span></button>`; }).join("");
+    sheet("Fənni seçin", `<div class="pq-lbl" style="margin-top:0">Hazır sınaqlar</div>${fold}<div class="pq-lbl">Mövzular üzrə</div>` + (subs.length ? subs.map(s => { const ic = icon(s); return `<button class="bq-it" onclick='bqSubj(${JSON.stringify(s).replace(/'/g, "&#39;")})'><span class="ic" style="background:${ic.bg}">${ic.t}</span><div><div class="t">${esc(s)}</div><div class="s">${cnt[s]} sual</div></div><span class="v2-chev" style="margin-left:auto">›</span></button>`; }).join("") : `<div class="pq-empty">Baza boşdur. «Sual bazası» bölməsindən JSON yükləyin.</div>`), footHtml());
   }
+  window.bqFolder = async (f) => {
+    BQ.view = "folder"; BQ.folder = f; await getIdx();
+    const L2 = Object.entries(BQ.sets || {}).filter(([, o]) => (o.folder || "buraxilis") === f).sort((a, b) => a[0].localeCompare(b[0], "az"));
+    sheet(f === "blok" ? "Blok sınaqları" : "Buraxılış sınaqları", L2.length ? L2.map(([n, o]) => `<button class="bq-it" onclick='bqTopic(${JSON.stringify("set:" + n).replace(/'/g, "&#39;")})'><div style="min-width:0"><div class="t">${esc(n)}</div><div class="s">${esc(o.subject || "")} · ${o.count} sual</div></div><span class="v2-chev" style="margin-left:auto">›</span></button>`).join("")
+      : `<div class="pq-empty">Bu papka boşdur. «Sual bazası» bölməsindən sınaq JSON-u yükləyin.</div>`, footHtml(), "bqSubjects()");
+  };
   window.bqSubj = async (s) => {
     BQ.subj = s; BQ.view = "topics";
     const I = await getIdx();
@@ -13573,8 +13588,8 @@ function homeExtra(){
   window.bqSubjects = bqSubjects;
 
   window.bqTopic = async (t) => {
-    BQ.topic = t; BQ.view = "qs"; BQ.year = "all"; BQ.q = "";
-    sheet(esc(t), `<div class="pq-sk"></div><div class="pq-sk"></div>`, footHtml(), BQ.subj ? `bqSubj(${JSON.stringify(BQ.subj).replace(/"/g, "&quot;")})` : "bqSubjects()");
+    BQ.topic = t; BQ.view = "qs"; BQ.year = "all"; BQ.q = ""; const isSet = t.startsWith("set:");
+    sheet(esc(isSet ? t.slice(4) : t), `<div class="pq-sk"></div><div class="pq-sk"></div>`, footHtml(), isSet ? `bqFolder('${BQ.folder || "buraxilis"}')` : BQ.subj ? `bqSubj(${JSON.stringify(BQ.subj).replace(/"/g, "&quot;")})` : "bqSubjects()");
     let qs;
     try { qs = await topicQs(t); } catch (e) { $("bq-body").innerHTML = `<div class="pq-empty">Xəta: ${esc(errAz(e))}</div>`; return; }
     const years = [...new Set(qs.map(q => q.year).filter(Boolean))].sort();
@@ -13620,13 +13635,17 @@ function homeExtra(){
   window.bqClear = () => { BQ.sel.clear(); if (BQ.view === "qs") list(); else if (BQ.view === "topics") bqSubj(BQ.subj); updFoot(); };
   window.bqAdd = () => {
     const arr = [...BQ.sel.values()]; if (!arr.length) return;
+    if (BQ.topic && BQ.topic.startsWith("set:")) arr.sort((x, y) => (x.setOrder || x.no || 0) - (y.setOrder || y.no || 0));
+    const et = q => q.examType === "open" || q.examType === "detailed" ? q.examType : "mcq";
     arr.forEach(q => examQuestions.push({
-      type: "mcq", text: q.text || "", imageBase64: q.imageBase64 || "",
+      type: et(q), text: q.text || "", imageBase64: q.imageBase64 || "",
       options: (Array.isArray(q.options) && q.options.length === 5 ? q.options : L.split("")).map(String),
-      correctIndex: Number(q.correctIndex) || 0, correctAnswer: "", textId: "",
+      correctIndex: Number(q.correctIndex) || 0, correctAnswer: et(q) === "open" ? String(q.openAnswer || q.answer || "").replace(/\$/g, "") : "", textId: "",
       topic: q.topic || "", bankId: q.id, year: q.year || "", exam: q.exam || ""
     }));
-    const tp = $("exam-topic"); if (tp && !tp.value.trim() && arr[0].topic) tp.value = arr[0].topic;
+    const tp = $("exam-topic"), tt = $("exam-title");
+    if (arr[0].set) { if (tt && !tt.value.trim()) tt.value = arr[0].set; if (tp && !tp.value.trim()) tp.value = arr[0].subject || "Riyaziyyat"; }
+    else if (tp && !tp.value.trim() && arr[0].topic) tp.value = arr[0].topic;
     renderQuestionBuilder();
     close();
     toast(`${arr.length} sual əlavə edildi`);
@@ -13639,7 +13658,7 @@ function homeExtra(){
     const t = ($("qb-ft") || {}).value;
     if (!t) { toast("Əvvəlcə yuxarıdan mövzu seçin"); return; }
     adminNewExam();
-    setTimeout(() => { try { wzGo(2, true); } catch (e) {} bqOpen(t); }, 80);
+    setTimeout(() => { try { wzGo(2, true); } catch (e) {} const qs = (document.getElementById("qb-ftl") || {}).textContent === "Sınaq"; if (qs) BQ.folder = (document.querySelector("#qb-fd .on") || {}).textContent.includes("Blok") ? "blok" : "buraxilis"; bqOpen(qs ? "set:" + t : t); }, 80);
   };
 
   // ---------- sınaq yaradanda ön baxış ----------
@@ -13650,7 +13669,7 @@ function homeExtra(){
       const items = document.querySelectorAll("#exam-questions-builder .q-builder-item");
       items.forEach((it, qi) => {
         const q = examQuestions[qi]; if (!q || !q.bankId || it.querySelector(".bq-prev")) return;
-        const tag = it.querySelector(".q-item-tag"); if (tag) tag.textContent = "Baza";
+        const tag = it.querySelector(".q-item-tag"); if (tag) tag.textContent = q.type === "open" ? "Baza · Açıq" : q.type === "detailed" ? "Baza · Yazılı" : "Baza";
         const ops = isMcq(q) && !isLetters(q) ? `<div class="o">${q.options.map((o, k) => `${k === q.correctIndex ? "<b style='color:#15803d'>" : ""}${L[k]}) ${esc(o)}${k === q.correctIndex ? "</b>" : ""}`).join("&nbsp;&nbsp; ")}</div>` : "";
         it.querySelector(".q-item-header").insertAdjacentHTML("afterend", `<div class="bq-prev"><div style="font-size:11px;font-weight:800;color:#0369a1">${esc([q.topic, q.year, q.exam].filter(Boolean).join(" · "))}</div>${esc(q.text || "")}${ops}</div>`);
       });
