@@ -8623,7 +8623,11 @@ function homeExtra(){
   }
   async function done(i, v, id, ex) {
     if (currentExam !== ex || !st[i] || st[i].v !== v) return;
-    await recPut(Object.assign({}, { id, studentId: currentStudentUid, attemptId: aid(), q: i, ts: Date.now(), done: true, data: { photoBase64: currentExamAnswers[i].photo } }));
+    // serverdən yenidən oxuyub yoxla: şəkil həqiqətən çatıbmı
+    try { const vv = await db.collection("detailedAnswers").doc(id).get({ source: "server" }); if (!vv.exists || !vv.data().photoBase64) { if (st[i] && st[i].v === v) setS(i, { s: "err", lock: false }); return; } } catch (e) { console.warn("yoxlama oxunmadı:", e); }
+    if (currentExam !== ex || !st[i] || st[i].v !== v) return;
+    const rec = (await recAll()).find(r => r.id === id);
+    if (rec) { rec.done = true; await recPut(rec); }
     setS(i, { s: "ok", p: 100, fresh: true });
     setTimeout(() => { if (st[i] && st[i].v === v) setS(i, { fresh: false }); }, 2200);
   }
@@ -9033,7 +9037,10 @@ function homeExtra(){
     for (const r of await recAll()) {
       if (r.studentId !== currentStudentUid) continue;
       if (currentExam && examExitGuardActive && r.attemptId === currentExam.attemptId) continue;
-      if (r.done) { recDel(r.id); continue; }
+      if (r.done) {
+        try { const sv = await db.collection("detailedAnswers").doc(r.id).get({ source: "server" }); if (sv.exists && sv.data().photoBase64) { recDel(r.id); continue; } } catch (e) { continue; }
+        if (!r.data || !r.data.examId) { recDel(r.id); continue; }
+      }
       try {
         if (await race(db.collection("detailedAnswers").doc(r.id).set({ ...r.data, createdAt: firebase.firestore.FieldValue.serverTimestamp() }), 30000) === "ok") {
           await recDel(r.id); toast("Gözləyən həll şəkli müəllimə göndərildi");
@@ -15495,6 +15502,81 @@ body.xn-open #xn-bd{opacity:1;pointer-events:auto}
       }).join("")}</div>`;
       ttmTeX(box);
     }catch(e){console.error(e);}
+  };
+})();
+</script>
+<script>
+/* ===== Ətraflı suallar: itən şəkilləri tapmaq və yenidən göndərmək ===== */
+(function(){
+  const DA=()=>db.collection("detailedAnswers");
+  // şəkilləri sənəd ID-si ilə birbaşa oxu (sorğu icazəyə ilişməsin)
+  async function photos(att){
+    const map={}, late={};
+    await Promise.all((att.perQuestion||[]).map(async(p,i)=>{
+      if(!p||p.type!=="detailed") return;
+      try{ const d=await DA().doc(att.id+"_"+i).get(); if(d.exists&&d.data().photoBase64){ map[i]=d.data().photoBase64; if(d.data().late) late[i]=1; } }catch(e){}
+    }));
+    return {map,late};
+  }
+  window.viewPastResult=async(attemptId)=>{
+    const a=studentAttemptsCache.find(x=>x.id===attemptId), exMeta=a&&studentExamsCache.find(e=>e.id===a.examId);
+    if(!a||!exMeta){ toast("Sınaq məlumatı tapılmadı"); return; }
+    toast("Yüklənir...");
+    const qs=(await db.collection("exams").doc(a.examId).collection("questions").orderBy("order").get()).docs.map(d=>d.data());
+    const r=await photos(a);
+    window._dqLate=r.late;
+    document.getElementById("exam-view-list").style.display="none";
+    renderExamResult({...exMeta,questions:qs},a,r.map);
+  };
+  // nəticə ekranında: şəkil yoxdursa və hələ yoxlanmayıbsa — yenidən göndər düyməsi
+  const orr=renderExamResult;
+  renderExamResult=function(ex,att,map){
+    const r=orr.apply(this,arguments);
+    try{
+      map=map||{}; const H=window._resultDetailHtml||[], L=window._dqLate||{};
+      ex.questions.forEach((q,i)=>{
+        const pq=att.perQuestion[i]; if(q.type!=="detailed"||!pq||!H[i]) return;
+        if(map[i]&&L[i]) H[i]=H[i].replace(/(<img[^>]+border:2px solid var\(--color-primary\)[^>]*>)/,'$1<div class="muted-note" style="color:#b45309">Sonradan göndərilib</div>');
+        if(map[i]) return;
+        const can=att.source!=="paper";
+        H[i]=H[i].replace('<div class="muted-note">Şəkil göndərilməyib</div>',
+          `<div class="muted-note">${pq.hasPhoto?"⚠️ Şəkil seçilib, amma serverə çatmayıb.":"Şəkil göndərilməyib"}</div>`+
+          (can?`<button class="btn-outline" style="margin-top:6px" onclick="dqLate('${att.id}',${i})">📷 Şəkli yenidən göndər</button>`:""));
+      });
+    }catch(e){console.error(e);}
+    return r;
+  };
+  window.dqLate=(attId,i)=>{
+    const inp=document.createElement("input"); inp.type="file"; inp.accept="image/*";
+    inp.onchange=async()=>{
+      const f=inp.files[0]; if(!f) return;
+      const a=studentAttemptsCache.find(x=>x.id===attId); if(!a) return;
+      toast("Göndərilir...");
+      try{
+        let b=await compressImageToBase64(f,1200,.75); if(b.length>600000) b=await compressImageToBase64(f,900,.6);
+        await DA().doc(attId+"_"+i).set({attemptId:attId,examId:a.examId,studentId:currentStudentUid,groupId:a.groupId||null,teacherId:a.teacherId||null,
+          questionIndex:i,photoBase64:b,points:null,maxPoints:1,late:true,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+        const v=await DA().doc(attId+"_"+i).get({source:"server"});
+        if(!v.exists||!v.data().photoBase64) throw new Error("yoxlanmadı");
+        toast("Şəkil müəllimə çatdı ✓"); viewPastResult(attId);
+      }catch(e){ console.error(e); toast(e.code==="permission-denied"?"Göndərmək olmadı (icazə yoxdur) — müəllimə bildir":"Göndərilmədi, interneti yoxla"); }
+    };
+    inp.click();
+  };
+  // müəllim yoxlanışı: şəkil tapılmayıbsa birbaşa sənəddən axtar, sonradan göndərilibsə qeyd et
+  const org=renderGradingPanel;
+  renderGradingPanel=function(){
+    const r=org.apply(this,arguments);
+    const it=gradingQueue[gradingIndex]; if(!it) return r;
+    if(!it._chk){ it._chk=1; const qi=gradingQIndex;
+      DA().doc(it.attemptId+"_"+qi).get().then(d=>{
+        if(!d.exists||!d.data().photoBase64) return;
+        it.photo=d.data().photoBase64; it.lost=false; it.late=!!d.data().late;
+        if(gradingQueue[gradingIndex]===it&&gradingQIndex===qi) renderGradingPanel();
+      }).catch(()=>{});
+    }
+    if(it.late&&it.photo){ const p=document.getElementById("grading-panel"), im=p&&p.querySelector('img[onclick][style*="margin-top:10px"]'); if(im) im.insertAdjacentHTML("beforebegin",'<div class="muted-note" style="color:#b45309;font-weight:700;margin-top:8px">Şagird bu şəkli sınaq bitdikdən sonra göndərib</div>'); }
+    return r;
   };
 })();
 </script>
