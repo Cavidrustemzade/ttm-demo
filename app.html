@@ -15357,5 +15357,56 @@ function homeExtra(){
   const t=document.querySelector('.tab-btn[data-tab="tab-eyani"]'); if(t) t.addEventListener("click",fill);
 })();
 </script>
+<style id="xn-css">
+#xn-bar,#xn-bd,.xn-head{display:none}
+@media(max-width:699px){
+#xn-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;position:sticky;top:60px;z-index:30;background:var(--color-light-gray);margin:-8px -14px 8px;padding:8px 14px 10px}
+.xn-btn{display:flex;align-items:center;gap:9px;padding:9px 14px 9px 11px;border-radius:16px;background:#fff;border:1px solid rgba(11,60,93,.1);box-shadow:0 6px 16px rgba(11,60,93,.08);font-weight:800;font-size:15px;color:var(--color-primary);transition:transform .15s}
+.xn-btn:active{transform:scale(.96)}
+.xn-ic{display:grid;grid-template-columns:repeat(2,6px);gap:3px}.xn-ic i{width:6px;height:6px;border-radius:2px;background:var(--color-primary)}
+.xn-btn small{font-size:11.5px;font-weight:700;color:#16a34a;background:#dcfce7;padding:2px 7px;border-radius:999px}
+.xn-chev{transition:transform .25s;font-size:12px}body.xn-open .xn-chev{transform:rotate(180deg)}
+.xn-tm{display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:999px;background:var(--color-primary);color:#fff;font-weight:800;font-size:15px;font-variant-numeric:tabular-nums;box-shadow:0 6px 16px rgba(11,60,93,.25)}
+.xn-tm.warning{background:var(--color-danger);animation:xnPulse 1s infinite}
+@keyframes xnPulse{50%{transform:scale(1.05)}}
+#exam-taking-layout .exam-timer-area{display:none!important}
+#exam-taking-layout .exam-nav-area{position:fixed!important;top:66px!important;left:10px;right:10px;z-index:60;max-height:72vh;overflow-y:auto;padding:14px!important;border-radius:22px;box-shadow:0 24px 50px rgba(11,25,40,.28)!important;transform-origin:top center;opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-14px) scale(.96);transition:opacity .2s ease,transform .25s cubic-bezier(.2,.9,.25,1),visibility .25s}
+body.xn-open #exam-taking-layout .exam-nav-area{opacity:1;visibility:visible;pointer-events:auto;transform:none}
+.xn-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.xn-head b{font-size:17px;color:var(--color-primary)}
+.xn-head button{width:36px;height:36px;border-radius:50%;background:var(--color-light-gray);color:var(--color-text-muted);font-size:16px}
+#exam-taking-layout .exam-nav-grid .exam-nav-btn{height:44px;min-height:44px;font-size:14px;border-radius:12px}
+#exam-taking-layout .exam-nav-legend{grid-template-columns:repeat(3,auto)!important;order:-1;margin:0 0 10px!important;padding:0!important;border:0!important}
+#exam-taking-layout .exam-nav-area{display:flex;flex-direction:column}
+#xn-bd{display:block;position:fixed;inset:0;z-index:55;background:rgba(11,25,40,.35);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .2s}
+body.xn-open #xn-bd{opacity:1;pointer-events:auto}
+.xn-head{order:-2}
+}
+</style>
+<script>
+/* ===== Sınaq: sual xəritəsi açılan düymə (telefon) ===== */
+(function(){
+  const $=id=>document.getElementById(id), vt=$("exam-view-taking"), nav=document.querySelector("#exam-taking-layout .exam-nav-area"), box=$("exam-timer-box");
+  if(!vt||!nav||!box) return;
+  vt.insertAdjacentHTML("afterbegin",`<div id="xn-bar"><button type="button" class="xn-btn" id="xn-open" aria-label="Bütün suallar"><span class="xn-ic"><i></i><i></i><i></i><i></i></span><span id="xn-cur">1/1</span><small id="xn-ans">0</small><span class="xn-chev">▼</span></button><div class="xn-tm" id="xn-tm">⏱ <span id="xn-tmt">00:00</span></div></div>`);
+  document.body.insertAdjacentHTML("beforeend",`<div id="xn-bd"></div>`);
+  nav.insertAdjacentHTML("afterbegin",`<div class="xn-head"><b>Suallar</b><button type="button" id="xn-x" aria-label="Bağla">✕</button></div>`);
+  const tb=$("exam-text-toolbar"), mq=matchMedia("(max-width:699px)");
+  const place=()=>{ if(!tb) return; if(mq.matches) $("xn-bar").after(tb); else nav.prepend(tb); };
+  mq.addEventListener?mq.addEventListener("change",place):mq.addListener(place); place();
+  const open=v=>document.body.classList.toggle("xn-open",v);
+  $("xn-open").onclick=()=>open(!document.body.classList.contains("xn-open"));
+  $("xn-x").onclick=$("xn-bd").onclick=()=>open(false);
+  const sync=()=>{ $("xn-tmt").textContent=box.textContent; $("xn-tm").classList.toggle("warning",box.classList.contains("warning")); };
+  new MutationObserver(sync).observe(box,{childList:true,characterData:true,subtree:true,attributes:true});
+  const upd=()=>{ try{ const n=currentExam.questions.length, a=document.querySelectorAll("#exam-nav-grid .exam-nav-btn.answered").length;
+    $("xn-cur").textContent=(currentExamIndex+1)+"/"+n; $("xn-ans").textContent=a+" cavab"; }catch(e){} };
+  const og=renderExamNavGrid; renderExamNavGrid=function(){ const r=og.apply(this,arguments); upd(); return r; };
+  const gq=window.goToExamQuestion; window.goToExamQuestion=function(){ const r=gq.apply(this,arguments); if(mq.matches) setTimeout(()=>open(false),180); window.scrollTo({top:0,behavior:"smooth"}); return r; };
+  const ox=exitExamMode; exitExamMode=function(){ open(false); return ox.apply(this,arguments); };
+  addEventListener("popstate",()=>open(false));
+})();
+</script>
+
 </body>
 </html>
