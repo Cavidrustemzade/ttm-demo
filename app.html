@@ -13509,7 +13509,7 @@ function homeExtra(){
   const TEX = /\$|\\\(|\\\[/;
   const isLetters = q => Array.isArray(q.options) && q.options.every((o, k) => String(o).trim() === L[k]);
   const isMcq = q => !q.type || q.type === "mcq";
-  const isRich = q => !!q && q.type !== "detailed" && ((isMcq(q) && Array.isArray(q.options) && !isLetters(q)) || TEX.test(q.text || ""));
+  const isRich = q => !!q && ((isMcq(q) && Array.isArray(q.options) && !isLetters(q)) || TEX.test(q.text || ""));
   const icon = s => { try { return v2Icon(s); } catch (e) { return { t: "📘", bg: "#0B3C5D" }; } };
   const meta = q => [q.year, q.no ? "№" + q.no : "", q.exam].filter(Boolean).join(" · ");
 
