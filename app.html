@@ -15604,77 +15604,96 @@ body.xn-open #xn-bd{opacity:1;pointer-events:auto}
   };
 })();
 </script>
-<!-- ===== İZAH STUDİYASI — app.html-də </body> sətrindən ƏVVƏL yapışdırın ===== -->
+<!-- ===== İZAH STUDİYASI v2 ===== -->
 <style id="iz-css">
-#iz-ov{position:fixed;inset:0;z-index:8000;display:flex;flex-direction:column;background:linear-gradient(135deg,#e4f3ff 0%,#8fd0f5 45%,#1d6fd6 100%);font-family:var(--font-main);-webkit-user-select:none;user-select:none}
+#iz-ov{position:fixed;inset:0;z-index:8000;display:flex;flex-direction:column;background:#fff;font-family:var(--font-main);-webkit-user-select:none;user-select:none}
 body.iz-open{overflow:hidden}
-body.iz-open #toast,body.iz-open #dq-tray,body.iz-open #nt-modal{display:none!important}
-.iz-top{display:flex;align-items:center;gap:16px;padding:10px 18px;background:#fff;border-radius:0 0 24px 24px;box-shadow:0 6px 20px rgba(11,60,93,.12)}
-.iz-logo{width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#14507d,#072a42);color:#fff;font-weight:900;font-size:16px;display:flex;align-items:center;justify-content:center;flex:none}
-.iz-brand b{display:block;color:#0B3C5D;font-size:15px}.iz-brand small{color:#6b7686;font-size:11px}
-.iz-title{display:flex;align-items:center;gap:8px;font-size:22px;font-weight:800;color:#0B3C5D;padding-left:16px;border-left:1px solid #e3e9f0;white-space:nowrap}
-.iz-title svg{width:30px;height:30px;color:#1d6fd6}
-.iz-meta{display:flex;gap:20px;margin-left:auto;min-width:0}
-.iz-meta div{min-width:0;padding-left:16px;border-left:1px solid #e3e9f0}
-.iz-meta small{display:block;font-size:11px;color:#6b7686}.iz-meta b{display:block;color:#0B3C5D;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
-.iz-fsb{display:flex;align-items:center;gap:8px;padding:11px 16px;border-radius:14px;background:#0B3C5D;color:#fff;font-weight:700;font-size:13.5px;white-space:nowrap}
-.iz-x{width:40px;height:40px;border-radius:12px;background:#eef3f8;color:#0B3C5D;font-size:16px;flex:none}
-#iz-ov svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.iz-fsb svg,.iz-t svg{width:20px;height:20px}
-.iz-main{flex:1;min-height:0;display:flex;padding:14px 18px 16px}
-.iz-board{flex:1;min-width:0;display:flex;flex-direction:column;background:#fff;border-radius:24px;box-shadow:0 0 0 4px rgba(255,255,255,.75),0 22px 50px rgba(11,60,93,.28);overflow:hidden}
-.iz-stage{position:relative;flex:1;min-height:0;overflow:hidden}
+body.iz-open #dq-tray,body.iz-open #nt-modal{display:none!important}
+body.iz-open #toast{z-index:9000}
+#iz-ov svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.iz-top{display:flex;align-items:center;gap:8px;padding:6px 10px;background:#fff;border-bottom:1px solid #e3e9f0;box-shadow:0 2px 10px rgba(11,60,93,.06);flex-wrap:wrap;position:relative;z-index:5}
+.iz-id{display:flex;align-items:center;gap:10px;min-width:0;flex:0 1 auto;max-width:30%}
+.iz-logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#14507d,#072a42);color:#fff;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center;flex:none}
+.iz-info{min-width:0}.iz-info b{display:block;font-size:14.5px;color:#0B3C5D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iz-info small{display:block;font-size:11.5px;color:#6b7686;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iz-tools{display:flex;align-items:center;gap:2px;flex:1 1 auto;justify-content:center;overflow-x:auto;scrollbar-width:none;min-width:0}
+.iz-tools::-webkit-scrollbar{display:none}
+.iz-b{flex:none;width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:none;color:#334155;transition:background .15s,transform .1s}
+.iz-b[hidden]{display:none}
+.iz-b:active{transform:scale(.9)}
+.iz-b.on{background:#e3f0fd;color:#1d6fd6}
+.iz-b:disabled{opacity:.3}
+.iz-sep{flex:none;width:1px;height:26px;background:#e3e9f0;margin:0 4px}
+.iz-c{flex:none;width:28px;height:28px;border-radius:50%;margin:0 3px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.1);transition:transform .15s}
+.iz-c.on{box-shadow:0 0 0 2px #fff,0 0 0 4px #1d6fd6;transform:scale(1.08)}
+.iz-c.rb{background:conic-gradient(red,#ff0,lime,cyan,blue,#f0f,red);position:relative;overflow:hidden;cursor:pointer}
+.iz-c.rb input{position:absolute;inset:-6px;opacity:0;cursor:pointer}
+.iz-wd{flex:none;width:34px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:none}
+.iz-wd i{display:block;width:20px;border-radius:9px;background:#475569}
+.iz-wd.on{background:#e3f0fd}.iz-wd.on i{background:#1d6fd6}
+.iz-right{display:flex;align-items:center;gap:4px;flex:none;margin-left:auto}
+.iz-nav{display:flex;align-items:center;background:#f1f5f9;border-radius:12px;padding:2px}
+.iz-nav .iz-b{width:36px;height:36px}
+.iz-no{min-width:56px;text-align:center;font-weight:800;color:#0B3C5D;font-size:14px;font-variant-numeric:tabular-nums}
+.iz-tm{font-weight:700;font-size:13px;color:#be123c;background:#fdecef;padding:6px 10px;border-radius:999px;font-variant-numeric:tabular-nums;white-space:nowrap}
+#iz-ov.iz-min .iz-tools{display:none}
+.iz-stage{position:relative;flex:1;min-height:0;overflow:hidden;background:#fff;touch-action:none}
 .iz-wm{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;color:#0B3C5D;opacity:.045;font-weight:900;font-size:min(20vw,26vh);line-height:1}
 .iz-wm small{font-size:.17em;font-weight:700}
-.iz-q{position:relative;z-index:1;padding:30px 40px 0;font-family:"Times New Roman",Georgia,serif;font-size:clamp(18px,2.1vw,30px);line-height:1.55;color:#111;overflow-wrap:anywhere}
-.iz-qt{white-space:pre-line;padding-right:170px}
-.iz-qt .n{font-weight:700;margin-right:12px}
-.iz-q img{display:block;max-width:100%;max-height:48vh;margin:10px 0;object-fit:contain}
-.iz-opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,max-content));gap:6px 48px;margin-top:16px}
+.iz-cnt{position:absolute;left:0;right:0;top:0;padding:20px 30px 0;z-index:1;will-change:transform}
+.iz-q{font-family:"Times New Roman",Georgia,serif;font-size:calc(var(--qs,1)*clamp(17px,1.6vw,25px));line-height:1.5;color:#111;overflow-wrap:anywhere;max-width:1150px}
+.iz-qt{white-space:pre-line}.iz-qt .n{font-weight:700;margin-right:10px}
+.iz-q img{display:block;max-width:min(100%,900px);max-height:calc(var(--qs,1)*34vh);margin:8px 0;object-fit:contain}
+.iz-opts{display:flex;flex-wrap:wrap;gap:4px 40px;margin-top:10px}
 .iz-opts .ok{color:#16a34a;font-weight:700}
+.iz-ans{display:inline-block;margin-top:12px;padding:6px 14px;border-radius:12px;background:#dcfce7;color:#15803d;font:700 15px var(--font-main);animation:fadeUp .25s ease}
+.iz-ans.no{background:#fef3c7;color:#92400e}
 .iz-ans[hidden]{display:none!important}
-.iz-t.ic span{display:none}
-.iz-ans{display:inline-block;margin-top:16px;padding:8px 16px;border-radius:12px;background:#dcfce7;color:#15803d;font:700 16px var(--font-main);animation:fadeUp .25s ease}
-.iz-cv{position:absolute;inset:0;width:100%;height:100%;z-index:2;touch-action:none;cursor:crosshair}
-.iz-badges{position:absolute;top:14px;right:16px;z-index:3;display:flex;gap:8px;pointer-events:none}
-.iz-badge{background:#e3f0fd;color:#1d6fd6;font-weight:700;font-size:14px;padding:7px 14px;border-radius:999px}
-.iz-badge.t{background:#fdecef;color:#be123c;font-variant-numeric:tabular-nums}
-.iz-bar{display:flex;align-items:stretch;gap:12px;padding:10px 12px 12px;flex-wrap:wrap;position:relative;z-index:4}
-.iz-tools,.iz-nav{display:flex;align-items:center;gap:4px;background:#fff;border:1px solid #e3e9f0;border-radius:18px;padding:6px;box-shadow:0 6px 18px rgba(11,60,93,.1);flex-wrap:wrap}
-.iz-nav{margin-left:auto}
-.iz-t{display:flex;align-items:center;gap:6px;padding:9px 11px;border-radius:12px;background:none;color:#0B3C5D;font-weight:700;font-size:13.5px}
-.iz-t.on{background:#e3f0fd;color:#1d6fd6}.iz-t:disabled{opacity:.35}
-.iz-v{flex-direction:column;gap:3px;font-size:12px;padding:6px 12px}
-.iz-v svg{width:30px;height:30px;padding:5px;border-radius:10px;background:#e3f0fd;color:#1d6fd6}
-.iz-sep{width:1px;height:28px;background:#e3e9f0;margin:0 4px}
-.iz-c{width:26px;height:26px;border-radius:50%;margin:0 2px;transition:transform .15s}
-.iz-c.on{box-shadow:0 0 0 2px #fff,0 0 0 4px #1d6fd6;transform:scale(1.1)}
-.iz-w{padding:8px 10px;border-radius:12px;border:1px solid #e3e9f0;background:#fff;color:#0B3C5D;font-weight:700;font-size:13px}
-.iz-next{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:150px;padding:10px 24px;border-radius:14px;background:linear-gradient(135deg,#1d6fd6,#0b56c4);color:#fff;font-weight:800;font-size:14px;box-shadow:0 10px 22px rgba(29,111,214,.35)}
-.iz-next svg{width:26px;height:26px}.iz-next:disabled{opacity:.45;box-shadow:none}
-.iz-fsx{display:none;position:absolute;top:4px;left:4px;z-index:9;width:28px;height:28px;border-radius:50%;background:rgba(11,60,93,.25);color:#fff;font-size:13px;opacity:.6}
-#iz-ov.iz-fs .iz-top{display:none}#iz-ov.iz-fs .iz-main{padding:10px}#iz-ov.iz-fs .iz-fsx{display:block}
-@media(max-width:1100px){.iz-brand,.iz-t span{display:none}.iz-v span{display:block}.iz-meta b{max-width:120px}}
-@media(max-width:700px){.iz-top{flex-wrap:wrap;gap:8px;padding:8px 10px}.iz-title{border:0;padding:0;font-size:17px}.iz-meta{order:5;width:100%;margin:0;gap:10px}.iz-meta div{padding-left:8px}.iz-fsb span{display:none}.iz-main{padding:8px}.iz-q{padding:20px 16px 0}.iz-qt{padding-right:0;padding-top:30px}.iz-nav{margin:0;width:100%;justify-content:space-between}.iz-next{flex:1;min-width:0}.iz-v span{display:none}}
+.iz-cv{position:absolute;inset:0;width:100%;height:100%;z-index:2}
+#iz-live{z-index:3;cursor:crosshair;touch-action:none}
+.iz-sbar{position:absolute;right:3px;top:0;width:4px;border-radius:4px;background:rgba(11,60,93,.28);z-index:4;opacity:0;transition:opacity .4s;pointer-events:none}
+.iz-sbar.on{opacity:1}
+.iz-down{position:absolute;right:14px;bottom:14px;z-index:4;display:flex;flex-direction:column;gap:8px}
+.iz-down button{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.92);box-shadow:0 4px 14px rgba(11,60,93,.18);color:#0B3C5D;display:flex;align-items:center;justify-content:center}
+.iz-down button[hidden]{display:none}
+.iz-snap{position:absolute;z-index:4;pointer-events:none;padding:5px 11px;border-radius:999px;background:#0B3C5D;color:#fff;font:700 12px var(--font-main);transform:translate(-50%,-150%);animation:izSnap 1s ease forwards;white-space:nowrap}
+@keyframes izSnap{0%{opacity:0;transform:translate(-50%,-110%) scale(.8)}15%{opacity:1;transform:translate(-50%,-150%)}75%{opacity:1}100%{opacity:0}}
+.iz-txp{position:absolute;top:0;right:0;bottom:0;width:min(440px,92%);z-index:6;background:#fffdf7;box-shadow:-10px 0 30px rgba(11,60,93,.18);padding:14px 18px 20px;overflow-y:auto;touch-action:pan-y;animation:izTx .25s ease;font-family:Georgia,serif;font-size:16px;line-height:1.7;color:#1c2530}
+.iz-txp img{max-width:100%;border-radius:8px;margin-top:8px}
+.iz-txh{display:flex;align-items:center;justify-content:space-between;gap:10px;position:sticky;top:-14px;background:#fffdf7;padding:4px 0 8px;font:800 15px var(--font-main);color:#0B3C5D}
+.iz-txh button{width:34px;height:34px;border-radius:50%;background:#f1f5f9;color:#475569}
+@keyframes izTx{from{transform:translateX(40px);opacity:0}}
+#iz-ov.iz-fs .iz-top{padding:3px 8px}
+@media(max-width:900px){.iz-id{max-width:none;flex:1 1 0}.iz-tools{order:3;flex:1 0 100%;justify-content:flex-start}.iz-cnt{padding:16px 16px 0}}
+@media(max-width:560px){.iz-tm{display:none}}
 </style>
 <script>
-/* ===== İzah Studiyası: mövcud sınaq bazasından suallar + lövhə ===== */
+/* ===== İzah Studiyası v2: kiçik sual, geniş lövhə, qələm/marker/silgi/lazer, fiqur tanıma, aşağı sürüşmə ===== */
 (function(){
   const $=id=>document.getElementById(id), L="ABCDE";
   const I=p=>`<svg viewBox="0 0 24 24"><path d="${p}"/></svg>`;
-  const IC={pen:"M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z",er:"M7 21h11M4 15l9-9 6 6-9 9H7z",un:"M9 14L4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3",re:"M15 14l5-5-5-5M20 9H9a5 5 0 0 0 0 10h3",ln:"M5 19L19 5",rc:"M4 6h16v12H4z",ci:"M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z",tr:"M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3",pin:"M12 17v5M8 3h8l-1 6 3 4H6l3-4z",pr:"M11 19l-7-7 7-7M20 19l-7-7 7-7",nx:"M5 12h14M13 6l6 6-6 6",eye:"M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z",fs:"M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5",play:"M3 6h18v13H3zM10 9.5v6l5-3z"};
-  const COL=["#111827","#e11d48","#1d4ed8","#16a34a","#7c3aed"];
+  const IC={pen:"M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z",mk:"M9 14l-5 5v1h5l4-4M10 13l7-7 3 3-7 7zM15 8l3 3",er:"M7 21h11M4 15l9-9 6 6-9 9H7z",
+    laser:"M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2",
+    un:"M9 14L4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3",re:"M15 14l5-5-5-5M20 9H9a5 5 0 0 0 0 10h3",tr:"M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3",
+    pin:"M12 17v5M8 3h8l-1 6 3 4H6l3-4z",pv:"M15 18l-6-6 6-6",nx:"M9 6l6 6-6 6",eye:"M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z",
+    fs:"M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5",down:"M12 5v14M6 13l6 6 6-6",up:"M12 19V5M6 11l6-6 6 6",
+    book:"M2 4h7a3 3 0 0 1 3 3v14a2 2 0 0 0-2-2H2zM22 4h-7a3 3 0 0 0-3 3v14a2 2 0 0 1 2-2h8z",aa:"M3 18l5-12 5 12M5 13h6M14 18l3.5-8 3.5 8M15.5 15h4",
+    hide:"M6 9l6 6 6-6",play:"M3 6h18v13H3zM10 9.5v6l5-3z"};
+  const COL=["#111827","#1d4ed8","#dc2626","#16a34a","#7c3aed","#ea580c"];
+  const MK=["#facc15","#4ade80","#38bdf8","#f472b6","#fb923c","#a78bfa"];
+  const WID={pen:[2,3.5,6],mk:[14,22,32]};
+  const QS=[.8,1,1.2,1.45];
   const main=document.querySelector("#view-admin .panel-main"), tabs=document.querySelector("#view-admin .tabs");
   if(!main||!tabs) return;
 
   // ---------- seçim bölməsi ----------
   const tb=document.createElement("button"); tb.className="tab-btn"; tb.dataset.tab="tab-izah"; tb.textContent="İzah Studiyası"; tabs.appendChild(tb);
   const pn=document.createElement("div"); pn.className="tab-panel"; pn.id="tab-izah";
-  pn.innerHTML=`<div class="card"><h3>İzah Studiyası</h3><p class="muted-note" style="margin-bottom:12px">Sınağı seçin — suallar böyük lövhədə açılır, üstündə yazırsınız, dərsi ekran yazısı ilə çəkirsiniz.</p>
+  pn.innerHTML=`<div class="card"><h3>İzah Studiyası</h3><p class="muted-note" style="margin-bottom:12px">Sınağı seçin — sual yuxarıda kiçik görünür, altı boş lövhədir. Dərsi planşetin ekran yazısı ilə çəkin.</p>
     <div class="field-row"><div class="field"><label>Sinif / qrup</label><select id="iz-g"></select></div><div class="field"><label>Fənn</label><select id="iz-s"></select></div></div>
     <div class="field" style="margin-bottom:14px"><label>Sınaq</label><select id="iz-e"></select></div>
     <button class="btn-small" id="iz-go" style="width:100%;padding:14px;font-size:15px">▶ Studiyanı aç</button>
-    <div class="muted-note" style="margin-top:10px">Klaviatura/pult: → növbəti, ← əvvəlki. Stylus işləyəndə ovuc toxunuşu nəzərə alınmır.</div></div>`;
+    <div class="muted-note" style="margin-top:10px;line-height:1.7">• Dairə, düz xətt, üçbucaq, düzbucaqlı: çəkin və qələmi 1 saniyə saxlayın — özü düzəlir.<br>• Yer lazımdırsa: iki barmaqla aşağı sürüşdürün və ya ⬇ düyməsi (stylus varsa bir barmaq da olur).<br>• Klaviatura/pult: → növbəti, ← əvvəlki sual.</div></div>`;
   main.appendChild(pn);
   tb.addEventListener("click",()=>{
     document.querySelectorAll(".tab-btn[data-tab]").forEach(b=>b.classList.remove("active"));
@@ -15700,169 +15719,305 @@ body.iz-open #toast,body.iz-open #dq-tray,body.iz-open #nt-modal{display:none!im
   }
   $("iz-g").onchange=fill; $("iz-s").onchange=fill; $("iz-go").onclick=openStudio;
 
-  // ---------- studiya ----------
-  let Z=null, cv=null, ctx=null, dpr=1;
+  // ---------- vəziyyət ----------
+  let Z=null, base=null, bctx=null, live=null, lctx=null, dpr=1, Wpx=1, Hpx=1;
+  const cfg=()=>{ try{ return JSON.parse(localStorage.getItem("iz_cfg")||"{}"); }catch(e){ return {}; } };
+  const saveCfg=()=>{ try{ localStorage.setItem("iz_cfg",JSON.stringify({tool:Z.tool==="laser"||Z.tool==="er"?"pen":Z.tool,col:Z.col,wi:Z.wi,qs:Z.qs_})); }catch(e){} };
+
   async function openStudio(){
     const ex=examsCache.find(x=>x.id===$("iz-e").value);
     if(!ex){ toast("Sınaq seçin"); return; }
     const btn=$("iz-go"); btn.disabled=true;
     try{
-      const qs=(await db.collection("exams").doc(ex.id).collection("questions").orderBy("order").get()).docs.map(d=>d.data());
+      const ref=db.collection("exams").doc(ex.id);
+      const [qsn,tsn]=await Promise.all([ref.collection("questions").orderBy("order").get(), ref.collection("texts").get().catch(()=>null)]);
+      const qs=qsn.docs.map(d=>d.data());
       if(!qs.length) throw new Error("Bu sınaqda sual yoxdur");
+      const texts=tsn&&tsn.docs.length?tsn.docs.map(d=>d.data()):(ex.texts||[]);
       let ink={}; try{ ink=JSON.parse(localStorage.getItem("iz_"+ex.id)||"{}"); }catch(e){}
       const gn=$("iz-g").value?$("iz-g").selectedOptions[0].text:(gids(ex).map(groupName).join(", ")||"—");
-      Z={ex,qs,gn,ink,i:0,tool:"pen",color:COL[2],w:3,keep:false,show:false,undo:[],redo:[],strokes:(ink[0]||[]).slice(),t0:Date.now()};
+      const c=cfg();
+      Z={ex,qs,texts,gn,ink,i:0,tool:c.tool||"pen",col:Object.assign({pen:COL[1],mk:MK[0]},c.col||{}),wi:Object.assign({pen:1,mk:1},c.wi||{}),qs_:QS.includes(c.qs)?c.qs:1,
+        keep:false,show:false,undo:[],redo:[],strokes:(ink[0]||[]).slice(),sy:0,t0:Date.now()};
       try{ Z.snd=localStorage.getItem("ttm_sound"); localStorage.setItem("ttm_sound","0"); }catch(e){} // çəkilişdə klik səsləri olmasın
       build(); render(); ui();
     }catch(e){ console.error(e); toast(errAz(e)); }
     btn.disabled=false;
   }
 
+  // ---------- quruluş ----------
+  const pk=()=>Z.tool==="mk"?"mk":"pen";
+  function tools(){
+    const t=Z.tool, k=pk(), pal=k==="mk"?MK:COL, cur=Z.col[k], wi=Z.wi[k], showC=t==="pen"||t==="mk";
+    const B=(id,ic,ti)=>`<button type="button" class="iz-b ${t===id?"on":""}" data-tool="${id}" title="${ti}" aria-label="${ti}">${I(IC[ic])}</button>`;
+    const A=(id,ic,ti,on)=>`<button type="button" class="iz-b ${on?"on":""}" data-act="${id}" title="${ti}" aria-label="${ti}">${I(IC[ic])}</button>`;
+    return B("pen","pen","Qələm")+B("mk","mk","Marker")+B("er","er","Silgi")+B("laser","laser","Lazer göstərici")+'<i class="iz-sep"></i>'+
+      (showC?pal.map(c=>`<button type="button" class="iz-c ${c===cur?"on":""}" data-c="${c}" style="background:${c}" aria-label="Rəng"></button>`).join("")+
+        `<label class="iz-c rb ${pal.includes(cur)?"":"on"}" title="Başqa rəng"><input type="color" id="iz-cc" value="${cur}"></label><i class="iz-sep"></i>`+
+        [0,1,2].map(n=>`<button type="button" class="iz-wd ${wi===n?"on":""}" data-wi="${n}" aria-label="Qalınlıq"><i style="height:${[2,4,7][n]}px;${k==="mk"?"background:"+cur+";opacity:.8":""}"></i></button>`).join("")+'<i class="iz-sep"></i>':"")+
+      A("undo","un","Geri al")+A("redo","re","Təkrar et")+'<i class="iz-sep"></i>'+A("aa","aa","Sual yazısının ölçüsü")+A("keep","pin","Lövhəni növbəti suala keçir",Z.keep)+A("clear","tr","Lövhəni təmizlə");
+  }
+  function retools(){ $("iz-tools").innerHTML=tools(); hover=null; saveCfg(); ui(); req(); }
+
   function build(){
-    const T=(k,t,ic,x="")=>`<button type="button" class="iz-t ${x}" data-tool="${k}" title="${t}">${I(ic)}<span>${t}</span></button>`;
-    const A=(k,t,ic,x="")=>`<button type="button" class="iz-t ${x}" data-act="${k}" title="${t}">${I(ic)}<span>${t}</span></button>`;
     const ov=document.createElement("div"); ov.id="iz-ov";
-    ov.innerHTML=`<header class="iz-top"><div class="iz-logo">TTM</div><div class="iz-brand"><b>Tam Tədris Mərkəzi</b><small>Biliyə aparan doğru yol</small></div>
-      <div class="iz-title">${I(IC.play)}İzah Studiyası</div>
-      <div class="iz-meta"><div><small>Sinif</small><b>${esc(Z.gn)}</b></div><div><small>Fənn</small><b>${esc(Z.ex.topic||"—")}</b></div><div><small>Sınaq</small><b>${esc(Z.ex.title)}</b></div></div>
-      <button type="button" class="iz-fsb" data-act="fs">${I(IC.fs)}<span>Tam ekran rejimi</span></button><button type="button" class="iz-x" data-act="close" aria-label="Bağla">✕</button></header>
-      <main class="iz-main"><div class="iz-board">
-        <div class="iz-stage" id="iz-stage"><div class="iz-wm">TTM<small>Tam Tədris Mərkəzi</small></div><div class="iz-q" id="iz-q"></div><canvas class="iz-cv" id="iz-cv"></canvas>
-          <div class="iz-badges"><span class="iz-badge" id="iz-no"></span><span class="iz-badge t" id="iz-tm">⏱ 0:00</span></div></div>
-        <div class="iz-bar"><div class="iz-tools">${T("pen","Qələm",IC.pen)}${T("eraser","Silgi",IC.er)}<i class="iz-sep"></i>${A("undo","Geri al",IC.un)}${A("redo","Təkrar et",IC.re)}<i class="iz-sep"></i>
-          ${COL.map(c=>`<button type="button" class="iz-c" data-c="${c}" style="background:${c}" aria-label="Rəng"></button>`).join("")}
-          <select class="iz-w" id="iz-w" aria-label="Qalınlıq">${[2,3,5,8,12].map(n=>`<option ${n===3?"selected":""}>${n}</option>`).join("")}</select><i class="iz-sep"></i>
-          ${T("line","Xətt",IC.ln,"ic")}${T("rect","Düzbucaqlı",IC.rc,"ic")}${T("circ","Dairə",IC.ci,"ic")}<i class="iz-sep"></i>${A("keep","Lövhəni saxla (növbəti suala keçir)",IC.pin,"ic")}${A("clear","Təmizlə",IC.tr,"ic")}</div>
-        <div class="iz-nav"><button type="button" class="iz-t iz-v" data-act="prev">${I(IC.pr)}<span>Əvvəlki sual</span></button>
-          <button type="button" class="iz-next" data-act="next">${I(IC.nx)}<span>Növbəti sual</span></button>
-          <button type="button" class="iz-t iz-v" data-act="show">${I(IC.eye)}<span>İzahı göstər</span></button></div></div>
-      </div></main><button type="button" class="iz-fsx" data-act="fs" aria-label="Tam ekrandan çıx">✕</button>`;
+    ov.innerHTML=`<header class="iz-top">
+      <div class="iz-id"><div class="iz-logo">TTM</div><div class="iz-info"><b>${esc(Z.ex.title)}</b><small>${esc(Z.gn)} · ${esc(Z.ex.topic||"—")}</small></div></div>
+      <div class="iz-tools" id="iz-tools"></div>
+      <div class="iz-right">
+        <button type="button" class="iz-b" data-act="text" title="Mətn" aria-label="Mətn" hidden>${I(IC.book)}</button>
+        <button type="button" class="iz-b" data-act="show" title="Düzgün cavabı göstər" aria-label="Düzgün cavab">${I(IC.eye)}</button>
+        <div class="iz-nav"><button type="button" class="iz-b" data-act="prev" aria-label="Əvvəlki sual">${I(IC.pv)}</button><span class="iz-no" id="iz-no"></span><button type="button" class="iz-b" data-act="next" aria-label="Növbəti sual">${I(IC.nx)}</button></div>
+        <span class="iz-tm" id="iz-tm">0:00</span>
+        <button type="button" class="iz-b" data-act="min" title="Alətləri gizlət/göstər" aria-label="Alətlər">${I(IC.hide)}</button>
+        <button type="button" class="iz-b" data-act="fs" title="Tam ekran" aria-label="Tam ekran">${I(IC.fs)}</button>
+        <button type="button" class="iz-b" data-act="close" aria-label="Bağla" style="background:#f1f5f9;font-size:16px">✕</button>
+      </div></header>
+      <div class="iz-stage" id="iz-stage"><div class="iz-wm">TTM<small>Tam Tədris Mərkəzi</small></div>
+        <div class="iz-cnt" id="iz-cnt"></div><canvas class="iz-cv" id="iz-base"></canvas><canvas class="iz-cv" id="iz-live"></canvas>
+        <div class="iz-sbar" id="iz-sbar"></div>
+        <div class="iz-down"><button type="button" data-act="up" id="iz-upb" aria-label="Yuxarı" hidden>${I(IC.up)}</button><button type="button" data-act="down" aria-label="Aşağı — yer aç">${I(IC.down)}</button></div>
+      </div>`;
     document.body.appendChild(ov); document.body.classList.add("iz-open");
-    cv=$("iz-cv"); ctx=cv.getContext("2d");
-    ov.addEventListener("click",e=>{
-      const t=e.target.closest("[data-tool]"), c=e.target.closest("[data-c]"), a=e.target.closest("[data-act]");
-      if(t){ Z.tool=t.dataset.tool; ui(); }
-      if(c){ Z.color=c.dataset.c; if(Z.tool==="eraser") Z.tool="pen"; ui(); }
-      if(!a) return;
-      const k=a.dataset.act;
-      if(k==="next") go(Z.i+1,1); else if(k==="prev") go(Z.i-1,-1);
-      else if(k==="undo") undo(); else if(k==="redo") redo();
-      else if(k==="clear"){ if(Z.strokes.length) commit([]); }
-      else if(k==="keep"){ Z.keep=!Z.keep; ui(); }
-      else if(k==="show"){ Z.show=!Z.show; showAns(); ui(); }
-      else if(k==="fs") fs(); else if(k==="close") close();
-    });
-    $("iz-w").onchange=e=>{ Z.w=+e.target.value; };
+    $("iz-tools").innerHTML=tools();
+    base=$("iz-base"); live=$("iz-live");
+    bctx=base.getContext("2d"); lctx=live.getContext("2d",{desynchronized:true})||live.getContext("2d");
+    ov.addEventListener("click",onClick);
+    ov.addEventListener("input",e=>{ if(e.target.id==="iz-cc") Z.col[pk()]=e.target.value; });
+    ov.addEventListener("change",e=>{ if(e.target.id==="iz-cc"){ Z.col[pk()]=e.target.value; retools(); } });
     bindPen();
+    $("iz-stage").addEventListener("wheel",e=>{ if(e.target.closest(".iz-txp")) return; e.preventDefault(); scrollTo(Z.sy+e.deltaY/Wpx); },{passive:false});
     Z.ro=new ResizeObserver(size); Z.ro.observe($("iz-stage"));
-    Z.tmr=setInterval(()=>{ const s=Math.floor((Date.now()-Z.t0)/1000), el=$("iz-tm"); if(el) el.textContent="⏱ "+(s>=3600?Math.floor(s/3600)+":":"")+String(Math.floor(s/60)%60).padStart(s>=3600?2:1,"0")+":"+String(s%60).padStart(2,"0"); },1000);
+    Z.tmr=setInterval(()=>{ const s=Math.floor((Date.now()-Z.t0)/1000), el=$("iz-tm"); if(el) el.textContent=(s>=3600?Math.floor(s/3600)+":":"")+String(Math.floor(s/60)%60).padStart(s>=3600?2:1,"0")+":"+String(s%60).padStart(2,"0"); },1000);
     addEventListener("keydown",key);
   }
 
-  function render(){
-    const q=Z.qs[Z.i], box=$("iz-q");
-    const letters=!Array.isArray(q.options)||q.options.every((o,k)=>String(o).trim()===L[k]);
-    let h=`<div class="iz-qt"><span class="n">${Z.i+1}.</span>${esc(q.text||"")}</div>`;
-    if(q.imageBase64) h+=`<img src="${q.imageBase64}" alt="">`;
-    if((!q.type||q.type==="mcq")&&!letters) h+=`<div class="iz-opts">${q.options.map((o,k)=>`<div data-k="${k}">${L[k]}) ${esc(o)}</div>`).join("")}</div>`;
-    const ans=q.type==="open"?esc(q.correctAnswer||""):q.type==="detailed"?"Ətraflı sual":L[q.correctIndex]||"?";
-    h+=`<div class="iz-ans" hidden>Düzgün cavab: ${ans}</div>`;
-    box.innerHTML=h; ttmTeX(box);
-    $("iz-no").textContent=`Sual ${Z.i+1} / ${Z.qs.length}`;
-  }
-  function showAns(){
-    const box=$("iz-q"), a=box.querySelector(".iz-ans"); if(a) a.hidden=!Z.show;
-    box.querySelectorAll(".iz-opts [data-k]").forEach(d=>d.classList.toggle("ok",Z.show&&+d.dataset.k===Z.qs[Z.i].correctIndex));
-  }
-  function ui(){
-    const ov=$("iz-ov"); if(!ov) return;
-    ov.querySelectorAll("[data-tool]").forEach(b=>b.classList.toggle("on",b.dataset.tool===Z.tool));
-    ov.querySelectorAll("[data-c]").forEach(b=>b.classList.toggle("on",b.dataset.c===Z.color&&Z.tool!=="eraser"));
-    const q=k=>ov.querySelector(`[data-act="${k}"]`);
-    q("undo").disabled=!Z.undo.length; q("redo").disabled=!Z.redo.length;
-    q("prev").disabled=Z.i===0; q("next").disabled=Z.i>=Z.qs.length-1;
-    q("next").querySelector("span").textContent=Z.i>=Z.qs.length-1?"Son sual":"Növbəti sual";
-    q("keep").classList.toggle("on",Z.keep); q("show").classList.toggle("on",Z.show);
+  function onClick(e){
+    const t=e.target.closest("[data-tool]"), c=e.target.closest("[data-c]"), w=e.target.closest("[data-wi]"), a=e.target.closest("[data-act]");
+    if(t){ Z.tool=t.dataset.tool; retools(); return; }
+    if(c){ Z.col[pk()]=c.dataset.c; retools(); return; }
+    if(w){ Z.wi[pk()]=+w.dataset.wi; retools(); return; }
+    if(!a) return;
+    const k=a.dataset.act;
+    if(k==="next") go(Z.i+1,1); else if(k==="prev") go(Z.i-1,-1);
+    else if(k==="undo") undo(); else if(k==="redo") redo();
+    else if(k==="clear"){ if(Z.strokes.length) commitAll([]); }
+    else if(k==="keep"){ Z.keep=!Z.keep; ui(); }
+    else if(k==="show"){ Z.show=!Z.show; showAns(); ui(); }
+    else if(k==="aa"){ Z.qs_=QS[(QS.indexOf(Z.qs_)+1)%QS.length]; $("iz-cnt").style.setProperty("--qs",Z.qs_); saveCfg(); scrollTo(Z.sy); toast("Sual ölçüsü: "+Math.round(Z.qs_*100)+"%"); }
+    else if(k==="text") textPanel();
+    else if(k==="down") smooth(Z.sy+Hpx*.6/Wpx); else if(k==="up") smooth(0);
+    else if(k==="min"){ $("iz-ov").classList.toggle("iz-min"); }
+    else if(k==="fs") fs(); else if(k==="close") close();
   }
 
-  // Keçid: yalnız sual sahəsi dəyişir (~240 ms)
+  // ---------- sual ----------
+  const textOf=q=>q&&q.textId&&(Z.texts||[]).find(x=>x.id===q.textId);
+  function render(){
+    const q=Z.qs[Z.i], box=$("iz-cnt");
+    box.style.setProperty("--qs",Z.qs_);
+    const letters=!Array.isArray(q.options)||q.options.every((o,k)=>String(o).trim()===L[k]);
+    let h=`<div class="iz-q"><div class="iz-qt"><span class="n">${Z.i+1}.</span>${esc(q.text||"")}</div>`;
+    if(q.imageBase64) h+=`<img src="${q.imageBase64}" alt="">`;
+    const mcq=!q.type||q.type==="mcq";
+    if(mcq&&!letters) h+=`<div class="iz-opts">${q.options.map((o,k)=>`<div data-k="${k}">${L[k]}) ${esc(o)}</div>`).join("")}</div>`;
+    let ans="";
+    if(q.type==="open"){ ans=String(q.correctAnswer||q.openAnswer||q.answer||"").trim(); if(ans&&!/\$/.test(ans)&&/\\[a-zA-Z]|\^|_/.test(ans)) ans="$"+ans+"$"; }
+    else if(mcq){ const k=Number(q.correctIndex); ans=L[k]?L[k]+(letters?"":") "+(q.options[k]||"")):""; }
+    if(q.type!=="detailed") h+=ans?`<div class="iz-ans" hidden>Düzgün cavab: ${esc(ans)}</div>`:`<div class="iz-ans no" hidden>Bu sual üçün cavab qeyd olunmayıb</div>`;
+    box.innerHTML=h+"</div>";
+    ttmTeX(box);
+    box.querySelectorAll("img").forEach(im=>im.addEventListener("load",()=>scrollTo(Z.sy),{once:true}));
+    const tp=$("iz-txp"); if(tp){ tp.remove(); if(textOf(q)) textPanel(); }
+  }
+  function showAns(){
+    const box=$("iz-cnt"), a=box.querySelector(".iz-ans"); if(a) a.hidden=!Z.show;
+    box.querySelectorAll(".iz-opts [data-k]").forEach(d=>d.classList.toggle("ok",Z.show&&+d.dataset.k===Number(Z.qs[Z.i].correctIndex)));
+  }
+  function textPanel(){
+    let p=$("iz-txp"); if(p){ p.remove(); ui(); return; }
+    const t=textOf(Z.qs[Z.i]); if(!t) return;
+    const imgs=t.images||(t.imageBase64?[t.imageBase64]:[]);
+    $("iz-stage").insertAdjacentHTML("beforeend",`<div class="iz-txp" id="iz-txp"><div class="iz-txh"><span>📖 ${esc(t.title||"Mətn")}</span><button type="button" data-act="text" aria-label="Bağla">✕</button></div>
+      <div style="white-space:pre-line">${esc(t.content||"")}</div>${imgs.map(s=>`<img src="${s}" alt="">`).join("")}</div>`);
+    const el=$("iz-txp"); ["pointerdown","pointermove","wheel"].forEach(ev=>el.addEventListener(ev,x=>x.stopPropagation()));
+    el.addEventListener("click",onClick); ttmTeX(el); ui();
+  }
+  function ui(){
+    const ov=$("iz-ov"); if(!ov||!Z) return;
+    const q=k=>ov.querySelector(`[data-act="${k}"]`), Q=Z.qs[Z.i];
+    if(q("undo")) q("undo").disabled=!Z.undo.length;
+    if(q("redo")) q("redo").disabled=!Z.redo.length;
+    if(q("keep")) q("keep").classList.toggle("on",Z.keep);
+    q("prev").disabled=Z.i===0; q("next").disabled=Z.i>=Z.qs.length-1;
+    $("iz-no").textContent=`${Z.i+1} / ${Z.qs.length}`;
+    const ey=q("show"); ey.classList.toggle("on",Z.show); ey.disabled=Q.type==="detailed";
+    const tx=ov.querySelector('.iz-right [data-act="text"]'); tx.hidden=!textOf(Q); tx.classList.toggle("on",!!$("iz-txp"));
+  }
+
   async function go(n,dir){
     if(!Z||Z.busy||n<0||n>=Z.qs.length) return;
     Z.ink[Z.i]=Z.strokes;
-    const carry=Z.keep?Z.strokes.slice():null, els=[$("iz-q"),cv], anim=!!els[0].animate;
-    Z.busy=true;
-    if(anim) await Promise.all(els.map(el=>el.animate([{opacity:1,transform:"none"},{opacity:0,transform:`translateX(${-dir*22}px)`}],{duration:100,easing:"ease-in"}).finished.catch(()=>{})));
-    Z.i=n; Z.show=false; Z.undo=[]; Z.redo=[];
+    const carry=Z.keep?Z.strokes.slice():null, els=[$("iz-cnt"),base], anim=!!els[0].animate;
+    Z.busy=true; cur=null; laser=[];
+    if(anim) await Promise.all(els.map(el=>el.animate([{opacity:1},{opacity:0}],{duration:110}).finished.catch(()=>{})));
+    Z.i=n; Z.show=false; Z.undo=[]; Z.redo=[]; Z.sy=0;
     Z.strokes=carry||(Z.ink[n]||[]).slice(); if(carry) Z.ink[n]=Z.strokes;
-    render(); redraw(); ui(); save();
-    if(anim) await Promise.all(els.map(el=>el.animate([{opacity:0,transform:`translateX(${dir*22}px)`},{opacity:1,transform:"none"}],{duration:140,easing:"cubic-bezier(.2,.8,.2,1)"}).finished.catch(()=>{})));
+    render(); scrollTo(0); ui(); save();
+    if(anim) await Promise.all(els.map(el=>el.animate([{opacity:0,transform:`translateX(${dir*18}px)`},{opacity:1,transform:"none"}],{duration:150,easing:"cubic-bezier(.2,.8,.2,1)"}).finished.catch(()=>{})));
     Z.busy=false;
   }
 
-  // ---------- lövhə ----------
-  function size(){ if(!cv) return; const r=cv.getBoundingClientRect(); dpr=Math.min(2,devicePixelRatio||1); cv.width=Math.round(r.width*dpr); cv.height=Math.round(r.height*dpr); redraw(); }
-  const W=()=>cv.width/dpr;
-  function samples(s){
-    if(s.t==="pen") return s.p;
-    const [a,b]=s.p, out=[];
-    if(!b) return [a];
-    if(s.t==="line") for(let k=0;k<=20;k++) out.push([a[0]+(b[0]-a[0])*k/20,a[1]+(b[1]-a[1])*k/20]);
-    if(s.t==="rect") [[a,[b[0],a[1]]],[[b[0],a[1]],b],[b,[a[0],b[1]]],[[a[0],b[1]],a]].forEach(([p,r])=>{ for(let k=0;k<=10;k++) out.push([p[0]+(r[0]-p[0])*k/10,p[1]+(r[1]-p[1])*k/10]); });
-    if(s.t==="circ"){ const cx=(a[0]+b[0])/2,cy=(a[1]+b[1])/2,rx=Math.abs(b[0]-a[0])/2,ry=Math.abs(b[1]-a[1])/2; for(let k=0;k<36;k++) out.push([cx+rx*Math.cos(k/36*6.283),cy+ry*Math.sin(k/36*6.283)]); }
-    return out;
+  // ---------- lövhə: ölçü, sürüşmə ----------
+  function size(){
+    if(!base||!Z) return;
+    const r=$("iz-stage").getBoundingClientRect(); if(!r.width) return;
+    dpr=Math.min(2,devicePixelRatio||1); Wpx=r.width; Hpx=r.height;
+    [base,live].forEach(c=>{ c.width=Math.round(Wpx*dpr); c.height=Math.round(Hpx*dpr); });
+    bctx.setTransform(dpr,0,0,dpr,0,0); lctx.setTransform(dpr,0,0,dpr,0,0);
+    scrollTo(Z.sy);
   }
-  function dS(s){
-    const w=W(), P=s.p.map(a=>[a[0]*w,a[1]*w]);
-    ctx.strokeStyle=ctx.fillStyle=s.c; ctx.lineWidth=s.w; ctx.lineCap=ctx.lineJoin="round"; ctx.beginPath();
+  function maxSy(){
+    const h=Hpx/Wpx, ch=($("iz-cnt").offsetHeight+20)/Wpx; let ib=0;
+    Z.strokes.forEach(s=>s.p.forEach(p=>{ if(p[1]>ib) ib=p[1]; }));
+    return Math.max(ch,ib,h)-h+h*.9; // altda həmişə ~1 ekran boş yer
+  }
+  let sbT=0;
+  function scrollTo(v){
+    if(!Z) return;
+    const m=maxSy(); Z.sy=Math.max(0,Math.min(m,v||0));
+    $("iz-cnt").style.transform=`translateY(${-Z.sy*Wpx}px)`;
+    const sb=$("iz-sbar"), tot=m+Hpx/Wpx;
+    if(Z.sy>0.001||sb.classList.contains("on")){ sb.style.height=Math.max(30,Hpx*(Hpx/Wpx)/tot)+"px"; sb.style.top=(Hpx-Math.max(30,Hpx*(Hpx/Wpx)/tot))*(Z.sy/m||0)+"px"; sb.classList.add("on"); clearTimeout(sbT); sbT=setTimeout(()=>sb.classList.remove("on"),900); }
+    $("iz-upb").hidden=Z.sy<0.05;
+    req(true);
+  }
+  function smooth(to){
+    const from=Z.sy, t0=performance.now();
+    (function st(t){ if(!Z) return; const k=Math.min(1,(t-t0)/260), e=1-Math.pow(1-k,3); scrollTo(from+(to-from)*e); if(k<1) requestAnimationFrame(st); })(t0);
+  }
+
+  // ---------- çəkmə ----------
+  const pf=p=>p[2]==null?1:Math.min(1.7,Math.max(.35,.3+1.4*p[2]));
+  const bb=new WeakMap();
+  function box(s){
+    let b=bb.get(s); if(b) return b;
+    let y0=1e9,y1=-1e9; s.p.forEach(p=>{ if(p[1]<y0) y0=p[1]; if(p[1]>y1) y1=p[1]; });
+    b=[y0,y1]; bb.set(s,b); return b;
+  }
+  function dS(c,s){
+    const w=Wpx, oy=Z.sy*w, P=s.p, n=P.length, X=k=>P[k][0]*w, Y=k=>P[k][1]*w-oy;
+    c.save(); c.lineCap=c.lineJoin="round"; c.strokeStyle=c.fillStyle=s.c; c.lineWidth=s.w;
+    if(s.h){ c.globalAlpha=.35; c.globalCompositeOperation="multiply"; }
     if(s.t==="pen"){
-      if(P.length===1){ ctx.arc(P[0][0],P[0][1],s.w/2,0,6.283); ctx.fill(); return; }
-      ctx.moveTo(P[0][0],P[0][1]);
-      for(let i=1;i<P.length-1;i++) ctx.quadraticCurveTo(P[i][0],P[i][1],(P[i][0]+P[i+1][0])/2,(P[i][1]+P[i+1][1])/2);
-      ctx.lineTo(P[P.length-1][0],P[P.length-1][1]);
-    } else {
-      if(!P[1]) return; const [a,b]=P;
-      if(s.t==="line"){ ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]); }
-      if(s.t==="rect") ctx.rect(Math.min(a[0],b[0]),Math.min(a[1],b[1]),Math.abs(b[0]-a[0]),Math.abs(b[1]-a[1]));
-      if(s.t==="circ") ctx.ellipse((a[0]+b[0])/2,(a[1]+b[1])/2,Math.abs(b[0]-a[0])/2,Math.abs(b[1]-a[1])/2,0,0,6.283);
+      if(n===1){ c.beginPath(); c.arc(X(0),Y(0),s.w*pf(P[0])/2,0,6.283); c.fill(); }
+      else if(!s.v){ c.beginPath(); c.moveTo(X(0),Y(0)); for(let i=1;i<n-1;i++) c.quadraticCurveTo(X(i),Y(i),(X(i)+X(i+1))/2,(Y(i)+Y(i+1))/2); c.lineTo(X(n-1),Y(n-1)); c.stroke(); }
+      else { let px=X(0),py=Y(0); for(let i=1;i<n;i++){ c.beginPath(); c.moveTo(px,py); let nx,ny; if(i<n-1){ nx=(X(i)+X(i+1))/2; ny=(Y(i)+Y(i+1))/2; c.quadraticCurveTo(X(i),Y(i),nx,ny); } else { nx=X(i); ny=Y(i); c.lineTo(nx,ny); } c.lineWidth=s.w*pf(P[i]); c.stroke(); px=nx; py=ny; } }
+    } else if(n>1){
+      c.beginPath();
+      if(s.t==="line"){ c.moveTo(X(0),Y(0)); c.lineTo(X(1),Y(1)); }
+      else if(s.t==="rect") c.rect(Math.min(X(0),X(1)),Math.min(Y(0),Y(1)),Math.abs(X(1)-X(0)),Math.abs(Y(1)-Y(0)));
+      else if(s.t==="circ") c.ellipse((X(0)+X(1))/2,(Y(0)+Y(1))/2,Math.abs(X(1)-X(0))/2,Math.abs(Y(1)-Y(0))/2,0,0,6.283);
+      else if(s.t==="poly"){ c.moveTo(X(0),Y(0)); for(let i=1;i<n;i++) c.lineTo(X(i),Y(i)); c.closePath(); }
+      c.stroke();
     }
-    ctx.stroke();
+    c.restore();
   }
-  let cur=null, pid=null, pen=false, base=null, raf=0;
-  function redraw(){ if(!ctx||!Z) return; ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,cv.width,cv.height); Z.strokes.forEach(dS); if(cur) dS(cur); }
-  const req=()=>{ if(!raf) raf=requestAnimationFrame(()=>{ raf=0; redraw(); }); };
-  const pt=e=>{ const r=cv.getBoundingClientRect(); return [+((e.clientX-r.left)/r.width).toFixed(4),+((e.clientY-r.top)/r.width).toFixed(4)]; };
-  function erase(p){
-    const r=(Z.w*2+12)/W(), n=Z.strokes.filter(s=>!samples(s).some(q=>Math.hypot(q[0]-p[0],q[1]-p[1])<r));
-    if(n.length!==Z.strokes.length){ Z.strokes=n; req(); }
+  function drawBase(){
+    bctx.clearRect(0,0,Wpx,Hpx);
+    const t=Z.sy-.05, bt=Z.sy+Hpx/Wpx+.05;
+    Z.strokes.forEach(s=>{ const b=box(s); if(b[1]>=t&&b[0]<=bt) dS(bctx,s); });
   }
+  let cur=null, pid=null, penSeen=false, erBase=null, hold=null, holdT=0, snapped=false, sm=null, prS=.5, hover=null, laser=[], pan=null;
+  const touches=new Map();
+  let nb=false, raf=0;
+  function req(b){ if(b) nb=true; if(!raf) raf=requestAnimationFrame(frame); }
+  function frame(){ raf=0; if(!Z||!lctx) return; if(nb){ nb=false; drawBase(); } drawLive(); if(laser.length) req(); }
+  function drawLive(){
+    lctx.clearRect(0,0,Wpx,Hpx);
+    if(cur) dS(lctx,cur);
+    if(laser.length){
+      const now=performance.now(), oy=Z.sy*Wpx; laser=laser.filter(p=>now-p[2]<900);
+      lctx.save(); lctx.lineCap="round"; lctx.strokeStyle="#ef4444"; lctx.shadowColor="#ef4444"; lctx.shadowBlur=12; lctx.lineWidth=5;
+      for(let i=1;i<laser.length;i++){ const a=laser[i-1],b=laser[i]; if(b[3]) continue; lctx.globalAlpha=Math.max(0,1-(now-b[2])/900); lctx.beginPath(); lctx.moveTo(a[0]*Wpx,a[1]*Wpx-oy); lctx.lineTo(b[0]*Wpx,b[1]*Wpx-oy); lctx.stroke(); }
+      const l=laser[laser.length-1]; if(l&&now-l[2]<300){ lctx.globalAlpha=1; lctx.fillStyle="#ef4444"; lctx.beginPath(); lctx.arc(l[0]*Wpx,l[1]*Wpx-oy,6,0,6.283); lctx.fill(); }
+      lctx.restore();
+    }
+    if(hover&&Z.tool==="er"){ lctx.save(); lctx.strokeStyle="rgba(71,85,105,.7)"; lctx.lineWidth=1.5; lctx.beginPath(); lctx.arc(hover[0]*Wpx,hover[1]*Wpx-Z.sy*Wpx,14,0,6.283); lctx.stroke(); lctx.restore(); }
+  }
+  const P=e=>{ const r=live.getBoundingClientRect(); return [(e.clientX-r.left)/Wpx,(e.clientY-r.top)/Wpx+Z.sy]; };
+  function mkPt(p,e,v){ const o=[+p[0].toFixed(4),+p[1].toFixed(4)]; if(v){ prS=prS*.6+(e.pressure||.5)*.4; o.push(+prS.toFixed(2)); } return o; }
+  const avgY=()=>{ let s=0; touches.forEach(y=>s+=y); return s/Math.max(1,touches.size); };
+  function armHold(e){ hold=P(e); clearTimeout(holdT); holdT=setTimeout(trySnap,700); }
+
   function bindPen(){
-    cv.addEventListener("pointerdown",e=>{
-      if(e.pointerType==="pen") pen=true;
-      if((pen&&e.pointerType==="touch")||pid!==null) return; // stylus varsa ovuc toxunuşunu say
-      e.preventDefault(); pid=e.pointerId; try{ cv.setPointerCapture(pid); }catch(x){}
-      const p=pt(e);
-      if(Z.tool==="eraser"){ base=Z.strokes; erase(p); return; }
-      cur={t:Z.tool,c:Z.color,w:Z.w,p:[p]}; req();
+    live.addEventListener("pointerdown",e=>{
+      if(e.pointerType==="pen") penSeen=true;
+      if(e.pointerType==="touch"){
+        touches.set(e.pointerId,e.clientY);
+        if(penSeen||touches.size>=2){
+          if(cur&&cur.touch){ cur=null; pid=null; clearTimeout(holdT); }
+          pan={y:avgY(),sy:Z.sy}; try{ live.setPointerCapture(e.pointerId); }catch(x){} req(); return;
+        }
+      }
+      if(pid!==null) return;
+      e.preventDefault(); pid=e.pointerId; try{ live.setPointerCapture(pid); }catch(x){}
+      const p=P(e);
+      if(Z.tool==="er"){ erBase=Z.strokes; hover=p; erase(p); req(); return; }
+      if(Z.tool==="laser"){ laser.push([p[0],p[1],performance.now(),1]); req(); return; }
+      const k=pk(), v=e.pointerType==="pen"&&k==="pen"; prS=e.pressure||.5;
+      cur={t:"pen",c:Z.col[k],w:WID[k][Z.wi[k]],p:[mkPt(p,e,v)],touch:e.pointerType==="touch"};
+      if(k==="mk") cur.h=1; if(v) cur.v=1;
+      sm=p; snapped=false; armHold(e); req();
     });
-    cv.addEventListener("pointermove",e=>{
-      if(e.pointerId!==pid) return;
+    live.addEventListener("pointermove",e=>{
+      if(e.pointerType==="touch"&&touches.has(e.pointerId)){ touches.set(e.pointerId,e.clientY); if(pan){ scrollTo(pan.sy-(avgY()-pan.y)/Wpx); return; } }
+      if(e.pointerId!==pid){ if(Z.tool==="er"&&pid===null&&e.pointerType!=="touch"){ hover=P(e); req(); } return; }
       const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];
-      if(Z.tool==="eraser"){ evs.forEach(x=>erase(pt(x))); return; }
+      if(Z.tool==="er"){ evs.forEach(x=>erase(P(x))); hover=P(e); req(); return; }
+      if(Z.tool==="laser"){ evs.forEach(x=>{ const p=P(x); laser.push([p[0],p[1],performance.now(),0]); }); req(); return; }
       if(!cur) return;
-      if(cur.t==="pen") evs.forEach(x=>cur.p.push(pt(x))); else cur.p[1]=pt(e);
+      if(snapped){ if(cur.t==="line"){ cur.p[1]=P(e); req(); } return; }
+      const minD=.6/Wpx;
+      evs.forEach(x=>{ const r=P(x), l=cur.p[cur.p.length-1];
+        sm=[sm[0]+(r[0]-sm[0])*.65, sm[1]+(r[1]-sm[1])*.65];
+        if(Math.hypot(sm[0]-l[0],sm[1]-l[1])>=minD) cur.p.push(mkPt(sm,x,cur.v)); });
+      const r=P(e); if(Math.hypot(r[0]-hold[0],r[1]-hold[1])*Wpx>6) armHold(e);
       req();
     });
     const up=e=>{
-      if(e.pointerId!==pid) return; pid=null;
-      if(base){ if(base!==Z.strokes){ Z.undo.push(base); Z.redo=[]; save(); ui(); } base=null; return; }
-      if(cur&&(cur.t==="pen"||cur.p[1])) commit(Z.strokes.concat([cur]));
-      cur=null; req();
+      if(e.pointerType==="touch"&&touches.has(e.pointerId)){ touches.delete(e.pointerId); if(pan){ pan=touches.size?{y:avgY(),sy:Z.sy}:null; return; } }
+      if(e.pointerId!==pid) return; pid=null; clearTimeout(holdT);
+      if(erBase){ if(erBase!==Z.strokes){ Z.undo.push(erBase); Z.redo=[]; save(); ui(); } erBase=null; if(e.pointerType==="touch") hover=null; req(); return; }
+      if(Z.tool==="laser") return;
+      if(cur){
+        if(!snapped){ const r=P(e), l=cur.p[cur.p.length-1]; if(Math.hypot(r[0]-l[0],r[1]-l[1])*Wpx>.5) cur.p.push(mkPt(r,e,cur.v)); }
+        const s=cur; cur=null; delete s.touch;
+        if(s.t!=="line"||s.p[1]) commit(s);
+      }
+      req();
     };
-    cv.addEventListener("pointerup",up); cv.addEventListener("pointercancel",up);
+    live.addEventListener("pointerup",up); live.addEventListener("pointercancel",up);
+    live.addEventListener("pointerleave",e=>{ if(pid===null&&hover){ hover=null; req(); } });
   }
-  function commit(arr){ Z.undo.push(Z.strokes); Z.redo=[]; Z.strokes=arr; save(); ui(); req(); }
-  function undo(){ if(!Z.undo.length) return; Z.redo.push(Z.strokes); Z.strokes=Z.undo.pop(); save(); ui(); req(); }
-  function redo(){ if(!Z.redo.length) return; Z.undo.push(Z.strokes); Z.strokes=Z.redo.pop(); save(); ui(); req(); }
+  function samples(s){
+    if(s.t==="pen") return s.p;
+    const [a,b]=s.p, out=[], ln=(p,r)=>{ for(let k=0;k<=12;k++) out.push([p[0]+(r[0]-p[0])*k/12,p[1]+(r[1]-p[1])*k/12]); };
+    if(!b) return [a];
+    if(s.t==="line") ln(a,b);
+    if(s.t==="rect") [[a,[b[0],a[1]]],[[b[0],a[1]],b],[b,[a[0],b[1]]],[[a[0],b[1]],a]].forEach(x=>ln(x[0],x[1]));
+    if(s.t==="circ"){ const cx=(a[0]+b[0])/2,cy=(a[1]+b[1])/2,rx=Math.abs(b[0]-a[0])/2,ry=Math.abs(b[1]-a[1])/2; for(let k=0;k<40;k++) out.push([cx+rx*Math.cos(k/40*6.283),cy+ry*Math.sin(k/40*6.283)]); }
+    if(s.t==="poly") s.p.forEach((p,i)=>ln(p,s.p[(i+1)%s.p.length]));
+    return out;
+  }
+  function erase(p){
+    const r=14/Wpx, n=Z.strokes.filter(s=>!samples(s).some(q=>Math.hypot(q[0]-p[0],q[1]-p[1])<r+(s.w/2)/Wpx));
+    if(n.length!==Z.strokes.length){ Z.strokes=n; req(true); }
+  }
+  function commit(s){ Z.undo.push(Z.strokes); Z.redo=[]; Z.strokes=Z.strokes.concat([s]); dS(bctx,s); save(); ui(); }
+  function commitAll(arr){ Z.undo.push(Z.strokes); Z.redo=[]; Z.strokes=arr; save(); ui(); req(true); }
+  function undo(){ if(!Z.undo.length) return; Z.redo.push(Z.strokes); Z.strokes=Z.undo.pop(); save(); ui(); req(true); }
+  function redo(){ if(!Z.redo.length) return; Z.undo.push(Z.strokes); Z.strokes=Z.redo.pop(); save(); ui(); req(true); }
   let svT=0;
   function save(now){
     if(!Z) return; Z.ink[Z.i]=Z.strokes;
@@ -15871,11 +16026,63 @@ body.iz-open #toast,body.iz-open #dq-tray,body.iz-open #nt-modal{display:none!im
     if(now) w(); else svT=setTimeout(w,800);
   }
 
+  // ---------- fiqur tanıma (çəkib saxlayanda) ----------
+  const D=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+  function segD(p,a,b){ const dx=b[0]-a[0],dy=b[1]-a[1],l=dx*dx+dy*dy; if(!l) return D(p,a); const t=Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dy)/l)); return Math.hypot(p[0]-a[0]-t*dx,p[1]-a[1]-t*dy); }
+  function rdp(Pt,e){ if(Pt.length<3) return Pt.slice(); let mx=0,k=0; const a=Pt[0],b=Pt[Pt.length-1]; for(let i=1;i<Pt.length-1;i++){ const d=segD(Pt[i],a,b); if(d>mx){ mx=d; k=i; } } if(mx>e){ const l=rdp(Pt.slice(0,k+1),e), r=rdp(Pt.slice(k),e); return l.slice(0,-1).concat(r); } return [a,b]; }
+  function clean(V){
+    let ch=true;
+    while(ch&&V.length>3){ ch=false;
+      for(let i=0;i<V.length;i++){ const p=V[(i-1+V.length)%V.length],v=V[i],nx=V[(i+1)%V.length], u=[p[0]-v[0],p[1]-v[1]], w=[nx[0]-v[0],nx[1]-v[1]];
+        const cs=(u[0]*w[0]+u[1]*w[1])/((Math.hypot(u[0],u[1])*Math.hypot(w[0],w[1]))||1);
+        if(Math.acos(Math.max(-1,Math.min(1,cs)))*180/Math.PI>150){ V.splice(i,1); ch=true; break; } } }
+    return V;
+  }
+  function recog(s){
+    const w=Wpx, Pt=s.p.map(p=>[p[0]*w,p[1]*w]), n=Pt.length;
+    let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9,Lp=0;
+    Pt.forEach((p,i)=>{ x0=Math.min(x0,p[0]); y0=Math.min(y0,p[1]); x1=Math.max(x1,p[0]); y1=Math.max(y1,p[1]); if(i) Lp+=D(p,Pt[i-1]); });
+    const bw=x1-x0,bh=y1-y0,dg=Math.hypot(bw,bh); if(dg<18) return null;
+    const a=Pt[0],b=Pt[n-1],d=D(a,b), back=q=>[+(q[0]/w).toFixed(4),+(q[1]/w).toFixed(4)];
+    if(d>dg*.85){ let mx=0; Pt.forEach(p=>{ mx=Math.max(mx,segD(p,a,b)); }); if(mx<Math.max(5,d*.07)) return {t:"line",p:[back(a),back(b)],lbl:"Düz xətt"}; }
+    if(d<dg*.35&&Lp>dg*1.6){
+      const eps=dg*.06; let V=rdp(Pt,eps); if(V.length>2&&D(V[0],V[V.length-1])<eps*2.5) V.pop();
+      V=clean(V);
+      const cx=(x0+x1)/2,cy=(y0+y1)/2,rx=bw/2||1,ry=bh/2||1;
+      let err=0; Pt.forEach(p=>{ err+=Math.abs(Math.hypot((p[0]-cx)/rx,(p[1]-cy)/ry)-1); }); err/=n;
+      if(V.length===3&&err>.07) return {t:"poly",p:V.map(back),lbl:"Üçbucaq"};
+      if(V.length===4&&err>.07){
+        const ax=V.every((v,i)=>{ const u=V[(i+1)%4], g=Math.abs(Math.atan2(u[1]-v[1],u[0]-v[0]))*180/Math.PI%90; return g<14||g>76; });
+        if(ax){ let a0=1e9,b0=1e9,a1=-1e9,b1=-1e9; V.forEach(v=>{ a0=Math.min(a0,v[0]); b0=Math.min(b0,v[1]); a1=Math.max(a1,v[0]); b1=Math.max(b1,v[1]); }); return {t:"rect",p:[back([a0,b0]),back([a1,b1])],lbl:"Düzbucaqlı"}; }
+        return {t:"poly",p:V.map(back),lbl:"Dördbucaqlı"};
+      }
+      if(err<.2){ let RX=rx,RY=ry,lbl="Ellips"; if(Math.abs(rx-ry)/Math.max(rx,ry)<.2){ RX=RY=(rx+ry)/2; lbl="Dairə"; } return {t:"circ",p:[back([cx-RX,cy-RY]),back([cx+RX,cy+RY])],lbl}; }
+      if(V.length>=5&&V.length<=6) return {t:"poly",p:V.map(back),lbl:"Çoxbucaqlı"};
+    }
+    return null;
+  }
+  function trySnap(){
+    if(!cur||snapped||pid===null||cur.t!=="pen"||cur.p.length<5) return;
+    const r=recog(cur); if(!r) return;
+    snapped=true;
+    const last=cur.p[cur.p.length-1];
+    cur={t:r.t,c:cur.c,w:cur.w*(cur.v?1:1),p:r.p,h:cur.h};
+    try{ navigator.vibrate&&navigator.vibrate(12); }catch(e){}
+    const el=document.createElement("div"); el.className="iz-snap"; el.textContent=r.lbl;
+    el.style.left=last[0]*Wpx+"px"; el.style.top=(last[1]-Z.sy)*Wpx+"px";
+    $("iz-stage").appendChild(el); setTimeout(()=>el.remove(),1000);
+    req();
+  }
+
+  // ---------- klaviatura, tam ekran, bağla ----------
   function key(e){
     if(!Z||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
     const k=e.key, m=e.ctrlKey||e.metaKey;
-    if(k==="ArrowRight"||k==="PageDown"||k===" "){ e.preventDefault(); go(Z.i+1,1); }
+    if(k==="ArrowRight"||k==="PageDown"){ e.preventDefault(); go(Z.i+1,1); }
     else if(k==="ArrowLeft"||k==="PageUp"){ e.preventDefault(); go(Z.i-1,-1); }
+    else if(k==="ArrowDown"){ e.preventDefault(); smooth(Z.sy+Hpx*.4/Wpx); }
+    else if(k==="ArrowUp"){ e.preventDefault(); smooth(Z.sy-Hpx*.4/Wpx); }
+    else if(k==="Escape"&&$("iz-txp")) textPanel();
     else if(m&&k.toLowerCase()==="z"){ e.preventDefault(); e.shiftKey?redo():undo(); }
     else if(m&&k.toLowerCase()==="y"){ e.preventDefault(); redo(); }
   }
@@ -15887,11 +16094,11 @@ body.iz-open #toast,body.iz-open #dq-tray,body.iz-open #nt-modal{display:none!im
   document.addEventListener("fullscreenchange",()=>{ const ov=$("iz-ov"); if(ov&&!document.fullscreenElement) ov.classList.remove("iz-fs"); });
   function close(){
     if(!Z) return;
-    save(true); clearInterval(Z.tmr); if(Z.ro) Z.ro.disconnect(); removeEventListener("keydown",key);
+    save(true); clearInterval(Z.tmr); clearTimeout(holdT); if(Z.ro) Z.ro.disconnect(); removeEventListener("keydown",key);
     if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
     const ov=$("iz-ov"); if(ov) ov.remove(); document.body.classList.remove("iz-open");
     try{ if(Z.snd===null) localStorage.removeItem("ttm_sound"); else localStorage.setItem("ttm_sound",Z.snd); }catch(e){}
-    Z=null; cv=ctx=null;
+    Z=null; base=live=bctx=lctx=null; cur=null; laser=[]; pid=null; pan=null; touches.clear();
   }
   addEventListener("pagehide",()=>{ if(Z) close(); });
 })();
