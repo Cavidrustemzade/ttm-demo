@@ -3927,6 +3927,8 @@ function renderQuestionBuilder() {
         </div>
       ` : q.type === "detailed" ? `
         <div class="muted-note">Şagird bu suala kağız üzərində cavab yazıb şəklini göndərəcək. Siz sonradan "Yoxlanış" bölməsində 0 / 0,5 / 1 bal verəcəksiniz.</div>
+        <div class="field" style="margin-top:8px;"><label>Düzgün cavab (yalnız müəllim görür, yoxlanışda göstərilir)</label>
+          <input type="text" value="${esc(q.correctAnswer || "")}" oninput="updateCorrectAnswer(${qi}, this.value)" placeholder="Məs: 37" /></div>
       ` : `
         <div class="field">
           <label>Düzgün cavab (şagird nə yazmalıdır, məs: 15)</label>
@@ -13668,7 +13670,7 @@ function homeExtra(){
     arr.forEach(q => examQuestions.push({
       type: et(q), text: q.text || "", imageBase64: q.imageBase64 || "",
       options: (Array.isArray(q.options) && q.options.length === 5 ? q.options : L.split("")).map(String),
-      correctIndex: Number(q.correctIndex) || 0, correctAnswer: et(q) === "open" ? String(q.openAnswer || q.answer || "").replace(/\$/g, "") : "", textId: "",
+      correctIndex: Number(q.correctIndex) || 0, correctAnswer: et(q) === "open" ? String(q.openAnswer || q.answer || "").replace(/\$/g, "") : et(q) === "detailed" ? String(q.openAnswer || q.answer || q.solution || "") : "", textId: "",
       topic: q.topic || "", bankId: q.id, year: q.year || "", exam: q.exam || ""
     }));
     const tp = $("exam-topic"), tt = $("exam-title");
@@ -16870,5 +16872,36 @@ function texPlain(s){
   };
 })();
 </script>
+<script>
+/* Ətraflı yoxlanış: düzgün cavab göstərilir (yoxdursa bazadan götürülür və ya əl ilə yazılır) */
+(function(){
+  const BK={};
+  async function bankAns(id){
+    if(id in BK) return BK[id];
+    try{ const d=await db.collection("questions").doc(id).get(); const q=d.exists?d.data():{}; BK[id]=String(q.openAnswer||q.answer||q.solution||"").trim(); }catch(e){ BK[id]=""; }
+    return BK[id];
+  }
+  const qRef=qi=>db.collection("exams").doc(document.getElementById("grading-exam-select").value).collection("questions").doc(String(qi));
+  const o=renderGradingPanel;
+  renderGradingPanel=function(){
+    const r=o.apply(this,arguments);
+    const box=document.querySelector("#grading-panel .gr-q"), qi=gradingQIndex, gq=(window._grQs||[])[qi];
+    if(!box||!gq) return r;
+    const ans=String(gq.correctAnswer||"").trim();
+    if(ans){ box.insertAdjacentHTML("afterend",`<div class="gr-ans">✓ Düzgün cavab: <b>${esc(ans)}</b> <button type="button" onclick="grAnsEdit()">Dəyiş</button></div>`); try{ttmTeX(box.nextElementSibling);}catch(e){} return r; }
+    if(gq.bankId&&!gq._bk){ gq._bk=1; bankAns(gq.bankId).then(a=>{ if(!a) return; gq.correctAnswer=a; qRef(qi).update({correctAnswer:a}).catch(()=>{}); if(gradingQIndex===qi) renderGradingPanel(); }); }
+    box.insertAdjacentHTML("afterend",`<div class="gr-ans no">Cavab qeyd olunmayıb <input id="gr-ans-in" placeholder="Cavabı yazın"><button type="button" onclick="grAnsSave()">Saxla</button></div>`);
+    return r;
+  };
+  window.grAnsEdit=()=>{ const gq=_grQs[gradingQIndex]; const v=prompt("Düzgün cavab:",gq.correctAnswer||""); if(v!==null) grAnsSave(v); };
+  window.grAnsSave=async(v)=>{
+    if(v==null) v=(document.getElementById("gr-ans-in")||{}).value||"";
+    v=v.trim(); const qi=gradingQIndex, gq=_grQs[qi]; if(!v) return toast("Cavabı yazın");
+    try{ await qRef(qi).update({correctAnswer:v}); gq.correctAnswer=v; toast("Cavab yadda saxlanıldı"); renderGradingPanel(); }
+    catch(e){ toast("Xəta: "+errAz(e)); }
+  };
+})();
+</script>
+<style>.gr-ans{background:#dcfce7;color:#15803d;border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:14.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.gr-ans b{font-size:16px}.gr-ans button{margin-left:auto;padding:6px 10px;border-radius:9px;background:#fff;color:#0B3C5D;font-weight:700;font-size:12.5px}.gr-ans.no{background:#fef3c7;color:#92400e}.gr-ans.no input{flex:1;min-width:110px;padding:8px;border:1.5px solid #f0d17c;border-radius:9px;font-size:14px}</style>
 </body>
 </html>
