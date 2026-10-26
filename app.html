@@ -12386,7 +12386,7 @@ function homeExtra(){
   const $ = id => document.getElementById(id);
   const L = "ABCDE";
   const QB = { all: null, f: { t: "", y: "", s: "", d: "" } };
-  const QB_F = { buraxilis: "Buraxılış sınaqları", blok: "Blok sınaqları" };
+  const QB_F = { buraxilis: "Buraxılış sınaqları", blok: "Blok sınaqları", kuiz: "Kuizlər" };
   const main = document.querySelector("#view-admin .panel-main"), tabs = document.querySelector("#view-admin .tabs");
   if (!main || !tabs) return;
   const tb = document.createElement("button");
@@ -12487,8 +12487,8 @@ function homeExtra(){
   window.qbImport = async (inp) => {
     const f = inp.files[0]; inp.value = "";
     if (!f) return;
-    let arr;
-    try { const d = JSON.parse(await f.text()); arr = Array.isArray(d) ? d : d.questions; if (!Array.isArray(arr)) throw 0; }
+    let arr, meta = {};
+    try { const d = JSON.parse(await f.text()); arr = Array.isArray(d) ? d : d.questions; meta = (d && d.meta) || {}; if (!Array.isArray(arr)) throw 0; }
     catch (e) { toast("Bu fayl düzgün sual faylı deyil"); return; }
     if (!QB.all) await qbLoad();
     const ok = [], bad = [];
@@ -12505,11 +12505,18 @@ function homeExtra(){
     const topics = [...new Set(ok.map(q => q.topic))];
     const ov = sheet(`<div class="pq-sh-h"><b>JSON yüklə</b><button class="pq-x" onclick="this.closest('.pq-ov').remove()">✕</button></div>
       <div class="pq-hstats" style="margin:0 0 12px;"><div style="background:#e0f2fe;color:#0369a1;"><b>${ok.length}</b><span>sual</span></div><div style="background:#f1f5f9;color:#334155;"><b>${ok.filter(q => q.imageBase64).length}</b><span>şəkilli</span></div><div style="background:#fef3c7;color:#92400e;"><b>${upd}</b><span>yenilənəcək</span></div></div>
-      <div class="muted-note">${ok.some(q => q.set) ? `Papka: <b>📁 ${esc(QB_F[ok[0].folder] || QB_F.buraxilis)}</b> · Sınaq: <b>${esc([...new Set(ok.map(q => q.set).filter(Boolean))].join(", "))}</b>` : `Mövzu: <b>${esc(topics.join(", "))}</b>`}</div>
+      <div class="field" style="margin-bottom:8px;"><label>Hara yazılsın?</label><select id="qb-dst"><option value="">🗂️ Mövzular (${esc(topics.join(", "))})</option>${Object.keys(QB_F).map(k => `<option value="${k}">📁 ${esc(QB_F[k])}</option>`).join("")}</select></div>
+      <div class="field" id="qb-snw" style="margin-bottom:8px;"><label>Ad (papkada belə görünəcək)</label><input type="text" id="qb-sn" value="${esc(ok.find(q => q.set) ? ok.find(q => q.set).set : (meta.title || meta.topic || f.name.replace(/\.json$/i, "").replace(/_/g, " ")))}"></div>
       ${bad.length ? `<div class="pq-fb no" style="font-size:12.5px;">Xətalı (${bad.length}), yüklənməyəcək:<br>${bad.slice(0, 8).map(esc).join("<br>")}</div>` : ""}
       <div id="qb-prog" class="muted-note" style="margin-top:8px;"></div>
       <button class="pq-go" id="qb-go" ${ok.length ? "" : "disabled"}>Bazaya yaz →</button>`);
+    const dst = ov.querySelector("#qb-dst"), snw = ov.querySelector("#qb-snw");
+    dst.value = ok.some(q => q.set) ? (QB_F[ok.find(q => q.set).folder] ? ok.find(q => q.set).folder : "buraxilis") : (QB.f.d || "");
+    const sw = () => { snw.style.display = dst.value ? "" : "none"; }; dst.onchange = sw; sw();
     ov.querySelector("#qb-go").onclick = async () => {
+      const fo = dst.value, sn = ov.querySelector("#qb-sn").value.trim();
+      if (fo && !sn) { toast("Ad yazın"); return; }
+      ok.forEach((q, i) => { if (fo) { q.folder = fo; q.set = sn; q.setOrder = i + 1; } else { delete q.folder; delete q.set; delete q.setOrder; } });
       const btn = ov.querySelector("#qb-go"); btn.disabled = true;
       try {
         for (let i = 0; i < ok.length; i += 15) {
@@ -13594,15 +13601,16 @@ function homeExtra(){
     const cnt = {};
     Object.values(I).forEach(o => { const s = o.subject || "Riyaziyyat"; cnt[s] = (cnt[s] || 0) + o.count; });
     const subs = Object.keys(cnt).sort((a, b) => a.localeCompare(b, "az"));
-    const SF = { buraxilis: ["Buraxılış sınaqları", "#ef4444"], blok: ["Blok sınaqları", "#6366f1"] }, sets = BQ.sets || {};
+    const SF = BQ_SF, sets = BQ.sets || {};
     const fold = Object.keys(SF).map(f => { const n = Object.values(sets).filter(o => (o.folder || "buraxilis") === f).length;
       return `<button class="bq-it" onclick="bqFolder('${f}')"><span class="ic" style="background:${SF[f][1]}">📁</span><div><div class="t">${SF[f][0]}</div><div class="s">${n ? n + " hazır sınaq · hamısını bir dəfəyə seç" : "Hələ boşdur"}</div></div><span class="v2-chev" style="margin-left:auto">›</span></button>`; }).join("");
     sheet("Fənni seçin", `<div class="pq-lbl" style="margin-top:0">Hazır sınaqlar</div>${fold}<div class="pq-lbl">Mövzular üzrə</div>` + (subs.length ? subs.map(s => { const ic = icon(s); return `<button class="bq-it" onclick='bqSubj(${JSON.stringify(s).replace(/'/g, "&#39;")})'><span class="ic" style="background:${ic.bg}">${ic.t}</span><div><div class="t">${esc(s)}</div><div class="s">${cnt[s]} sual</div></div><span class="v2-chev" style="margin-left:auto">›</span></button>`; }).join("") : `<div class="pq-empty">Baza boşdur. «Sual bazası» bölməsindən JSON yükləyin.</div>`), footHtml());
   }
+  const BQ_SF = { buraxilis: ["Buraxılış sınaqları", "#ef4444"], blok: ["Blok sınaqları", "#6366f1"], kuiz: ["Kuizlər", "#10b981"] };
   window.bqFolder = async (f) => {
     BQ.view = "folder"; BQ.folder = f; await getIdx();
     const L2 = Object.entries(BQ.sets || {}).filter(([, o]) => (o.folder || "buraxilis") === f).sort((a, b) => a[0].localeCompare(b[0], "az"));
-    sheet(f === "blok" ? "Blok sınaqları" : "Buraxılış sınaqları", L2.length ? L2.map(([n, o]) => `<button class="bq-it" onclick='bqTopic(${JSON.stringify("set:" + n).replace(/'/g, "&#39;")})'><div style="min-width:0"><div class="t">${esc(n)}</div><div class="s">${esc(o.subject || "")} · ${o.count} sual</div></div><span class="v2-chev" style="margin-left:auto">›</span></button>`).join("")
+    sheet((BQ_SF[f] || BQ_SF.buraxilis)[0], L2.length ? L2.map(([n, o]) => `<button class="bq-it" onclick='bqTopic(${JSON.stringify("set:" + n).replace(/'/g, "&#39;")})'><div style="min-width:0"><div class="t">${esc(n)}</div><div class="s">${esc(o.subject || "")} · ${o.count} sual</div></div><span class="v2-chev" style="margin-left:auto">›</span></button>`).join("")
       : `<div class="pq-empty">Bu papka boşdur. «Sual bazası» bölməsindən sınaq JSON-u yükləyin.</div>`, footHtml(), "bqSubjects()");
   };
   window.bqSubj = async (s) => {
@@ -13688,7 +13696,7 @@ function homeExtra(){
     const t = ($("qb-ft") || {}).value;
     if (!t) { toast("Əvvəlcə yuxarıdan mövzu seçin"); return; }
     adminNewExam();
-    setTimeout(() => { try { wzGo(2, true); } catch (e) {} const qs = (document.getElementById("qb-ftl") || {}).textContent === "Sınaq"; if (qs) BQ.folder = (document.querySelector("#qb-fd .on") || {}).textContent.includes("Blok") ? "blok" : "buraxilis"; bqOpen(qs ? "set:" + t : t); }, 80);
+    setTimeout(() => { try { wzGo(2, true); } catch (e) {} const qs = (document.getElementById("qb-ftl") || {}).textContent === "Sınaq"; if (qs) BQ.folder = (document.querySelector("#qb-fd .on") || {}).textContent.includes("Blok") ? "blok" : (document.querySelector("#qb-fd .on") || {}).textContent.includes("Kuiz") ? "kuiz" : "buraxilis"; bqOpen(qs ? "set:" + t : t); }, 80);
   };
 
   // ---------- sınaq yaradanda ön baxış ----------
