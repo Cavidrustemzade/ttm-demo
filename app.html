@@ -13530,7 +13530,7 @@ function homeExtra(){
   const oi = initAdminPanel;
   initAdminPanel = function (uid, sa) {
     const r = oi.apply(this, arguments);
-    const c = $("bq-card"); if (c) c.style.display = sa ? "flex" : "none";
+    const c = $("bq-card"); if (c) c.style.display = "flex";
     const b = $("bq-frombank"); if (b) b.style.display = sa ? "" : "none";
     return r;
   };
@@ -13567,7 +13567,6 @@ function homeExtra(){
   let ov = null;
   function close() { if (!ov) return; ov.remove(); ov = null; document.body.style.overflow = ""; }
   window.bqOpen = async (topic) => {
-    if (!window._ttmSA) { toast("Bu bölmə hələlik yalnız admin üçündür"); return; }
     close();
     BQ.sel = new Map(); BQ.year = "all"; BQ.q = "";
     ov = document.createElement("div"); ov.className = "pq-ov";
@@ -13756,51 +13755,92 @@ function homeExtra(){
     d.innerHTML = h;
     return d;
   }
-  async function renderAll() {
-    await ensureLib("h2c"); await katexReady();
+  // ---- irəliləyiş pəncərəsi ----
+  function prog() {
+    const o = document.createElement("div");
+    o.id = "bq-prog";
+    o.style.cssText = "position:fixed;inset:0;z-index:9500;background:rgba(8,28,45,.5);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:20px";
+    o.innerHTML = `<div style="background:#fff;border-radius:24px;padding:24px 20px;width:min(340px,100%);text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.25)">
+      <div style="position:relative;width:110px;height:110px;margin:0 auto 14px"><svg width="110" height="110" viewBox="0 0 110 110" style="transform:rotate(-90deg)"><circle cx="55" cy="55" r="48" fill="none" stroke="#e8edf3" stroke-width="10"/><circle id="bq-pc" cx="55" cy="55" r="48" fill="none" stroke="#1d6fd6" stroke-width="10" stroke-linecap="round" stroke-dasharray="301.6" stroke-dashoffset="301.6" style="transition:stroke-dashoffset .35s ease"/></svg>
+      <b id="bq-pp" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;color:#0B3C5D">0%</b></div>
+      <div id="bq-pt" style="font-weight:800;color:#0B3C5D;font-size:16px">PDF hazırlanır</div>
+      <div id="bq-ps" style="font-size:13px;color:#6b7686;margin-top:4px">Düsturlar çəkilir...</div></div>`;
+    document.body.appendChild(o);
+    let cur = 0;
+    return {
+      set(p, sub) { cur = Math.max(cur, Math.min(100, Math.round(p))); const c = document.getElementById("bq-pc"); if (c) c.style.strokeDashoffset = 301.6 * (1 - cur / 100); const t = document.getElementById("bq-pp"); if (t) t.textContent = cur + "%"; if (sub) { const s = document.getElementById("bq-ps"); if (s) s.textContent = sub; } },
+      done() { this.set(100, "Hazırdır"); setTimeout(() => o.remove(), 350); }
+    };
+  }
+  // Bütün düsturlu sualları birdən yığır, az sayda çəkilişlə şəkilə çevirir
+  async function renderAll(P) {
+    if (!cachedFontBase64) fetchFirstWorking(["https://raw.githubusercontent.com/googlefonts/noto-fonts/main/hinted/ttf/NotoSans/NotoSans-Regular.ttf", "https://cdn.jsdelivr.net/gh/googlefonts/noto-fonts/hinted/ttf/NotoSans/NotoSans-Regular.ttf"]).then(b => { if (!cachedFontBase64) cachedFontBase64 = arrayBufferToBase64(b); }).catch(() => {});
+    ensureLib("jspdf").catch(() => {});
+    await ensureLib("h2c"); await katexReady(); P.set(8);
     const cols = Number(($("pdf-columns-field") || {}).value) || 2;
-    const colW = cols === 2 ? (210 - 24 - 8) / 2 : 210 - 24, PX = 4, wPx = Math.round((colW - 7) * PX);
+    const colW = cols === 2 ? (210 - 24 - 8) / 2 : 210 - 24, PX = 4, wPx = Math.round((colW - 7) * PX), SC = 2.5;
     const color = ($("pdf-color-field") || {}).value || "#0B3C5D";
-    const host = document.createElement("div");
-    host.id = "bq-host"; host.style.cssText = "position:fixed;left:0;top:0;background:#fff;z-index:-9999;opacity:0;pointer-events:none";
-    document.body.appendChild(host);
-    try {
-      const out = [];
-      for (const q of examQuestions) {
-        if (!isRich(q)) { out.push(q); continue; }
-        const key = JSON.stringify([q.text, q.options, q.imageBase64 ? q.imageBase64.length : 0, wPx, color]);
-        let img = cache.get(key);
-        if (!img) {
-          const el = build(q, wPx, color);
-          host.innerHTML = ""; host.appendChild(el);
-          ttmTeX(el);
-          try { await document.fonts.ready; } catch (e) {}
-          await Promise.all([...el.querySelectorAll("img")].map(i => i.decode ? i.decode().catch(() => {}) : null));
-          const c = await window.html2canvas(el, { scale: 3, backgroundColor: "#ffffff", logging: false, useCORS: true, onclone: d => { const h = d.getElementById("bq-host"); if (h) h.style.opacity = "1"; } });
-          img = c.toDataURL("image/jpeg", 0.92); cache.set(key, img);
+    const keyOf = q => JSON.stringify([q.text, q.options, q.imageBase64 ? q.imageBase64.length : 0, wPx, color]);
+    const todo = [];
+    examQuestions.forEach(q => { if (isRich(q) && !cache.has(keyOf(q)) && !todo.some(t => t.k === keyOf(q))) todo.push({ q, k: keyOf(q) }); });
+    if (todo.length) {
+      const host = document.createElement("div");
+      host.id = "bq-host"; host.style.cssText = `position:fixed;left:0;top:0;width:${wPx}px;background:#fff;z-index:-9999;opacity:0;pointer-events:none`;
+      document.body.appendChild(host);
+      try {
+        todo.forEach(t => { t.el = build(t.q, wPx, color); t.el.style.paddingBottom = "4px"; host.appendChild(t.el); });
+        ttmTeX(host);
+        try { await document.fonts.ready; } catch (e) {}
+        await Promise.all([...host.querySelectorAll("img")].map(i => i.decode ? i.decode().catch(() => {}) : null));
+        P.set(15, `${todo.length} sual çəkilir...`);
+        // ~2400px-lik hissələrə böl (telefon yaddaşı üçün)
+        const groups = []; let g = [], h = 0;
+        todo.forEach(t => { const th = t.el.offsetHeight; if (g.length && h + th > 2400) { groups.push(g); g = []; h = 0; } g.push(t); h += th; });
+        if (g.length) groups.push(g);
+        let done = 0;
+        for (const grp of groups) {
+          todo.forEach(t => { t.el.style.display = grp.includes(t) ? "" : "none"; });
+          const H = host.offsetHeight;
+          const c = await window.html2canvas(host, {
+            scale: SC, backgroundColor: "#ffffff", logging: false, useCORS: true, windowHeight: Math.max(innerHeight, H + 40),
+            ignoreElements: n => n.parentNode === document.body && n.id !== "bq-host" && n.tagName !== "STYLE" && n.tagName !== "LINK",
+            onclone: d => { const x = d.getElementById("bq-host"); if (x) x.style.opacity = "1"; }
+          });
+          const k = c.width / host.offsetWidth;
+          grp.forEach(t => {
+            const y = Math.round(t.el.offsetTop * k), hh = Math.max(1, Math.round(t.el.offsetHeight * k));
+            const s = document.createElement("canvas"); s.width = c.width; s.height = hh;
+            s.getContext("2d").drawImage(c, 0, y, c.width, hh, 0, 0, c.width, hh);
+            cache.set(t.k, s.toDataURL("image/jpeg", 0.9));
+          });
+          done += grp.length;
+          P.set(15 + 70 * done / todo.length, `${done} / ${todo.length} sual hazırdır`);
+          await new Promise(r => setTimeout(r, 0));
         }
-        out.push({ ...q, text: "", imageBase64: img, _r: true });
-      }
-      return out;
-    } finally { host.remove(); }
+      } finally { host.remove(); }
+    }
+    P.set(88, "PDF yığılır...");
+    return examQuestions.map(q => isRich(q) ? { ...q, text: "", imageBase64: cache.get(keyOf(q)), _r: true } : q);
   }
   gbtn.addEventListener("click", async e => {
     if (bypass || !examQuestions.some(isRich)) return;
     e.stopImmediatePropagation(); e.preventDefault();
     if (gbtn.disabled) return;
-    gbtn.disabled = true; toast("Düsturlar hazırlanır...");
+    gbtn.disabled = true;
+    const P = prog();
     let rendered = null;
-    try { rendered = await renderAll(); } catch (err) { console.error(err); toast("Düsturlar çəkilmədi, mətn kimi çıxacaq"); }
+    try { rendered = await renderAll(P); } catch (err) { console.error(err); toast("Düsturlar çəkilmədi, mətn kimi çıxacaq"); }
     gbtn.disabled = false;
     const orig = examQuestions;
-    if (rendered) {
-      examQuestions = rendered;
-      const mo = new MutationObserver(() => { if (!gbtn.disabled) { mo.disconnect(); examQuestions = orig; } });
-      mo.observe(gbtn, { attributes: true, attributeFilter: ["disabled"] });
-      setTimeout(() => { mo.disconnect(); if (examQuestions === rendered) examQuestions = orig; }, 120000);
-    }
+    let fin = false;
+    const finish = () => { if (fin) return; fin = true; P.done(); if (examQuestions === rendered) examQuestions = orig; };
+    if (rendered) examQuestions = rendered;
+    const mo = new MutationObserver(() => { if (!gbtn.disabled) { mo.disconnect(); finish(); } });
+    mo.observe(gbtn, { attributes: true, attributeFilter: ["disabled"] });
+    setTimeout(() => { mo.disconnect(); finish(); }, 120000);
     bypass = true;
     try { gbtn.click(); } finally { bypass = false; }
+    if (!gbtn.disabled) { mo.disconnect(); finish(); }
   }, true);
 })();
 </script>
