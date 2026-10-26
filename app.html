@@ -3301,7 +3301,7 @@ document.getElementById("daily-back-btn").addEventListener("click", () => {
 
 function loadDailyStatusForGroup() {
   if (dailyStatusUnsub) { dailyStatusUnsub(); dailyStatusUnsub = null; }
-  dailyStatusUnsub = db.collection("dailyStatus").where("groupId", "==", dailyCurrentGroupId).where("date", "==", dailyCurrentDate)
+  dailyStatusUnsub = db.collection("dailyStatus").where("teacherId", "==", currentTeacherId).where("groupId", "==", dailyCurrentGroupId).where("date", "==", dailyCurrentDate)
     .onSnapshot(snap => {
       dailyStatusCache = {};
       snap.forEach(d => { dailyStatusCache[d.data().studentId] = d.data(); });
