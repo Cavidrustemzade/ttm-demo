@@ -16951,5 +16951,109 @@ function texPlain(s){
 })();
 </script>
 <style>.gr-ans{background:#dcfce7;color:#15803d;border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:14.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.gr-ans b{font-size:16px}.gr-ans button{margin-left:auto;padding:6px 10px;border-radius:9px;background:#fff;color:#0B3C5D;font-weight:700;font-size:12.5px}.gr-ans.no{background:#fef3c7;color:#92400e}.gr-ans.no input{flex:1;min-width:110px;padding:8px;border:1.5px solid #f0d17c;border-radius:9px;font-size:14px}</style>
+
+<!-- ===== Təkrar: mövzu öyrənmə (Öyrən + Testlər) — məs. Çevrə ===== -->
+<style id="lt-css">
+.lt-card{display:flex;align-items:center;gap:14px;background:#fff;border-radius:18px;padding:14px;border:1px solid rgba(11,60,93,.08);box-shadow:var(--shadow-sm);cursor:pointer;margin-bottom:10px;transition:transform .15s;width:100%;text-align:left;font:inherit;color:inherit}
+.lt-card:active{transform:scale(.98)}
+.lt-card.off{opacity:.55;cursor:default}
+.lt-ic{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;font-size:24px;font-weight:800;flex:none;color:#fff}
+.lt-bar{height:6px;background:#e2e8f0;border-radius:4px;overflow:hidden;margin-top:7px}
+.lt-bar i{display:block;height:100%;border-radius:4px;transition:width .5s}
+.lt-badge{display:inline-block;font-size:10.5px;font-weight:800;color:#1d4ed8;background:#dbeafe;border-radius:8px;padding:2px 7px;margin-left:6px;vertical-align:middle}
+.lt-ov{position:fixed;inset:0;z-index:9999;background:#f1f5fb;animation:ltin .3s ease both}
+.lt-ov.out{animation:ltout .25s ease both}
+.lt-ov iframe{width:100%;height:100%;border:0;display:block}
+@keyframes ltin{from{opacity:0;transform:translateY(18px)}}
+@keyframes ltout{to{opacity:0;transform:translateY(18px)}}
+</style>
+<script>
+(function () {
+  /* Hazır mövzular: açar söz bankdakı mövzu adı ilə tutuşdurulur ("Çevrə", "Çevrə və dairə" ...) */
+  const LT = {
+    "Çevrə": { file: "tekrar-cevre.html", subj: "Riyaziyyat", ic: "◯", c: "#2563eb",
+      secs: [{ k: "bucaq", t: "Çevrədə bucaq", ic: "∠", c: "#2563eb", props: 16, tests: 6 },
+             { k: "uzunluq", t: "Çevrədə uzunluq", ic: "↔", c: "#0891b2", props: 8, tests: 7 }] }
+  };
+  const nrm = s => String(s || "").toLocaleLowerCase("az").replace(/\s+/g, " ").trim();
+  const find = t => { const n = nrm(t); for (const k in LT) if (n === nrm(k) || n.startsWith(nrm(k))) return Object.assign({ name: k }, LT[k]); return null; };
+  const P = () => window._PQ || {};
+  const esc_ = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const js_ = s => esc_(JSON.stringify(s));
+  const done = k => { try { return JSON.parse(localStorage.getItem("ttm_tk_" + k) || "[]").length; } catch (e) { return 0; } };
+  const bankKey = (L) => { const idx = P().idx || {}; return Object.keys(idx).find(k => find(k) && find(k).name === L.name) || null; };
+  const title = t => { const e = document.getElementById("pq-title"); if (e) e.textContent = t; };
+  let ov = null;
+
+  function page(t) {
+    const L = find(t), p = P(); if (!L) return;
+    p.view = "learn"; p.ltTopic = t; p.cfg = null; p.subj = p.subj || L.subj; title(L.name);
+    const bk = bankKey(L), bn = bk ? (P().idx[bk].count || 0) : 0;
+    let h = `<div class="sq-shead sq-in" style="--c:${L.c}"><span class="sq-si" style="background:${L.c}">${L.ic}</span><div><div class="pq-tn" style="font-size:19px;">${esc_(L.name)}</div><div class="pq-ts">Əvvəl öyrən, sonra test işlə, sonra imtahan sualları</div></div></div>`;
+    h += `<div class="pq-sec">📘 Öyrən və testlər</div>`;
+    L.secs.forEach((s, i) => {
+      const d = done(s.k), td = done(s.k + "_t"), pc = Math.round(d / s.props * 100);
+      h += `<button class="lt-card sq-in" style="animation-delay:${60 + i * 50}ms" onclick="ltOpen(${js_(L.file)},${js_(s.k)})">
+        <span class="lt-ic" style="background:${s.c}">${s.ic}</span>
+        <div style="flex:1;min-width:0;"><div class="pq-tn">${esc_(s.t)}</div>
+        <div class="pq-ts">${s.props} xassə · ${s.tests} test · ${d}/${s.props} öyrənilib · ${td}/${s.tests} test</div>
+        <div class="lt-bar"><i style="width:${pc}%;background:${s.c}"></i></div></div><span class="v2-chev">›</span></button>`;
+    });
+    h += `<div class="pq-sec">🎯 İmtahan sualları</div>`;
+    h += bk ? `<button class="lt-card sq-in" style="animation-delay:180ms" onclick="pqTopic(${js_(bk)},1)"><span class="lt-ic" style="background:#0B3C5D">🎯</span>
+        <div style="flex:1;min-width:0;"><div class="pq-tn">${esc_(bk)}</div><div class="pq-ts">${bn} sual · 2019-dan imtahanlarda çıxmış suallar</div></div><span class="v2-chev">›</span></button>`
+      : `<div class="lt-card off"><span class="lt-ic" style="background:#94a3b8">🎯</span><div><div class="pq-tn">İmtahan sualları</div><div class="pq-ts">Bu mövzu üzrə hələ sual əlavə olunmayıb</div></div></div>`;
+    document.getElementById("pq-root").innerHTML = h;
+    window.scrollTo(0, 0);
+  }
+
+  window.ltOpen = (file, sec) => {
+    if (ov) return;
+    ov = document.createElement("div"); ov.className = "lt-ov";
+    ov.innerHTML = `<iframe src="${esc_(file)}?embed=1&sec=${encodeURIComponent(sec)}" title="Təkrar"></iframe>`;
+    document.body.appendChild(ov); document.body.style.overflow = "hidden";
+    try { history.pushState({ ttmNav: 1 }, "", location.href); } catch (e) {}
+  };
+  function close() {
+    if (!ov) return;
+    const o = ov; ov = null; o.classList.add("out"); setTimeout(() => o.remove(), 250);
+    document.body.style.overflow = "";
+    if (P().view === "learn") page(P().ltTopic);
+  }
+  window.addEventListener("message", e => { if (e.data && e.data.ttm === "lt-close") close(); });
+
+  /* Mövzu: hazır materialı olan mövzu öyrənmə səhifəsini açır; bank=1 → imtahan sualları (köhnə səhifə) */
+  const oTopic = window.pqTopic;
+  window.pqTopic = function (t, bank) { if (!bank && find(t)) return page(t); return oTopic.apply(this, arguments); };
+
+  /* Mövzular siyahısı: hazır mövzulara "Öyrən" nişanı; bankda olmayan hazır mövzunu əlavə et */
+  const oSubj = window.pqSubject;
+  window.pqSubject = async function (s) {
+    const r = await oSubj.apply(this, arguments);
+    const grid = document.querySelector("#pq-root .pq-tgrid"); if (!grid) return r;
+    grid.querySelectorAll(".pq-tc .pq-tn").forEach(el => { if (find(el.textContent)) el.insertAdjacentHTML("beforeend", `<span class="lt-badge">📘 Öyrən</span>`); });
+    Object.keys(LT).forEach(k => {
+      const L = Object.assign({ name: k }, LT[k]); if (nrm(L.subj) !== nrm(s) || bankKey(L)) return;
+      const n = L.secs.reduce((a, x) => a + x.props, 0), tn = L.secs.reduce((a, x) => a + x.tests, 0);
+      const pd = L.secs.reduce((a, x) => a + done(x.k), 0), pc = Math.round(pd / n * 100);
+      grid.querySelector(".pq-empty") && grid.querySelector(".pq-empty").remove();
+      grid.insertAdjacentHTML("afterbegin", `<div class="pq-tc sq-in" onclick="pqTopic(${js_(k)})"><div class="pq-ring" style="background:conic-gradient(${L.c} ${pc * 3.6}deg,#e2e8f0 0)"><span>${pd ? pc + "%" : "—"}</span></div>
+        <div style="flex:1;min-width:0;"><div class="pq-tn">${esc_(k)}<span class="lt-badge">📘 Öyrən</span></div><div class="pq-ts">${n} xassə · ${tn} test</div></div><span class="v2-chev">›</span></div>`);
+    });
+    return r;
+  };
+
+  /* Geri: öyrənmə pəncərəsi → mövzu səhifəsi → mövzular */
+  const oBack = window.pqBack;
+  window.pqBack = function () {
+    const p = P();
+    if (ov) { close(); return; }
+    if (!p.sess && p.view === "learn") return window.pqSubject(p.subj || "Riyaziyyat");
+    if (!p.sess && p.view === "cfg" && p.cfg && find(p.cfg.t)) return page(p.cfg.t);
+    return oBack.apply(this, arguments);
+  };
+})();
+</script>
+
 </body>
 </html>
