@@ -16140,7 +16140,7 @@ window.IZ_MATH_URL = window.IZ_MATH_URL || "";
     q("keep").classList.toggle("on",Z.keep);
     ov.querySelectorAll('[data-act="prev"]').forEach(b=>b.disabled=Z.i===0); ov.querySelectorAll('[data-act="next"]').forEach(b=>b.disabled=Z.i>=Z.qs.length-1&&!(Z.doc&&Z.doc.blank));
     $("iz-no").textContent=Z.doc?`Səh. ${Z.i+1} / ${Z.qs.length}`:`${Z.i+1} / ${Z.qs.length}`;
-    if(Z.doc){ ["show","aa","keep"].forEach(a=>{ const b=q(a); if(b) b.hidden=!(a==="aa"&&Z.doc.render); }); const pb=$("iz-doc"); ov.querySelectorAll('[data-act="pdf"]').forEach(b=>b.classList.toggle("on",!!pb&&!pb.classList.contains("closed"))); if(popFor==="pen"||popFor==="mk") refreshPen(); return; }
+    if(Z.doc){ ["show","aa","keep"].forEach(a=>{ const b=q(a); if(b) b.hidden=true; }); const pb=$("iz-doc"); ov.querySelectorAll('[data-act="pdf"]').forEach(b=>b.classList.toggle("on",!!pb&&!pb.classList.contains("closed"))); if(popFor==="pen"||popFor==="mk") refreshPen(); return; }
     const ey=q("show"); ey.classList.toggle("on",Z.show); ey.disabled=Q.type==="detailed";
     const tx=q("text"); tx.hidden=!textOf(Q); tx.classList.toggle("on",!!$("iz-txp"));
     live.style.cursor=Z.tool==="sel"?"default":Z.tool==="er"&&Z.erMode==="line"?"none":"crosshair";
@@ -16547,7 +16547,10 @@ window.IZ_MATH_URL = window.IZ_MATH_URL || "";
   };
   window.izCurTool=()=>Z?{t:Z.tool,c:Z.col[ik()],w:Z.tool==="mk"?pxOf("mk",Z.wv.mk):pxOf(Z.pk,Z.wv.pen),er:ERR[Z.wi.er],d:Z.dash}:null;
   window.izPalm=()=>{ try{ return localStorage.getItem("iz_palm")!=="0"; }catch(e){ return true; } };
-  window.izBig=e=>(e.width||0)>38||(e.height||0)>38;
+  window.izPenSeen=false;
+  window.izBig=e=>{ const t=window.izPenSeen?38:95; return (e.width||0)>t||(e.height||0)>t; };
+  // qələmin yan düyməsi (S Pen) və ya qələmin arxa ucu — pozan kimi işləsin
+  window.izPenEr=e=>e.pointerType==="pen"&&(((e.buttons||0)&34)!==0||e.button===5||e.button===2);
   function armHold(e){ hold=P(e); clearTimeout(holdT); if(Z.snap) holdT=setTimeout(trySnap,700); }
   function abortGesture(){
     if(erBase){ Z.strokes=erBase; erBase=null; }
@@ -16556,7 +16559,9 @@ window.IZ_MATH_URL = window.IZ_MATH_URL || "";
 
   function bindPen(){
     live.addEventListener("pointerdown",e=>{
-      if(e.pointerType==="pen"){ penSeen=true; penDown=true; pan=null; touches.clear(); }
+      if(e.pointerType==="pen"){ penSeen=true; window.izPenSeen=true; penDown=true; pan=null; touches.clear(); if(izPenEr(e)&&Z.tool!=="er"){ Z.prevTool=Z.tool; Z.tool="er"; Z.erMode="line"; hover=null; sync(); } }
+      // ilk barmaq: əvvəlki (itmiş) toxunuşları unut — yoxsa lövhə "sürüşdürmə"də ilişib qalır, qələm yazmır
+      if(e.pointerType==="touch"&&e.isPrimary&&pid===null){ touches.clear(); pan=null; }
       if(e.pointerType==="touch"){
         // qələm yazırkən heç bir toxunuş qəbul olunmur (ovuc ekrana dəysə də)
         if(penDown||(pid!==null&&Z.ptype==="pen")||(izPalm()&&izBig(e))){ e.preventDefault(); return; }
@@ -16597,7 +16602,7 @@ window.IZ_MATH_URL = window.IZ_MATH_URL || "";
       req();
     });
     const up=e=>{
-      if(e.pointerType==="pen") penDown=false;
+      if(e.pointerType==="pen"){ penDown=false; if(Z.prevTool){ setTimeout(()=>{ if(Z&&Z.prevTool){ Z.tool=Z.prevTool; Z.prevTool=null; Z.erMode=cfg().erMode==="area"?"area":"line"; sync(); } },0); } }
       if(e.pointerType==="touch"&&touches.has(e.pointerId)){ touches.delete(e.pointerId); if(pan){ if(touches.size) startPan(); else pan=null; return; } }
       if(e.pointerId!==pid) return; pid=null; clearTimeout(holdT);
       if(lasso){ const Lp=lasso; lasso=null; if(Z.tool==="sel") finishLasso(Lp,P(e)); else finishArea(Lp); req(); return; }
@@ -17256,7 +17261,13 @@ function texPlain(s){
 .mq-who{font-size:12.5px;color:#475569;margin:10px 0}
 .mq-acts{display:flex;gap:8px}.mq-acts button{flex:1;padding:12px;border-radius:12px;font:800 14px var(--font-main)}
 .mq-go{background:#1d6fd6;color:#fff}.mq-go:disabled{opacity:.4}.mq-go2{background:#f1f5f9;color:#0B3C5D;flex:0 0 auto!important}
-#iz-ov .mq-q{display:inline-block;max-width:min(calc(56% * var(--qs,1)),100%);background:#fff;border-radius:14px;box-shadow:0 4px 18px rgba(11,60,93,.12),0 0 0 1px rgba(11,60,93,.06);overflow:hidden}
+#iz-ov.iz-mq .iz-cnt{z-index:4;pointer-events:none;mix-blend-mode:multiply}
+#iz-ov.iz-mq .mq-h,#iz-ov.iz-mq .mq-rz{pointer-events:auto;touch-action:none}
+#iz-ov .mq-h{cursor:move}
+#iz-ov .mq-mv{font-style:normal;font-size:16px;opacity:.8}
+#iz-ov .mq-rz{position:absolute;right:0;bottom:0;width:34px;height:34px;cursor:nwse-resize;background:linear-gradient(135deg,transparent 50%,#0B3C5D 50%);border-top-left-radius:10px;opacity:.85}
+#iz-ov .mq-q.drag{box-shadow:0 0 0 3px #1d6fd6,0 10px 30px rgba(11,60,93,.25)}
+#iz-ov .mq-q{position:relative;display:block;background:#fff;border-radius:14px;box-shadow:0 4px 18px rgba(11,60,93,.12),0 0 0 1px rgba(11,60,93,.06);overflow:hidden}
 #iz-ov .mq-h{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#0B3C5D;color:#fff;font-size:13px}
 #iz-ov .mq-h span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.85}
 #iz-ov .mq-h b{background:#ea580c;padding:3px 10px;border-radius:999px;font-size:13px;flex:none}
@@ -17479,12 +17490,41 @@ function texPlain(s){
         <div class="mq-t">Önəm</div><div class="mq-imp">${Object.keys(IMP).map(k=>`<button type="button" data-imp="${k}" class="${x.imp===k?"on "+k:""}">${IMP[k]}</button>`).join("")}</div>
         <button type="button" class="mq-done ${x.done?"ok":""}" data-done>${x.done?"✓ İzah olundu":"İzah olundu"}</button></div>`;
     }
-    function markDone(i,anim){ const n=ns[i]; if(!(N[nk(n)]||{}).done) note(n,{done:true}); if(anim){ const st=$("iz-stage"); if(st){ const c=document.createElement("div"); c.className="mq-ok"; c.innerHTML=`<svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M14 27l8 8 16-17"/></svg><b>${n}-ci sual izah olundu</b>`; st.appendChild(c); setTimeout(()=>c.remove(),1300); } } side(cur); }
+    // sualı lövhədə sürüşdür (başlıqdan tut) və böyüt/kiçilt (sağ alt küncdən çək)
+    function pos(n){ store.pos=store.pos||{}; return store.pos[n]=store.pos[n]||{}; }
+    function cardDrag(card,n,SWp){
+      let g=null;
+      card.addEventListener("pointerdown",e=>{ const h=e.target.closest(".mq-h,.mq-rz"); if(!h) return; e.preventDefault(); e.stopPropagation(); try{ card.setPointerCapture(e.pointerId); }catch(x){}
+        const ps=pos(n), r=card.getBoundingClientRect(); g={rz:h.classList.contains("mq-rz"),sx:e.clientX,sy:e.clientY,x:(ps.x||0)*SWp,y:(ps.y||0)*SWp,w:card.offsetWidth,k:(r.width/card.offsetWidth)||1,id:e.pointerId}; card.classList.add("drag"); });
+      const mv=e=>{ if(!g||e.pointerId!==g.id) return null; const dx=(e.clientX-g.sx)/g.k, dy=(e.clientY-g.sy)/g.k;
+        if(g.rz) card.style.width=Math.max(150,Math.min(SWp*1.3,g.w+dx))+"px"; else card.style.transform=`translate(${g.x+dx}px,${Math.max(-20,g.y+dy)}px)`; return [dx,dy]; };
+      card.addEventListener("pointermove",mv);
+      const end=e=>{ const d=mv(e); if(!d) return; const ps=pos(n); if(g.rz) ps.w=+(card.offsetWidth/SWp).toFixed(4); else { ps.x=+((g.x+d[0])/SWp).toFixed(4); ps.y=+(Math.max(-20,g.y+d[1])/SWp).toFixed(4); } g=null; card.classList.remove("drag"); saveMeta(store); };
+      card.addEventListener("pointerup",end); card.addEventListener("pointercancel",end);
+    }
+    // həll (sual şəkli + lövhədəki yazı) şagirdin «Zəif yerlərim» bölməsinə gedir
+    const sent={};
+    function small(url){ return new Promise(res=>{ const im=new Image(); im.onload=()=>{ const k=Math.min(1,900/im.width), c=document.createElement("canvas"); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k); const g=c.getContext("2d"); g.fillStyle="#fff"; g.fillRect(0,0,c.width,c.height); g.drawImage(im,0,0,c.width,c.height); res(c.toDataURL("image/jpeg",.8)); }; im.onerror=()=>res(url); im.src=url; }); }
+    async function upload(n){
+      const i=ns.indexOf(n); if(i<0) return; const ink=(store.inkByNum||{})[n]||[], x=N[nk(n)]||{};
+      if(!ink.length&&!x.done) return;
+      const ids=[...new Set((who[n]||[]).map(s=>s.id))]; if(!ids.length) return;
+      const js=JSON.stringify(ink.filter(s=>s.t!=="tex")); if(js.length>700000){ toast(n+"-ci sualın həlli çox böyükdür, göndərilmədi"); return; }
+      const key=js.length+"|"+JSON.stringify(pos(n))+"|"+(x.imp||""); if(sent[n]===key) return; sent[n]=key;
+      try{ await db.collection("bookSolutions").doc(currentTeacherId+"_"+B.id+"_"+u.key+"_"+n).set({teacherId:currentTeacherId,book:B.id,unit:u.key,unitTitle:u.t,parent:u.parent||"",num:n,studentIds:ids,
+          img:IMS[n]||(IMS[n]=await small(IM[i].url)),sw:store.sw||1000,pos:pos(n),ink:js,imp:x.imp||"",at:firebase.firestore.FieldValue.serverTimestamp()}); }
+      catch(e){ sent[n]=null; console.error(e); toast("Həll şagirdə göndərilmədi: "+errAz(e)); }
+    }
+    const IMS={};
+    function markDone(i,anim){ const n=ns[i]; if(!(N[nk(n)]||{}).done) note(n,{done:true}); setTimeout(()=>upload(n),1500); if(anim){ const st=$("iz-stage"); if(st){ const c=document.createElement("div"); c.className="mq-ok"; c.innerHTML=`<svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M14 27l8 8 16-17"/></svg><b>${n}-ci sual izah olundu</b>`; st.appendChild(c); setTimeout(()=>c.remove(),1300); } } side(cur); }
     const doc={id:sid,name:u.t,pages:ns.length,ink,page:0,
-      render:(i,box)=>{ cur=i; const n=ns[i], im=IM[i]; box.innerHTML=`<div class="mq-q"><div class="mq-h"><span>${esc(u.t)}</span><b>${n}-ci sual</b></div><img src="${im.url}" alt="${n}-ci sual" class="${im.full?"full":""}"></div>`; setTimeout(()=>side(i),0); },
+      render:(i,box)=>{ cur=i; const n=ns[i], im=IM[i], ov=$("iz-ov"); if(ov) ov.classList.add("iz-mq");
+        const SWp=(box.parentNode&&box.parentNode.clientWidth)||1000, ps=pos(n); store.sw=SWp;
+        box.innerHTML=`<div class="mq-q" style="width:${(ps.w||(im.full?.42:.5))*SWp}px;transform:translate(${(ps.x||0)*SWp}px,${(ps.y||0)*SWp}px)"><div class="mq-h" title="Tutub sürüşdürün"><i class="mq-mv">✥</i><span>${esc(u.t)}</span><b>${n}-ci sual</b></div><img src="${im.url}" alt="${n}-ci sual"><i class="mq-rz" title="Küncdən çəkib böyüdün / kiçildin"></i></div>`;
+        cardDrag(box.firstChild,n,SWp); setTimeout(()=>side(i),0); },
       onPage:n=>{ if(n>cur) markDone(cur,true); },
       onSave:(ink2)=>{ store.inkByNum=store.inkByNum||{}; ns.forEach((n,i)=>{ if(ink2[i]&&ink2[i].length) store.inkByNum[n]=ink2[i]; else delete store.inkByNum[n]; }); saveMeta(store); },
-      onClose:()=>{ saveMeta(store,true); mqView(); }};
+      onClose:async()=>{ saveMeta(store,true); for(const n of ns) await upload(n); mqView(); }};
     izOpenDoc(doc);
   }
 
@@ -17669,7 +17709,7 @@ function texPlain(s){
       if(e.pointerType==="pen") P.penOn=true;
       if(!P.wr||e.pointerType==="touch"||(e.pointerType==="mouse"&&e.button!==0)) return;
       const d=e.target.closest(".pd-p"); if(!d) return;
-      const t=izCurTool()||{t:"pen",c:"#1d4ed8",w:2}, i=+d.dataset.pg, r=d.getBoundingClientRect(), W=r.width;
+      let t=izCurTool()||{t:"pen",c:"#1d4ed8",w:2}; if(izPenEr(e)) t=Object.assign({},t,{t:"er"}); const i=+d.dataset.pg, r=d.getBoundingClientRect(), W=r.width;
       const pt=ev=>[+((ev.clientX-r.left)/W).toFixed(4),+((ev.clientY-r.top)/W).toFixed(4)];
       e.preventDefault(); try{ inn.setPointerCapture(e.pointerId); }catch(x){}
       const p=pt(e);
@@ -17792,6 +17832,7 @@ function texPlain(s){
     let h=`<p class="ms-info">Ev tapşırığında həll edə bilmədiyin sualların nömrələrini seç və göndər. Müəllim dərsdə onları lövhədə izah edəcək.</p>
       ${S.err?`<div class="empty-state" style="color:#b91c1c">${esc(S.err)}</div>`:""}
       <div class="ms-sum"><div><b>${tot}</b><small>göndərilib</small></div><div><b>${ok}</b><small>izah olunub</small></div><div><b>${tot-ok}</b><small>gözləyir</small></div></div>
+      ${ok?`<button type="button" class="ms-send" style="background:#7c3aed;margin:0 0 12px" onclick="zyOpen()">⭐ İzah olunan suallara bax (${ok})</button>`:""}
       <div class="v2-sec-head"><h3>📘 ${esc(b.name)}</h3></div>`;
     U.mains.forEach((g,gi)=>{
       const cnt=g.units.reduce((a,u)=>a+(S.sent[u.key]||[]).length,0), op=S.om===gi;
@@ -17804,6 +17845,8 @@ function texPlain(s){
     box.innerHTML=h;
   }
   function mqUnitsLocal(b){ const mains=[]; b.toc.forEach(e=>{ if(e[0]===0){ const g={t:e[1],units:[]}; if(e[3]) g.units.push({key:mains.length+"",t:e[1],n:e[3].length/5}); mains.push(g); } else { const g=mains[mains.length-1]; g.units.push({key:(mains.length-1)+"."+g.units.filter(x=>x.key.includes(".")).length,t:e[1],n:e[3]?e[3].length/5:0}); } }); return {mains:mains.filter(g=>g.units.length)}; }
+  // açılan başlıq ekranın yuxarısına qalxsın
+  function top(sel){ requestAnimationFrame(()=>{ const el=$("ms-box")&&$("ms-box").querySelector(sel); if(el) window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-70,behavior:"smooth"}); }); }
   function grid(u){
     if(!u.n) return "";
     const sel=S.sel[u.key]||new Set(), sent=new Set(S.sent[u.key]||[]), ch=sel.size!==sent.size||[...sel].some(n=>!sent.has(n));
@@ -17815,8 +17858,8 @@ function texPlain(s){
   document.addEventListener("click",async e=>{
     const box=$("ms-box"); if(!box||!box.contains(e.target)) return;
     const om=e.target.closest("[data-om]"), os=e.target.closest("[data-os]"), nb=e.target.closest("[data-n]"), sd=e.target.closest("[data-send]");
-    if(om){ const g=+om.dataset.om; S.om=S.om===g?null:g; S.os=null; render(); return; }
-    if(os){ S.os=S.os===os.dataset.os?null:os.dataset.os; render(); return; }
+    if(om){ const g=+om.dataset.om; S.om=S.om===g?null:g; S.os=null; render(); if(S.om!==null) top(`[data-om="${g}"]`); return; }
+    if(os){ S.os=S.os===os.dataset.os?null:os.dataset.os; render(); if(S.os) top(`[data-os="${S.os}"]`); return; }
     if(nb){ const k=nb.dataset.u, n=+nb.dataset.n, s=S.sel[k]=S.sel[k]||new Set(); s.has(n)?s.delete(n):s.add(n); render(); return; }
     if(sd){ const k=sd.dataset.send, b=B(), T=tids(); if(!T.length){ toast("Əvvəlcə müəllimə qoşulun («Fənlər» bölməsi)"); return; }
       const nums=[...(S.sel[k]||[])].sort((a,c)=>a-c), ref=db.collection("bookMistakes").doc(currentStudentUid+"_"+b.id+"_"+k.replace(".","-"));
@@ -17829,6 +17872,123 @@ function texPlain(s){
       }catch(x){ console.error(x); toast("Göndərilmədi: "+errAz(x)); sd.disabled=false; }
     }
   });
+})();
+</script>
+
+<!-- ===== Şagird: Zəif yerlərim (müəllimin lövhədə izah etdiyi suallar) ===== -->
+<style id="zy-css">
+.zy-f{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;scrollbar-width:none}.zy-f::-webkit-scrollbar{display:none}
+.zy-f button{flex:none;padding:8px 13px;border-radius:999px;background:#fff;border:1.5px solid #e2e8f0;font:700 13px var(--font-main);color:#334155}
+.zy-f button.on{background:#0B3C5D;border-color:#0B3C5D;color:#fff}
+.zy-u{font-size:12.5px;font-weight:900;color:#64748b;margin:14px 2px 8px}
+.zy-i{display:flex;gap:10px;align-items:center;width:100%;background:#fff;border:1px solid rgba(11,60,93,.08);border-radius:16px;padding:8px;margin-bottom:8px;box-shadow:var(--shadow-sm);text-align:left;font:inherit;color:inherit}
+.zy-i img{width:96px;height:58px;object-fit:cover;object-position:left top;border-radius:10px;border:1px solid #e2e8f0;flex:none}
+.zy-i div{flex:1;min-width:0}.zy-i b{display:block;font-size:14.5px;color:#0B3C5D}.zy-i small{font-size:12px;color:#64748b}
+.zy-imp{display:inline-block;font-size:11px;font-weight:800;padding:3px 8px;border-radius:999px;margin-top:4px}
+.zy-imp.high{background:#fee2e2;color:#b91c1c}.zy-imp.mid{background:#fef3c7;color:#92400e}.zy-imp.low{background:#f1f5f9;color:#475569}
+.zy-i.seen{opacity:.65}
+#zy-ov{position:fixed;inset:0;z-index:9000;background:#eef3f8;display:flex;flex-direction:column;font-family:var(--font-main)}
+.zy-top{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#0B3C5D;color:#fff}
+.zy-top b{flex:1;min-width:0;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.zy-top button{width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.14);color:#fff;font-size:18px;border:0}
+.zy-bar{display:flex;gap:8px;padding:10px 12px;background:#fff;box-shadow:0 2px 10px rgba(11,60,93,.08);flex-wrap:wrap}
+.zy-bar button{flex:1;min-width:90px;padding:11px;border-radius:12px;font:800 14px var(--font-main);background:#f1f5f9;color:#0B3C5D;border:0}
+.zy-bar button.pri{background:#16a34a;color:#fff}.zy-bar button.on{background:#1d6fd6;color:#fff}
+.zy-sc{flex:1;overflow:auto;padding:12px;-webkit-overflow-scrolling:touch}
+.zy-wrap{position:relative;background:#fff;border-radius:16px;box-shadow:0 4px 18px rgba(11,60,93,.1);overflow:hidden;margin:0 auto}
+.zy-board{position:absolute;left:0;top:0;transform-origin:0 0}
+.zy-board .zy-cnt{position:absolute;left:0;top:0;right:0;padding:20px 30px 0}
+.zy-board .mq-q{position:relative;display:block;background:#fff;border-radius:14px;box-shadow:0 4px 18px rgba(11,60,93,.12),0 0 0 1px rgba(11,60,93,.06);overflow:hidden}
+.zy-board .mq-h{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#0B3C5D;color:#fff;font-size:13px}
+.zy-board .mq-h span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.85}
+.zy-board .mq-h b{background:#ea580c;padding:3px 10px;border-radius:999px;font-size:13px;flex:none}
+.zy-board .mq-q img{display:block;width:100%;height:auto;padding:6px 8px 8px;box-sizing:border-box}
+.zy-board canvas{position:absolute;left:0;top:0}
+.zy-board .zy-ink{z-index:2;mix-blend-mode:multiply;pointer-events:none;transition:opacity .3s}
+.zy-board .zy-me{z-index:3;touch-action:none}
+.zy-hint{text-align:center;font-size:12.5px;color:#64748b;margin:10px 0 0}
+</style>
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const more=document.querySelector("#stab-more .card .v2-sec-head"), host=$("stab-more");
+  if(!more||!host) return;
+  more.insertAdjacentHTML("afterend",`<div class="v2-more-row" onclick="zyOpen()"><span class="v2-more-ico" style="background:#7c3aed;">⭐</span><div style="flex:1;min-width:0;"><div class="v2-more-t">Zəif yerlərim</div><div class="v2-more-s">Müəllimin izah etdiyi suallar — təkrar həll et</div></div><span class="v2-chev">›</span></div>`);
+  host.insertAdjacentHTML("afterend",`<div class="tab-panel" id="stab-weak"><div class="v2-backrow"><button class="v2-back" onclick="v2Tab('stab-more')">←</button><div class="v2-backtitle">Zəif yerlərim</div></div><div class="card" id="zy-box"></div></div>`);
+  const IMP={high:"Çox vacib",mid:"Orta",low:"Önəmsiz"}, RANK={high:0,mid:1,"":2,low:3};
+  let L=[], F="all";
+  const seen=()=>{ try{ return JSON.parse(localStorage.getItem("zy_seen")||"{}"); }catch(e){ return {}; } };
+  window.zyOpen=async()=>{ v2ShowPanel("stab-weak","stab-more"); $("zy-box").innerHTML=`<div class="pq-sk"></div><div class="pq-sk"></div>`;
+    try{ const s=await db.collection("bookSolutions").where("studentIds","array-contains",currentStudentUid).get(); L=s.docs.map(d=>Object.assign({id:d.id},d.data())); }
+    catch(e){ console.error(e); $("zy-box").innerHTML=`<div class="empty-state">Yüklənmədi: ${esc(errAz(e))}</div>`; return; }
+    draw(); };
+  function draw(){
+    const box=$("zy-box"), S=seen();
+    if(!L.length){ box.innerHTML=`<div class="empty-state">Hələ izah olunmuş sual yoxdur.<br>«Səhv suallarım» bölməsindən həll edə bilmədiyin sualları göndər — müəllim izah edəndən sonra burada görünəcək.</div>`; return; }
+    const A=L.filter(x=>F==="all"||(F==="new"?!S[x.id]:x.imp===F)).sort((a,b)=>(RANK[a.imp||""]-RANK[b.imp||""])||String(a.unit).localeCompare(String(b.unit),undefined,{numeric:true})||a.num-b.num);
+    const cnt=k=>L.filter(x=>k==="new"?!S[x.id]:x.imp===k).length;
+    let h=`<div class="zy-f">${[["all","Hamısı ("+L.length+")"],["new","Baxmadıqlarım ("+cnt("new")+")"],["high","Çox vacib ("+cnt("high")+")"],["mid","Orta ("+cnt("mid")+")"]].map(([k,t])=>`<button type="button" data-zf="${k}" class="${F===k?"on":""}">${t}</button>`).join("")}</div>`;
+    let last="";
+    A.forEach(x=>{ const g=(x.parent?x.parent+" → ":"")+x.unitTitle; if(g!==last){ h+=`<div class="zy-u">${esc(g)}</div>`; last=g; }
+      h+=`<button type="button" class="zy-i ${S[x.id]?"seen":""}" data-zi="${x.id}"><img src="${x.img}" alt=""><div><b>${x.num}-ci sual</b><small>${S[x.id]?"✓ baxılıb":"yeni izah"}</small>${x.imp?`<br><span class="zy-imp ${x.imp}">${IMP[x.imp]}</span>`:""}</div></button>`; });
+    box.innerHTML=h||`<div class="empty-state">Bu filtrdə sual yoxdur</div>`;
+  }
+  document.addEventListener("click",e=>{ const box=$("zy-box"); if(!box||!box.contains(e.target)) return;
+    const f=e.target.closest("[data-zf]"); if(f){ F=f.dataset.zf; draw(); return; }
+    const i=e.target.closest("[data-zi]"); if(i) view(L.find(x=>x.id===i.dataset.zi)); });
+
+  // lövhəni şagirddə eyni ölçüdə qur, sonra ekrana sığdır
+  function stroke(c,s){
+    const P=s.p; if(!P||!P.length) return; const W=1;
+    c.save(); c.lineCap=c.lineJoin="round"; c.strokeStyle=c.fillStyle=s.c; c.lineWidth=s.w;
+    if(s.h){ c.globalAlpha=.35; } else if(s.k==="pencil") c.globalAlpha=.8;
+    if(s.d===1) c.setLineDash([s.w*3+6,s.w*2+5]); else if(s.d===2) c.setLineDash([.1,s.w*2+4]);
+    const X=k=>P[k][0]*SWv, Y=k=>P[k][1]*SWv; c.beginPath();
+    if(s.t==="pen"){ if(P.length===1){ c.arc(X(0),Y(0),s.w/2,0,6.283); c.fill(); c.restore(); return; } c.moveTo(X(0),Y(0)); for(let k=1;k<P.length-1;k++) c.quadraticCurveTo(X(k),Y(k),(X(k)+X(k+1))/2,(Y(k)+Y(k+1))/2); c.lineTo(X(P.length-1),Y(P.length-1)); }
+    else if(P.length>1){ if(s.t==="line"){ c.moveTo(X(0),Y(0)); c.lineTo(X(1),Y(1)); } else if(s.t==="rect") c.rect(Math.min(X(0),X(1)),Math.min(Y(0),Y(1)),Math.abs(X(1)-X(0)),Math.abs(Y(1)-Y(0)));
+      else if(s.t==="circ") c.ellipse((X(0)+X(1))/2,(Y(0)+Y(1))/2,Math.abs(X(1)-X(0))/2,Math.abs(Y(1)-Y(0))/2,0,0,6.283);
+      else if(s.t==="poly"){ c.moveTo(X(0),Y(0)); for(let k=1;k<P.length;k++) c.lineTo(X(k),Y(k)); c.closePath(); } }
+    c.stroke(); c.restore();
+  }
+  let SWv=1000;
+  function view(x){
+    if(!x) return; const S=seen(); S[x.id]=1; try{ localStorage.setItem("zy_seen",JSON.stringify(S)); }catch(e){}
+    let ink=[]; try{ ink=JSON.parse(x.ink||"[]"); }catch(e){}
+    SWv=x.sw||1000; const ps=x.pos||{};
+    const ov=document.createElement("div"); ov.id="zy-ov";
+    ov.innerHTML=`<div class="zy-top"><button type="button" data-z="x" aria-label="Bağla">←</button><b>${esc(x.unitTitle)} · ${x.num}-ci sual</b></div>
+      <div class="zy-bar"><button type="button" data-z="sol" class="pri">👁 Müəllimin həllinə bax</button><button type="button" data-z="pen" class="on">✏️ Qaralama</button><button type="button" data-z="clr">🧹 Sil</button></div>
+      <div class="zy-sc"><div class="zy-wrap" id="zy-w"><div class="zy-board" id="zy-b" style="width:${SWv}px"><div class="zy-cnt"><div class="mq-q" style="width:${(ps.w||.5)*SWv}px;transform:translate(${(ps.x||0)*SWv}px,${(ps.y||0)*SWv}px)"><div class="mq-h"><span>${esc(x.unitTitle)}</span><b>${x.num}-ci sual</b></div><img src="${x.img}" alt=""></div></div><canvas class="zy-ink" id="zy-ink"></canvas><canvas class="zy-me" id="zy-me"></canvas></div></div>
+      <p class="zy-hint">Əvvəlcə sualı özün barmaqla həll et, sonra müəllimin həllinə bax.</p></div>`;
+    document.body.appendChild(ov); document.body.style.overflow="hidden";
+    const b=$("zy-b"), w=$("zy-w"), ci=$("zy-ink"), cm=$("zy-me"); let show=false, k=1, H=0, X0=0, pen=true;
+    const img=b.querySelector("img");
+    function layout(){
+      const cardB=(b.querySelector(".mq-q").offsetHeight)+20+(ps.y||0)*SWv; let my=0; ink.forEach(s=>(s.p||[]).forEach(p=>{ if(p[1]*SWv>my) my=p[1]*SWv; }));
+      H=Math.max(cardB,my)+SWv*.35;
+      // yalnız sual və həll olan hissəni ekrana sığdır
+      const cx0=30+(ps.x||0)*SWv, cx1=cx0+b.querySelector(".mq-q").offsetWidth; let x0=cx0, x1=cx1;
+      ink.forEach(s=>(s.p||[]).forEach(p=>{ const v=p[0]*SWv; if(v<x0) x0=v; if(v>x1) x1=v; }));
+      X0=Math.max(0,x0-24); const CW=Math.min(SWv,x1+24)-X0;
+      k=Math.min(1.6,(w.parentNode.clientWidth-24)/CW)||1; b.style.transform=`scale(${k}) translateX(${-X0}px)`; w.style.width=CW*k+"px"; w.style.height=H*k+"px"; b.style.height=H+"px";
+      [ci,cm].forEach(c=>{ if(c.width!==SWv||c.height!==Math.round(H)){ const old=c===cm&&c.width?c.toDataURL():null; c.width=SWv; c.height=Math.round(H); c.style.width=SWv+"px"; c.style.height=H+"px"; if(old){ const im=new Image(); im.onload=()=>c.getContext("2d").drawImage(im,0,0); im.src=old; } } });
+      const g=ci.getContext("2d"); g.clearRect(0,0,ci.width,ci.height); ink.forEach(s=>stroke(g,s)); ci.style.opacity=show?1:0;
+    }
+    img.complete?layout():img.onload=layout; layout();
+    const ro=new ResizeObserver(layout); ro.observe(w.parentNode);
+    // şagirdin öz qaralaması
+    let d=null; const gm=cm.getContext("2d");
+    const pt=e=>{ const r=cm.getBoundingClientRect(); return [(e.clientX-r.left)/k,(e.clientY-r.top)/k]; };
+    cm.addEventListener("pointerdown",e=>{ if(!pen) return; e.preventDefault(); cm.setPointerCapture(e.pointerId); d=pt(e); gm.lineCap=gm.lineJoin="round"; gm.strokeStyle="#7c3aed"; gm.lineWidth=3/Math.max(k,.35); });
+    cm.addEventListener("pointermove",e=>{ if(!d) return; const q=pt(e); gm.beginPath(); gm.moveTo(d[0],d[1]); gm.lineTo(q[0],q[1]); gm.stroke(); d=q; });
+    const up=()=>d=null; cm.addEventListener("pointerup",up); cm.addEventListener("pointercancel",up);
+    ov.addEventListener("click",e=>{ const z=e.target.closest("[data-z]"); if(!z) return;
+      if(z.dataset.z==="x"){ ro.disconnect(); ov.remove(); document.body.style.overflow=""; draw(); }
+      else if(z.dataset.z==="sol"){ show=!show; ci.style.opacity=show?1:0; z.textContent=show?"🙈 Həlli gizlət":"👁 Müəllimin həllinə bax"; z.classList.toggle("pri",!show); z.classList.toggle("on",show); if(show&&!ink.length) toast("Müəllim bu sualı şifahi izah edib — lövhədə yazı yoxdur"); }
+      else if(z.dataset.z==="clr") gm.clearRect(0,0,cm.width,cm.height);
+      else if(z.dataset.z==="pen"){ pen=!pen; z.classList.toggle("on",pen); cm.style.touchAction=pen?"none":"pan-x pan-y"; toast(pen?"Barmaqla yaz":"Barmaqla sürüşdür"); }
+    });
+  }
 })();
 </script>
 
