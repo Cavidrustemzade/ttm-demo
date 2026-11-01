@@ -15717,6 +15717,19 @@ body.iz-open #toast{z-index:9000}
 .iz-down{position:absolute;right:14px;bottom:14px;z-index:6;display:flex;flex-direction:column;gap:8px}
 .iz-down button{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.92);box-shadow:0 4px 14px rgba(11,60,93,.18);color:#0B3C5D;display:flex;align-items:center;justify-content:center}
 .iz-down button[hidden]{display:none}
+#iz-ov .iz-down .iz-zm{width:auto;min-width:56px;padding:0 10px;border-radius:22px;font-weight:800;font-size:13px}
+#iz-ov{touch-action:none}
+#iz-ov .iz-pop,#iz-ov .iz-txp,#iz-ov .iz-mc{touch-action:pan-x pan-y}
+#iz-ov .iz-tools{touch-action:pan-x}
+#iz-ov:not(.iz-hasdoc) .iz-dn{display:none!important}
+.iz-frame.iz-dual{display:flex;gap:0}
+.iz-dual .iz-stage{flex:1;min-width:0}
+.iz-doc{width:var(--pzw,46%);flex:none;min-width:0;background:#fff;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 6px 24px rgba(11,60,93,.10),0 0 0 1px rgba(11,60,93,.05);transition:width .22s ease,height .22s ease}
+.iz-doc.closed{width:0!important;box-shadow:none}
+.iz-split{width:14px;flex:none;cursor:col-resize;touch-action:none;display:flex;align-items:center;justify-content:center}
+.iz-split i{width:5px;height:46px;border-radius:5px;background:#b8c6d6}
+.iz-doc.closed+.iz-split{width:8px;pointer-events:none}.iz-doc.closed+.iz-split i{display:none}
+@media(max-width:820px){.iz-frame.iz-dual{flex-direction:column}.iz-doc{width:auto!important;height:var(--pzw,46%)}.iz-doc.closed{height:0!important}.iz-split{width:auto;height:14px;cursor:row-resize}.iz-split i{width:46px;height:5px}}
 .iz-snap{position:absolute;z-index:6;pointer-events:none;padding:5px 11px;border-radius:999px;background:#0B3C5D;color:#fff;font:700 12px var(--font-main);transform:translate(-50%,-150%);animation:izSnap 1s ease forwards;white-space:nowrap}
 @keyframes izSnap{0%{opacity:0;transform:translate(-50%,-110%) scale(.8)}15%{opacity:1;transform:translate(-50%,-150%)}75%{opacity:1}100%{opacity:0}}
 .iz-selbox{position:absolute;z-index:5;border:1.5px solid #1d6fd6;border-radius:3px;touch-action:none;cursor:move;transform-origin:center;background:rgba(29,111,214,.03)}
@@ -15986,7 +15999,8 @@ window.IZ_MATH_URL = window.IZ_MATH_URL || "";
   $("iz-g").onchange=fill; $("iz-s").onchange=fill; $("iz-go").onclick=openStudio;
 
   // ---------- vəziyyət ----------
-  let Z=null, base=null, bctx=null, live=null, lctx=null, dpr=1, Wpx=1, Hpx=1;
+  let Z=null, base=null, bctx=null, live=null, lctx=null, dpr=1, Wpx=1, Hpx=1, SW=1;
+  const OX=()=>Z?Z.sx*Wpx:0, ZK=()=>Z&&Z.zm?Z.zm:1;
   const cfg=()=>{ try{ return JSON.parse(localStorage.getItem("iz_cfg")||"{}"); }catch(e){ return {}; } };
   const saveCfg=()=>{ try{ localStorage.setItem("iz_cfg",JSON.stringify({tool:/^(sel|pen|mk)$/.test(Z.tool)?Z.tool:Z.lastInk,pk:Z.pk,col:Z.col,wv:Z.wv,er:Z.wi.er,qs:Z.qs_,dash:Z.dash,erMode:Z.erMode,snap:Z.snap})); }catch(e){} };
 
@@ -16007,17 +16021,33 @@ window.IZ_MATH_URL = window.IZ_MATH_URL || "";
       Z={ex,qs,texts,gn,ink,i:0,tool,lastInk:tool==="mk"?"mk":"pen",pk:PENS[c.pk]?c.pk:"ball",
         col:Object.assign({pen:COL[1],mk:MK[0]},c.col||{}),wv,wi:{er:[0,1,2].includes(c.er)?c.er:(ow.er!=null?ow.er:1)},qs_:QS.includes(c.qs)?c.qs:1,
         dash:[0,1,2,3].includes(c.dash)?c.dash:0,erMode:c.erMode==="area"?"area":"line",erMk:false,snap:c.snap!==false,
-        sel:new Set(),xf:null,clip:null,keep:false,show:false,undo:[],redo:[],strokes:(ink[0]||[]).slice(),sy:0,t0:Date.now()};
+        sel:new Set(),xf:null,clip:null,keep:false,show:false,undo:[],redo:[],strokes:(ink[0]||[]).slice(),sy:0,sx:0,zm:1,t0:Date.now()};
       try{ Z.snd=localStorage.getItem("ttm_sound"); localStorage.setItem("ttm_sound","0"); }catch(e){} // çəkilişdə klik səsləri olmasın
       build(); render(); sync();
     }catch(e){ console.error(e); toast(errAz(e)); }
     btn.disabled=false;
   }
 
+  // ---------- PDF / dərs / test izahı: eyni lövhə, eyni alətlər ----------
+  // o={id,name,pages,ink,page,blank,mount(el,api),onSave(ink,i,pages),onPage(i),onClose()}
+  window.izOpenDoc=function(o){
+    if(Z) return;
+    const c=cfg(), tool=/^(sel|pen|mk)$/.test(c.tool)?c.tool:"pen";
+    const ow=c.wi||{}, wv=Object.assign({pen:PRE.pen[ow.pen!=null?ow.pen:1],mk:PRE.mk[ow.mk!=null?ow.mk:1]},c.wv||{});
+    const ink=o.ink||{}, i=Math.max(0,Math.min((o.pages||1)-1,o.page||0));
+    Z={ex:{id:"doc_"+o.id,title:o.name,topic:""},doc:o,qs:Array.from({length:o.pages||1},()=>({type:"doc"})),texts:[],gn:"",ink,i,tool,lastInk:tool==="mk"?"mk":"pen",pk:PENS[c.pk]?c.pk:"ball",
+      col:Object.assign({pen:COL[1],mk:MK[0]},c.col||{}),wv,wi:{er:[0,1,2].includes(c.er)?c.er:(ow.er!=null?ow.er:1)},qs_:1,
+      dash:[0,1,2,3].includes(c.dash)?c.dash:0,erMode:c.erMode==="area"?"area":"line",erMk:false,snap:c.snap!==false,
+      sel:new Set(),xf:null,clip:null,keep:false,show:false,undo:[],redo:[],strokes:(ink[i]||[]).slice(),sy:0,sx:0,zm:1,t0:Date.now()};
+    try{ Z.snd=localStorage.getItem("ttm_sound"); localStorage.setItem("ttm_sound","0"); }catch(e){}
+    build(); render(); sync();
+    return {go:(n)=>go(n,n>Z.i?1:-1,true),page:()=>Z?Z.i:0};
+  };
+
   // ---------- quruluş (bir dəfə qurulur, sonra yalnız sinif/rəng dəyişir) ----------
   const ik=()=>Z.tool==="mk"?"mk":Z.tool==="pen"?"pen":Z.lastInk;
   const wkey=()=>Z.tool==="er"?"er":ik();
-  const curW=()=>Z.tool==="mk"?pxOf("mk",Z.wv.mk):pxOf(Z.pk,Z.wv.pen);
+  const curW=()=>+((Z.tool==="mk"?pxOf("mk",Z.wv.mk):pxOf(Z.pk,Z.wv.pen))/ZK()).toFixed(2);
   function barHTML(){
     const T=(id,ti,inner)=>`<button type="button" class="iz-b" data-tool="${id}" title="${ti}" aria-label="${ti}">${inner}</button>`;
     const A=(id,ti,ic)=>`<button type="button" class="iz-b" data-act="${id}" title="${ti}" aria-label="${ti}">${SVG(IC[ic])}</button>`;
@@ -16032,6 +16062,7 @@ window.IZ_MATH_URL = window.IZ_MATH_URL || "";
   }
   const pillKey=()=>"iz_pill_"+Z.ex.id;
   function pillText(){
+    if(Z.doc) return Z.doc.name||"";
     try{ const v=localStorage.getItem(pillKey()); if(v) return v; }catch(e){}
     const g=String(Z.gn||"").split(",")[0].trim();
     return [g&&g!=="—"?g:"",Z.ex.topic||"",Z.ex.title||""].filter(Boolean).join("  •  ");
@@ -16048,6 +16079,7 @@ window.IZ_MATH_URL = window.IZ_MATH_URL || "";
       <header class="iz-top">
       <div class="iz-tools" id="iz-tools">${barHTML()}</div>
       <div class="iz-right">
+        <button type="button" class="iz-b iz-dn" data-act="pdf" title="PDF-i yığ / aç" aria-label="PDF-i yığ və ya aç">${SVG(IC.book)}</button>
         <button type="button" class="iz-b" data-act="text" title="Mətn" aria-label="Mətn" hidden>${SVG(IC.book)}</button>
         <button type="button" class="iz-b" data-act="show" title="Düzgün cavabı göstər" aria-label="Düzgün cavab">${SVG(IC.eye)}</button>
         <div class="iz-nav"><button type="button" class="iz-b" data-act="prev" aria-label="Əvvəlki sual">${SVG(IC.pv)}</button><span class="iz-no" id="iz-no"></span><button type="button" class="iz-b" data-act="next" aria-label="Növbəti sual">${SVG(IC.nx)}</button></div>
@@ -16060,10 +16092,15 @@ window.IZ_MATH_URL = window.IZ_MATH_URL || "";
         <div class="iz-cnt" id="iz-cnt"></div><canvas class="iz-cv" id="iz-base"></canvas><div class="iz-texl" id="iz-tex"></div><canvas class="iz-cv" id="iz-live"></canvas>
         <div class="iz-selbox" id="iz-selbox" hidden>${["nw","n","ne","e","se","s","sw","w"].map(h=>`<i data-h="${h}"></i>`).join("")}<b data-h="rot">${SVG(IC.rot)}</b></div>
         <div class="iz-sbar" id="iz-sbar"></div>
-        <div class="iz-down"><button type="button" data-act="up" id="iz-upb" aria-label="Yuxarı" hidden>${SVG(IC.up)}</button><button type="button" data-act="down" aria-label="Aşağı — yer aç">${SVG(IC.down)}</button></div>
-        <div class="iz-dock"><button type="button" data-act="prev" aria-label="Əvvəlki sual">${SVG(IC.pv)}</button><button type="button" data-act="min" aria-label="Alətləri göstər">${SVG(IC.tools)}</button><button type="button" data-act="next" aria-label="Növbəti sual">${SVG(IC.nx)}</button></div>
+        <div class="iz-down"><button type="button" class="iz-zm" data-act="z100" id="iz-zm" title="100%-ə qaytar" hidden>100%</button><button type="button" data-act="up" id="iz-upb" aria-label="Yuxarı" hidden>${SVG(IC.up)}</button><button type="button" data-act="down" aria-label="Aşağı — yer aç">${SVG(IC.down)}</button></div>
+        <div class="iz-dock"><button type="button" data-act="prev" aria-label="Əvvəlki sual">${SVG(IC.pv)}</button><button type="button" class="iz-dn" data-act="pdf" aria-label="PDF">${SVG(IC.book)}</button><button type="button" data-act="min" aria-label="Alətləri göstər">${SVG(IC.tools)}</button><button type="button" data-act="next" aria-label="Növbəti sual">${SVG(IC.nx)}</button></div>
       </div></div>`;
-    document.body.appendChild(ov); document.body.classList.add("iz-open");
+    document.body.appendChild(ov); document.body.classList.add("iz-open"); izLockZoom(true);
+    if(Z.doc){
+      ov.classList.add("iz-isdoc");
+      const fr=ov.querySelector(".iz-frame");
+      if(Z.doc.mount){ ov.classList.add("iz-hasdoc"); fr.classList.add("iz-dual"); fr.insertAdjacentHTML("afterbegin",`<section class="iz-doc" id="iz-doc"></section><div class="iz-split" id="iz-split" title="Sürüşdürüb ölçünü dəyiş"><i></i></div>`); }
+    }
     const pill=$("iz-pill"); pill.textContent=pillText();
     pill.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); pill.blur(); } e.stopPropagation(); });
     pill.addEventListener("blur",()=>{ const v=pill.textContent.replace(/\s+/g," ").trim(); try{ if(v) localStorage.setItem(pillKey(),v); else localStorage.removeItem(pillKey()); }catch(e){} if(!v) pill.textContent=pillText(); });
@@ -16074,7 +16111,13 @@ window.IZ_MATH_URL = window.IZ_MATH_URL || "";
     ov.addEventListener("input",onInput);
     ov.addEventListener("pointerdown",e=>{ if(popEl&&!popEl.contains(e.target)&&!e.target.closest('[data-tool="pen"],[data-tool="mk"],[data-tool="er"],[data-act="pal"],[data-act="dashm"],[data-act="style"]')) closePop(); },true);
     bindPen(); bindSel();
-    $("iz-stage").addEventListener("wheel",e=>{ if(e.target.closest(".iz-txp,.iz-mb,.iz-mc")) return; e.preventDefault(); scrollTo(Z.sy+e.deltaY/Wpx); },{passive:false});
+    if(Z.doc&&Z.doc.mount){ const d=$("iz-doc"), sp=$("iz-split"); let w=46, cl=false; try{ w=+localStorage.getItem("pz_lw")||46; cl=localStorage.getItem("pz_closed")==="1"; }catch(x){}
+      d.style.setProperty("--pzw",w+"%"); if(cl) d.classList.add("closed");
+      let on=false; sp.addEventListener("pointerdown",e=>{ on=true; sp.setPointerCapture(e.pointerId); e.preventDefault(); d.style.transition="none"; });
+      sp.addEventListener("pointermove",e=>{ if(!on) return; const r=sp.parentNode.getBoundingClientRect(), v=innerWidth>820?(e.clientX-r.left)/r.width*100:(e.clientY-r.top)/r.height*100; w=Math.max(18,Math.min(80,v)); d.style.setProperty("--pzw",w+"%"); });
+      const end=()=>{ if(!on) return; on=false; d.style.transition=""; try{ localStorage.setItem("pz_lw",w.toFixed(1)); }catch(x){} }; sp.addEventListener("pointerup",end); sp.addEventListener("pointercancel",end);
+      Z.doc.mount(d); }
+    $("iz-stage").addEventListener("wheel",e=>{ if(e.target.closest(".iz-txp,.iz-mb,.iz-mc")) return; e.preventDefault(); if(e.ctrlKey||e.metaKey){ setZoom(Z.zm*Math.exp(-e.deltaY*.0025),e.clientX,e.clientY); return; } if(e.shiftKey&&Z.zm>1){ Z.sx+=e.deltaY/Wpx; clampX(); scrollTo(Z.sy); return; } scrollTo(Z.sy+e.deltaY/Wpx); },{passive:false});
     Z.ro=new ResizeObserver(size); Z.ro.observe($("iz-stage"));
     Z.tmr=setInterval(()=>{ const s=Math.floor((Date.now()-Z.t0)/1000), el=$("iz-tm"); if(el) el.textContent=(s>=3600?Math.floor(s/3600)+":":"")+String(Math.floor(s/60)%60).padStart(s>=3600?2:1,"0")+":"+String(s%60).padStart(2,"0"); },1000);
     addEventListener("keydown",key);
@@ -16095,8 +16138,9 @@ window.IZ_MATH_URL = window.IZ_MATH_URL || "";
     const q=a=>ov.querySelector(`.iz-top [data-act="${a}"]`), Q=Z.qs[Z.i];
     q("undo").disabled=!Z.undo.length; q("redo").disabled=!Z.redo.length;
     q("keep").classList.toggle("on",Z.keep);
-    ov.querySelectorAll('[data-act="prev"]').forEach(b=>b.disabled=Z.i===0); ov.querySelectorAll('[data-act="next"]').forEach(b=>b.disabled=Z.i>=Z.qs.length-1);
-    $("iz-no").textContent=`${Z.i+1} / ${Z.qs.length}`;
+    ov.querySelectorAll('[data-act="prev"]').forEach(b=>b.disabled=Z.i===0); ov.querySelectorAll('[data-act="next"]').forEach(b=>b.disabled=Z.i>=Z.qs.length-1&&!(Z.doc&&Z.doc.blank));
+    $("iz-no").textContent=Z.doc?`Səh. ${Z.i+1} / ${Z.qs.length}`:`${Z.i+1} / ${Z.qs.length}`;
+    if(Z.doc){ ["show","aa","keep"].forEach(a=>{ const b=q(a); if(b) b.hidden=true; }); const pb=$("iz-doc"); ov.querySelectorAll('[data-act="pdf"]').forEach(b=>b.classList.toggle("on",!!pb&&!pb.classList.contains("closed"))); if(popFor==="pen"||popFor==="mk") refreshPen(); return; }
     const ey=q("show"); ey.classList.toggle("on",Z.show); ey.disabled=Q.type==="detailed";
     const tx=q("text"); tx.hidden=!textOf(Q); tx.classList.toggle("on",!!$("iz-txp"));
     live.style.cursor=Z.tool==="sel"?"default":Z.tool==="er"&&Z.erMode==="line"?"none":"crosshair";
@@ -16278,6 +16322,8 @@ window.IZ_MATH_URL = window.IZ_MATH_URL || "";
     else if(k==="aa"){ Z.qs_=QS[(QS.indexOf(Z.qs_)+1)%QS.length]; $("iz-cnt").style.setProperty("--qs",Z.qs_); saveCfg(); scrollTo(Z.sy); toast("Sual ölçüsü: "+Math.round(Z.qs_*100)+"%"); }
     else if(k==="text") textPanel();
     else if(k==="down") smooth(Z.sy+Hpx*.6/Wpx); else if(k==="up") smooth(0);
+    else if(k==="z100") setZoom(1);
+    else if(k==="pdf"){ const pb=$("iz-doc"); if(pb){ pb.classList.toggle("closed"); try{ localStorage.setItem("pz_closed",pb.classList.contains("closed")?"1":"0"); }catch(x){} sync(); } }
     else if(k==="min"){ closePop(); $("iz-ov").classList.toggle("iz-min"); }
     else if(k==="fs") fs(); else if(k==="close") close();
     else if(k==="cut"){ copySel(); delSel(); } else if(k==="copy"){ copySel(); toast("Köçürüldü"); showCtx(); }
@@ -16297,6 +16343,7 @@ window.IZ_MATH_URL = window.IZ_MATH_URL || "";
   // ---------- sual ----------
   const textOf=q=>q&&q.textId&&(Z.texts||[]).find(x=>x.id===q.textId);
   function render(){
+    if(Z.doc){ $("iz-cnt").innerHTML=""; return; }
     const q=Z.qs[Z.i], box=$("iz-cnt");
     box.style.setProperty("--qs",Z.qs_);
     const letters=!Array.isArray(q.options)||q.options.every((o,k)=>String(o).trim()===L[k]);
@@ -16327,14 +16374,16 @@ window.IZ_MATH_URL = window.IZ_MATH_URL || "";
     ttmTeX(el); sync();
   }
 
-  async function go(n,dir){
-    if(!Z||Z.busy||n<0||n>=Z.qs.length) return;
+  async function go(n,dir,fromDoc){
+    if(Z&&Z.doc&&Z.doc.blank&&n===Z.qs.length&&!Z.busy){ Z.qs.push({type:"doc"}); toast("Yeni səhifə: "+(n+1)); }
+    if(!Z||Z.busy||n<0||n>=Z.qs.length||n===Z.i) return;
+    if(Z.doc&&!fromDoc&&Z.doc.onPage) Z.doc.onPage(n);
     clearSel(); closePop();
     Z.ink[Z.i]=Z.strokes;
     const carry=Z.keep?Z.strokes.slice():null, els=[$("iz-cnt"),base,$("iz-tex")], anim=!!els[0].animate;
     Z.busy=true; cur=null; laser=[]; lasso=null; closeMC();
     if(anim) await Promise.all(els.map(el=>el.animate([{opacity:1},{opacity:0}],{duration:110}).finished.catch(()=>{})));
-    Z.i=n; Z.show=false; Z.undo=[]; Z.redo=[]; Z.sy=0;
+    Z.i=n; Z.show=false; Z.undo=[]; Z.redo=[]; Z.sy=0; if(Z.doc&&Z.zm!==1){ Z.zm=1; Wpx=SW; Z.sx=0; showZoom(); }
     Z.strokes=carry||(Z.ink[n]||[]).slice(); if(carry) Z.ink[n]=Z.strokes;
     render(); scrollTo(0); sync(); save();
     if(anim) await Promise.all(els.map(el=>el.animate([{opacity:0,transform:`translateX(${dir*18}px)`},{opacity:1,transform:"none"}],{duration:150,easing:"cubic-bezier(.2,.8,.2,1)"}).finished.catch(()=>{})));
@@ -16345,8 +16394,8 @@ window.IZ_MATH_URL = window.IZ_MATH_URL || "";
   function size(){
     if(!base||!Z) return;
     const r=$("iz-stage").getBoundingClientRect(); if(!r.width) return;
-    dpr=Math.min(2,devicePixelRatio||1); Wpx=r.width; Hpx=r.height;
-    [base,live].forEach(c=>{ c.width=Math.round(Wpx*dpr); c.height=Math.round(Hpx*dpr); });
+    dpr=Math.min(2,devicePixelRatio||1); SW=r.width; Wpx=SW*ZK(); Hpx=r.height;
+    [base,live].forEach(c=>{ c.width=Math.round(SW*dpr); c.height=Math.round(Hpx*dpr); });
     bctx.setTransform(dpr,0,0,dpr,0,0); lctx.setTransform(dpr,0,0,dpr,0,0);
     scrollTo(Z.sy);
   }
@@ -16359,7 +16408,7 @@ window.IZ_MATH_URL = window.IZ_MATH_URL || "";
   function scrollTo(v){
     if(!Z) return;
     const m=maxSy(); Z.sy=Math.max(0,Math.min(m,v||0));
-    $("iz-cnt").style.transform=`translateY(${-Z.sy*Wpx}px)`;
+    $("iz-cnt").style.transform=`translate(${-OX()}px,${-Z.sy*Wpx}px) scale(${ZK()})`;
     const sb=$("iz-sbar"), tot=m+Hpx/Wpx, bh=Math.max(30,Hpx*(Hpx/Wpx)/tot);
     if(Z.sy>0.001||sb.classList.contains("on")){ sb.style.height=bh+"px"; sb.style.top=(Hpx-bh)*(Z.sy/m||0)+"px"; sb.classList.add("on"); clearTimeout(sbT); sbT=setTimeout(()=>sb.classList.remove("on"),900); }
     $("iz-upb").hidden=Z.sy<0.05;
@@ -16384,24 +16433,24 @@ window.IZ_MATH_URL = window.IZ_MATH_URL || "";
   }
   function dS(c,s,W,ox,oy){
     if(s.t==="tex") return;
-    if(W==null){ W=Wpx; ox=0; oy=Z.sy*Wpx; }
+    let zk=1; if(W==null){ W=Wpx; ox=OX(); oy=Z.sy*Wpx; zk=ZK(); }
     const P=s.p, n=P.length, X=k=>P[k][0]*W-ox, Y=k=>P[k][1]*W-oy;
     if(!n) return;
-    c.save(); c.lineCap=c.lineJoin="round"; c.strokeStyle=c.fillStyle=s.c; c.lineWidth=s.w;
+    c.save(); c.lineCap=c.lineJoin="round"; c.strokeStyle=c.fillStyle=s.c; const sw=s.w*zk; c.lineWidth=sw;
     if(s.h){ c.globalAlpha=.35; c.globalCompositeOperation="multiply"; }
     else if(s.k==="pencil") c.globalAlpha=.8;
-    if(s.d===1||s.d===2) c.setLineDash(s.d===2?[.1,s.w*2+4]:[s.w*3+6,s.w*2+5]);
+    if(s.d===1||s.d===2) c.setLineDash(s.d===2?[.1,sw*2+4]:[sw*3+6,sw*2+5]);
     if(s.t==="pen"){
       const dashed=s.d===1||s.d===2, taper=s.d===3;
       const varW=!dashed&&(s.v||taper||s.k==="cal"||s.k==="brush"||s.k==="pencil");
-      if(n===1){ c.beginPath(); c.arc(X(0),Y(0),s.w*pf(P[0])/2,0,6.283); c.fill(); }
+      if(n===1){ c.beginPath(); c.arc(X(0),Y(0),sw*pf(P[0])/2,0,6.283); c.fill(); }
       else if(!varW){ c.beginPath(); c.moveTo(X(0),Y(0)); for(let i=1;i<n-1;i++) c.quadraticCurveTo(X(i),Y(i),(X(i)+X(i+1))/2,(Y(i)+Y(i+1))/2); c.lineTo(X(n-1),Y(n-1)); c.stroke(); }
       else {
         let px=X(0),py=Y(0),fe=-1,fb=-1;
         const tl=Math.max(4,Math.min(14,n/4));
         for(let i=1;i<n;i++){
           const dx=X(i)-X(i-1), dy=Y(i)-Y(i-1);
-          let lw=s.w;
+          let lw=sw;
           if(s.k==="brush"){ const f=s.v?.2+2*(P[i][2]!=null?P[i][2]:.5):Math.max(.35,Math.min(1.5,1.5-Math.hypot(dx,dy)/(W>200?18:6))); fb=fb<0?f:fb*.7+f*.3; lw*=fb; }
           else if(s.v) lw*=pf(P[i]);
           if(s.k==="pencil") lw*=.9+.1*Math.sin(i*1.7);
@@ -16423,13 +16472,13 @@ window.IZ_MATH_URL = window.IZ_MATH_URL || "";
     c.restore();
   }
   function drawBase(){
-    bctx.clearRect(0,0,Wpx,Hpx);
+    bctx.clearRect(0,0,SW,Hpx);
     const t=Z.sy-.05, bt=Z.sy+Hpx/Wpx+.05;
     Z.strokes.forEach(s=>{ if(s.t==="tex"||Z.sel.has(s)) return; const b=bbox(s); if(b[3]>=t&&b[1]<=bt) dS(bctx,s); });
   }
   function syncTex(){
     const lay=$("iz-tex"); if(!lay) return;
-    lay.style.transform=`translateY(${-Z.sy*Wpx}px)`;
+    lay.style.transform=`translate(${-OX()}px,${-Z.sy*Wpx}px)`;
     const keep=new Set();
     Z.strokes.forEach(s=>{
       if(s.t!=="tex") return;
@@ -16451,27 +16500,54 @@ window.IZ_MATH_URL = window.IZ_MATH_URL || "";
   function req(b){ if(b) nb=true; if(!raf) raf=requestAnimationFrame(frame); }
   function frame(){ raf=0; if(!Z||!lctx) return; if(nb){ nb=false; drawBase(); } syncTex(); drawLive(); if(laser.length) req(); }
   function drawLive(){
-    lctx.clearRect(0,0,Wpx,Hpx);
+    lctx.clearRect(0,0,SW,Hpx);
     Z.sel.forEach(s=>{ if(s.t==="tex") return; const m=Z.xf?bake(s,Z.xf):s;
       dS(lctx,{t:m.t,p:m.p,c:"#7dd3fc",w:m.w+6}); dS(lctx,m); });
     if(cur) dS(lctx,cur);
     if(lasso&&lasso.length>1){
       const area=Z.tool==="er", oy=Z.sy*Wpx;
       lctx.save(); lctx.setLineDash([6,5]); lctx.lineWidth=1.6; lctx.strokeStyle=area?"#ef4444":"#1d6fd6"; lctx.fillStyle=area?"rgba(239,68,68,.08)":"rgba(29,111,214,.06)";
-      lctx.beginPath(); lasso.forEach((p,i)=>i?lctx.lineTo(p[0]*Wpx,p[1]*Wpx-oy):lctx.moveTo(p[0]*Wpx,p[1]*Wpx-oy)); lctx.closePath(); lctx.fill(); lctx.stroke(); lctx.restore();
+      lctx.beginPath(); lasso.forEach((p,i)=>i?lctx.lineTo(p[0]*Wpx-OX(),p[1]*Wpx-oy):lctx.moveTo(p[0]*Wpx-OX(),p[1]*Wpx-oy)); lctx.closePath(); lctx.fill(); lctx.stroke(); lctx.restore();
     }
     if(laser.length){
       const now=performance.now(), oy=Z.sy*Wpx; laser=laser.filter(p=>now-p[2]<900);
       lctx.save(); lctx.lineCap="round"; lctx.strokeStyle="#ef4444"; lctx.shadowColor="#ef4444"; lctx.shadowBlur=12; lctx.lineWidth=5;
-      for(let i=1;i<laser.length;i++){ const a=laser[i-1],b=laser[i]; if(b[3]) continue; lctx.globalAlpha=Math.max(0,1-(now-b[2])/900); lctx.beginPath(); lctx.moveTo(a[0]*Wpx,a[1]*Wpx-oy); lctx.lineTo(b[0]*Wpx,b[1]*Wpx-oy); lctx.stroke(); }
-      const l=laser[laser.length-1]; if(l&&now-l[2]<300){ lctx.globalAlpha=1; lctx.fillStyle="#ef4444"; lctx.beginPath(); lctx.arc(l[0]*Wpx,l[1]*Wpx-oy,6,0,6.283); lctx.fill(); }
+      for(let i=1;i<laser.length;i++){ const a=laser[i-1],b=laser[i]; if(b[3]) continue; lctx.globalAlpha=Math.max(0,1-(now-b[2])/900); lctx.beginPath(); lctx.moveTo(a[0]*Wpx-OX(),a[1]*Wpx-oy); lctx.lineTo(b[0]*Wpx-OX(),b[1]*Wpx-oy); lctx.stroke(); }
+      const l=laser[laser.length-1]; if(l&&now-l[2]<300){ lctx.globalAlpha=1; lctx.fillStyle="#ef4444"; lctx.beginPath(); lctx.arc(l[0]*Wpx-OX(),l[1]*Wpx-oy,6,0,6.283); lctx.fill(); }
       lctx.restore();
     }
-    if(hover&&Z.tool==="er"&&Z.erMode==="line"){ lctx.save(); lctx.strokeStyle="rgba(71,85,105,.75)"; lctx.fillStyle="rgba(255,255,255,.5)"; lctx.lineWidth=1.5; lctx.beginPath(); lctx.arc(hover[0]*Wpx,hover[1]*Wpx-Z.sy*Wpx,ERR[Z.wi.er],0,6.283); lctx.fill(); lctx.stroke(); lctx.restore(); }
+    if(hover&&Z.tool==="er"&&Z.erMode==="line"){ lctx.save(); lctx.strokeStyle="rgba(71,85,105,.75)"; lctx.fillStyle="rgba(255,255,255,.5)"; lctx.lineWidth=1.5; lctx.beginPath(); lctx.arc(hover[0]*Wpx-OX(),hover[1]*Wpx-Z.sy*Wpx,ERR[Z.wi.er],0,6.283); lctx.fill(); lctx.stroke(); lctx.restore(); }
   }
-  const P=e=>{ const r=live.getBoundingClientRect(); return [(e.clientX-r.left)/Wpx,(e.clientY-r.top)/Wpx+Z.sy]; };
+  const P=e=>{ const r=live.getBoundingClientRect(); return [(e.clientX-r.left)/Wpx+Z.sx,(e.clientY-r.top)/Wpx+Z.sy]; };
   function mkPt(p,e,v){ const o=[+p[0].toFixed(4),+p[1].toFixed(4)]; if(v){ prS=prS*.6+(e.pressure||.5)*.4; o.push(+prS.toFixed(2)); } return o; }
-  const avgY=()=>{ let s=0; touches.forEach(y=>s+=y); return s/Math.max(1,touches.size); };
+  let penDown=false;
+  // iki barmaq: sürüşdürmə + yaxınlaşdırma (Samsung Notes kimi)
+  function tInfo(){ const a=[...touches.values()].slice(0,2), c=[(a[0][0]+(a[1]||a[0])[0])/2,(a[0][1]+(a[1]||a[0])[1])/2]; return {c,d:a[1]?Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1]):0}; }
+  function startPan(){ const t=tInfo(), r=live.getBoundingClientRect(); pan={c:t.c,d:t.d,zm:Z.zm,wx:(t.c[0]-r.left)/Wpx+Z.sx,wy:(t.c[1]-r.top)/Wpx+Z.sy}; }
+  function movePan(){
+    const t=tInfo(), r=live.getBoundingClientRect();
+    if(pan.d>20&&t.d>20) Z.zm=Math.max(.5,Math.min(5,pan.zm*t.d/pan.d));
+    Wpx=SW*Z.zm; Z.sx=pan.wx-(t.c[0]-r.left)/Wpx; clampX(); showZoom();
+    scrollTo(pan.wy-(t.c[1]-r.top)/Wpx);
+  }
+  function clampX(){ Z.sx=Z.zm>=1?Math.max(0,Math.min(1-1/Z.zm,Z.sx)):-(1/Z.zm-1)/2; }
+  function setZoom(z,cx,cy){
+    const r=live.getBoundingClientRect(); if(cx==null){ cx=r.left+r.width/2; cy=r.top+r.height/2; }
+    const wx=(cx-r.left)/Wpx+Z.sx, wy=(cy-r.top)/Wpx+Z.sy;
+    Z.zm=Math.max(.5,Math.min(5,z)); Wpx=SW*Z.zm; Z.sx=wx-(cx-r.left)/Wpx; clampX(); showZoom(); scrollTo(wy-(cy-r.top)/Wpx);
+  }
+  function showZoom(){ const b=$("iz-zm"); if(!b) return; const v=Math.round(Z.zm*100); b.hidden=Math.abs(v-100)<3; b.textContent=v+"%"; }
+  // studiya açıq olanda saytın özü yaxınlaşmasın (iki barmaq yalnız lövhəni/PDF-i böyütsün)
+  let vpOld=null;
+  const noGest=e=>e.preventDefault();
+  window.izLockZoom=on=>{
+    const m=document.querySelector('meta[name="viewport"]'); if(!m) return;
+    if(on){ if(vpOld===null) vpOld=m.getAttribute("content")||""; m.setAttribute("content","width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"); document.addEventListener("gesturestart",noGest,{passive:false}); }
+    else if(vpOld!==null&&!document.querySelector("#iz-ov")){ m.setAttribute("content",vpOld); vpOld=null; document.removeEventListener("gesturestart",noGest); }
+  };
+  window.izCurTool=()=>Z?{t:Z.tool,c:Z.col[ik()],w:Z.tool==="mk"?pxOf("mk",Z.wv.mk):pxOf(Z.pk,Z.wv.pen),er:ERR[Z.wi.er],d:Z.dash}:null;
+  window.izPalm=()=>{ try{ return localStorage.getItem("iz_palm")!=="0"; }catch(e){ return true; } };
+  window.izBig=e=>(e.width||0)>38||(e.height||0)>38;
   function armHold(e){ hold=P(e); clearTimeout(holdT); if(Z.snap) holdT=setTimeout(trySnap,700); }
   function abortGesture(){
     if(erBase){ Z.strokes=erBase; erBase=null; }
@@ -16480,15 +16556,16 @@ window.IZ_MATH_URL = window.IZ_MATH_URL || "";
 
   function bindPen(){
     live.addEventListener("pointerdown",e=>{
-      if(e.pointerType==="pen") penSeen=true;
+      if(e.pointerType==="pen"){ penSeen=true; penDown=true; pan=null; touches.clear(); }
       if(e.pointerType==="touch"){
-        // ovuc qoruması: qələm görülübsə, yazı gedirsə və ya toxunuş genişdirsə — barmaq/ovuc nəzərə alınmır
-        if(window.izPalm()&&(penSeen||pid!==null||window.izBig(e))){ e.preventDefault(); return; }
-        touches.set(e.pointerId,e.clientY);
-        if(!window.izPalm()&&(penSeen||touches.size>=2)){
+        // qələm yazırkən heç bir toxunuş qəbul olunmur (ovuc ekrana dəysə də)
+        if(penDown||(pid!==null&&Z.ptype==="pen")||(izPalm()&&izBig(e))){ e.preventDefault(); return; }
+        touches.set(e.pointerId,[e.clientX,e.clientY]);
+        if(touches.size>=2||(penSeen&&!izPalm())){
           if(pid!==null&&Z.ptype==="touch") abortGesture();
-          pan={y:avgY(),sy:Z.sy}; try{ live.setPointerCapture(e.pointerId); }catch(x){} req(); return;
+          startPan(); try{ live.setPointerCapture(e.pointerId); }catch(x){} req(); return;
         }
+        if(penSeen){ e.preventDefault(); return; } // tək barmaq yazmır — qələm var
       }
       if(pid!==null) return;
       e.preventDefault(); pid=e.pointerId; Z.ptype=e.pointerType; try{ live.setPointerCapture(pid); }catch(x){}
@@ -16504,7 +16581,7 @@ window.IZ_MATH_URL = window.IZ_MATH_URL || "";
       sm=p; snapped=false; armHold(e); req();
     });
     live.addEventListener("pointermove",e=>{
-      if(e.pointerType==="touch"&&touches.has(e.pointerId)){ touches.set(e.pointerId,e.clientY); if(pan){ scrollTo(pan.sy-(avgY()-pan.y)/Wpx); return; } }
+      if(e.pointerType==="touch"&&touches.has(e.pointerId)){ touches.set(e.pointerId,[e.clientX,e.clientY]); if(pan){ movePan(); return; } }
       if(e.pointerId!==pid){ if(Z.tool==="er"&&pid===null&&e.pointerType!=="touch"){ hover=P(e); req(); } return; }
       const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];
       if(lasso){ evs.forEach(x=>{ const q=P(x), l=lasso[lasso.length-1]; if(D(q,l)*Wpx>2) lasso.push(q); }); req(); return; }
@@ -16520,7 +16597,8 @@ window.IZ_MATH_URL = window.IZ_MATH_URL || "";
       req();
     });
     const up=e=>{
-      if(e.pointerType==="touch"&&touches.has(e.pointerId)){ touches.delete(e.pointerId); if(pan){ pan=touches.size?{y:avgY(),sy:Z.sy}:null; return; } }
+      if(e.pointerType==="pen") penDown=false;
+      if(e.pointerType==="touch"&&touches.has(e.pointerId)){ touches.delete(e.pointerId); if(pan){ if(touches.size) startPan(); else pan=null; return; } }
       if(e.pointerId!==pid) return; pid=null; clearTimeout(holdT);
       if(lasso){ const Lp=lasso; lasso=null; if(Z.tool==="sel") finishLasso(Lp,P(e)); else finishArea(Lp); req(); return; }
       if(erBase){ if(erBase!==Z.strokes){ Z.undo.push(erBase); Z.redo=[]; save(); sync(); } erBase=null; if(e.pointerType==="touch") hover=null; req(); return; }
@@ -16629,15 +16707,15 @@ window.IZ_MATH_URL = window.IZ_MATH_URL || "";
     const b=$("iz-selbox"); if(!b) return;
     if(!Z.sel.size){ b.hidden=true; return; }
     const bb=selBB(); b.hidden=false; b.style.transform="";
-    b.style.left=bb[0]*Wpx-PAD+"px"; b.style.top=(bb[1]-Z.sy)*Wpx-PAD+"px";
+    b.style.left=bb[0]*Wpx-OX()-PAD+"px"; b.style.top=(bb[1]-Z.sy)*Wpx-PAD+"px";
     b.style.width=(bb[2]-bb[0])*Wpx+2*PAD+"px"; b.style.height=(bb[3]-bb[1])*Wpx+2*PAD+"px";
   }
   function hideCtx(){ const c=$("iz-ctx"); if(c) c.remove(); }
   function posCtx(m){
     const st=$("iz-stage"), W=st.clientWidth, H=st.clientHeight, mw=m.offsetWidth, mh=m.offsetHeight;
     let x,y;
-    if(m.dataset.at){ const a=JSON.parse(m.dataset.at); x=a[0]*Wpx-mw/2; y=(a[1]-Z.sy)*Wpx-mh-12; }
-    else { const bb=selBB(), top=(bb[1]-Z.sy)*Wpx-PAD, bot=(bb[3]-Z.sy)*Wpx+PAD; x=(bb[0]+bb[2])/2*Wpx-mw/2; y=top-mh-48; if(y<6) y=bot+14; if(y>H-mh-6) y=Math.max(6,Math.min(H-mh-6,top+8)); }
+    if(m.dataset.at){ const a=JSON.parse(m.dataset.at); x=a[0]*Wpx-OX()-mw/2; y=(a[1]-Z.sy)*Wpx-mh-12; }
+    else { const bb=selBB(), top=(bb[1]-Z.sy)*Wpx-PAD, bot=(bb[3]-Z.sy)*Wpx+PAD; x=(bb[0]+bb[2])/2*Wpx-OX()-mw/2; y=top-mh-48; if(y<6) y=bot+14; if(y>H-mh-6) y=Math.max(6,Math.min(H-mh-6,top+8)); }
     m.style.left=Math.max(6,Math.min(W-mw-6,x))+"px"; m.style.top=Math.max(6,Math.min(H-mh-6,y))+"px";
   }
   function showCtx(){
@@ -16703,7 +16781,7 @@ window.IZ_MATH_URL = window.IZ_MATH_URL || "";
         const f=q=>[A[0]+(q[0]-A[0])*kx,A[1]+(q[1]-A[1])*ky];
         Z.xf={f,k:g.h.length===1?(kx!==1?kx:ky):kx,kw:Math.sqrt(kx*ky),a:0};
         const a=f([g.bb[0],g.bb[1]]), b=f([g.bb[2],g.bb[3]]);
-        sb.style.left=Math.min(a[0],b[0])*Wpx-PAD+"px"; sb.style.top=(Math.min(a[1],b[1])-Z.sy)*Wpx-PAD+"px"; sb.style.width=Math.abs(b[0]-a[0])*Wpx+2*PAD+"px"; sb.style.height=Math.abs(b[1]-a[1])*Wpx+2*PAD+"px";
+        sb.style.left=Math.min(a[0],b[0])*Wpx-OX()-PAD+"px"; sb.style.top=(Math.min(a[1],b[1])-Z.sy)*Wpx-PAD+"px"; sb.style.width=Math.abs(b[0]-a[0])*Wpx+2*PAD+"px"; sb.style.height=Math.abs(b[1]-a[1])*Wpx+2*PAD+"px";
       }
       req();
     });
@@ -16745,7 +16823,7 @@ window.IZ_MATH_URL = window.IZ_MATH_URL || "";
     const edit=()=>{ ed.hidden=false; inp.value=val; setTimeout(()=>inp.focus(),30); place(); };
     const place=()=>{
       const W=$("iz-stage").clientWidth, H=$("iz-stage").clientHeight, mw=m.offsetWidth, mh=m.offsetHeight, bb=o.bb;
-      let x=(bb[0]+bb[2])/2*Wpx-mw/2, y=(bb[3]-Z.sy)*Wpx+PAD+14; if(y+mh>H-6) y=(bb[1]-Z.sy)*Wpx-PAD-mh-14;
+      let x=(bb[0]+bb[2])/2*Wpx-OX()-mw/2, y=(bb[3]-Z.sy)*Wpx+PAD+14; if(y+mh>H-6) y=(bb[1]-Z.sy)*Wpx-PAD-mh-14;
       m.style.left=Math.max(8,Math.min(W-mw-8,x))+"px"; m.style.top=Math.max(8,Math.min(H-mh-8,y))+"px";
     };
     inp.addEventListener("input",()=>{ val=inp.value.trim(); show(); });
@@ -16791,6 +16869,7 @@ window.IZ_MATH_URL = window.IZ_MATH_URL || "";
   let svT=0;
   function save(now){
     if(!Z) return; Z.ink[Z.i]=Z.strokes;
+    if(Z.doc){ const d=Z.doc, ink=Z.ink, i=Z.i, n=Z.qs.length; clearTimeout(svT); const w=()=>{ try{ d.onSave&&d.onSave(ink,i,n); }catch(e){ console.error(e); } }; if(now) w(); else svT=setTimeout(w,700); return; }
     const id=Z.ex.id, ink=Z.ink; clearTimeout(svT);
     const w=()=>{ try{ localStorage.setItem("iz_"+id,JSON.stringify(ink)); }catch(e){} };
     if(now) w(); else svT=setTimeout(w,800);
@@ -16838,7 +16917,7 @@ window.IZ_MATH_URL = window.IZ_MATH_URL || "";
     cur=o;
     try{ navigator.vibrate&&navigator.vibrate(12); }catch(e){}
     const el=document.createElement("div"); el.className="iz-snap"; el.textContent=r.lbl;
-    el.style.left=last[0]*Wpx+"px"; el.style.top=(last[1]-Z.sy)*Wpx+"px";
+    el.style.left=last[0]*Wpx-OX()+"px"; el.style.top=(last[1]-Z.sy)*Wpx+"px";
     $("iz-stage").appendChild(el); setTimeout(()=>el.remove(),1000);
     req();
   }
@@ -16871,9 +16950,10 @@ window.IZ_MATH_URL = window.IZ_MATH_URL || "";
     save(true); clearInterval(Z.tmr); clearTimeout(holdT); if(Z.ro) Z.ro.disconnect(); removeEventListener("keydown",key);
     if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
     closePop();
-    const ov=$("iz-ov"); if(ov) ov.remove(); document.body.classList.remove("iz-open");
+    const ov=$("iz-ov"); if(ov) ov.remove(); document.body.classList.remove("iz-open"); izLockZoom(false);
     try{ if(Z.snd===null) localStorage.removeItem("ttm_sound"); else localStorage.setItem("ttm_sound",Z.snd); }catch(e){}
-    Z=null; base=live=bctx=lctx=null; cur=null; laser=[]; pid=null; pan=null; lasso=null; drag=null; erBase=null; touches.clear();
+    const dc=Z.doc;
+    Z=null; if(dc&&dc.onClose) setTimeout(()=>dc.onClose(),0); base=live=bctx=lctx=null; cur=null; laser=[]; pid=null; pan=null; lasso=null; drag=null; erBase=null; touches.clear(); penDown=false;
   }
   addEventListener("pagehide",()=>{ if(Z) close(); });
 })();
@@ -17057,7 +17137,8 @@ function texPlain(s){
 })();
 </script>
 
-<!-- ===== İzah Studiyası: hub (Dərs / Sınaq / Test izahları) + PDF + lövhə ===== -->
+
+<!-- ===== İzah Studiyası: bölmələr (Dərs / Sınaq / Test) + PDF paneli (eyni lövhə ilə) ===== -->
 <style id="pz-css">
 .ih-head{display:flex;align-items:center;gap:14px;margin:4px 2px 18px}
 .ih-play{width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#1d6fd6,#0B3C5D);display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 10px 22px rgba(11,60,93,.3)}
@@ -17077,111 +17158,121 @@ function texPlain(s){
 .ih-art svg{width:150px;height:120px;filter:drop-shadow(0 10px 14px rgba(0,0,0,.22))}
 .ih-card b{display:block;font-size:21px;font-weight:900;position:relative}
 .ih-card span{display:block;font-size:13px;opacity:.9;margin-top:4px;padding-right:56px;position:relative}
-.ih-go{position:absolute;right:16px;bottom:18px;width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.9);color:#0B3C5D;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900}
+.ih-go{position:absolute;right:16px;bottom:18px;width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.9);color:#0B3C5D;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;font-style:normal}
 .ih-palm{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid rgba(11,60,93,.08);border-radius:18px;padding:14px;margin-top:16px;box-shadow:var(--shadow-sm)}
 .ih-palm>div{flex:1;min-width:0}.ih-palm b{display:block;font-size:14.5px;color:#0B3C5D}.ih-palm small{font-size:12px;color:var(--color-text-muted);line-height:1.45;display:block;margin-top:2px}
 .ih-back{display:flex;align-items:center;gap:10px;margin-bottom:14px}
 .ih-back h3{margin:0;font-size:19px;color:#0B3C5D}
 .pzl-acts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.pzl-acts.one{grid-template-columns:1fr}
 .pzl-acts label,.pzl-acts button{display:flex;align-items:center;justify-content:center;gap:8px;padding:15px 10px;border-radius:16px;font-weight:800;font-size:14.5px;cursor:pointer;font-family:inherit}
 .pzl-add{background:linear-gradient(135deg,#1d6fd6,#0B3C5D);color:#fff;box-shadow:0 10px 22px rgba(11,60,93,.25)}
 .pzl-add input{display:none}
 .pzl-blank{background:#fff;color:#0B3C5D;border:1.5px solid var(--color-gray)}
-.pzl-acts.one{grid-template-columns:1fr}
-.pzl-item{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid rgba(11,60,93,.08);border-radius:18px;padding:10px;margin-bottom:10px;box-shadow:var(--shadow-sm);cursor:pointer;animation:sqIn .4s ease both}
-.pzl-item:active{transform:scale(.99)}
-.pzl-cov{width:58px;height:76px;border-radius:10px;background:#f1f5f9 center/cover no-repeat;flex:none;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:center;font-size:22px}
-.pzl-item b{display:block;font-size:14.5px;color:#14212E;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pzl-item small{font-size:12px;color:var(--color-text-muted)}
-.pzl-del{width:40px;height:40px;border-radius:12px;background:#fef2f2;color:#dc2626;flex:none;font-size:16px}
-/* ---- studiya ---- */
-#pz-ov{position:fixed;inset:0;z-index:8000;display:flex;flex-direction:column;background:#eef3f8;font-family:var(--font-main);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
-#pz-ov *{box-sizing:border-box}
-#pz-ov button{font-family:inherit;border:0;cursor:pointer;background:none;color:inherit}
-#pz-ov svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.pz-top{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#fff;box-shadow:0 2px 12px rgba(11,60,93,.07);z-index:5;flex:none}
-.pz-top h4{flex:1;min-width:0;margin:0;font-size:17px;color:#0B3C5D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pz-ib{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#334155;flex:none}
-.pz-ib:hover:not(:disabled){background:#f1f5f9}.pz-ib:disabled{opacity:.3}
-.pz-ib.on{background:#e3f0fd;color:#1d6fd6}
-.pz-grp{display:flex;align-items:center;background:#f4f7fb;border-radius:14px;padding:2px}
-.pz-save{display:flex;align-items:center;gap:7px;padding:10px 16px!important;border-radius:13px;background:#1d6fd6!important;color:#fff!important;font-weight:800;font-size:14px}
-.pz-body{flex:1;min-height:0;display:flex;gap:10px;padding:10px;position:relative}
-.pz-left{display:flex;flex-direction:column;background:#fff;border-radius:18px;box-shadow:0 4px 18px rgba(11,60,93,.08);overflow:hidden;min-width:0;flex:none;transition:width .25s ease}
-.pz-left.closed{width:0!important;margin-right:-10px}
-.pz-lh{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid #eef2f6;flex:none;overflow-x:auto;scrollbar-width:none}
-.pz-lh::-webkit-scrollbar{display:none}
-.pz-fn{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
-.pz-fn i{font-style:normal;background:#ef4444;color:#fff;font-size:10px;font-weight:900;padding:4px 5px;border-radius:6px;flex:none}
-.pz-fn b{font-size:13.5px;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pz-pg{display:flex;align-items:center;gap:4px;font-size:13.5px;font-weight:700;color:#0f172a;padding:0 6px;white-space:nowrap}
-.pz-pg input{width:42px;text-align:center;padding:6px 2px;border:1px solid #e2e8f0;border-radius:9px;font:700 13.5px var(--font-main);-webkit-user-select:text;user-select:text}
-.pz-zm{min-width:48px;text-align:center;font-size:13px;font-weight:700}
-.pz-lb{flex:1;min-height:0;display:flex}
-.pz-th{width:96px;flex:none;overflow-y:auto;background:#f1f5f9;padding:8px 8px 20px;border-right:1px solid #e5eaf0;touch-action:pan-y}
-.pz-th.off{display:none}
-.pz-t{display:block;width:100%;margin-bottom:10px;border-radius:8px;padding:3px!important;background:#fff!important;box-shadow:0 1px 4px rgba(0,0,0,.08);text-align:center}
-.pz-t canvas{width:100%;display:block;min-height:90px;background:#fff}
-.pz-t small{display:block;font-size:11px;font-weight:700;color:#64748b;padding:3px 0 1px}
-.pz-t.on{box-shadow:0 0 0 3px #1d6fd6}.pz-t.on small{color:#1d6fd6}
-.pz-pv{flex:1;min-width:0;overflow:auto;background:#e2e8f0;padding:12px;touch-action:pan-x pan-y;-webkit-overflow-scrolling:touch}
-.pz-pv canvas{display:block;margin:0 auto;background:#fff;box-shadow:0 4px 16px rgba(0,0,0,.12)}
-.pz-split{width:10px;margin:0 -10px 0 0;flex:none;cursor:col-resize;display:flex;align-items:center;justify-content:center;touch-action:none;z-index:2}
-.pz-split i{width:4px;height:44px;border-radius:4px;background:#cbd5e1}
-.pz-left.closed+.pz-split{display:none}
-.pz-right{flex:1;min-width:0;display:flex;flex-direction:column;background:#fff;border-radius:18px;box-shadow:0 4px 18px rgba(11,60,93,.08);overflow:hidden}
-.pz-tools{display:flex;align-items:center;gap:2px;padding:6px 8px;border-bottom:1px solid #eef2f6;overflow-x:auto;scrollbar-width:none;flex:none}
-.pz-tools::-webkit-scrollbar{display:none}
-.pz-sep{width:1px;height:24px;background:#e3e9f0;margin:0 5px;flex:none}
-.pz-c{width:26px;height:26px;border-radius:50%;margin:0 3px;flex:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);transition:transform .14s}
-.pz-c.on{box-shadow:0 0 0 2px #fff,0 0 0 4px #1d6fd6;transform:scale(1.06)}
-.pz-cp{position:relative;width:26px;height:26px;border-radius:50%;margin:0 3px;flex:none;background:conic-gradient(red,#ff0,lime,cyan,blue,#f0f,red);overflow:hidden}
-.pz-cp input{position:absolute;inset:-6px;opacity:0;cursor:pointer}
-.pz-w{flex:none;padding:7px 8px;border:1px solid #e2e8f0;border-radius:10px;font:600 13px var(--font-main);background:#fff;color:#0f172a}
-.pz-pgl{flex:none;font-size:12px;font-weight:800;color:#1d6fd6;background:#e3f0fd;border-radius:999px;padding:5px 10px;margin-left:auto;white-space:nowrap}
-.pz-stage{position:relative;flex:1;min-height:0;overflow:hidden;touch-action:none;background:#fff}
-.pz-stage canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
-.pz-stage .pz-live{cursor:crosshair}
-.pz-wm{position:absolute;right:16px;bottom:12px;font-weight:900;font-size:18px;color:#0B3C5D;opacity:.08;pointer-events:none}
-.pz-sc{position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;gap:8px;z-index:3}
-.pz-sc button{width:42px;height:42px;border-radius:50%!important;background:rgba(255,255,255,.95)!important;box-shadow:0 3px 12px rgba(11,60,93,.18);color:#0B3C5D!important;display:flex;align-items:center;justify-content:center}
-.pz-sc button[hidden]{display:none}
-.pz-open{position:absolute;left:0;top:50%;transform:translateY(-50%);z-index:3;padding:14px 8px!important;border-radius:0 14px 14px 0!important;background:#0B3C5D!important;color:#fff!important;font-weight:800;font-size:12px;writing-mode:vertical-rl;display:none}
-.pz-left.closed~.pz-right .pz-open{display:block}
-.pz-dock{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:6;display:none;gap:6px;background:rgba(11,60,93,.85);border-radius:999px;padding:5px;opacity:.5;transition:opacity .2s}
-.pz-dock:hover{opacity:1}
-.pz-dock button{width:40px;height:40px;border-radius:50%!important;color:#fff!important;display:flex;align-items:center;justify-content:center}
-#pz-ov.rec .pz-top{display:none}
-#pz-ov.rec .pz-dock{display:flex}
-#pz-ov.rec .pz-body{padding:6px}
-@media(max-width:820px){.pz-body{flex-direction:column}.pz-left{width:100%!important;height:42%}.pz-left.closed{height:0;margin:0 0 -10px}.pz-split{display:none}.pz-th{display:none}.pz-top h4{font-size:15px}.pz-hm{display:none}}
+.pzl-fold{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 12px;scrollbar-width:none}
+.pzl-fold::-webkit-scrollbar{display:none}
+.pzl-fold button{flex:none;display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:999px;background:#fff;border:1.5px solid #e2e8f0;font:700 13.5px var(--font-main);color:#334155;white-space:nowrap}
+.pzl-fold button.on{background:#0B3C5D;border-color:#0B3C5D;color:#fff}
+.pzl-fold button small{font-size:11.5px;opacity:.7}
+.pzl-fold .nf{border-style:dashed;color:#1d6fd6}
+.pzl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.pzl-item{position:relative;background:#fff;border:1px solid rgba(11,60,93,.08);border-radius:18px;padding:8px;box-shadow:var(--shadow-sm);cursor:pointer;animation:sqIn .4s ease both;text-align:left;font:inherit;color:inherit}
+.pzl-item:active{transform:scale(.98)}
+.pzl-cov{aspect-ratio:3/4;border-radius:12px;background:#f1f5f9 center top/cover no-repeat;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:center;font-size:30px}
+.pzl-item b{display:block;font-size:13.5px;color:#14212E;margin:8px 2px 0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.3}
+.pzl-item small{display:block;font-size:11.5px;color:var(--color-text-muted);margin:3px 2px 0}
+.pzl-more{position:absolute;right:12px;top:12px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.95);box-shadow:0 2px 8px rgba(0,0,0,.15);font-size:18px;font-weight:900;color:#0B3C5D;display:flex;align-items:center;justify-content:center}
+.pz-mb{position:fixed;inset:0;z-index:9500;background:rgba(15,23,42,.45);display:flex;align-items:flex-end;justify-content:center;animation:pzF .15s ease}
+@media(min-width:600px){.pz-mb{align-items:center}}
+@keyframes pzF{from{opacity:0}}
+.pz-md{background:#fff;width:min(420px,100%);border-radius:22px 22px 0 0;padding:16px;max-height:80vh;overflow:auto;font-family:var(--font-main)}
+@media(min-width:600px){.pz-md{border-radius:22px}}
+.pz-md h4{margin:0 0 12px;font-size:16px;color:#0B3C5D}
+.pz-md input[type=text]{width:100%;padding:12px;border:1.5px solid #e2e8f0;border-radius:12px;font:600 15px var(--font-main);box-sizing:border-box}
+.pz-md label.ck{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:14px;color:#334155}
+.pz-md .row{display:flex;gap:8px;margin-top:14px}
+.pz-md .row button{flex:1;padding:12px;border-radius:12px;font:800 14.5px var(--font-main);background:#f1f5f9;color:#334155}
+.pz-md .row .pri{background:#1d6fd6;color:#fff}.pz-md .row .red{background:#dc2626;color:#fff}
+.pz-md .mi{display:flex;align-items:center;gap:10px;width:100%;padding:13px 12px;border-radius:12px;font:700 14.5px var(--font-main);color:#0f172a;background:none;text-align:left}
+.pz-md .mi:hover,.pz-md .mi.on{background:#eef4fb}
+.pz-md .mi.red{color:#dc2626}
+/* ---- PDF paneli (studiyanın solunda) ---- */
+.pd-h{display:flex;align-items:center;gap:4px;padding:6px 8px;border-bottom:1px solid #eef2f6;flex:none;overflow-x:auto;scrollbar-width:none;touch-action:pan-x}
+.pd-h::-webkit-scrollbar{display:none}
+#iz-ov .pd-b{display:flex;flex:1;min-height:0;position:relative}
+#iz-ov .pd-ib{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;color:#334155;flex:none;background:none}
+#iz-ov .pd-ib:hover{background:#f1f5f9}#iz-ov .pd-ib.on{background:#e3f0fd;color:#1d6fd6}
+#iz-ov .pd-ib:disabled{opacity:.3}
+.pd-fn{display:flex;align-items:center;gap:6px;min-width:60px;flex:1;overflow:hidden}
+.pd-fn i{font-style:normal;background:#ef4444;color:#fff;font-size:10px;font-weight:900;padding:4px 5px;border-radius:6px;flex:none}
+.pd-fn b{font-size:13px;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pd-pg{display:flex;align-items:center;gap:4px;font-size:13px;font-weight:700;color:#0f172a;white-space:nowrap;flex:none}
+#iz-ov .pd-pg input{width:46px;text-align:center;padding:6px 2px;border:1px solid #e2e8f0;border-radius:9px;font:700 13px var(--font-main);-webkit-user-select:text;user-select:text}
+.pd-zg{display:flex;align-items:center;background:#f4f7fb;border-radius:12px;flex:none}
+.pd-zg span{min-width:44px;text-align:center;font-size:12.5px;font-weight:800}
+#iz-ov .pd-sc{flex:1;min-width:0;overflow:auto;background:#dfe6ee;touch-action:pan-x pan-y;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;position:relative}
+.pd-in{padding:12px;width:max-content;min-width:100%;box-sizing:border-box}
+.pd-p{position:relative;margin:0 auto 10px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.pd-p canvas{position:absolute;inset:0;width:100%;height:100%}
+.pd-p .pd-a{z-index:2}
+.pd-p.cur{box-shadow:0 0 0 3px rgba(29,111,214,.55),0 2px 10px rgba(0,0,0,.12)}
+.pd-p em{position:absolute;left:50%;top:40%;transform:translateX(-50%);font-style:normal;color:#94a3b8;font-weight:800;font-size:14px}
+.pd-badge{position:absolute;right:12px;bottom:12px;z-index:3;background:rgba(15,23,42,.72);color:#fff;font:800 12.5px var(--font-main);padding:6px 10px;border-radius:999px;pointer-events:none;opacity:0;transition:opacity .25s}
+.pd-badge.on{opacity:1}
+#iz-ov .pd-toc{width:240px;flex:none;background:#f8fafc;border-right:1px solid #e5eaf0;display:flex;flex-direction:column;min-height:0;touch-action:pan-y}
+.pd-toc[hidden]{display:none!important}
+@media(max-width:1100px){#iz-ov .pd-toc{position:absolute;left:0;top:0;bottom:0;z-index:6;width:min(280px,88%);box-shadow:10px 0 30px rgba(11,60,93,.18)}}
+.pd-th{display:flex;align-items:center;gap:6px;padding:8px 8px 6px}
+#iz-ov .pd-th input{flex:1;min-width:0;padding:9px 10px;border:1px solid #e2e8f0;border-radius:10px;font:600 13px var(--font-main);-webkit-user-select:text;user-select:text}
+.pd-tl{flex:1;overflow-y:auto;padding:2px 6px 10px;overscroll-behavior:contain}
+#iz-ov .pd-ti{display:flex;align-items:center;gap:6px;width:100%;text-align:left;padding:9px 8px;border-radius:10px;background:none;font:700 13.5px var(--font-main);color:#0f172a;line-height:1.3}
+#iz-ov .pd-ti.l1{padding-left:22px;font-weight:600;font-size:13px;color:#334155}
+#iz-ov .pd-ti.l2{padding-left:36px;font-weight:500;font-size:12.5px;color:#475569}
+#iz-ov .pd-ti span{flex:1;min-width:0}
+#iz-ov .pd-ti small{font-size:11px;color:#94a3b8;font-weight:700;flex:none}
+#iz-ov .pd-ti:hover{background:#eef4fb}
+#iz-ov .pd-ti.on{background:#1d6fd6;color:#fff}#iz-ov .pd-ti.on small{color:#dbeafe}
+#iz-ov .pd-ti i{font-style:normal;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#94a3b8;flex:none;font-weight:900}
+#iz-ov .pd-ti.on i{color:#fff}
+.pd-te{padding:18px 10px;text-align:center;font-size:12.5px;color:#64748b;line-height:1.5}
+#iz-ov .pd-ta{margin:6px 8px 10px;padding:11px;border-radius:12px;background:#1d6fd6;color:#fff;font:800 13.5px var(--font-main)}
 </style>
 <script>
 (function(){
   const $=id=>document.getElementById(id);
   const SVG=d=>`<svg viewBox="0 0 24 24"><path d="${d}"/></svg>`;
-  const I={back:"M15 18l-6-6 6-6",pv:"M15 18l-6-6 6-6",nx:"M9 6l6 6-6 6",un:"M9 14L4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3",re:"M15 14l5-5-5-5M20 9H9a5 5 0 0 0 0 10h3",
-    fs:"M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5",save:"M5 3h11l3 3v15H5zM8 3v5h7M8 21v-7h8v7",pen:"M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z",hl:"M9 14l-5 5v1h5l4-4M10 13l7-7 3 3-7 7z",
-    er:"M7 21h11M4 15l9-9 6 6-9 9H7z",line:"M5 19L19 5",arr:"M5 19L19 5M10 5h9v9",rect:"M4 6h16v12H4z",circ:"M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16z",tr:"M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3",
-    fit:"M4 4h16v16H4zM9 9l-3 3 3 3M15 9l3 3-3 3",thumb:"M4 4h6v7H4zM4 14h6v6H4zM14 4h6v16h-6z",pdf:"M3 4h7v16H3zM14 4h7v16h-7z",down:"M12 5v14M6 13l6 6 6-6",up:"M12 19V5M6 11l6-6 6 6",x:"M6 6l12 12M18 6L6 18",plus:"M12 5v14M5 12h14",minus:"M5 12h14"};
+  const I={toc:"M4 6h16M4 12h10M4 18h13",pv:"M15 18l-6-6 6-6",nx:"M9 6l6 6-6 6",fit:"M4 4h16v16H4zM9 9l-3 3 3 3M15 9l3 3-3 3",pen:"M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z",
+    un:"M9 14L4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3",plus:"M12 5v14M5 12h14",minus:"M5 12h14",x:"M6 6l12 12M18 6L6 18",dots:"M12 5h.01M12 12h.01M12 19h.01"};
   const LS={g(k,d){try{const v=localStorage.getItem(k);return v===null?d:v;}catch(e){return d;}},s(k,v){try{localStorage.setItem(k,v);}catch(e){}}};
+  // Hazır mündəricatlar (kitab PDF-ləri üçün) — açar: PDF barmaq izi və ya "ad#səhifə sayı". Siyahı: [{t:"Başlıq",p:səhifə,lv:0|1|2}]
+  window.PZ_BOOKS=window.PZ_BOOKS||{};
 
-  // ---- ovuc qoruması (həm köhnə studiya, həm PDF lövhəsi üçün) ----
-  window.izPalm=()=>LS.g("iz_palm","1")!=="0";
-  window.izBig=e=>(e.width||0)>38||(e.height||0)>38;
-  document.addEventListener("touchmove",e=>{ if(e.target.closest&&e.target.closest("#iz-ov .iz-stage,#pz-stage")) e.preventDefault(); },{passive:false});
-  document.addEventListener("contextmenu",e=>{ if(e.target.closest&&e.target.closest("#iz-ov,#pz-ov")) e.preventDefault(); });
-
-  // ---- IndexedDB: PDF faylları və lövhə yazıları müəllimin cihazında saxlanılır ----
+  // ---- IndexedDB: PDF faylları və yazılar müəllimin cihazında ----
   let dbp=null;
   const DB=()=>dbp||(dbp=new Promise((res,rej)=>{ const r=indexedDB.open("ttm_pz",1);
-    r.onupgradeneeded=()=>{ const d=r.result; d.createObjectStore("meta",{keyPath:"id"}); d.createObjectStore("files"); };
+    r.onupgradeneeded=()=>{ const d=r.result; if(!d.objectStoreNames.contains("meta")) d.createObjectStore("meta",{keyPath:"id"}); if(!d.objectStoreNames.contains("files")) d.createObjectStore("files"); };
     r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }));
   function tx(st,mode,fn){ return DB().then(d=>new Promise((res,rej)=>{ const t=d.transaction(st,mode), q=fn(t.objectStore(st)); let out; if(q) q.onsuccess=()=>out=q.result; t.oncomplete=()=>res(out); t.onerror=()=>rej(t.error); })); }
   const putMeta=m=>tx("meta","readwrite",s=>s.put(m));
   const allMeta=()=>tx("meta","readonly",s=>s.getAll()).then(a=>(a||[]).filter(m=>m.owner===currentTeacherId));
+  const svT={};
+  function saveMeta(m,now){ clearTimeout(svT[m.id]); const go=()=>putMeta(m).catch(e=>{ console.error(e); toast("Yadda saxlanmadı: "+errAz(e)); }); if(now) return go(); svT[m.id]=setTimeout(go,800); return Promise.resolve(); }
 
-  // ---- hub ----
+  // ---- kiçik pəncərə (ad yazmaq, menyu) ----
+  function sheet(html,onClick){
+    const m=document.createElement("div"); m.className="pz-mb"; m.innerHTML=`<div class="pz-md">${html}</div>`;
+    ["pointerdown","pointermove","wheel","keydown","touchstart","touchmove"].forEach(ev=>m.addEventListener(ev,x=>x.stopPropagation(),{passive:true}));
+    m.addEventListener("click",e=>{ if(e.target===m){ m.remove(); return; } const b=e.target.closest("[data-k]"); if(b) onClick(b.dataset.k,m); });
+    document.body.appendChild(m); const inp=m.querySelector("input[type=text]"); if(inp) setTimeout(()=>{ inp.focus(); inp.select(); },60);
+    return m;
+  }
+  function ask(title,val,extra){ return new Promise(res=>{
+    const m=sheet(`<h4>${esc(title)}</h4><input type="text" value="${esc(val||"")}">${extra||""}<div class="row"><button type="button" data-k="0">Ləğv et</button><button type="button" class="pri" data-k="1">Hazır</button></div>`,(k,m)=>{
+      const v=m.querySelector("input[type=text]").value.trim(), c=m.querySelector("input[type=checkbox]"); m.remove(); res(k==="1"&&v?{v,c:c?c.checked:false}:null); });
+    m.querySelector("input[type=text]").addEventListener("keydown",e=>{ if(e.key==="Enter") m.querySelector('[data-k="1"]').click(); });
+  }); }
+
+  // ---- bölmələr (hub) ----
   const pn=$("tab-izah"); if(!pn) return;
   const old=pn.querySelector(":scope>.card");
   const ART={
@@ -17196,42 +17287,61 @@ function texPlain(s){
       <button type="button" class="ih-card g" data-ih="sinaq"><div class="ih-art">${ART.g}</div><b>Sınaq izahları</b><span>Sınaq imtahanlarının ətraflı izahı</span><i class="ih-go">→</i></button>
       <button type="button" class="ih-card p" data-ih="test"><div class="ih-art">${ART.p}</div><b>Test izahları</b><span>PDF test kitabçası ilə sual izahları</span><i class="ih-go">→</i></button>
     </div>
-    <div class="ih-palm"><div><b>Elektron lövhə rejimi</b><small>Yazarkən ovuc və barmaq toxunuşları nəzərə alınmır — lövhə sürüşmür, xətt kəsilmir. Lövhəni ⬇ düyməsi ilə sürüşdürün.</small></div><button type="button" class="tg" id="ih-palm" role="switch" aria-label="Elektron lövhə rejimi"></button></div>`;
+    <div class="ih-palm"><div><b>Elektron lövhə rejimi</b><small>Qələmlə yazanda ovuc və barmaq nəzərə alınmır. İki barmaqla lövhəni sürüşdürün və yaxınlaşdırın.</small></div><button type="button" class="tg" id="ih-palm" role="switch" aria-label="Elektron lövhə rejimi"></button></div>`;
   const sinaq=document.createElement("div"); sinaq.id="ih-sinaq"; sinaq.hidden=true;
   sinaq.innerHTML=`<div class="ih-back"><button type="button" class="v2-back" data-ih="hub">←</button><h3>Sınaq izahları</h3></div>`;
   const list=document.createElement("div"); list.id="ih-list"; list.hidden=true;
-  if(old){ old.parentNode.insertBefore(hub,old); old.parentNode.insertBefore(sinaq,old); sinaq.appendChild(old); sinaq.after(list); old.querySelector("h3").style.display="none"; }
+  if(old){ old.parentNode.insertBefore(hub,old); old.parentNode.insertBefore(sinaq,old); sinaq.appendChild(old); sinaq.after(list); const h=old.querySelector("h3"); if(h) h.style.display="none"; }
+  else { pn.prepend(list); pn.prepend(sinaq); pn.prepend(hub); }
   const paintPalm=()=>{ const b=$("ih-palm"); b.classList.toggle("on",izPalm()); b.setAttribute("aria-checked",izPalm()); };
   paintPalm();
-  $("ih-palm").onclick=()=>{ LS.s("iz_palm",izPalm()?"0":"1"); paintPalm(); toast(izPalm()?"Elektron lövhə rejimi açıqdır":"İki barmaqla sürüşdürmə açıqdır"); };
-  let CAT="test";
+  $("ih-palm").onclick=()=>{ LS.s("iz_palm",izPalm()?"0":"1"); paintPalm(); toast(izPalm()?"Elektron lövhə rejimi açıqdır":"Elektron lövhə rejimi bağlıdır"); };
+  let CAT="test", FOLD="";
   function show(v){ hub.hidden=v!=="hub"; sinaq.hidden=v!=="sinaq"; list.hidden=v!=="list"; window.scrollTo(0,0); if(v==="list") renderList(); }
   pn.addEventListener("click",e=>{ const b=e.target.closest("[data-ih]"); if(!b) return; const k=b.dataset.ih;
-    if(k==="hub"||k==="sinaq") show(k); else { CAT=k; show("list"); } });
+    if(k==="hub"||k==="sinaq") show(k); else { if(CAT!==k) FOLD=""; CAT=k; show("list"); } });
   const tb=document.querySelector('.tab-btn[data-tab="tab-izah"]'); if(tb) tb.addEventListener("click",()=>show("hub"));
   try{ const r=A_MORE.find(x=>x[0]==="tab-izah"); if(r) r[4]="Dərs, sınaq və test izahları — PDF və lövhə"; }catch(e){}
 
+  // ---- siyahı + qovluqlar ----
+  const foldKey=()=>"pz_folds_"+CAT+"_"+(currentTeacherId||"");
+  const folds=()=>{ try{ return JSON.parse(LS.g(foldKey(),"[]")); }catch(e){ return []; } };
   async function renderList(){
     const t=CAT==="test"?"Test izahları":"Dərs izahları";
+    let A=[]; try{ A=(await allMeta()).filter(m=>m.cat===CAT); }catch(e){ console.error(e); }
+    const F=[...new Set(folds().concat(A.map(m=>m.folder).filter(Boolean)))].sort((a,b)=>a.localeCompare(b,"az"));
+    if(FOLD&&!F.includes(FOLD)) FOLD="";
+    const B=A.filter(m=>!FOLD||m.folder===FOLD).sort((a,b)=>(b.used||0)-(a.used||0));
     list.innerHTML=`<div class="ih-back"><button type="button" class="v2-back" data-ih="hub">←</button><h3>${t}</h3></div>
       <div class="pzl-acts ${CAT==="test"?"one":""}"><label class="pzl-add">📄 PDF əlavə et<input type="file" accept="application/pdf,.pdf" id="pzl-in"></label>${CAT==="ders"?`<button type="button" class="pzl-blank" id="pzl-blank">✏️ Boş lövhə</button>`:""}</div>
-      <div class="pq-sec">Yüklənmiş fayllar</div><div id="pzl-l"><div class="pq-sk"></div></div>
-      <p class="muted-note" style="text-align:center;margin-top:10px">Fayllar və yazılar bu cihazda saxlanılır.</p>`;
-    $("pzl-in").onchange=e=>addPdf(e.target.files[0]);
+      <div class="pzl-fold" id="pzl-f"><button type="button" data-f="" class="${FOLD?"":"on"}">📚 Hamısı <small>${A.length}</small></button>${F.map(f=>`<button type="button" data-f="${esc(f)}" class="${FOLD===f?"on":""}">📁 ${esc(f)} <small>${A.filter(m=>m.folder===f).length}</small></button>`).join("")}<button type="button" class="nf" data-f="+">＋ Qovluq</button></div>
+      <div class="pzl-grid" id="pzl-l">${B.map((m,i)=>{ const n=Object.values(m.ink||{}).filter(x=>x&&x.length).length;
+        return `<div class="pzl-item" data-id="${m.id}" style="animation-delay:${Math.min(i,12)*35}ms"><div class="pzl-cov" style="${m.cover?`background-image:url(${m.cover})`:""}">${m.cover?"":(m.blank?"✏️":"📄")}</div>
+          <button type="button" class="pzl-more" data-more="${m.id}" aria-label="Seçimlər">⋯</button>
+          <b>${esc(m.name)}</b><small>${m.pages} səh.${n?` · ${n} səhifədə yazı`:""}${m.folder&&!FOLD?` · 📁 ${esc(m.folder)}`:""}</small></div>`; }).join("")}</div>
+      ${B.length?"":`<div class="pq-empty">${FOLD?"Bu qovluq boşdur.":"Hələ fayl yoxdur."} «PDF əlavə et» düyməsinə basın.</div>`}
+      <p class="muted-note" style="text-align:center;margin-top:12px">PDF-lər və yazılar bu cihazda saxlanılır.</p>`;
+    $("pzl-in").onchange=e=>{ addPdf(e.target.files[0]); e.target.value=""; };
     if($("pzl-blank")) $("pzl-blank").onclick=addBlank;
-    let A=[]; try{ A=(await allMeta()).filter(m=>m.cat===CAT).sort((a,b)=>(b.used||0)-(a.used||0)); }catch(e){ console.error(e); }
-    const box=$("pzl-l"); if(!box) return;
-    box.innerHTML=A.length?A.map((m,i)=>{ const n=Object.values(m.ink||{}).filter(x=>x&&x.length).length;
-      return `<div class="pzl-item" data-id="${m.id}" style="animation-delay:${i*40}ms"><div class="pzl-cov" style="${m.cover?`background-image:url(${m.cover})`:""}">${m.cover?"":(m.blank?"✏️":"📄")}</div>
-        <div style="flex:1;min-width:0"><b>${esc(m.name)}</b><small>${m.pages} səhifə · ${n} səhifədə yazı · ${new Date(m.added).toLocaleDateString("az-AZ")}</small></div>
-        <button type="button" class="pzl-del" data-del="${m.id}" aria-label="Sil">🗑</button></div>`; }).join("")
-      :`<div class="pq-empty">Hələ fayl yoxdur. «PDF əlavə et» düyməsinə basın.</div>`;
-    box.onclick=async e=>{
-      const d=e.target.closest("[data-del]");
-      if(d){ e.stopPropagation(); const m=A.find(x=>x.id===d.dataset.del); if(!(await ttmConfirm(`«${m.name}» silinsin?\nÜzərindəki yazılar da silinəcək.`))) return;
-        await tx("meta","readwrite",s=>s.delete(m.id)); await tx("files","readwrite",s=>s.delete(m.id)); toast("Silindi"); renderList(); return; }
-      const it=e.target.closest(".pzl-item"); if(it) openStudio(A.find(x=>x.id===it.dataset.id));
+    $("pzl-f").onclick=async e=>{ const b=e.target.closest("[data-f]"); if(!b) return;
+      if(b.dataset.f==="+"){ const r=await ask("Yeni qovluğun adı",""); if(!r) return; const L=folds(); if(!L.includes(r.v)) L.push(r.v); LS.s(foldKey(),JSON.stringify(L)); FOLD=r.v; renderList(); return; }
+      FOLD=b.dataset.f; renderList(); };
+    $("pzl-l").onclick=e=>{
+      const mo=e.target.closest("[data-more]"); if(mo){ e.stopPropagation(); itemMenu(A.find(x=>x.id===mo.dataset.more),F); return; }
+      const it=e.target.closest(".pzl-item"); if(it) openDoc(A.find(x=>x.id===it.dataset.id));
     };
+  }
+  function itemMenu(m,F){
+    sheet(`<h4>${esc(m.name)}</h4><button type="button" class="mi" data-k="open">▶ Aç</button><button type="button" class="mi" data-k="ren">✏️ Adını dəyiş</button><button type="button" class="mi" data-k="mv">📁 Qovluğa köçür</button><button type="button" class="mi red" data-k="del">🗑 Sil</button>`,async(k,s)=>{
+      s.remove();
+      if(k==="open") openDoc(m);
+      else if(k==="ren"){ const r=await ask("Yeni ad",m.name); if(r){ m.name=r.v; await saveMeta(m,true); renderList(); } }
+      else if(k==="mv"){ sheet(`<h4>Qovluq seçin</h4><button type="button" class="mi ${m.folder?"":"on"}" data-k="">📚 Qovluqsuz</button>${F.map(f=>`<button type="button" class="mi ${m.folder===f?"on":""}" data-k="${esc(f)}">📁 ${esc(f)}</button>`).join("")}<button type="button" class="mi" data-k="+">＋ Yeni qovluq</button>`,async(f,s2)=>{
+          s2.remove(); if(f==="+"){ const r=await ask("Yeni qovluğun adı",""); if(!r) return; f=r.v; const L=folds(); if(!L.includes(f)) L.push(f); LS.s(foldKey(),JSON.stringify(L)); }
+          m.folder=f||""; await saveMeta(m,true); toast(f?"«"+f+"» qovluğuna köçürüldü":"Qovluqdan çıxarıldı"); renderList(); }); }
+      else if(k==="del"){ if(!(await ttmConfirm(`«${m.name}» silinsin?\nÜzərindəki yazılar da silinəcək.`))) return;
+        await tx("meta","readwrite",s=>s.delete(m.id)); await tx("files","readwrite",s=>s.delete(m.id)); toast("Silindi"); renderList(); }
+    });
   }
   async function addPdf(f){
     if(!f) return;
@@ -17240,259 +17350,241 @@ function texPlain(s){
     try{
       await ensureLib("pdfjs");
       const buf=await f.arrayBuffer(), pdf=await pdfjsLib.getDocument({data:buf.slice(0)}).promise;
-      const pg=await pdf.getPage(1), v=pg.getViewport({scale:1}), vp=pg.getViewport({scale:160/v.width}), c=document.createElement("canvas");
+      const pg=await pdf.getPage(1), v=pg.getViewport({scale:1}), vp=pg.getViewport({scale:220/v.width}), c=document.createElement("canvas");
       c.width=vp.width; c.height=vp.height; await pg.render({canvasContext:c.getContext("2d"),viewport:vp}).promise;
-      const m={id:"pz"+Date.now().toString(36),owner:currentTeacherId,cat:CAT,name:f.name.replace(/\.pdf$/i,""),pages:pdf.numPages,added:Date.now(),used:Date.now(),cover:c.toDataURL("image/jpeg",.7),ink:{},last:1};
+      const m={id:"pz"+Date.now().toString(36),owner:currentTeacherId,cat:CAT,folder:FOLD,name:f.name.replace(/\.pdf$/i,""),pages:pdf.numPages,fp:(pdf.fingerprints||[pdf.fingerprint])[0]||"",
+        added:Date.now(),used:Date.now(),cover:c.toDataURL("image/jpeg",.72),ink:{},pdfInk:{},toc:null,last:1};
+      try{ pdf.destroy(); }catch(e){}
       await tx("files","readwrite",s=>s.put(buf,m.id)); await putMeta(m);
-      openStudio(m);
+      renderList(); openDoc(m);
     }catch(e){ console.error(e); toast("PDF açılmadı: "+errAz(e)); }
   }
   async function addBlank(){
-    const m={id:"pz"+Date.now().toString(36),owner:currentTeacherId,cat:CAT,blank:true,name:"Dərs "+new Date().toLocaleDateString("az-AZ"),pages:1,added:Date.now(),used:Date.now(),ink:{},last:1};
-    await putMeta(m); openStudio(m);
+    const m={id:"pz"+Date.now().toString(36),owner:currentTeacherId,cat:CAT,folder:FOLD,blank:true,name:"Dərs "+new Date().toLocaleDateString("az-AZ"),pages:1,added:Date.now(),used:Date.now(),ink:{},last:1};
+    await putMeta(m); renderList(); openDoc(m);
   }
 
-  // ---- studiya ----
-  let B=null, base, live, bc, lc, Wpx=1, Hpx=1, dpr=1;
-  const COLS=["#111827","#dc2626","#1d4ed8","#16a34a"];
-  async function openStudio(m){
-    let pdf=null;
+  // ---- studiyanı aç (sınaq izahı ilə eyni lövhə) ----
+  async function openDoc(m){
+    if(!m||!window.izOpenDoc) return;
+    let pdf=null, pane=null;
     if(!m.blank){
       try{ await ensureLib("pdfjs"); const buf=await tx("files","readonly",s=>s.get(m.id)); if(!buf) throw new Error("Fayl tapılmadı"); pdf=await pdfjsLib.getDocument({data:buf}).promise; }
       catch(e){ console.error(e); toast("PDF açılmadı: "+errAz(e)); return; }
     }
-    m.used=Date.now(); m.ink=m.ink||{};
-    B={rn:0,m,pdf,page:Math.min(m.last||1,m.pages),zoom:1,tool:LS.g("pz_tool","pen"),col:LS.g("pz_col",COLS[2]),w:+LS.g("pz_w","3"),undo:{},redo:{},sy:0,penSeen:false,pid:null,cur:null};
-    build(); setPage(B.page,true);
-    try{ B.snd=localStorage.getItem("ttm_sound"); localStorage.setItem("ttm_sound","0"); }catch(e){}
-  }
-  function build(){
-    const blank=!!B.m.blank, ov=document.createElement("div"); ov.id="pz-ov";
-    const T=(k,ic,ti)=>`<button type="button" class="pz-ib" data-tool="${k}" title="${ti}" aria-label="${ti}">${SVG(I[ic])}</button>`;
-    ov.innerHTML=`<header class="pz-top"><button type="button" class="pz-ib" data-a="close" aria-label="Geri">${SVG(I.back)}</button><h4>${esc(B.m.name)}</h4>
-        <div class="pz-grp"><button type="button" class="pz-ib" data-a="undo" aria-label="Geri al">${SVG(I.un)}</button><button type="button" class="pz-ib" data-a="redo" aria-label="Təkrar et">${SVG(I.re)}</button></div>
-        <button type="button" class="pz-ib" data-a="fs" title="Çəkiliş üçün tam ekran" aria-label="Tam ekran">${SVG(I.fs)}</button>
-        <button type="button" class="pz-save" data-a="save">${SVG(I.save)}<span class="pz-hm">Saxla</span></button></header>
-      <div class="pz-body">
-        <section class="pz-left ${blank||LS.g("pz_closed","0")==="1"?"closed":""}" id="pz-left" style="width:${LS.g("pz_lw","46")}%">${blank?"":`
-          <div class="pz-lh"><div class="pz-fn"><i>PDF</i><b>${esc(B.m.name)}</b></div>
-            <div class="pz-pg"><button type="button" class="pz-ib" data-a="prev" aria-label="Əvvəlki səhifə">${SVG(I.pv)}</button><input id="pz-pi" inputmode="numeric"> / ${B.m.pages}<button type="button" class="pz-ib" data-a="next" aria-label="Növbəti səhifə">${SVG(I.nx)}</button></div>
-            <div class="pz-grp"><button type="button" class="pz-ib" data-a="zo" aria-label="Kiçilt">${SVG(I.minus)}</button><span class="pz-zm" id="pz-zm">100%</span><button type="button" class="pz-ib" data-a="zi" aria-label="Böyüt">${SVG(I.plus)}</button></div>
-            <button type="button" class="pz-ib" data-a="fit" title="Enə sığdır" aria-label="Enə sığdır">${SVG(I.fit)}</button>
-            <button type="button" class="pz-ib" data-a="thumbs" title="Səhifələr" aria-label="Səhifələr">${SVG(I.thumb)}</button>
-            <button type="button" class="pz-ib" data-a="hide" title="PDF-i yığ" aria-label="PDF-i yığ">${SVG(I.pv)}</button></div>
-          <div class="pz-lb"><div class="pz-th ${LS.g("pz_th","1")==="1"?"":"off"}" id="pz-th"></div><div class="pz-pv" id="pz-pv"><canvas id="pz-pc"></canvas></div></div>`}</section>
-        <div class="pz-split" id="pz-split"><i></i></div>
-        <section class="pz-right">
-          <div class="pz-tools">${T("pen","pen","Qələm")}${T("hl","hl","Marker")}${T("er","er","Pozan")}${T("line","line","Düz xətt")}${T("arr","arr","Ox")}${T("rect","rect","Düzbucaqlı")}${T("circ","circ","Dairə")}<i class="pz-sep"></i>
-            ${COLS.map(c=>`<button type="button" class="pz-c" data-c="${c}" style="background:${c}" aria-label="Rəng"></button>`).join("")}<label class="pz-cp" title="Başqa rəng"><input type="color" id="pz-cc"></label><i class="pz-sep"></i>
-            <select class="pz-w" id="pz-w" aria-label="Qalınlıq">${[2,3,5,8,12].map(w=>`<option value="${w}">${w} px</option>`).join("")}</select>
-            <button type="button" class="pz-ib" data-a="clear" title="Səhifəni təmizlə" aria-label="Səhifəni təmizlə">${SVG(I.tr)}</button>
-            ${blank?`<button type="button" class="pz-ib" data-a="prev" aria-label="Əvvəlki">${SVG(I.pv)}</button><button type="button" class="pz-ib" data-a="next" aria-label="Növbəti">${SVG(I.nx)}</button><button type="button" class="pz-ib" data-a="addp" title="Yeni səhifə" aria-label="Yeni səhifə">${SVG(I.plus)}</button>`:""}
-            <span class="pz-pgl" id="pz-pgl"></span></div>
-          <div class="pz-stage" id="pz-stage"><canvas id="pz-base"></canvas><canvas class="pz-live" id="pz-live"></canvas><div class="pz-wm">TTM</div>
-            ${blank?"":`<button type="button" class="pz-open" data-a="showpdf">PDF</button>`}
-            <div class="pz-sc"><button type="button" data-a="up" id="pz-up" hidden aria-label="Yuxarı">${SVG(I.up)}</button><button type="button" data-a="down" aria-label="Aşağı — yer aç">${SVG(I.down)}</button></div></div>
-        </section>
-        <div class="pz-dock"><button type="button" data-a="prev" aria-label="Əvvəlki">${SVG(I.pv)}</button>${blank?"":`<button type="button" data-a="togpdf" aria-label="PDF">${SVG(I.pdf)}</button>`}<button type="button" data-a="undo" aria-label="Geri al">${SVG(I.un)}</button><button type="button" data-a="fs" aria-label="Çıx">${SVG(I.x)}</button><button type="button" data-a="next" aria-label="Növbəti">${SVG(I.nx)}</button></div>
-      </div>`;
-    document.body.appendChild(ov); document.body.style.overflow="hidden";
-    base=$("pz-base"); live=$("pz-live"); bc=base.getContext("2d"); lc=live.getContext("2d");
-    $("pz-w").value=String(B.w); $("pz-cc").value=B.col;
-    ov.addEventListener("click",onClick);
-    $("pz-w").onchange=e=>{ B.w=+e.target.value; LS.s("pz_w",B.w); };
-    $("pz-cc").oninput=e=>setCol(e.target.value);
-    const pi=$("pz-pi"); if(pi){ pi.onchange=()=>setPage(+pi.value||B.page); pi.onkeydown=e=>{ e.stopPropagation(); if(e.key==="Enter") pi.blur(); }; }
-    bindBoard(); bindSplit(); syncTools();
-    B.ro=new ResizeObserver(()=>{ sizeBoard(); clearTimeout(B.rt); B.rt=setTimeout(renderPdf,150); }); B.ro.observe($("pz-stage")); B.ro.observe($("pz-left"));
-    $("pz-stage").addEventListener("wheel",e=>{ e.preventDefault(); scroll(B.sy+e.deltaY/Wpx); },{passive:false});
-    addEventListener("keydown",key);
-    if(B.pdf) buildThumbs();
-  }
-  function syncTools(){
-    const ov=$("pz-ov"); if(!ov) return;
-    ov.querySelectorAll("[data-tool]").forEach(b=>b.classList.toggle("on",b.dataset.tool===B.tool));
-    ov.querySelectorAll("[data-c]").forEach(b=>b.classList.toggle("on",b.dataset.c===B.col));
-    const u=B.undo[B.page]||[], r=B.redo[B.page]||[];
-    ov.querySelectorAll('[data-a="undo"]').forEach(b=>b.disabled=!u.length); ov.querySelectorAll('[data-a="redo"]').forEach(b=>b.disabled=!r.length);
-    ov.querySelectorAll('[data-a="prev"]').forEach(b=>b.disabled=B.page<=1); ov.querySelectorAll('[data-a="next"]').forEach(b=>b.disabled=B.page>=B.m.pages&&!B.m.blank);
-    $("pz-pgl").textContent=`Səhifə ${B.page} lövhəsi`;
-    const pi=$("pz-pi"); if(pi) pi.value=B.page;
-    const zm=$("pz-zm"); if(zm) zm.textContent=Math.round(B.zoom*100)+"%";
-    const th=ov.querySelector('[data-a="thumbs"]'); if(th) th.classList.toggle("on",!$("pz-th").classList.contains("off"));
-    $("pz-th")&&$("pz-th").querySelectorAll(".pz-t").forEach(t=>t.classList.toggle("on",+t.dataset.p===B.page));
-    live.style.cursor=B.tool==="er"?"cell":"crosshair";
-  }
-  function setCol(c){ B.col=c; LS.s("pz_col",c); if(B.tool==="er") B.tool="pen"; syncTools(); }
-  function onClick(e){
-    const t=e.target.closest("[data-tool]"); if(t){ B.tool=t.dataset.tool; LS.s("pz_tool",B.tool); syncTools(); return; }
-    const c=e.target.closest("[data-c]"); if(c){ setCol(c.dataset.c); return; }
-    const th=e.target.closest(".pz-t"); if(th){ setPage(+th.dataset.p); return; }
-    const a=e.target.closest("[data-a]"); if(!a) return;
-    const k=a.dataset.a, L=$("pz-left");
-    if(k==="close") close();
-    else if(k==="save"){ save(true).then(()=>toast("Yadda saxlandı")); }
-    else if(k==="prev") setPage(B.page-1);
-    else if(k==="next"){ if(B.m.blank&&B.page>=B.m.pages){ B.m.pages++; } setPage(B.page+1); }
-    else if(k==="addp"){ B.m.pages++; setPage(B.m.pages); toast("Yeni səhifə əlavə olundu"); }
-    else if(k==="zi"){ B.zoom=Math.min(4,+(B.zoom+.25).toFixed(2)); renderPdf(); syncTools(); }
-    else if(k==="zo"){ B.zoom=Math.max(.5,+(B.zoom-.25).toFixed(2)); renderPdf(); syncTools(); }
-    else if(k==="fit"){ B.zoom=1; renderPdf(); syncTools(); }
-    else if(k==="thumbs"){ const x=$("pz-th"); x.classList.toggle("off"); LS.s("pz_th",x.classList.contains("off")?"0":"1"); syncTools(); }
-    else if(k==="hide"){ L.classList.add("closed"); LS.s("pz_closed","1"); }
-    else if(k==="showpdf"){ L.classList.remove("closed"); LS.s("pz_closed","0"); }
-    else if(k==="togpdf"){ L.classList.toggle("closed"); }
-    else if(k==="undo") undo(); else if(k==="redo") redo();
-    else if(k==="clear"){ if(!ink().length) return; ttmConfirm("Bu səhifənin lövhəsi təmizlənsin?").then(ok=>{ if(ok) commitAll([]); }); }
-    else if(k==="down") smooth(B.sy+Hpx*.6/Wpx); else if(k==="up") smooth(0);
-    else if(k==="fs") fs();
+    m.used=Date.now(); m.ink=m.ink||{}; m.pdfInk=m.pdfInk||{};
+    const api=izOpenDoc({id:m.id,name:m.name,pages:m.pages,ink:m.ink,page:(m.last||1)-1,blank:!!m.blank,
+      mount:pdf?(el=>{ pane=pdfPane(el,m,pdf); }):null,
+      onSave:(ink,i,n)=>{ m.ink=ink; m.last=i+1; if(m.blank) m.pages=n; saveMeta(m); },
+      onPage:i=>{ if(pane) pane.goto(i+1,true); },
+      onClose:()=>{ if(pane) pane.destroy(); saveMeta(m,true); if(pdf) try{ pdf.destroy(); }catch(e){} if(!list.hidden) renderList(); }});
+    if(pane&&api) pane.api=api;
   }
 
-  // ---- PDF ----
-  async function renderPdf(){
-    if(!B||!B.pdf) return; const pv=$("pz-pv"), cv=$("pz-pc"); if(!pv||!pv.clientWidth) return;
-    const my=++B.rn, pg=await B.pdf.getPage(B.page); if(!B||my!==B.rn) return;
-    const v1=pg.getViewport({scale:1}), d=Math.min(2.5,devicePixelRatio||1), css=(pv.clientWidth-24)/v1.width*B.zoom, vp=pg.getViewport({scale:css*d});
-    const off=document.createElement("canvas"); off.width=Math.floor(vp.width); off.height=Math.floor(vp.height);
-    if(B.task){ try{ B.task.cancel(); }catch(e){} }
-    B.task=pg.render({canvasContext:off.getContext("2d"),viewport:vp});
-    try{ await B.task.promise; }catch(e){ return; }
-    if(!B||my!==B.rn) return;
-    cv.width=off.width; cv.height=off.height; cv.style.width=off.width/d+"px"; cv.style.height=off.height/d+"px"; cv.getContext("2d").drawImage(off,0,0);
-  }
-  function buildThumbs(){
-    const box=$("pz-th"); box.innerHTML="";
-    for(let p=1;p<=B.m.pages;p++) box.insertAdjacentHTML("beforeend",`<button type="button" class="pz-t" data-p="${p}"><canvas></canvas><small>${p}</small></button>`);
-    const io=new IntersectionObserver(es=>es.forEach(async en=>{ if(!en.isIntersecting||!B) return; io.unobserve(en.target);
-      const p=+en.target.dataset.p, pg=await B.pdf.getPage(p), v=pg.getViewport({scale:1}), vp=pg.getViewport({scale:160/v.width}), c=en.target.querySelector("canvas");
-      c.width=vp.width; c.height=vp.height; pg.render({canvasContext:c.getContext("2d"),viewport:vp}); }),{root:box,rootMargin:"300px"});
-    box.querySelectorAll(".pz-t").forEach(t=>io.observe(t)); B.io=io;
-  }
-  function setPage(p,first){
-    if(!B) return; p=Math.max(1,Math.min(B.m.pages,p)); if(p===B.page&&!first) return;
-    B.page=p; B.m.last=p; B.sy=0; B.cur=null; B.pid=null;
-    renderPdf(); sizeBoard(); syncTools(); if(!first) save();
-    const t=$("pz-th")&&$("pz-th").querySelector(`[data-p="${p}"]`); if(t) t.scrollIntoView({block:"nearest",behavior:"smooth"});
-    const pv=$("pz-pv"); if(pv) pv.scrollTop=0;
-  }
-  function bindSplit(){
-    const s=$("pz-split"), L=$("pz-left"); let on=false;
-    s.addEventListener("pointerdown",e=>{ on=true; s.setPointerCapture(e.pointerId); });
-    s.addEventListener("pointermove",e=>{ if(!on) return; const r=$("pz-ov").querySelector(".pz-body").getBoundingClientRect(); const pc=Math.max(22,Math.min(75,(e.clientX-r.left)/r.width*100)); L.style.width=pc+"%"; LS.s("pz_lw",pc.toFixed(1)); });
-    const end=()=>on=false; s.addEventListener("pointerup",end); s.addEventListener("pointercancel",end);
-  }
+  // ---- PDF paneli: ardıcıl səhifələr, iki barmaqla zoom, mündəricat, PDF üzərində yazı ----
+  function pdfPane(el,m,pdf){
+    const N=pdf.numPages, dpr=()=>Math.min(2,devicePixelRatio||1);
+    const P={api:null,zoom:+LS.g("pz_zoom","1")||1,cur:1,rat:[],rend:new Map(),vis:new Set(),toc:!LS.g("pz_toc","")?innerWidth>1100:LS.g("pz_toc","")==="1",wr:LS.g("pz_wr","1")==="1",undo:[],dead:false};
+    el.innerHTML=`<div class="pd-h">
+        <button type="button" class="pd-ib" data-p="toc" title="Mündəricat — başlıqlar" aria-label="Mündəricat">${SVG(I.toc)}</button>
+        <div class="pd-fn"><i>PDF</i><b>${esc(m.name)}</b></div>
+        <div class="pd-pg"><input id="pd-pi" inputmode="numeric" aria-label="Səhifə"> / ${N}</div>
+        <div class="pd-zg"><button type="button" class="pd-ib" data-p="zo" aria-label="Kiçilt">${SVG(I.minus)}</button><span id="pd-zm"></span><button type="button" class="pd-ib" data-p="zi" aria-label="Böyüt">${SVG(I.plus)}</button></div>
+        <button type="button" class="pd-ib" data-p="fit" title="Enə sığdır" aria-label="Enə sığdır">${SVG(I.fit)}</button>
+        <button type="button" class="pd-ib" data-p="wr" title="PDF üzərində qələmlə yaz" aria-label="PDF üzərində yaz">${SVG(I.pen)}</button>
+        <button type="button" class="pd-ib" data-p="un" title="PDF-dəki son yazını geri al" aria-label="PDF-də geri al">${SVG(I.un)}</button>
+        <button type="button" class="pd-ib" data-p="hide" title="PDF-i yığ" aria-label="PDF-i yığ">${SVG(I.pv)}</button></div>
+      <div class="pd-b"><aside class="pd-toc" id="pd-toc" ${P.toc?"":"hidden"}></aside><div class="pd-sc" id="pd-sc"><div class="pd-in" id="pd-in"></div></div><div class="pd-badge" id="pd-bd"></div></div>`;
+    const sc=$("pd-sc"), inn=$("pd-in"), pi=$("pd-pi");
+    let pages=[];
 
-  // ---- lövhə ----
-  const ink=()=>B.m.ink[B.page]||(B.m.ink[B.page]=[]);
-  function sizeBoard(){
-    if(!B||!base) return; const r=$("pz-stage").getBoundingClientRect(); if(!r.width) return;
-    dpr=Math.min(2,devicePixelRatio||1); Wpx=r.width; Hpx=r.height;
-    [base,live].forEach(c=>{ c.width=Math.round(Wpx*dpr); c.height=Math.round(Hpx*dpr); });
-    bc.setTransform(dpr,0,0,dpr,0,0); lc.setTransform(dpr,0,0,dpr,0,0); scroll(B.sy);
-  }
-  function maxSy(){ let b=0; ink().forEach(s=>s.p.forEach(p=>{ if(p[1]>b) b=p[1]; })); return Math.max(0,b-Hpx/Wpx*.4)+Hpx/Wpx*.6; }
-  function scroll(v){ B.sy=Math.max(0,Math.min(maxSy(),v||0)); $("pz-up").hidden=B.sy<.02; redraw(); }
-  function smooth(to){ const f=B.sy,t0=performance.now(); (function st(t){ if(!B) return; const k=Math.min(1,(t-t0)/250); scroll(f+(to-f)*(1-Math.pow(1-k,3))); if(k<1) requestAnimationFrame(st); })(t0); }
-  function dS(c,s){
-    const W=Wpx, oy=B.sy*W, X=p=>p[0]*W, Y=p=>p[1]*W-oy, P=s.p; if(!P.length) return;
-    c.save(); c.lineCap=c.lineJoin="round"; c.strokeStyle=c.fillStyle=s.c; c.lineWidth=Math.max(1,s.w*W);
-    if(s.t==="hl"){ c.globalAlpha=.35; c.globalCompositeOperation="multiply"; c.lineWidth=Math.max(6,s.w*W*3.2); }
-    c.beginPath();
-    if(s.t==="pen"||s.t==="hl"){
-      if(P.length===1){ c.arc(X(P[0]),Y(P[0]),c.lineWidth/2,0,6.283); c.fill(); c.restore(); return; }
-      c.moveTo(X(P[0]),Y(P[0])); for(let i=1;i<P.length-1;i++) c.quadraticCurveTo(X(P[i]),Y(P[i]),(X(P[i])+X(P[i+1]))/2,(Y(P[i])+Y(P[i+1]))/2); c.lineTo(X(P[P.length-1]),Y(P[P.length-1]));
-    } else if(P.length>1){ const a=P[0], b=P[1];
-      if(s.t==="line"||s.t==="arr"){ c.moveTo(X(a),Y(a)); c.lineTo(X(b),Y(b));
-        if(s.t==="arr"){ const an=Math.atan2(Y(b)-Y(a),X(b)-X(a)), h=Math.max(12,c.lineWidth*4); c.moveTo(X(b),Y(b)); c.lineTo(X(b)-h*Math.cos(an-.45),Y(b)-h*Math.sin(an-.45)); c.moveTo(X(b),Y(b)); c.lineTo(X(b)-h*Math.cos(an+.45),Y(b)-h*Math.sin(an+.45)); } }
-      else if(s.t==="rect") c.rect(Math.min(X(a),X(b)),Math.min(Y(a),Y(b)),Math.abs(X(b)-X(a)),Math.abs(Y(b)-Y(a)));
-      else if(s.t==="circ") c.ellipse((X(a)+X(b))/2,(Y(a)+Y(b))/2,Math.abs(X(b)-X(a))/2,Math.abs(Y(b)-Y(a))/2,0,0,6.283); }
-    c.stroke(); c.restore();
-  }
-  function redraw(){ bc.clearRect(0,0,Wpx,Hpx); ink().forEach(s=>dS(bc,s)); drawLive(); }
-  function drawLive(){ lc.clearRect(0,0,Wpx,Hpx); if(B.cur) dS(lc,B.cur);
-    if(B.tool==="er"&&B.hv){ lc.save(); lc.strokeStyle="rgba(71,85,105,.7)"; lc.lineWidth=1.5; lc.beginPath(); lc.arc(B.hv[0]*Wpx,(B.hv[1]-B.sy)*Wpx,16,0,6.283); lc.stroke(); lc.restore(); } }
-  let raf=0; const req=()=>{ if(!raf) raf=requestAnimationFrame(()=>{ raf=0; if(B) drawLive(); }); };
-  const pt=e=>{ const r=live.getBoundingClientRect(); return [+((e.clientX-r.left)/Wpx).toFixed(4),+((e.clientY-r.top)/Wpx+B.sy).toFixed(4)]; };
-  function segD(p,a,b){ const dx=b[0]-a[0],dy=b[1]-a[1],l=dx*dx+dy*dy; if(!l) return Math.hypot(p[0]-a[0],p[1]-a[1]); const t=Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dy)/l)); return Math.hypot(p[0]-a[0]-t*dx,p[1]-a[1]-t*dy); }
-  function shapePts(s){ if(s.t==="pen"||s.t==="hl") return s.p; const [a,b]=s.p; if(!b) return [a];
-    if(s.t==="rect") return [a,[b[0],a[1]],b,[a[0],b[1]],a];
-    if(s.t==="circ"){ const o=[],cx=(a[0]+b[0])/2,cy=(a[1]+b[1])/2,rx=Math.abs(b[0]-a[0])/2,ry=Math.abs(b[1]-a[1])/2; for(let k=0;k<=32;k++) o.push([cx+rx*Math.cos(k/32*6.283),cy+ry*Math.sin(k/32*6.283)]); return o; }
-    return [a,b]; }
-  function eraseAt(a,b){ const r=16/Wpx, arr=ink(); const keep=arr.filter(s=>{ const P=shapePts(s), rr=r+s.w; if(P.length===1) return segD(P[0],a,b)>rr; for(let i=1;i<P.length;i++) if(segD(P[i-1],a,b)<rr) return false; return true; });
-    if(keep.length!==arr.length){ B.m.ink[B.page]=keep; redraw(); } }
-  function bindBoard(){
-    const touches=new Set(); let pan=null, erBase=null, last=null;
-    const avg=()=>{ let s=0; B.ty.forEach(v=>s+=v); return s/Math.max(1,B.ty.size); }; B.ty=new Map();
-    live.addEventListener("pointerdown",e=>{
-      if(e.pointerType==="pen") B.penSeen=true;
-      if(e.pointerType==="touch"){
-        if(izPalm()&&(B.penSeen||B.pid!==null||izBig(e))){ e.preventDefault(); return; }
-        if(!izPalm()){ B.ty.set(e.pointerId,e.clientY); if(B.ty.size>=2){ if(B.pid!==null){ B.cur=null; if(erBase){ B.m.ink[B.page]=erBase; erBase=null; redraw(); } B.pid=null; } pan={y:avg(),sy:B.sy}; return; } }
+    // mündəricat: hazır siyahı → PDF-in öz başlıqları → müəllimin başlıqları
+    async function initToc(){
+      if(!Array.isArray(m.toc)){
+        const pre=PZ_BOOKS[m.fp]||PZ_BOOKS[m.name+"#"+N];
+        if(pre) m.toc=pre.map(x=>Object.assign({},x));
+        else { m.toc=[]; try{ const ol=await pdf.getOutline(); if(ol&&ol.length){ const out=[]; const walk=async(a,lv)=>{ for(const o of a){ try{ let d=o.dest; if(typeof d==="string") d=await pdf.getDestination(d); if(d&&d[0]){ const ix=await pdf.getPageIndex(d[0]); out.push({t:o.title,p:ix+1,lv:Math.min(lv,2)}); } }catch(e){} if(o.items&&o.items.length&&lv<2) await walk(o.items,lv+1); } }; await walk(ol,0); m.toc=out; } }catch(e){} }
+        saveMeta(m);
       }
-      if(B.pid!==null) return;
-      e.preventDefault(); B.pid=e.pointerId; try{ live.setPointerCapture(B.pid); }catch(x){}
+      drawToc();
+    }
+    let tq="";
+    function drawToc(){
+      const box=$("pd-toc"); if(!box) return;
+      const T=(m.toc||[]).map((x,i)=>Object.assign({i},x)).sort((a,b)=>a.p-b.p||a.i-b.i);
+      const curI=(()=>{ let k=-1; T.forEach((x,j)=>{ if(x.p<=P.cur) k=j; }); return k; })();
+      const L=T.filter(x=>!tq||x.t.toLocaleLowerCase("az").includes(tq));
+      if(!box.firstChild) box.innerHTML=`<div class="pd-th"><input id="pd-tq" placeholder="Başlıq axtar..." aria-label="Başlıq axtar"><button type="button" class="pd-ib" data-p="toc" aria-label="Bağla">${SVG(I.x)}</button></div><div class="pd-tl" id="pd-tl"></div><button type="button" class="pd-ta" data-p="addt">＋ Bu səhifəyə başlıq əlavə et</button>`,
+        $("pd-tq").addEventListener("input",e=>{ tq=e.target.value.trim().toLocaleLowerCase("az"); drawToc(); }), $("pd-tq").addEventListener("keydown",e=>e.stopPropagation());
+      $("pd-tl").innerHTML=L.length?L.map(x=>`<button type="button" class="pd-ti l${x.lv||0} ${T[curI]&&T[curI].i===x.i?"on":""}" data-tp="${x.p}" data-ti="${x.i}"><span>${esc(x.t)}</span><small>${x.p}</small><i data-tm="${x.i}" aria-label="Seçimlər">⋯</i></button>`).join("")
+        :`<div class="pd-te">${tq?"Tapılmadı":"Başlıq yoxdur.<br>İzah edəcəyiniz mövzunun səhifəsini açıb aşağıdakı düymə ilə başlıq əlavə edin — sonra bir toxunuşla həmin yerə keçəcəksiniz."}</div>`;
+      const on=$("pd-tl").querySelector(".on"); if(on&&!tq) on.scrollIntoView({block:"nearest"});
+    }
+
+    // səhifə ölçüləri və yerləşmə
+    const baseW=()=>Math.max(120,sc.clientWidth-24);
+    function layout(keep){
+      if(P.dead||!el.isConnected) return;
+      const W=baseW()*P.zoom;
+      pages.forEach((d,i)=>{ d.style.width=W+"px"; d.style.height=W*P.rat[i]+"px"; });
+      $("pd-zm").textContent=Math.round(P.zoom*100)+"%";
+    }
+    function build(r1){
+      for(let i=0;i<N;i++) P.rat[i]=r1;
+      inn.innerHTML=Array.from({length:N},(_,i)=>`<div class="pd-p" data-pg="${i+1}"><em>${i+1}</em><canvas class="pd-c"></canvas><canvas class="pd-a"></canvas></div>`).join("");
+      pages=[...inn.children]; layout();
+      P.io=new IntersectionObserver(es=>es.forEach(en=>{ const i=+en.target.dataset.pg; if(en.isIntersecting){ P.vis.add(i); render(i); } else P.vis.delete(i); }),{root:sc,rootMargin:"500px 0px"});
+      pages.forEach(d=>P.io.observe(d));
+    }
+    async function render(i){
+      if(P.dead) return; const d=pages[i-1], W=parseFloat(d.style.width), key=Math.round(W*dpr());
+      const r=P.rend.get(i); if(r&&r.key===key) return; P.rend.set(i,{key,busy:true});
+      try{
+        const pg=await pdf.getPage(i); if(P.dead) return;
+        const v1=pg.getViewport({scale:1}), rr=v1.height/v1.width;
+        if(Math.abs(rr-P.rat[i-1])>.005){ P.rat[i-1]=rr; d.style.height=W*rr+"px"; }
+        const sc2=Math.min(key,2600)/v1.width, vp=pg.getViewport({scale:sc2}), off=document.createElement("canvas");
+        off.width=Math.floor(vp.width); off.height=Math.floor(vp.height);
+        await pg.render({canvasContext:off.getContext("2d"),viewport:vp}).promise;
+        const cur=P.rend.get(i); if(P.dead||!cur||cur.key!==key) return;
+        const cv=d.querySelector(".pd-c"); cv.width=off.width; cv.height=off.height; cv.getContext("2d").drawImage(off,0,0); cur.busy=false;
+        const em=d.querySelector("em"); if(em) em.remove();
+        drawInk(i);
+      }catch(e){ P.rend.delete(i); }
+      // yaddaşa qənaət: uzaq səhifələri boşalt
+      if(P.rend.size>14){ [...P.rend.keys()].sort((a,b)=>Math.abs(b-P.cur)-Math.abs(a-P.cur)).slice(0,P.rend.size-14).forEach(k=>{ if(P.vis.has(k)) return; const c=pages[k-1].querySelectorAll("canvas"); c.forEach(x=>{ x.width=0; x.height=0; }); P.rend.delete(k); }); }
+    }
+    const rerender=()=>{ clearTimeout(P.rt); P.rt=setTimeout(()=>{ P.vis.forEach(i=>render(i)); },160); };
+
+    // hansı səhifədəyik
+    function pageAt(){ const y=sc.scrollTop+sc.clientHeight*.35; let lo=0,hi=N-1; while(lo<hi){ const mid=(lo+hi+1)>>1; if(pages[mid].offsetTop<=y) lo=mid; else hi=mid-1; } return lo+1; }
+    let sT=0, bdT=0;
+    function onScroll(){
+      if(P.dead||!el.isConnected||!pages.length) return;
+      const p=pageAt();
+      if(p!==P.cur){ if(pages[P.cur-1]) pages[P.cur-1].classList.remove("cur"); P.cur=p; pages[p-1].classList.add("cur"); if(document.activeElement!==pi) pi.value=p; if($("pd-toc")&&!$("pd-toc").hidden) drawToc(); }
+      const bd=$("pd-bd"); bd.textContent=`${p} / ${N}`; bd.classList.add("on"); clearTimeout(bdT); bdT=setTimeout(()=>bd.classList.remove("on"),900);
+      clearTimeout(sT); sT=setTimeout(()=>{ if(P.api&&!P.lock&&P.api.page()!==P.cur-1) P.api.go(P.cur-1); },350);
+    }
+    sc.addEventListener("scroll",onScroll,{passive:true});
+    P.goto=(p,fromBoard)=>{ p=Math.max(1,Math.min(N,p|0)); const d=pages[p-1]; if(!d) return; P.lock=!!fromBoard; sc.scrollTop=d.offsetTop-8; onScroll(); pages.forEach(x=>x.classList.remove("cur")); d.classList.add("cur"); pi.value=P.cur; setTimeout(()=>P.lock=false,400); if(!fromBoard&&P.api&&P.api.page()!==p-1) P.api.go(p-1); };
+    pi.addEventListener("keydown",e=>{ e.stopPropagation(); if(e.key==="Enter") pi.blur(); });
+    pi.addEventListener("change",()=>P.goto(+pi.value||P.cur));
+
+    // zoom
+    function setZoom(z,ax,ay){
+      z=Math.max(.4,Math.min(4,z)); const z0=P.zoom; if(Math.abs(z-z0)<.001) return;
+      if(ax==null){ ax=sc.clientWidth/2; ay=sc.clientHeight/2; }
+      const cx=sc.scrollLeft+ax, cy=sc.scrollTop+ay; P.zoom=z; layout();
+      sc.scrollLeft=cx*z/z0-ax; sc.scrollTop=cy*z/z0-ay; LS.s("pz_zoom",z.toFixed(2)); rerender(); P.vis.forEach(i=>drawInk(i));
+    }
+    sc.addEventListener("wheel",e=>{ if(!(e.ctrlKey||e.metaKey)) return; e.preventDefault(); const r=sc.getBoundingClientRect(); setZoom(P.zoom*Math.exp(-e.deltaY*.0025),e.clientX-r.left,e.clientY-r.top); },{passive:false});
+    let pinch=null;
+    const tdist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+    sc.addEventListener("touchstart",e=>{
+      const st=[...e.changedTouches].some(t=>t.touchType==="stylus");
+      if((st||P.penOn)&&P.wr){ e.preventDefault(); return; } // qələm səhifəni sürüşdürmür — yazır
+      if(e.touches.length===2){ const r=sc.getBoundingClientRect(), t=e.touches; pinch={d:tdist(t),z:P.zoom,ax:(t[0].clientX+t[1].clientX)/2-r.left,ay:(t[0].clientY+t[1].clientY)/2-r.top}; e.preventDefault(); }
+    },{passive:false});
+    sc.addEventListener("touchmove",e=>{
+      if(P.penOn&&P.wr){ e.preventDefault(); return; }
+      if(!pinch||e.touches.length<2) return; e.preventDefault();
+      const t=e.touches, r=sc.getBoundingClientRect(), d=tdist(t), ax=(t[0].clientX+t[1].clientX)/2-r.left, ay=(t[0].clientY+t[1].clientY)/2-r.top;
+      const z0=P.zoom, z=Math.max(.4,Math.min(4,pinch.z*d/pinch.d)); const cx=sc.scrollLeft+pinch.ax, cy=sc.scrollTop+pinch.ay;
+      P.zoom=z; layout(); sc.scrollLeft=cx*z/z0-ax; sc.scrollTop=cy*z/z0-ay; pinch.ax=ax; pinch.ay=ay;
+    },{passive:false});
+    const tend=e=>{ if(pinch&&e.touches.length<2){ pinch=null; LS.s("pz_zoom",P.zoom.toFixed(2)); rerender(); P.vis.forEach(i=>drawInk(i)); } };
+    sc.addEventListener("touchend",tend); sc.addEventListener("touchcancel",tend);
+
+    // PDF üzərində yazı (lövhədəki seçilmiş qələm/marker/pozan ilə)
+    function drawInk(i,extra){
+      const d=pages[i-1], cv=d&&d.querySelector(".pd-a"); if(!cv) return;
+      const W=parseFloat(d.style.width), H=parseFloat(d.style.height), k=dpr();
+      if(cv.width!==Math.round(W*k)){ cv.width=Math.round(W*k); cv.height=Math.round(H*k); }
+      const c=cv.getContext("2d"); c.setTransform(k,0,0,k,0,0); c.clearRect(0,0,W,H);
+      (m.pdfInk[i]||[]).concat(extra?[extra]:[]).forEach(s=>stroke(c,s,W));
+    }
+    function stroke(c,s,W){
+      const p=s.p; if(!p.length) return; c.save(); c.lineCap=c.lineJoin="round"; c.strokeStyle=c.fillStyle=s.c; c.lineWidth=Math.max(.6,s.w*W);
+      if(s.h){ c.globalAlpha=.35; c.globalCompositeOperation="multiply"; }
+      if(s.d===1) c.setLineDash([c.lineWidth*3+6,c.lineWidth*2+5]); else if(s.d===2) c.setLineDash([.1,c.lineWidth*2+4]);
+      c.beginPath();
+      if(p.length===1){ c.arc(p[0][0]*W,p[0][1]*W,c.lineWidth/2,0,6.283); c.fill(); c.restore(); return; }
+      c.moveTo(p[0][0]*W,p[0][1]*W); for(let j=1;j<p.length-1;j++) c.quadraticCurveTo(p[j][0]*W,p[j][1]*W,(p[j][0]+p[j+1][0])/2*W,(p[j][1]+p[j+1][1])/2*W); c.lineTo(p[p.length-1][0]*W,p[p.length-1][1]*W);
+      c.stroke(); c.restore();
+    }
+    let dw=null;
+    inn.addEventListener("pointerdown",e=>{
+      if(e.pointerType==="pen") P.penOn=true;
+      if(!P.wr||e.pointerType==="touch"||(e.pointerType==="mouse"&&e.button!==0)) return;
+      const d=e.target.closest(".pd-p"); if(!d) return;
+      const t=izCurTool()||{t:"pen",c:"#1d4ed8",w:2}, i=+d.dataset.pg, r=d.getBoundingClientRect(), W=r.width;
+      const pt=ev=>[+((ev.clientX-r.left)/W).toFixed(4),+((ev.clientY-r.top)/W).toFixed(4)];
+      e.preventDefault(); try{ inn.setPointerCapture(e.pointerId); }catch(x){}
       const p=pt(e);
-      if(B.tool==="er"){ erBase=ink(); last=p; B.hv=p; eraseAt(p,p); req(); return; }
-      B.cur={t:B.tool,c:B.col,w:+(B.w/Wpx).toFixed(5),p:B.tool==="pen"||B.tool==="hl"?[p]:[p,p]}; B.sm=p; req();
+      if(t.t==="er"){ dw={er:true,i,pid:e.pointerId,pt,W,before:m.pdfInk[i]||[],R:(t.er||14)/W}; eraseAt(dw,p); return; }
+      const s={c:t.t==="laser"?"#ef4444":t.c,w:+(Math.max(1,t.w*(t.t==="mk"?1:1))/W).toFixed(5),p:[p]}; if(t.t==="mk") s.h=1; else if(t.d===1||t.d===2) s.d=t.d;
+      dw={i,pid:e.pointerId,pt,W,s,laser:t.t==="laser"}; drawInk(i,s);
     });
-    live.addEventListener("pointermove",e=>{
-      if(pan&&B.ty.has(e.pointerId)){ B.ty.set(e.pointerId,e.clientY); scroll(pan.sy-(avg()-pan.y)/Wpx); return; }
-      if(e.pointerId!==B.pid){ if(B.tool==="er"&&e.pointerType!=="touch"&&B.pid===null){ B.hv=pt(e); req(); } return; }
+    inn.addEventListener("pointermove",e=>{
+      if(!dw||e.pointerId!==dw.pid) return;
       const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];
-      if(B.tool==="er"){ evs.forEach(x=>{ const q=pt(x); eraseAt(last,q); last=q; }); B.hv=last; req(); return; }
-      const c=B.cur; if(!c) return;
-      if(c.t==="pen"||c.t==="hl"){ evs.forEach(x=>{ const r=pt(x), l=c.p[c.p.length-1]; B.sm=[B.sm[0]+(r[0]-B.sm[0])*.65,B.sm[1]+(r[1]-B.sm[1])*.65]; if(Math.hypot(B.sm[0]-l[0],B.sm[1]-l[1])*Wpx>=.7) c.p.push([+B.sm[0].toFixed(4),+B.sm[1].toFixed(4)]); }); }
-      else c.p[1]=pt(e);
-      req();
+      if(dw.er){ evs.forEach(x=>eraseAt(dw,dw.pt(x))); return; }
+      evs.forEach(x=>{ const q=dw.pt(x), l=dw.s.p[dw.s.p.length-1]; if(Math.hypot(q[0]-l[0],q[1]-l[1])*dw.W>=.8) dw.s.p.push(q); });
+      drawInk(dw.i,dw.s);
     });
-    const up=e=>{
-      if(B.ty.has(e.pointerId)){ B.ty.delete(e.pointerId); if(pan){ pan=B.ty.size>=2?{y:avg(),sy:B.sy}:null; if(!B.ty.size) pan=null; return; } }
-      if(e.pointerId!==B.pid) return; B.pid=null;
-      if(erBase){ if(erBase!==ink()){ push(erBase); save(); } erBase=null; if(e.pointerType==="touch") B.hv=null; req(); syncTools(); return; }
-      const c=B.cur; B.cur=null; if(!c) return;
-      if(c.t==="pen"||c.t==="hl"){ const r=pt(e), l=c.p[c.p.length-1]; if(Math.hypot(r[0]-l[0],r[1]-l[1])*Wpx>.5) c.p.push(r); }
-      else if(Math.hypot(c.p[1][0]-c.p[0][0],c.p[1][1]-c.p[0][1])*Wpx<4){ req(); return; }
-      push(ink()); B.m.ink[B.page]=ink().concat([c]); dS(bc,c); req(); save(); syncTools();
+    function eraseAt(g,p){ const arr=m.pdfInk[g.i]||[], keep=arr.filter(s=>!s.p.some((q,j)=>{ const a=j?s.p[j-1]:q; return segD(p,a,q)<g.R+s.w/2; })); if(keep.length!==arr.length){ m.pdfInk[g.i]=keep; drawInk(g.i); } }
+    function segD(p,a,b){ const dx=b[0]-a[0],dy=b[1]-a[1],l=dx*dx+dy*dy; if(!l) return Math.hypot(p[0]-a[0],p[1]-a[1]); const t=Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dy)/l)); return Math.hypot(p[0]-a[0]-t*dx,p[1]-a[1]-t*dy); }
+    const pup=e=>{
+      if(e.pointerType==="pen") setTimeout(()=>P.penOn=false,60);
+      if(!dw||e.pointerId!==dw.pid) return; const g=dw; dw=null;
+      if(g.er){ if((m.pdfInk[g.i]||[])!==g.before){ P.undo.push([g.i,g.before]); saveMeta(m); } return; }
+      if(g.laser){ setTimeout(()=>drawInk(g.i),700); return; }
+      P.undo.push([g.i,m.pdfInk[g.i]||[]]); m.pdfInk[g.i]=(m.pdfInk[g.i]||[]).concat([g.s]); drawInk(g.i); saveMeta(m); paint();
     };
-    live.addEventListener("pointerup",up); live.addEventListener("pointercancel",up);
-    live.addEventListener("pointerleave",()=>{ if(B&&B.pid===null&&B.hv){ B.hv=null; req(); } });
+    inn.addEventListener("pointerup",pup); inn.addEventListener("pointercancel",pup);
+
+    function paint(){
+      el.querySelector('[data-p="wr"]').classList.toggle("on",P.wr);
+      el.querySelector('[data-p="toc"]').classList.toggle("on",!$("pd-toc").hidden);
+      el.querySelector('[data-p="un"]').disabled=!P.undo.length;
+      inn.style.cursor=P.wr?"crosshair":"";
+    }
+    el.addEventListener("click",e=>{
+      const tp=e.target.closest("[data-tp]"), tm=e.target.closest("[data-tm]");
+      if(tm){ e.stopPropagation(); tocMenu(+tm.dataset.tm); return; }
+      if(tp){ P.goto(+tp.dataset.tp); if(innerWidth<=1100){ $("pd-toc").hidden=true; paint(); } return; }
+      const b=e.target.closest("[data-p]"); if(!b) return; const k=b.dataset.p;
+      if(k==="toc"){ const t=$("pd-toc"); t.hidden=!t.hidden; LS.s("pz_toc",t.hidden?"0":"1"); if(!t.hidden) drawToc(); paint(); setTimeout(()=>{ layout(); rerender(); },30); }
+      else if(k==="zi") setZoom(P.zoom*1.25); else if(k==="zo") setZoom(P.zoom/1.25);
+      else if(k==="fit"){ setZoom(1); sc.scrollLeft=0; }
+      else if(k==="wr"){ P.wr=!P.wr; LS.s("pz_wr",P.wr?"1":"0"); paint(); toast(P.wr?"PDF üzərində qələmlə yaza bilərsiniz":"PDF-də yazı bağlıdır — yalnız baxış"); }
+      else if(k==="un"){ const u=P.undo.pop(); if(u){ m.pdfInk[u[0]]=u[1]; drawInk(u[0]); saveMeta(m); P.goto(u[0]); } paint(); }
+      else if(k==="hide"){ const t=$("iz-doc"); if(t){ t.classList.add("closed"); LS.s("pz_closed","1"); document.querySelectorAll('#iz-ov [data-act="pdf"]').forEach(x=>x.classList.remove("on")); } }
+      else if(k==="addt") addTitle();
+    });
+    async function addTitle(){
+      const r=await ask(`${P.cur}-ci səhifə üçün başlıq`,"",`<label class="ck"><input type="checkbox"> Alt başlıq (məs. «Qalıqlı bölmə»)</label>`); if(!r) return;
+      m.toc=(m.toc||[]).concat([{t:r.v,p:P.cur,lv:r.c?1:0}]); saveMeta(m); drawToc(); toast("Başlıq əlavə olundu");
+    }
+    function tocMenu(ix){
+      const x=m.toc[ix]; if(!x) return;
+      sheet(`<h4>${esc(x.t)} · ${x.p}-ci səh.</h4><button type="button" class="mi" data-k="ren">✏️ Adını dəyiş</button><button type="button" class="mi" data-k="here">📍 Bu səhifəyə (${P.cur}) bağla</button><button type="button" class="mi" data-k="lv">${x.lv?"⬅ Əsas başlıq et":"➡ Alt başlıq et"}</button><button type="button" class="mi red" data-k="del">🗑 Sil</button>`,async(k,s)=>{
+        s.remove();
+        if(k==="ren"){ const r=await ask("Yeni ad",x.t); if(r) x.t=r.v; }
+        else if(k==="here") x.p=P.cur;
+        else if(k==="lv") x.lv=x.lv?0:1;
+        else if(k==="del") m.toc.splice(ix,1);
+        saveMeta(m); drawToc();
+      });
+    }
+
+    // başlanğıc
+    const ro=new ResizeObserver(()=>{ if(!pages.length||P.dead||!el.isConnected) return; const cy=sc.scrollTop/(inn.scrollHeight||1); layout(); sc.scrollTop=cy*inn.scrollHeight; rerender(); P.vis.forEach(i=>drawInk(i)); });
+    pdf.getPage(1).then(pg=>{ const v=pg.getViewport({scale:1}); build(v.height/v.width); ro.observe(sc); initToc(); paint(); P.goto(m.last||1,true); });
+    P.destroy=()=>{ P.dead=true; ro.disconnect(); if(P.io) P.io.disconnect(); clearTimeout(sT); };
+    return P;
   }
-  function push(prev){ (B.undo[B.page]=B.undo[B.page]||[]).push(prev); B.redo[B.page]=[]; }
-  function commitAll(arr){ push(ink()); B.m.ink[B.page]=arr; redraw(); save(); syncTools(); }
-  function undo(){ const u=B.undo[B.page]; if(!u||!u.length) return; (B.redo[B.page]=B.redo[B.page]||[]).push(ink()); B.m.ink[B.page]=u.pop(); redraw(); save(); syncTools(); }
-  function redo(){ const r=B.redo[B.page]; if(!r||!r.length) return; (B.undo[B.page]=B.undo[B.page]||[]).push(ink()); B.m.ink[B.page]=r.pop(); redraw(); save(); syncTools(); }
-  let svT=0;
-  function save(now){ if(!B) return Promise.resolve(); clearTimeout(svT); const m=B.m;
-    Object.keys(m.ink).forEach(k=>{ if(!m.ink[k]||!m.ink[k].length) delete m.ink[k]; });
-    const go=()=>putMeta(m).catch(e=>{ console.error(e); toast("Yadda saxlanmadı: "+errAz(e)); });
-    if(now) return go(); svT=setTimeout(go,700); return Promise.resolve(); }
-  function key(e){
-    if(!B||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
-    const k=e.key, m=e.ctrlKey||e.metaKey;
-    if(m&&k.toLowerCase()==="z"){ e.preventDefault(); e.shiftKey?redo():undo(); }
-    else if(m&&k.toLowerCase()==="y"){ e.preventDefault(); redo(); }
-    else if(m&&k.toLowerCase()==="s"){ e.preventDefault(); save(true).then(()=>toast("Yadda saxlandı")); }
-    else if(k==="ArrowRight"||k==="PageDown"){ e.preventDefault(); setPage(B.page+1); }
-    else if(k==="ArrowLeft"||k==="PageUp"){ e.preventDefault(); setPage(B.page-1); }
-    else if(k==="ArrowDown"){ e.preventDefault(); smooth(B.sy+Hpx*.4/Wpx); }
-    else if(k==="ArrowUp"){ e.preventDefault(); smooth(B.sy-Hpx*.4/Wpx); }
-    else if(k==="Escape"&&$("pz-ov").classList.contains("rec")) fs();
-  }
-  function fs(){
-    const ov=$("pz-ov"), on=!ov.classList.contains("rec"); ov.classList.toggle("rec",on);
-    try{ if(on&&ov.requestFullscreen&&!document.fullscreenElement) ov.requestFullscreen().catch(()=>{}); if(!on&&document.fullscreenElement) document.exitFullscreen().catch(()=>{}); }catch(e){}
-  }
-  document.addEventListener("fullscreenchange",()=>{ const ov=$("pz-ov"); if(ov&&!document.fullscreenElement) ov.classList.remove("rec"); });
-  async function close(){
-    if(!B) return; await save(true);
-    removeEventListener("keydown",key); if(B.ro) B.ro.disconnect(); if(B.io) B.io.disconnect();
-    if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
-    try{ if(B.snd===null) localStorage.removeItem("ttm_sound"); else localStorage.setItem("ttm_sound",B.snd); }catch(e){}
-    if(B.pdf) try{ B.pdf.destroy(); }catch(e){}
-    const ov=$("pz-ov"); if(ov) ov.remove(); document.body.style.overflow=""; B=null;
-    if(!list.hidden) renderList();
-  }
-  addEventListener("pagehide",()=>{ if(B) save(true); });
 })();
 </script>
 
