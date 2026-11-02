@@ -18613,7 +18613,9 @@ function texPlain(s){
     const tk = SP.tk, qs = await questions(a.examId);
     if ((a.perQuestion || []).some(p => p && p.type === "detailed") && !SP.photos[id]) {
       SP.photos[id] = {};
-      try { const ph = await db.collection("detailedAnswers").where("attemptId", "==", id).get(); ph.forEach(d => { const x = d.data(); SP.photos[id][x.questionIndex] = x.photoBase64; }); } catch (e) { console.warn(e); }
+      const col = db.collection("detailedAnswers");
+      const ph = await col.where("attemptId", "==", id).get().catch(() => col.where("examId", "==", a.examId).where("attemptId", "==", id).get()).catch(e => { console.warn(e); return null; });
+      if (ph) ph.forEach(d => { const x = d.data(); SP.photos[id][x.questionIndex] = x.photoBase64; });
     }
     if (SP.times[id] === undefined) { SP.times[id] = null; try { const d = await db.collection("attemptTimes").doc(id).get(); if (d.exists) SP.times[id] = d.data(); } catch (e) {} }
     if (tk !== SP.tk || !$("sp-xb-" + id)) return;
