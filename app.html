@@ -2,7 +2,7 @@
 <html lang="az">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>TTM Tədris Mərkəzi — Giriş</title>
 <link rel="canonical" href="https://tamtedris.az/app.html" />
 <meta name="description" content="TTM Tədris Mərkəzi şagird və müəllim portalı. Daxil olmaq üçün istifadəçi adı və şifrənizi daxil edin." />
@@ -18112,11 +18112,11 @@ function texPlain(s){
 .sp-hero{position:relative;overflow:hidden;border-radius:24px;padding:18px;color:#fff;background:linear-gradient(120deg,#0d4f8f,#0B3C5D 65%);box-shadow:0 14px 30px rgba(11,60,93,.26);display:flex;flex-wrap:wrap;align-items:center;gap:14px}
 .sp-hero .cap{position:absolute;right:26%;top:50%;transform:translateY(-50%);width:120px;height:120px;opacity:.26;fill:#9cc8f5;pointer-events:none}
 .sp-hero .sp-av{width:72px;height:72px;font-size:25px;border:3px solid #fff}
-.sp-hero .tx{flex:1;min-width:170px;position:relative}.sp-hero h3{margin:0;font-size:22px;font-weight:800;color:#fff;overflow-wrap:anywhere}
+.sp-hero .tx{flex:1;min-width:150px;position:relative}.sp-hero h3{margin:0;font-size:22px;font-weight:800;color:#fff;overflow-wrap:anywhere}
 .sp-hero .tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
 .sp-tag{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:999px;font-size:12.5px;font-weight:700;border:1.5px solid rgba(255,255,255,.5);color:#fff}
 .sp-tag.ok{background:#dcfce7;border-color:#dcfce7;color:#166534}
-@media(max-width:600px){.sp-hero .cap{display:none}.sp-stats span{font-size:10.5px}}
+@media(max-width:600px){.sp-hero{padding:15px;gap:11px}.sp-hero .sp-av{width:58px;height:58px;font-size:20px}.sp-hero h3{font-size:19px;line-height:1.2}.sp-hero .tags .sp-tag{font-size:12px}.sp-hero .cap{display:none}.sp-stats span{font-size:10.5px}}
 .sp-acts{display:flex;gap:8px;position:relative}.sp-acts button{width:42px;height:42px;border-radius:13px;background:rgba(255,255,255,.14);border:1.5px solid rgba(255,255,255,.35);color:#fff;display:flex;align-items:center;justify-content:center}.sp-acts button:hover{background:rgba(255,255,255,.25)}
 .sp-tabs{display:flex;gap:4px;overflow-x:auto;margin:12px 0;padding:5px;background:#fff;border-radius:16px;box-shadow:var(--shadow-sm);scrollbar-width:none}.sp-tabs::-webkit-scrollbar{display:none}
 .sp-tabs button{flex:1 0 auto;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 12px;border-radius:12px;background:none;font-size:13px;font-weight:700;color:var(--color-text);white-space:nowrap}.sp-tabs button.on{background:var(--color-primary);color:#fff}
@@ -18255,7 +18255,8 @@ function texPlain(s){
   }
   function suggest(fullName, groupId) {
     const w = String(fullName || "").trim().split(/\s+/).filter(Boolean).map(slug).filter(Boolean);
-    if (!w.length) return { username: "", password: "" };
+    if (!String(fullName || "").trim()) return { username: "", password: "" };
+    if (!w.length) w.push("sagird"); // məs. kiril hərfləri ilə yazılmış ad
     const code = groupCode(gName(groupId));
     let base = w.length > 1 ? (w[0] + w[1]) : (w[0] + code);
     base = base.slice(0, 24);
@@ -18482,7 +18483,7 @@ function texPlain(s){
     topics().then(l => {
       if (tk !== SP.tk) return; const e = $("sp-ov-wk"); if (!e) return;
       const w = l.filter(x => x.pct < 75).slice(0, 3);
-      e.innerHTML = w.length ? w.map(topicBar).join("") : `<div class="sp-empty">${l.length ? "Zəif mövzu yoxdur 👍" : "Məlumat hələ yoxdur"}</div>`;
+      e.innerHTML = w.length ? w.map(topicBar).join("") : `<div class="sp-empty">${l.length ? "Zəif mövzu yoxdur" : "Məlumat hələ yoxdur"}</div>`;
     });
   }
   function attRow(a) {
@@ -18671,7 +18672,7 @@ function texPlain(s){
       h += qCard(q, p, i, null, 0, titleOf(a) + " · " + fmtS(ms(a.submittedAt))); n++;
     }));
     if (!o.isConnected) return;
-    body.innerHTML = n ? `<div class="muted-note" style="margin:0 0 10px">${n} sual</div>${h}` : `<div class="sp-empty">Səhv sual yoxdur 👍</div>`;
+    body.innerHTML = n ? `<div class="muted-note" style="margin:0 0 10px">${n} sual</div>${h}` : `<div class="sp-empty">Səhv sual yoxdur</div>`;
     body.addEventListener("click", e => { const im = e.target.closest(".sp-q img"); if (im) openImageLightbox(im.src); });
     if (window.ttmTeX) ttmTeX(body);
   };
@@ -18760,7 +18761,7 @@ function texPlain(s){
 
   // ---------- Ödənişlər ----------
   const payOpen = () => (typeof paymentsUnlocked !== "undefined" && paymentsUnlocked) || SP.payOk;
-  const pinForm = () => `<div class="muted-note" style="margin:0">🔒 Ödənişlər bölməsinin kodunu yazın</div><div class="sp-pin"><input type="password" inputmode="numeric" id="sp-pin" placeholder="Kod" autocomplete="off" /><button type="button" class="sp-btn" style="margin:0" onclick="spPin()">Aç</button></div>`;
+  const pinForm = () => `<div class="muted-note" style="margin:0">Ödənişlər bölməsinin kodunu yazın</div><div class="sp-pin"><input type="password" inputmode="numeric" id="sp-pin" placeholder="Kod" autocomplete="off" /><button type="button" class="sp-btn" style="margin:0" onclick="spPin()">Aç</button></div>`;
   window.spPin = () => {
     const i = $("sp-pin"); if (!i) return;
     if (i.value !== PAYMENTS_PIN) { toast("Kod yanlışdır"); i.value = ""; return; }
@@ -18908,6 +18909,54 @@ function texPlain(s){
       doc.save(safe(s.fullName) + " hesabat.pdf");
     } catch (e) { console.error(e); toast("PDF alınmadı: " + errAz(e)); }
   };
+})();
+</script>
+<style id="ttm-polish">
+/* Bütün sayt üçün toxunuş və mobil cila. Mövcud qaydaları dəyişmir: :where() və ayrıca `scale` xassəsi istifadə olunur. */
+:root{--ease-out:cubic-bezier(.23,1,.32,1);--ease-in-out:cubic-bezier(.77,0,.175,1);--ease-drawer:cubic-bezier(.32,.72,0,1)}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;overscroll-behavior-y:none}
+body{overscroll-behavior-y:none}
+::selection{background:rgba(29,111,214,.24)}
+input,textarea{caret-color:#1d6fd6}
+:where(button,a,[role=button],select,summary,input):focus-visible{outline:2px solid #1d6fd6;outline-offset:2px}
+:where(button,a,label,select,summary,[role=button],[onclick]){touch-action:manipulation}
+:where(button,[role=button],.tab-btn,.v2-nav-btn,.sp-chip,.sp-tabs button){-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+:where(button,[role=button],[onclick]){transition:scale 140ms var(--ease-out)}
+:where(button,[role=button]):not(:disabled):active{scale:.97}
+.a-qc:active,.v2-more-row:active,.list-item[onclick]:active,.door-card:active,.rs-row:active,.pq-tc:active,.vx-mod:active,.vx-tp:active,.sp-row:active,.sp-door:active,.sp-er:active,.sp-exh:active,.sp-bar2:active,.sp-menu button:active{scale:.985}
+.sp-tabs button:active,.sp-qn:active{scale:.95}
+:where(.sp-sc,.sp-ring span,.sp-big b,.sp-stats b,.sp-cnt b,.sp-qn,.sp-kv,.a-cnt b,.pq-hstats b,.vx-qk b,table){font-variant-numeric:tabular-nums}
+:where(h1,h2){letter-spacing:-.02em}
+:where(h1,h2,h3,h4){text-wrap:balance}
+:where(.sp-sheet,.st-sheet,.kf-sbx,.ttm-about .sh,#dq-sheet .sh){overscroll-behavior:contain}
+@media (pointer:coarse){input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),select,textarea{font-size:16px!important}}
+@media (prefers-reduced-motion:reduce){#view-admin .tab-panel.active,#view-student .tab-panel.active,#sp-home,#sp-listv,#sp-add,.sp-sheet{animation:none}:where(button,[role=button]):not(:disabled):active{scale:1}}
+.a-qc:active,.bq-it:active,.btn-outline:active,.btn-primary:active,.btn-small:active,.cp-sw:active,.cp-trigger:active,.door-card:active,.dq-main:active,.eg-opt:active,.gx-lv:active,.ih-card:active,.iz-b:active,.iz-c:active,.kf button:active,.lt-card:active,.option-btn:active,.pq-cfa button:active,.pq-go:active,.pq-opt:active,.pq-tc:active,.pzl-item:active,.race-opt-btn:active,.rs-row:active,.sq-subj:active,.stat-icon-card:active,.tab-btn:active,.upload-choice-card:active,.v2-cta:active,.v2-more-row:active,.v2-sc:active,.v2-subj:active,.v2-trow:active,.vx-mod:active,.vx-node:active,.wz-back:active,.wz-nav button:active,.xn-btn:active{scale:1}
+</style>
+<script id="ttm-polish-js">
+(function () {
+  // Toxunuşlu ekranda :hover ilişib qalmasın
+  if (matchMedia("(hover:none)").matches) {
+    const seen = new WeakSet();
+    const clean = list => {
+      for (let i = list.cssRules.length - 1; i >= 0; i--) {
+        const r = list.cssRules[i];
+        if (r.cssRules && r.type !== 1) { clean(r); continue; }
+        const s = r.selectorText; if (!s || !s.includes(":hover") || /\([^)]*,/.test(s)) continue;
+        const keep = s.split(",").filter(x => !x.includes(":hover"));
+        if (keep.length) r.selectorText = keep.join(","); else list.deleteRule(i);
+      }
+    };
+    const run = () => { for (const sh of document.styleSheets) { if (seen.has(sh)) continue; seen.add(sh); try { clean(sh); } catch (e) {} } };
+    run();
+    let t = 0; const later = () => { clearTimeout(t); t = setTimeout(run, 250); };
+    [document.head, document.body].forEach(n => new MutationObserver(later).observe(n, { childList: true }));
+    addEventListener("load", later);
+  }
+  // Klaviatura: istifadəçi adı və kodlar
+  ["username", "tr-username", "sr-username", "student-username", "student-password"].forEach(id => { const e = document.getElementById(id); if (e) { e.setAttribute("autocapitalize", "none"); e.setAttribute("autocorrect", "off"); e.spellcheck = false; } });
+  const pw = document.getElementById("password"); if (pw) pw.setAttribute("enterkeyhint", "go");
+  const pin = document.getElementById("payments-pin-input"); if (pin) pin.setAttribute("inputmode", "numeric");
 })();
 </script>
 
