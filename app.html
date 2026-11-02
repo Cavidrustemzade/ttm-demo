@@ -1655,26 +1655,54 @@ function ttmConfirm(msg){return new Promise(function(res){var m=document.createE
     <div class="tab-panel" id="tab-more"><div class="card"><div class="v2-sec-head"><h3>Daha çox</h3></div><div id="a-more-list"></div></div></div>
     <div class="tab-panel" id="tab-settings"><div class="card"><h3>Parametrlər</h3><div class="list-item"><div class="list-item-info"><div class="list-item-title" id="a-set-name">—</div><div class="list-item-sub">Hesab</div></div></div><a class="list-item" href="privacy.html" style="text-decoration:none;color:inherit;margin-top:6px;"><div class="list-item-info"><div class="list-item-title">Məxfilik siyasəti</div><div class="list-item-sub">Məlumatlarınız necə qorunur</div></div><span class="v2-chev">›</span></a><button type="button" class="list-item ttm-about-open" style="width:100%;text-align:left;background:none;color:inherit;"><div class="list-item-info"><div class="list-item-title">Tətbiq haqqında</div><div class="list-item-sub">Versiya və əlaqə</div></div><span class="v2-chev">›</span></button><button class="btn-small" id="a-set-logout" style="width:100%;background:var(--color-danger);margin-top:8px;">Çıxış</button><a href="delete-account.html" class="btn-outline" style="display:block;text-align:center;text-decoration:none;margin-top:8px;color:var(--color-danger);border-color:var(--color-danger);">Hesabı sil</a></div></div>
     <div class="tab-panel active" id="tab-students">
-      <div class="card">
-        <h3 id="student-form-title">Yeni şagird əlavə et</h3>
-        <input type="hidden" id="student-edit-id" value="" />
-        <div class="field-row">
-          <div class="field"><label>Ad Soyad</label><input type="text" id="student-fullname" placeholder="Məs: Əli Vəliyev" /></div>
-          <div class="field"><label>Qrup</label><select id="student-group"></select></div>
+      <div id="sp-home">
+        <div class="sp-head"><h2>Şagirdlər</h2><p>Şagird idarəetməsi</p></div>
+        <div class="sp-doors">
+          <button type="button" class="sp-door blue" id="sp-door-list"><img alt="" src="data:image/webp;base64,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" /><span class="bar"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.5 2.8-6 6-6s6 2.5 6 6M16 5.5a3 3 0 0 1 0 6M18 14.5c2 .6 3 2.6 3 5.5"/></svg><span class="tx"><b>Şagirdlər</b><small id="sp-count">—</small></span><i>→</i></span></button>
+          <button type="button" class="sp-door green" id="sp-door-add"><img alt="" src="data:image/webp;base64,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" /><span class="bar"><svg viewBox="0 0 24 24"><circle cx="10" cy="8" r="3.4"/><path d="M3.5 20c0-3.6 2.9-6.2 6.5-6.2 1.3 0 2.5.3 3.5.9M18 13v7M14.5 16.5h7"/></svg><span class="tx"><b>Yeni şagird əlavə et</b><small>Ad və şifrə avtomatik yazılır</small></span><i>→</i></span></button>
         </div>
-        <div class="field-row" id="student-credentials-row">
-          <div class="field"><label>İstifadəçi adı</label><input type="text" id="student-username" placeholder="Məs: alivaliyev" /></div>
-          <div class="field"><label>Şifrə</label><input type="text" id="student-password" placeholder="Sadə şifrə seçin" /></div>
-        </div>
-        <div style="display:flex; gap:8px;">
-          <button class="btn-small" id="student-save-btn">Əlavə et</button>
-          <button class="btn-outline" id="student-cancel-edit-btn" style="display:none">Ləğv et</button>
-        </div>
-        <div class="muted-note">Qeyd: Redaktədə istifadəçi adı/şifrə dəyişdirilə bilməz (Firebase məhdudiyyəti). Yalnız ad və qrup yenilənir.</div>
       </div>
-      <div class="card">
-        <h3>Şagird siyahısı</h3>
-        <div id="students-list"><div class="empty-state">Yüklənir...</div></div>
+      <div id="sp-listv" style="display:none">
+        <div class="sp-bar">
+          <button type="button" class="sp-ib" id="sp-list-back" aria-label="Geri">←</button>
+          <h2>Şagirdlər</h2>
+          <button type="button" class="sp-ib" id="sp-excel"><svg viewBox="0 0 24 24"><path d="M12 4v11M7.5 11l4.5 4.5 4.5-4.5M4 20h16"/></svg>Excel</button>
+          <button type="button" class="sp-ib pri" id="sp-list-add" aria-label="Yeni şagird"><svg viewBox="0 0 24 24"><circle cx="10" cy="8" r="3.4"/><path d="M3.5 20c0-3.6 2.9-6.2 6.5-6.2M18 13v7M14.5 16.5h7"/></svg></button>
+        </div>
+        <div class="sp-md" id="sp-md">
+          <aside class="sp-master">
+            <div class="sp-tools">
+              <label class="sp-search"><svg class="sp-svg" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input type="search" id="sp-q" placeholder="Şagird axtar..." autocomplete="off" /></label>
+              <label class="sp-sort" title="Sırala"><svg class="sp-svg" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><select id="sp-sort" aria-label="Sırala"><option value="name">Ada görə</option><option value="hi">Nəticə: yüksəkdən</option><option value="lo">Nəticə: aşağıdan</option></select></label>
+            </div>
+            <div class="sp-chips" id="sp-chips"></div>
+            <div id="students-list"><div class="empty-state">Yüklənir...</div></div>
+            <div class="sp-pager" id="sp-pager"></div>
+          </aside>
+          <section class="sp-detail" id="sp-detail"></section>
+        </div>
+      </div>
+      <div id="sp-add" style="display:none">
+        <div class="sp-bar"><button type="button" class="sp-ib" id="sp-add-back" aria-label="Geri">←</button><h2 id="sp-add-title">Yeni şagird</h2></div>
+        <div id="sp-done"></div>
+        <div class="card sp-addcard">
+          <h3 id="student-form-title">Yeni şagird əlavə et</h3>
+          <input type="hidden" id="student-edit-id" value="" />
+          <div class="field-row">
+            <div class="field"><label>Ad Soyad</label><input type="text" id="student-fullname" placeholder="Məs: Əli Vəliyev" autocomplete="off" /></div>
+            <div class="field"><label>Qrup</label><select id="student-group"></select></div>
+          </div>
+          <div class="field-row" id="student-credentials-row">
+            <div class="field"><label>İstifadəçi adı</label><input type="text" id="student-username" placeholder="Ad yazanda özü dolacaq" autocomplete="off" autocapitalize="none" /></div>
+            <div class="field"><label>Şifrə</label><input type="text" id="student-password" placeholder="Qrupa görə özü dolacaq" autocomplete="off" autocapitalize="none" /></div>
+          </div>
+          <button type="button" class="sp-regen" id="sp-regen">↻ Yenidən təklif et</button>
+          <div style="display:flex; gap:8px;">
+            <button class="btn-small" id="student-save-btn">Əlavə et</button>
+            <button class="btn-outline" id="student-cancel-edit-btn" style="display:none">Ləğv et</button>
+          </div>
+          <div class="muted-note" id="sp-form-note">İstifadəçi adı ada, şifrə isə ada və qrupa görə avtomatik yazılır. İstəsəniz dəyişə bilərsiniz.</div>
+        </div>
       </div>
     </div>
 
@@ -3194,19 +3222,30 @@ document.getElementById("student-save-btn").addEventListener("click", async () =
     await db.collection("users").doc(editId).update({ fullName });
     toast("Yeniləndi");
     resetStudentForm();
+    if (window.spAfterEdit) window.spAfterEdit(editId);
     return;
   }
 
   // Yeni şagird
-  const username = document.getElementById("student-username").value.trim().toLowerCase();
+  let username = document.getElementById("student-username").value.trim().toLowerCase();
   const password = document.getElementById("student-password").value;
   if (!username || !password) { toast("İstifadəçi adı və şifrə yazın"); return; }
   if (password.length < 6) { toast("Şifrə ən azı 6 simvol olmalıdır"); return; }
 
   document.getElementById("student-save-btn").disabled = true;
   try {
-    const email = username + USERNAME_DOMAIN;
-    const cred = await secondaryAuth.createUserWithEmailAndPassword(email, password);
+    // Avtomatik ad başqası tərəfindən tutulubsa, sonuna rəqəm artırıb yenidən yoxlayırıq
+    const autoName = !window.spUsernameIsAuto || window.spUsernameIsAuto();
+    const baseName = username;
+    let cred = null;
+    for (let n = 2; !cred; n++) {
+      try {
+        cred = await secondaryAuth.createUserWithEmailAndPassword(username + USERNAME_DOMAIN, password);
+      } catch (e) {
+        if (e.code !== "auth/email-already-in-use" || !autoName || n > 30) throw e;
+        username = baseName + n;
+      }
+    }
     const uid = cred.user.uid;
     await secondaryAuth.signOut();
 
@@ -3218,6 +3257,7 @@ document.getElementById("student-save-btn").addEventListener("click", async () =
 
     toast("Şagird əlavə edildi");
     resetStudentForm();
+    if (window.spAfterAdd) await window.spAfterAdd({ uid, fullName, username, password, groupId });
   } catch (err) {
     console.error(err);
     if (err.code === "auth/email-already-in-use") {
@@ -3234,6 +3274,7 @@ window.deleteStudent = async (id) => {
   if (!(await ttmConfirm("Bu şagirdi silmək istədiyinizə əminsiniz? (Giriş imkanı dərhal bağlanacaq)"))) return;
   await db.collection("students").doc(id).update({ active: false });
   await db.collection("users").doc(id).delete();
+  db.collection("studentCreds").doc(id).delete().catch(() => {});
   toast("Şagird silindi");
 };
 
@@ -11797,6 +11838,7 @@ function homeExtra(){
       const c = aCur();
       if (c && c.id === "tab-exams" && c.mode === "create" && window.wzStep && wzStep() > 1) { wzGo(wzStep() - 1); return true; }
       if (c && c.id === "tab-groups" && vis($("daily-view-students")) && $("daily-back-btn")) { $("daily-back-btn").click(); return true; }
+      if (c && c.id === "tab-students" && window.spBackInner && window.spBackInner()) return true;
     }
     const p = document.querySelector(`#view-${r === "a" ? "admin" : "student"} .tab-panel.active`);
     const ib = p && Array.from(p.querySelectorAll('button[onclick^="tvList"],button[onclick^="ppRenderList"]')).find(vis);
@@ -18022,6 +18064,848 @@ function texPlain(s){
       else if(s.t==="poly"){ c.moveTo(X(0),Y(0)); for(let i=1;i<P.length;i++) c.lineTo(X(i),Y(i)); c.closePath(); } }
     c.stroke(); c.restore();
   }
+})();
+</script>
+
+<style id="sp-css">
+#sp-home,#sp-listv,#sp-add{animation:spIn .28s ease both}
+@keyframes spIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.sp-head{margin:2px 2px 16px}.sp-head h2{font-size:24px;font-weight:800;color:var(--color-primary);margin:0}.sp-head p{font-size:13.5px;color:var(--color-text-muted);margin:2px 0 0}
+.sp-doors{display:grid;grid-template-columns:1fr;gap:16px;max-width:900px;margin:0 auto}
+@media(min-width:640px){.sp-doors{grid-template-columns:1fr 1fr;gap:22px}}
+.sp-door{position:relative;display:block;width:100%;padding:0;border-radius:26px;overflow:hidden;text-align:left;color:inherit;background:#fff;box-shadow:0 14px 34px rgba(11,60,93,.18);transition:transform .18s,box-shadow .18s}
+.sp-door:hover{transform:translateY(-3px);box-shadow:0 20px 42px rgba(11,60,93,.24)}.sp-door:active{transform:scale(.985)}
+.sp-door img{display:block;width:100%;aspect-ratio:578/320;object-fit:cover}
+.sp-door .bar{display:flex;align-items:center;gap:12px;padding:14px 16px}
+.sp-door .bar svg{width:30px;height:30px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.sp-door .tx{flex:1;min-width:0}.sp-door b{display:block;font-size:17px;font-weight:800;line-height:1.2}.sp-door small{display:block;font-size:12.5px;opacity:.82;margin-top:2px}
+.sp-door i{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:18px;font-weight:800;flex:none}
+.sp-door.blue .bar{background:linear-gradient(135deg,#0d5cae,#0B3C5D);color:#fff}.sp-door.blue i{background:rgba(255,255,255,.18)}
+.sp-door.green .bar{background:#eafaf0;color:#14532d}.sp-door.green .bar svg{color:#16a34a}.sp-door.green i{background:#16a34a;color:#fff}
+.sp-bar{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.sp-bar h2{flex:1;min-width:0;font-size:20px;font-weight:800;color:var(--color-primary);margin:0}
+.sp-ib{height:40px;min-width:40px;padding:0 12px;border-radius:12px;background:#fff;color:var(--color-primary);font-weight:700;font-size:13px;box-shadow:var(--shadow-sm);display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:none}
+.sp-ib svg,.sp-svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.sp-ib.pri{background:var(--color-primary);color:#fff}
+.sp-md{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}.sp-md>*{min-width:0}
+.sp-md .sp-detail{display:none}.sp-md.detail .sp-master{display:none}.sp-md.detail .sp-detail{display:block}
+@media(min-width:980px){.sp-md{grid-template-columns:330px minmax(0,1fr)}.sp-md .sp-master,.sp-md.detail .sp-master{display:block;position:sticky;top:76px}.sp-md .sp-detail{display:block}.sp-pback{display:none!important}}
+.sp-master{background:#fff;border-radius:22px;padding:14px;box-shadow:var(--shadow-sm)}
+.sp-tools{display:flex;gap:8px;margin-bottom:10px}
+.sp-search{flex:1;min-width:0;position:relative}.sp-search svg{position:absolute;left:12px;top:12px;color:var(--color-text-muted)}
+.sp-search input{width:100%;height:42px;padding:0 12px 0 38px;border:1.5px solid var(--color-gray);border-radius:999px;font-size:14px;font-family:inherit;background:#f8fafc;outline:none}.sp-search input:focus{border-color:var(--color-primary);background:#fff}
+.sp-sort{width:42px;height:42px;position:relative;flex:none;border-radius:12px;border:1.5px solid var(--color-gray);display:flex;align-items:center;justify-content:center;color:var(--color-primary);background:#fff}
+.sp-sort select{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer;font-size:14px}
+.sp-chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;margin-bottom:6px;border-bottom:1px solid #eef2f6;scrollbar-width:none}.sp-chips::-webkit-scrollbar{display:none}
+.sp-chip{flex:none;padding:7px 12px;border-radius:999px;background:#fff;border:1.5px solid var(--color-gray);font-size:12.5px;font-weight:700;color:var(--color-text);white-space:nowrap}
+.sp-chip.on{background:var(--color-primary);border-color:var(--color-primary);color:#fff}
+.sp-row{display:flex;align-items:center;gap:11px;width:100%;padding:10px;border-radius:16px;background:#fff;text-align:left;color:inherit;margin-top:6px;box-shadow:0 1px 0 #eef2f6}
+.sp-row:hover{background:#f6f9fc}.sp-row.on{background:#dcebfb;box-shadow:inset 0 0 0 1.5px #a8cdf3}
+.sp-av{width:44px;height:44px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex:none}
+.sp-row .tx{flex:1;min-width:0}.sp-row b{display:block;font-size:14.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sp-gtag{display:inline-block;max-width:100%;margin-top:3px;padding:2px 8px;border-radius:7px;background:#e6f0fa;color:#0B3C5D;font-size:11.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sp-ring{--p:0;--c:#94a3b8;width:42px;height:42px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;background:conic-gradient(var(--c) calc(var(--p)*1%),#e8edf3 0)}
+.sp-ring span{width:32px;height:32px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:800;color:var(--color-text)}
+.sp-chev{color:#94a3b8;font-size:20px;font-weight:700;flex:none}
+.sp-pager{display:flex;justify-content:center;gap:6px;margin-top:12px;flex-wrap:wrap}.sp-pager button{min-width:34px;height:34px;border-radius:10px;background:#fff;font-weight:700;color:var(--color-text)}.sp-pager button.on{background:var(--color-primary);color:#fff}
+.sp-pback{margin-bottom:10px}
+.sp-hero{position:relative;overflow:hidden;border-radius:24px;padding:18px;color:#fff;background:linear-gradient(120deg,#0d4f8f,#0B3C5D 65%);box-shadow:0 14px 30px rgba(11,60,93,.26);display:flex;flex-wrap:wrap;align-items:center;gap:14px}
+.sp-hero .cap{position:absolute;right:26%;top:50%;transform:translateY(-50%);width:120px;height:120px;opacity:.26;fill:#9cc8f5;pointer-events:none}
+.sp-hero .sp-av{width:72px;height:72px;font-size:25px;border:3px solid #fff}
+.sp-hero .tx{flex:1;min-width:170px;position:relative}.sp-hero h3{margin:0;font-size:22px;font-weight:800;color:#fff;overflow-wrap:anywhere}
+.sp-hero .tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.sp-tag{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:999px;font-size:12.5px;font-weight:700;border:1.5px solid rgba(255,255,255,.5);color:#fff}
+.sp-tag.ok{background:#dcfce7;border-color:#dcfce7;color:#166534}
+@media(max-width:600px){.sp-hero .cap{display:none}.sp-stats span{font-size:10.5px}}
+.sp-acts{display:flex;gap:8px;position:relative}.sp-acts button{width:42px;height:42px;border-radius:13px;background:rgba(255,255,255,.14);border:1.5px solid rgba(255,255,255,.35);color:#fff;display:flex;align-items:center;justify-content:center}.sp-acts button:hover{background:rgba(255,255,255,.25)}
+.sp-tabs{display:flex;gap:4px;overflow-x:auto;margin:12px 0;padding:5px;background:#fff;border-radius:16px;box-shadow:var(--shadow-sm);scrollbar-width:none}.sp-tabs::-webkit-scrollbar{display:none}
+.sp-tabs button{flex:1 0 auto;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 12px;border-radius:12px;background:none;font-size:13px;font-weight:700;color:var(--color-text);white-space:nowrap}.sp-tabs button.on{background:var(--color-primary);color:#fff}
+.sp-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+@media(min-width:760px){.sp-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:1320px){.sp-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.sp-c{background:#fff;border-radius:20px;padding:15px;box-shadow:var(--shadow-sm);min-width:0}
+.sp-c.wide{grid-column:1/-1}
+.sp-c h4{display:flex;align-items:center;gap:8px;margin:0 0 11px;font-size:15px;font-weight:800;color:var(--color-primary)}.sp-c h4 a{margin-left:auto;font-size:12.5px;font-weight:700;color:#1d6fd6;cursor:pointer}
+.sp-tot{display:flex;align-items:center;gap:14px}
+.sp-big{--p:0;--c:#16a34a;width:126px;height:126px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;background:conic-gradient(var(--c) calc(var(--p)*1%),#e8edf3 0)}
+.sp-big div{width:104px;height:104px;border-radius:50%;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center}.sp-big b{font-size:26px;font-weight:800;line-height:1}.sp-big span{font-size:10.5px;color:var(--color-text-muted);margin-top:3px}
+.sp-cnt{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}.sp-cnt div{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:#f6f8fa;font-size:13px}.sp-cnt b{margin-left:auto;font-size:15px}
+.sp-dot{width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex:none}
+.sp-dot.ok{background:#dcfce7;color:#15803d}.sp-dot.bad{background:#fee2e2;color:#dc2626}.sp-dot.blank{background:#e2e8f0;color:#475569}.sp-dot.wait{background:#fef3c7;color:#a16207}
+.sp-er{display:flex;align-items:center;gap:8px;width:100%;padding:9px 11px;border-radius:13px;background:#f6f8fa;margin-bottom:6px;text-align:left;color:inherit;font-size:13.5px}.sp-er b{flex:1;min-width:0;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sp-er small{color:var(--color-text-muted);font-size:12px;flex:none}
+.sp-sc{padding:3px 9px;border-radius:9px;font-weight:800;font-size:12.5px;flex:none}.sp-sc.g{background:#dcfce7;color:#166534}.sp-sc.y{background:#fef3c7;color:#854d0e}.sp-sc.r{background:#fee2e2;color:#b91c1c}.sp-sc.n{background:#e2e8f0;color:#475569}
+.sp-bar2{margin-bottom:10px;display:block;width:100%;text-align:left;background:none;padding:0;color:inherit}.sp-bar2 .l{display:flex;justify-content:space-between;gap:8px;font-size:13.5px;font-weight:600;margin-bottom:4px}.sp-bar2 .l b{font-weight:800;flex:none}.sp-bar2 .l small{color:var(--color-text-muted);font-weight:500}
+.sp-track{height:8px;border-radius:9px;background:#e8edf3;overflow:hidden}.sp-track i{display:block;height:100%;border-radius:9px}
+.sp-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sp-tile{padding:13px 4px;border-radius:15px;text-align:center;font-size:12px;font-weight:700;color:var(--color-text);display:flex;flex-direction:column;align-items:center;gap:7px;line-height:1.2;transition:transform .12s}.sp-tile:hover{transform:translateY(-2px)}
+.sp-tile svg{width:24px;height:24px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sp-kv{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #eef2f6;font-size:13.5px;min-height:42px}.sp-kv:last-child{border-bottom:0}.sp-kv>span:first-child{color:var(--color-text-muted);flex:none;min-width:96px}.sp-kv .v{flex:1;min-width:0;font-weight:700;overflow-wrap:anywhere}
+.sp-kv select{flex:1;min-width:0;height:36px;border:1.5px solid var(--color-gray);border-radius:10px;padding:0 8px;font-family:inherit;font-size:13px;font-weight:700;background:#fff;margin:0}
+.sp-mini{width:32px;height:32px;border-radius:9px;background:#eef3f8;color:var(--color-primary);display:inline-flex;align-items:center;justify-content:center;flex:none}.sp-mini svg{width:16px;height:16px}
+.sp-mo{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}@media(min-width:760px){.sp-mo{grid-template-columns:repeat(6,1fr)}}
+.sp-mo button{padding:10px 2px;border-radius:12px;background:#f1f5f9;color:#475569;font-size:12px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:3px}.sp-mo button.p{background:#dcfce7;color:#166534}.sp-mo button.d{background:#fee2e2;color:#b91c1c}.sp-mo button.cur{box-shadow:0 0 0 2px var(--color-primary)}
+.sp-pin{display:flex;gap:8px;margin-top:10px}.sp-pin input{flex:1;min-width:0;height:42px;border:1.5px solid var(--color-gray);border-radius:11px;padding:0 12px;font-size:15px;font-family:inherit}
+.sp-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.sp-stats div{padding:11px 4px;border-radius:14px;background:#f6f8fa;text-align:center}.sp-stats b{display:block;font-size:19px;font-weight:800;color:var(--color-primary)}.sp-stats span{font-size:11px;color:var(--color-text-muted)}
+.sp-ex{border-radius:16px;background:#fff;box-shadow:var(--shadow-sm);margin-bottom:9px;overflow:hidden}
+.sp-exh{display:flex;align-items:center;gap:10px;width:100%;padding:13px 14px;background:none;text-align:left;color:inherit}.sp-exh .tx{flex:1;min-width:0}.sp-exh b{display:block;font-size:14.5px;font-weight:800;overflow-wrap:anywhere}.sp-exh small{font-size:12px;color:var(--color-text-muted)}
+.sp-exb{padding:0 14px 14px;border-top:1px solid #eef2f6}
+.sp-fil{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+.sp-qg{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.sp-qn{width:36px;height:36px;border-radius:10px;font-weight:800;font-size:13px}.sp-qn.ok{background:#dcfce7;color:#166534}.sp-qn.bad,.sp-qn.part{background:#fee2e2;color:#b91c1c}.sp-qn.blank{background:#e2e8f0;color:#475569}.sp-qn.wait{background:#fef3c7;color:#854d0e}.sp-qn.on{box-shadow:0 0 0 2px var(--color-primary)}
+.sp-q{border:1.5px solid #e8edf3;border-radius:14px;padding:12px;margin-bottom:9px;font-size:14px}.sp-q.ok{border-color:#bbf7d0}.sp-q.bad,.sp-q.part{border-color:#fecaca}.sp-q.wait{border-color:#fde68a}
+.sp-qh{display:flex;align-items:center;gap:7px;font-weight:800;margin-bottom:6px;font-size:13px}.sp-qh small{font-weight:500;color:var(--color-text-muted);margin-left:auto;text-align:right}
+.sp-q img{max-width:100%;max-height:300px;border-radius:9px;border:1px solid var(--color-gray);cursor:zoom-in;display:block;margin:7px 0}
+.sp-opts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.sp-opt{padding:6px 10px;border-radius:10px;background:#f1f5f9;font-size:13px;font-weight:600}.sp-opt.c{background:#dcfce7;color:#166534}.sp-opt.w{background:#fee2e2;color:#b91c1c}
+.sp-ans{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:13px}.sp-ans b.g{color:#15803d}.sp-ans b.r{color:#dc2626}
+.sp-chart{position:relative}.sp-chart svg{display:block;width:100%;overflow:visible}.sp-tip{position:absolute;transform:translate(-50%,-100%);background:#0B3C5D;color:#fff;font-size:12px;font-weight:600;padding:5px 9px;border-radius:8px;white-space:nowrap;pointer-events:none;display:none;z-index:2}
+.sp-legend{display:flex;gap:14px;font-size:12px;color:var(--color-text-muted);margin-bottom:9px}.sp-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px}
+.sp-cmp{margin-bottom:11px;font-size:13px}.sp-cmp .t{display:flex;justify-content:space-between;gap:8px;font-weight:700;margin-bottom:4px}.sp-cmp .t small{font-weight:500;color:var(--color-text-muted);flex:none}.sp-cmp .r{display:flex;align-items:center;gap:7px;margin-top:3px;font-size:12px}.sp-cmp .r .sp-track{flex:1}.sp-cmp .r b{width:34px;text-align:right}
+.sp-days{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}.sp-days i{width:16px;height:16px;border-radius:4px;background:#e8edf3}.sp-days i.g{background:#22c55e}.sp-days i.y{background:#f59e0b}.sp-days i.r{background:#ef4444}.sp-days i.n{background:#94a3b8}
+.sp-dr{padding:10px 0;border-bottom:1px solid #eef2f6;font-size:13px}.sp-dr:last-child{border-bottom:0}.sp-dr b{display:block;margin-bottom:5px}.sp-dr .t{display:inline-block;margin:0 5px 4px 0;padding:3px 8px;border-radius:8px;background:#f1f5f9;font-size:12px;font-weight:600}.sp-dr p{margin:3px 0 0;color:var(--color-text-muted)}
+.sp-tl{position:relative;padding-left:20px}.sp-tl:before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:2px;background:#e8edf3}.sp-tl div{position:relative;padding:0 0 13px;font-size:13.5px}.sp-tl div:before{content:"";position:absolute;left:-19px;top:5px;width:10px;height:10px;border-radius:50%;background:#1d6fd6;border:2px solid #fff;box-shadow:0 0 0 1px #d6e4f2}.sp-tl small{display:block;color:var(--color-text-muted);font-size:12px}
+.sp-empty{padding:18px 8px;text-align:center;color:var(--color-text-muted);font-size:13.5px}
+.sp-warn{padding:10px 12px;border-radius:12px;background:#fff7e6;color:#854d0e;font-size:12.5px;line-height:1.45;margin-top:9px}
+.sp-ov{position:fixed;inset:0;z-index:9000;background:rgba(11,40,62,.5);display:flex;align-items:flex-end;justify-content:center}
+@media(min-width:700px){.sp-ov{align-items:center;padding:20px}}
+.sp-sheet{background:#fff;width:100%;max-width:620px;max-height:90vh;overflow-y:auto;border-radius:22px 22px 0 0;padding:18px;animation:spIn .22s ease both}@media(min-width:700px){.sp-sheet{border-radius:22px}}
+.sp-sh{display:flex;align-items:center;gap:8px;margin-bottom:12px}.sp-sh h4{flex:1;margin:0;font-size:17px;font-weight:800;color:var(--color-primary)}.sp-sh button{width:34px;height:34px;border-radius:50%;background:#eef2f6;color:#475569;font-size:15px;flex:none}
+.sp-fld{margin-top:10px}.sp-fld label{display:block;font-size:12.5px;font-weight:700;color:var(--color-text-muted);margin-bottom:4px}.sp-fld input{width:100%;height:44px;border:1.5px solid var(--color-gray);border-radius:11px;padding:0 12px;font-size:15px;font-family:inherit}
+.sp-btn{height:44px;padding:0 16px;border-radius:12px;background:var(--color-primary);color:#fff;font-weight:700;font-size:14px;margin-top:10px}.sp-btn.gh{background:#eef3f8;color:var(--color-primary)}.sp-btn.da{background:#fee2e2;color:#b91c1c}.sp-btn:disabled{opacity:.6}
+.sp-menu button{display:flex;align-items:center;gap:10px;width:100%;padding:13px 6px;background:none;border-bottom:1px solid #eef2f6;font-size:14.5px;font-weight:600;color:inherit;text-align:left}.sp-menu button.da{color:#b91c1c}
+.sp-addcard{max-width:660px;margin:0 auto}
+.sp-regen{display:inline-flex;align-items:center;gap:5px;background:none;color:#1d6fd6;font-weight:700;font-size:12.5px;padding:0;margin:0 0 10px}
+.sp-done{max-width:660px;margin:0 auto 14px;background:linear-gradient(135deg,#ecfdf3,#fff);border:1.5px solid #bbf7d0;border-radius:20px;padding:16px;animation:spIn .25s ease both}
+.sp-done h4{margin:0 0 8px;font-size:16px;font-weight:800;color:#166534}
+.sp-done .row{display:flex;flex-wrap:wrap;gap:8px}
+</style>
+<script id="sp-js">
+/* ===== Şagirdlər bölməsi: kartlar, siyahı + şagird profili, avtomatik giriş məlumatı ===== */
+(function () {
+  const $ = id => document.getElementById(id);
+  const MONTHS = ["Yan", "Fev", "Mar", "Apr", "May", "İyn", "İyl", "Avq", "Sen", "Okt", "Noy", "Dek"];
+  const MONTHS_FULL = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "İyun", "İyul", "Avqust", "Sentyabr", "Oktyabr", "Noyabr", "Dekabr"];
+  const PAGE = 20, LET = ["A", "B", "C", "D", "E", "F", "G"];
+  const SP = { view: "home", q: "", group: "", sort: "name", page: 1, cur: null, tab: "ov", att: [], attReady: false, attErr: "", unsub: null,
+    scores: {}, scoresAt: 0, creds: {}, qc: {}, examAtt: {}, daily: null, stats: null, topicsP: null, payOk: false, openEx: null, exF: {}, exQ: {}, photos: {}, times: {}, addFrom: "home", tk: 0, year: new Date().getFullYear() };
+
+  const IC = {
+    home: '<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',
+    doc: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/>',
+    chart: '<path d="M5 20V11M12 20V4M19 20v-6"/>',
+    target: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".6"/>',
+    card: '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3 10h18M7 15h3"/>',
+    cal: '<rect x="4" y="5" width="16" height="16" rx="2.5"/><path d="M4 10h16M8 3v4M16 3v4"/>',
+    pulse: '<path d="M3 12h4l3-7 4 14 3-7h4"/>',
+    pen: '<path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
+    key: '<circle cx="8" cy="15" r="4.5"/><path d="M11.2 11.8L20 3M16 7l3 3M13.5 9.5l2 2"/>',
+    dots: '<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>',
+    copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4V5a1 1 0 0 1 1-1h10v1"/>',
+    eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
+    x: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M9.5 12.5l5 5M14.5 12.5l-5 5"/>',
+    dl: '<path d="M12 4v11M7.5 11l4.5 4.5 4.5-4.5M4 20h16"/>',
+    trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'
+  };
+  const svg = (n, cls) => `<svg class="${cls || "sp-svg"}" viewBox="0 0 24 24" aria-hidden="true">${IC[n]}</svg>`;
+  const TABS = [["ov", "Ümumi", "home"], ["ex", "Sınaqlar", "doc"], ["an", "Analiz", "chart"], ["wk", "Zəif mövzular", "target"], ["pay", "Ödənişlər", "card"], ["att", "Davamiyyət", "cal"], ["act", "Fəaliyyət", "pulse"]];
+
+  const ms = t => (t && t.toMillis ? t.toMillis() : (t && t.seconds ? t.seconds * 1000 : (typeof t === "number" ? t : 0)));
+  const fmtD = m => { if (!m) return "—"; const d = new Date(m); return d.getDate() + " " + MONTHS[d.getMonth()] + " " + d.getFullYear(); };
+  const fmtS = m => { if (!m) return ""; const d = new Date(m); return d.getDate() + " " + MONTHS[d.getMonth()]; };
+  const band = p => p === null || p === undefined ? "#94a3b8" : p >= 75 ? "#16a34a" : p >= 50 ? "#f59e0b" : "#ef4444";
+  const bandC = p => p === null || p === undefined ? "n" : p >= 75 ? "g" : p >= 50 ? "y" : "r";
+  const stu = id => studentsCache.find(s => s.id === id);
+  const activeList = () => studentsCache.filter(s => s.active !== false);
+  const gName = id => { const g = groupsCache.find(x => x.id === id); return g ? g.name : "Qrupsuz"; };
+  const av = n => `<span class="sp-av" style="background:${avatarColor(n)}">${esc(initials(n))}</span>`;
+  const examOf = a => (typeof examsCache !== "undefined" ? examsCache : []).find(x => x.id === a.examId);
+  const titleOf = a => { const e = examOf(a); return (e && e.title) || a.examTitle || "Sınaq"; };
+
+  // ---------- Sualın vəziyyəti ----------
+  function pqSt(p) {
+    if (!p) return "blank";
+    const empty = p.selected === null || p.selected === undefined || p.selected === "";
+    if (p.type === "detailed") {
+      if (p.points === null || p.points === undefined) return (!empty || p.hasPhoto) ? "wait" : "blank";
+      if (p.points >= (p.maxPoints ?? 1)) return "ok";
+      if (p.points > 0) return "part";
+      return (empty && !p.hasPhoto) ? "blank" : "bad";
+    }
+    if (p.isCorrect) return "ok";
+    return empty ? "blank" : "bad";
+  }
+  function tally(a) {
+    const o = { ok: 0, bad: 0, blank: 0, wait: 0, total: 0 };
+    (a.perQuestion || []).forEach(p => { if (!p) return; o.total++; const s = pqSt(p); if (s === "part") o.bad++; else o[s]++; });
+    o.score = computeAttemptStats(a.perQuestion).score;
+    return o;
+  }
+  const mean = arr => arr.length ? Math.round(arr.reduce((x, y) => x + y, 0) / arr.length) : null;
+
+  // ---------- Avtomatik ad / şifrə ----------
+  function slug(s) {
+    const M = { "ə": "e", "Ə": "e", "ı": "i", "I": "i", "İ": "i", "i": "i", "ö": "o", "Ö": "o", "ü": "u", "Ü": "u", "ğ": "g", "Ğ": "g", "ş": "s", "Ş": "s", "ç": "c", "Ç": "c" };
+    return Array.from(String(s || "")).map(c => M[c] !== undefined ? M[c] : c.toLowerCase()).join("").replace(/[^a-z0-9]/g, "");
+  }
+  // Qrupun qısa kodu: "802 KƏPƏZ" → 802, "SENTYABR 11B" → 11b, "11-D Online" → 11d, "İmtahan qrupu" → imta
+  function groupCode(name) {
+    const n = String(name || "");
+    const m = n.match(/\d+\s*-?\s*[A-Za-zƏəÇçĞğİıÖöŞşÜü]?(?![A-Za-zƏəÇçĞğİıÖöŞşÜü])/) || n.match(/\d+/);
+    if (m) return slug(m[0]);
+    return slug(n.split(/\s+/)[0]).slice(0, 4) || "ttm";
+  }
+  function suggest(fullName, groupId) {
+    const w = String(fullName || "").trim().split(/\s+/).filter(Boolean).map(slug).filter(Boolean);
+    if (!w.length) return { username: "", password: "" };
+    const code = groupCode(gName(groupId));
+    let base = w.length > 1 ? (w[0] + w[1]) : (w[0] + code);
+    base = base.slice(0, 24);
+    const used = new Set(studentsCache.map(s => String(s.username || "").toLowerCase()));
+    let username = base;
+    for (let n = 2; used.has(username); n++) username = base + n;
+    let password = w[0].slice(0, 10) + code;
+    while (password.length < 6) password += "123".slice(0, 6 - password.length);
+    return { username, password };
+  }
+  let manualU = false, manualP = false;
+  function refreshSuggestion() {
+    if ($("student-edit-id").value) return;
+    const s = suggest($("student-fullname").value, $("student-group").value);
+    if (!manualU) $("student-username").value = s.username;
+    if (!manualP) $("student-password").value = s.password;
+  }
+  $("student-fullname").addEventListener("input", refreshSuggestion);
+  $("student-group").addEventListener("change", refreshSuggestion);
+  $("student-username").addEventListener("input", () => { manualU = !!$("student-username").value; if (!manualU) refreshSuggestion(); });
+  $("student-password").addEventListener("input", () => { manualP = !!$("student-password").value; if (!manualP) refreshSuggestion(); });
+  $("sp-regen").addEventListener("click", () => { manualU = manualP = false; refreshSuggestion(); });
+  window.spUsernameIsAuto = () => !manualU;
+
+  function credsRef(uid) { return db.collection("studentCreds").doc(uid); }
+  async function saveCreds(uid, username, password) {
+    await credsRef(uid).set({ teacherId: currentTeacherId, studentId: uid, username, password, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    SP.creds[uid] = { state: "ok", username, password };
+  }
+  function shareText(name, u, p) { return `${name}\nSayt: tamtedris.az\nİstifadəçi adı: ${u}\nŞifrə: ${p}`; }
+  async function copy(text, msg) {
+    try { await navigator.clipboard.writeText(text); }
+    catch (e) { const t = document.createElement("textarea"); t.value = text; t.style.cssText = "position:fixed;opacity:0"; document.body.appendChild(t); t.select(); try { document.execCommand("copy"); } catch (x) {} t.remove(); }
+    toast(msg || "Kopyalandı");
+  }
+
+  // Yeni şagird yaradılandan sonra (əsas saxlama funksiyasından çağırılır)
+  window.spAfterAdd = async ({ uid, fullName, username, password, groupId }) => {
+    let saved = true;
+    try { await saveCreds(uid, username, password); } catch (e) { saved = false; console.warn("studentCreds yazılmadı:", e); SP.creds[uid] = { state: "denied", username, password }; }
+    $("sp-done").innerHTML = `<div class="sp-done">
+      <h4>✓ ${esc(fullName)} əlavə edildi</h4>
+      <div class="sp-kv"><span>Qrup</span><span class="v">${esc(gName(groupId))}</span></div>
+      <div class="sp-kv"><span>İstifadəçi adı</span><span class="v" id="sp-d-u">${esc(username)}</span></div>
+      <div class="sp-kv"><span>Şifrə</span><span class="v" id="sp-d-p">${esc(password)}</span></div>
+      ${saved ? "" : `<div class="sp-warn">Şifrə yadda saxlanmadı: Firebase-ə <b>studentCreds</b> qaydası əlavə edilməyib. Bu şifrəni indi kopyalayın, sonra profildə görünməyəcək.</div>`}
+      <div class="row"><button type="button" class="sp-btn" id="sp-d-copy">Kopyala</button><button type="button" class="sp-btn gh" id="sp-d-open">Profilə bax</button></div></div>`;
+    $("sp-d-copy").onclick = () => copy(shareText(fullName, username, password), "Giriş məlumatı kopyalandı");
+    $("sp-d-open").onclick = () => spOpen(uid);
+    manualU = manualP = false;
+    refreshSuggestion();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  window.spAfterEdit = id => spOpen(id);
+
+  // ---------- Ekranlar ----------
+  function spShow(v) {
+    SP.view = v;
+    $("sp-home").style.display = v === "home" ? "" : "none";
+    $("sp-listv").style.display = v === "list" ? "" : "none";
+    $("sp-add").style.display = v === "add" ? "" : "none";
+    if (v === "list") { loadScores(); renderStudentsList(); if (innerWidth >= 980 && !SP.cur) { const f = filtered()[0]; if (f) spOpen(f.id); } }
+    window.scrollTo(0, 0);
+  }
+  window.spShow = spShow;
+  function closeDetail() {
+    if (SP.unsub) { try { SP.unsub(); } catch (e) {} SP.unsub = null; }
+    SP.cur = null; $("sp-md").classList.remove("detail"); $("sp-detail").innerHTML = "";
+    renderStudentsList();
+  }
+  function isEditing() { return !!$("student-edit-id").value; }
+  function openAdd(from) {
+    SP.addFrom = from || SP.view;
+    if (isEditing()) resetStudentForm();
+    $("sp-add-title").textContent = "Yeni şagird"; $("sp-regen").style.display = "";
+    $("sp-form-note").textContent = "İstifadəçi adı ada, şifrə isə ada və qrupa görə avtomatik yazılır. İstəsəniz dəyişə bilərsiniz.";
+    $("sp-done").innerHTML = ""; manualU = manualP = false; refreshSuggestion();
+    spShow("add");
+  }
+  function addBack() {
+    if (isEditing()) { const id = $("student-edit-id").value; resetStudentForm(); spOpen(id); return; }
+    if (SP.addFrom === "list") { spShow("list"); return; }
+    spShow("home");
+  }
+  // Telefonun geri düyməsi üçün
+  window.spBackInner = () => {
+    if (SP.view === "add") { addBack(); return true; }
+    if (SP.view === "list") {
+      if (SP.cur && innerWidth < 980) { closeDetail(); window.scrollTo(0, 0); return true; }
+      if (SP.cur) closeDetail();
+      spShow("home"); return true;
+    }
+    return false;
+  };
+  $("sp-door-list").addEventListener("click", () => spShow("list"));
+  $("sp-door-add").addEventListener("click", () => openAdd("home"));
+  $("sp-list-add").addEventListener("click", () => openAdd("list"));
+  $("sp-list-back").addEventListener("click", () => { if (SP.cur) closeDetail(); spShow("home"); });
+  $("sp-add-back").addEventListener("click", addBack);
+  $("student-cancel-edit-btn").addEventListener("click", () => { if (SP.cur) spOpen(SP.cur); else spShow("list"); });
+  document.addEventListener("click", e => {
+    if (e.target.closest('#a-nav [data-go="tab-students"], .a-cnt')) { if (isEditing()) resetStudentForm(); if (SP.cur) closeDetail(); spShow("home"); }
+  }, true);
+  $("sp-excel").addEventListener("click", exportList);
+
+  // Redaktə: mövcud forma
+  const oEdit = window.editStudent;
+  window.editStudent = id => {
+    SP.addFrom = "list"; $("sp-done").innerHTML = "";
+    spShow("add"); oEdit(id);
+    $("sp-add-title").textContent = "Redaktə"; $("sp-regen").style.display = "none";
+    $("sp-form-note").textContent = "Burada ad və qrup yenilənir. Şifrəni profildəki açar düyməsindən dəyişə bilərsiniz.";
+  };
+
+  // ---------- Siyahı ----------
+  async function loadScores() {
+    if (Date.now() - SP.scoresAt < 60000) return;
+    SP.scoresAt = Date.now();
+    try {
+      const snap = await db.collection("examAttempts").where("teacherId", "==", currentTeacherId).get();
+      const by = {};
+      snap.forEach(d => { const a = d.data(); (by[a.studentId] = by[a.studentId] || []).push(computeAttemptStats(a.perQuestion).score); });
+      SP.scores = {}; Object.keys(by).forEach(k => { SP.scores[k] = mean(by[k]); });
+      renderStudentsList();
+    } catch (e) { console.warn("Şagird faizləri oxunmadı:", e); SP.scoresAt = 0; }
+  }
+  function filtered() {
+    const q = SP.q.trim().toLocaleLowerCase("az");
+    let l = activeList();
+    if (SP.group) l = l.filter(s => s.groupId === SP.group);
+    if (q) l = l.filter(s => (s.fullName || "").toLocaleLowerCase("az").includes(q) || (s.username || "").toLowerCase().includes(q));
+    const v = s => SP.scores[s.id] === undefined ? null : SP.scores[s.id];
+    if (SP.sort !== "name") l = l.slice().sort((a, b) => { const x = v(a), y = v(b); if (x === null) return y === null ? 0 : 1; if (y === null) return -1; return SP.sort === "hi" ? y - x : x - y; });
+    return l;
+  }
+  renderStudentsList = function () {
+    const el = $("students-list"), all = activeList();
+    const cnt = $("sp-count"); if (cnt) cnt.textContent = all.length + " şagird";
+    const counts = {}; all.forEach(s => { counts[s.groupId] = (counts[s.groupId] || 0) + 1; });
+    if (SP.group && !counts[SP.group]) SP.group = "";
+    $("sp-chips").innerHTML = `<button type="button" class="sp-chip ${SP.group ? "" : "on"}" data-g="">Hamısı · ${all.length}</button>` + groupsCache.filter(g => counts[g.id]).map(g => `<button type="button" class="sp-chip ${SP.group === g.id ? "on" : ""}" data-g="${g.id}">${esc(g.name)} · ${counts[g.id]}</button>`).join("");
+    const list = filtered(), pages = Math.max(1, Math.ceil(list.length / PAGE));
+    if (SP.page > pages) SP.page = pages;
+    const slice = list.slice((SP.page - 1) * PAGE, SP.page * PAGE);
+    if (!all.length) el.innerHTML = `<div class="empty-state">Hələ şagird əlavə edilməyib</div>`;
+    else if (!list.length) el.innerHTML = `<div class="empty-state">Şagird tapılmadı</div>`;
+    else el.innerHTML = slice.map(s => {
+      const p = SP.scores[s.id];
+      return `<button type="button" class="sp-row ${SP.cur === s.id ? "on" : ""}" data-id="${s.id}">${av(s.fullName)}<span class="tx"><b>${esc(s.fullName)}</b><span class="sp-gtag">${esc(gName(s.groupId))}</span></span><span class="sp-ring" style="--p:${p === undefined ? 0 : p};--c:${band(p)}"><span>${p === undefined ? "—" : p + "%"}</span></span><span class="sp-chev">›</span></button>`;
+    }).join("");
+    $("sp-pager").innerHTML = pages > 1 ? Array.from({ length: pages }, (_, i) => `<button type="button" class="${SP.page === i + 1 ? "on" : ""}" data-p="${i + 1}">${i + 1}</button>`).join("") : "";
+    if (SP.cur) { if (!stu(SP.cur) || stu(SP.cur).active === false) closeDetail(); else paintHero(); }
+    if (SP.view === "add" && !isEditing()) refreshSuggestion();
+  };
+  $("students-list").addEventListener("click", e => { const b = e.target.closest(".sp-row"); if (b) spOpen(b.dataset.id); });
+  $("sp-chips").addEventListener("click", e => { const b = e.target.closest(".sp-chip"); if (!b) return; SP.group = b.dataset.g; SP.page = 1; renderStudentsList(); });
+  $("sp-pager").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; SP.page = +b.dataset.p; renderStudentsList(); });
+  $("sp-q").addEventListener("input", e => { SP.q = e.target.value; SP.page = 1; renderStudentsList(); });
+  $("sp-sort").addEventListener("change", e => { SP.sort = e.target.value; SP.page = 1; renderStudentsList(); });
+
+  // ---------- Profil ----------
+  function spOpen(id) {
+    const s = stu(id); if (!s) { spShow("list"); return; }
+    if (SP.unsub) { try { SP.unsub(); } catch (e) {} SP.unsub = null; }
+    Object.assign(SP, { cur: id, att: [], attReady: false, attErr: "", daily: null, stats: null, topicsP: null, openEx: null, exQ: {}, tk: SP.tk + 1, year: new Date().getFullYear() });
+    if (SP.view !== "list") spShow("list");
+    $("sp-md").classList.add("detail");
+    $("sp-detail").innerHTML = `<button type="button" class="sp-ib sp-pback" id="sp-pback">← Siyahı</button><div id="sp-hero"></div><div class="sp-tabs" id="sp-tabs"></div><div id="sp-body"></div>`;
+    $("sp-pback").onclick = () => { closeDetail(); window.scrollTo(0, 0); };
+    paintHero(); paintTabs(); paintBody(); renderStudentsList();
+    if (innerWidth < 980) window.scrollTo(0, 0);
+    loadCreds(id).then(() => { if (SP.cur === id && SP.tab === "ov") { paintInfo(); } });
+    listenAttempts(id);
+  }
+  window.spOpen = spOpen;
+  function listenAttempts(id) {
+    const on = snap => {
+      if (SP.cur !== id) return;
+      SP.att = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(a => !a.teacherId || a.teacherId === currentTeacherId).sort((a, b) => ms(a.submittedAt) - ms(b.submittedAt));
+      SP.attReady = true; SP.topicsP = null; paintBody();
+    };
+    const fail = err => { console.error(err); if (SP.cur !== id) return; SP.attReady = true; SP.attErr = errAz(err); paintBody(); };
+    SP.unsub = db.collection("examAttempts").where("studentId", "==", id).onSnapshot(on, () => {
+      if (SP.cur !== id) return;
+      SP.unsub = db.collection("examAttempts").where("teacherId", "==", currentTeacherId).where("studentId", "==", id).onSnapshot(on, fail);
+    });
+  }
+  function paintHero() {
+    const s = stu(SP.cur), h = $("sp-hero"); if (!s || !h) return;
+    h.innerHTML = `<div class="sp-hero"><svg class="cap" viewBox="0 0 64 64"><path d="M32 12L2 26l30 14 24-11v16h4V27zM14 37v11c9 7 27 7 36 0V37L32 45z"/></svg>${av(s.fullName)}<div class="tx"><h3>${esc(s.fullName)}</h3><div class="tags"><span class="sp-tag">${esc(gName(s.groupId))}</span><span class="sp-tag ok">✓ Aktiv</span></div></div><div class="sp-acts">${s._enrolled ? "" : `<button type="button" title="Redaktə" aria-label="Redaktə" onclick="editStudent('${s.id}')">${svg("pen")}</button>`}<button type="button" title="Giriş məlumatı" aria-label="Giriş məlumatı" onclick="spKey()">${svg("key")}</button><button type="button" title="Ödənişlər" aria-label="Ödənişlər" onclick="spTab('pay')">${svg("card")}</button><button type="button" title="Daha çox" aria-label="Daha çox" onclick="spMore()">${svg("dots")}</button></div></div>`;
+  }
+  function paintTabs() { $("sp-tabs").innerHTML = TABS.map(t => `<button type="button" class="${SP.tab === t[0] ? "on" : ""}" onclick="spTab('${t[0]}')">${svg(t[2])}${t[1]}</button>`).join(""); }
+  window.spTab = t => { SP.tab = t; paintTabs(); paintBody(); const b = $("sp-tabs").querySelector(".on"); if (b && b.scrollIntoView) b.scrollIntoView({ inline: "center", block: "nearest" }); };
+  function paintBody() {
+    const b = $("sp-body"); if (!b) return;
+    const tk = ++SP.tk;
+    if (!SP.attReady && ["ov", "ex", "an", "wk"].includes(SP.tab)) { b.innerHTML = `<div class="sp-c"><div class="sp-empty">Yüklənir...</div></div>`; return; }
+    ({ ov: tabOv, ex: tabEx, an: tabAn, wk: tabWk, pay: tabPay, att: tabAtt, act: tabAct })[SP.tab](b, tk);
+  }
+  const errBox = () => SP.attErr ? `<div class="sp-warn">Sınaqlar oxunmadı: ${esc(SP.attErr)}</div>` : "";
+
+  // ---------- Ümumi ----------
+  function tabOv(b, tk) {
+    const atts = SP.att, T = { ok: 0, bad: 0, blank: 0, wait: 0 };
+    atts.forEach(a => { const t = tally(a); T.ok += t.ok; T.bad += t.bad; T.blank += t.blank; T.wait += t.wait; });
+    const avg = mean(atts.map(a => tally(a).score));
+    const recent = atts.slice(-3).reverse();
+    b.innerHTML = `${errBox()}<div class="sp-grid">
+      <div class="sp-c"><div class="sp-tot"><div class="sp-big" style="--p:${avg || 0};--c:${band(avg)}"><div><b>${avg === null ? "—" : avg + "%"}</b><span>Ümumi nəticə</span></div></div><div class="sp-cnt"><div><i class="sp-dot ok" style="font-style:normal">✓</i>Düzgün<b>${T.ok}</b></div><div><i class="sp-dot bad" style="font-style:normal">✕</i>Səhv<b>${T.bad}</b></div><div><i class="sp-dot blank" style="font-style:normal">–</i>Boş<b>${T.blank}</b></div>${T.wait ? `<div><i class="sp-dot wait" style="font-style:normal">…</i>Yoxlanılır<b>${T.wait}</b></div>` : ""}</div></div></div>
+      <div class="sp-c" id="sp-info"></div>
+      <div class="sp-c"><h4>${svg("doc")}Son sınaqlar${atts.length ? `<a onclick="spTab('ex')">Hamısına bax ›</a>` : ""}</h4>${recent.length ? recent.map(attRow).join("") : `<div class="sp-empty">Hələ sınaq işləməyib</div>`}</div>
+      <div class="sp-c"><h4>${svg("target")}Zəif mövzular${atts.length ? `<a onclick="spTab('wk')">Hamısı ›</a>` : ""}</h4><div id="sp-ov-wk"><div class="sp-empty">Hesablanır...</div></div></div>
+      <div class="sp-c"><h4>${svg("chart")}Nəticə dinamikası</h4><div id="sp-trend"></div></div>
+      <div class="sp-c"><h4>${svg("card")}Ödənişlər<a onclick="spTab('pay')">Hamısı ›</a></h4><div id="sp-ov-pay"></div></div>
+      <div class="sp-c wide"><div class="sp-tiles" style="grid-template-columns:repeat(auto-fit,minmax(96px,1fr))">
+        <button type="button" class="sp-tile" style="background:#ffe4e6" onclick="spWrong()"><svg viewBox="0 0 24 24" stroke="#e11d48">${IC.x}</svg>Səhv suallar</button>
+        <button type="button" class="sp-tile" style="background:#e0edff" onclick="spTab('ex')"><svg viewBox="0 0 24 24" stroke="#2563eb">${IC.doc}</svg>Sınaqlar</button>
+        <button type="button" class="sp-tile" style="background:#fff0dc" onclick="spKey()"><svg viewBox="0 0 24 24" stroke="#ea580c">${IC.key}</svg>Giriş məlumatı</button>
+        <button type="button" class="sp-tile" style="background:#ede9fe" onclick="spTab('an')"><svg viewBox="0 0 24 24" stroke="#6d28d9">${IC.chart}</svg>Qarşılaşdırma</button>
+        <button type="button" class="sp-tile" style="background:#ffeadb" onclick="spPdf()"><svg viewBox="0 0 24 24" stroke="#c2410c">${IC.doc}</svg>Hesabat (PDF)</button>
+        <button type="button" class="sp-tile" style="background:#dff5ee" onclick="spExport()"><svg viewBox="0 0 24 24" stroke="#0f766e">${IC.dl}</svg>İxrac et</button>
+      </div></div></div>`;
+    paintInfo(); drawTrend($("sp-trend")); paintOvPay();
+    topics().then(l => {
+      if (tk !== SP.tk) return; const e = $("sp-ov-wk"); if (!e) return;
+      const w = l.filter(x => x.pct < 75).slice(0, 3);
+      e.innerHTML = w.length ? w.map(topicBar).join("") : `<div class="sp-empty">${l.length ? "Zəif mövzu yoxdur 👍" : "Məlumat hələ yoxdur"}</div>`;
+    });
+  }
+  function attRow(a) {
+    const t = tally(a), c = t.wait ? "n" : bandC(t.score);
+    return `<button type="button" class="sp-er" onclick="spOpenExam('${a.id}')"><b>${esc(titleOf(a))}</b><small>${fmtS(ms(a.submittedAt))}</small><span class="sp-sc ${c}">${t.ok}/${t.total}</span></button>`;
+  }
+  window.spOpenExam = id => { SP.openEx = id; window.spTab("ex"); const e = $("sp-x-" + id); if (e) e.scrollIntoView({ block: "start", behavior: "smooth" }); };
+  const topicBar = (r, i) => `<button type="button" class="sp-bar2" onclick="spWrong(${JSON.stringify(r.t).replace(/"/g, "&quot;")})"><span class="l"><span>${esc(r.t)} <small>${r.c}/${r.n}</small></span><b>${r.pct}%</b></span><span class="sp-track" style="display:block"><i style="width:${Math.max(3, r.pct)}%;background:${band(r.pct)}"></i></span></button>`;
+  function paintInfo() {
+    const el = $("sp-info"), s = stu(SP.cur); if (!el || !s) return;
+    const cr = SP.creds[s.id] || {};
+    const user = cr.username || s.username || "—";
+    const eg = window.ttmEG ? `<select class="eg-sel" data-id="${s.id}" aria-label="İmtahan qrupu"><option value="">Seçilməyib</option>${ttmEG.opts().map(o => `<option value="${o[0]}" ${s.examGroup === o[0] ? "selected" : ""}>${esc(o[1])}</option>`).join("")}</select>` : "—";
+    el.innerHTML = `<h4>${svg("key")}Məlumat<a onclick="spKey()">Şifrə ›</a></h4>
+      <div class="sp-kv"><span>Qrup</span><select id="sp-grp" aria-label="Qrup">${groupsCache.map(g => `<option value="${g.id}" ${s.groupId === g.id ? "selected" : ""}>${esc(g.name)}</option>`).join("")}${s.groupId && !groupsCache.some(g => g.id === s.groupId) ? `<option value="${esc(s.groupId)}" selected>—</option>` : ""}</select></div>
+      <div class="sp-kv"><span>İmtahan qrupu</span>${eg}</div>
+      <div class="sp-kv"><span>İstifadəçi adı</span><span class="v">${esc(user)}</span>${user !== "—" ? `<button type="button" class="sp-mini" aria-label="Kopyala" onclick="spCopy(${JSON.stringify(user).replace(/"/g, "&quot;")})">${svg("copy")}</button>` : ""}</div>
+      <div class="sp-kv"><span>Şifrə</span><span class="v">${passView(s, cr)}</span></div>
+      ${s.paymentDay || s.monthlyFee ? `<div class="sp-kv"><span>Ödəniş</span><span class="v">${s.monthlyFee ? esc(s.monthlyFee) + " AZN" : ""}${s.paymentDay ? " · Ödəniş günü: " + esc(s.paymentDay) : ""}</span></div>` : ""}
+      ${s.createdAt ? `<div class="sp-kv"><span>Qeydiyyat</span><span class="v">${fmtD(ms(s.createdAt))}</span></div>` : ""}`;
+    $("sp-grp").onchange = async e => {
+      const v = e.target.value, prev = s.groupId;
+      try { await payDocRef(s.id).update({ groupId: v }); toast("Qrup dəyişdirildi: " + gName(v)); }
+      catch (err) { console.error(err); toast("Xəta: " + errAz(err)); e.target.value = prev; }
+    };
+  }
+  const passView = (s, cr) => {
+    if (s._enrolled) return `<span style="font-weight:500;color:var(--color-text-muted)">Şagird özü təyin edib</span>`;
+    if (cr.password) return `<span id="sp-pw" data-p="${esc(cr.password)}">••••••••</span> <button type="button" class="sp-mini" aria-label="Göstər" style="vertical-align:middle" onclick="spEye()">${svg("eye")}</button>`;
+    return `<a style="color:#1d6fd6;cursor:pointer;font-weight:600" onclick="spKey()">${cr.state === "denied" ? "Qayda lazımdır" : "Bilinmir — qeyd et"}</a>`;
+  };
+  window.spEye = () => { const e = $("sp-pw"); if (!e) return; e.textContent = e.textContent.startsWith("•") ? e.dataset.p : "••••••••"; };
+  window.spCopy = t => copy(t);
+  async function loadCreds(id) {
+    const s = stu(id); if (!s) return;
+    if (s._enrolled) {
+      try { const d = await db.collection("students").doc(id).get(); if (d.exists) { const x = d.data(); s.username = x.username || ""; if (x.examGroup) s.examGroup = x.examGroup; if (x.createdAt) s.createdAt = x.createdAt; } } catch (e) {}
+      SP.creds[id] = { state: "enrolled", username: s.username };
+      return;
+    }
+    if (SP.creds[id] && SP.creds[id].state === "ok") return;
+    try {
+      const d = await credsRef(id).get();
+      SP.creds[id] = d.exists ? { state: "ok", ...d.data() } : { state: "none" };
+    } catch (e) { SP.creds[id] = { state: "denied" }; }
+  }
+
+  // ---------- Sheet ----------
+  function sheet(title, html) {
+    const o = document.createElement("div"); o.className = "sp-ov";
+    o.innerHTML = `<div class="sp-sheet"><div class="sp-sh"><h4>${esc(title)}</h4><button type="button" class="sp-x">✕</button></div><div class="sp-shb">${html}</div></div>`;
+    const close = () => { o.remove(); document.body.style.overflow = ""; };
+    o.querySelector(".sp-x").onclick = close;
+    o.addEventListener("click", e => { if (e.target === o) close(); });
+    document.body.appendChild(o); document.body.style.overflow = "hidden";
+    o._close = close; return o;
+  }
+
+  // Giriş məlumatı
+  window.spKey = async () => {
+    const s = stu(SP.cur); if (!s) return;
+    await loadCreds(s.id);
+    const cr = SP.creds[s.id] || {}, user = cr.username || s.username || "";
+    if (s._enrolled) { sheet("Giriş məlumatı", `<div class="sp-kv"><span>İstifadəçi adı</span><span class="v">${esc(user || "—")}</span></div><div class="sp-warn">Bu şagird özü qeydiyyatdan keçib, şifrəni özü təyin edib. Şifrə sistemdə görünmür.</div>`); return; }
+    const known = !!cr.password;
+    const o = sheet("Giriş məlumatı", `
+      <div class="sp-kv"><span>İstifadəçi adı</span><span class="v">${esc(user || "—")}</span><button type="button" class="sp-mini" aria-label="Kopyala" id="sp-k-cu">${svg("copy")}</button></div>
+      <div class="sp-kv"><span>Şifrə</span><span class="v">${known ? esc(cr.password) : "Bilinmir"}</span>${known ? `<button type="button" class="sp-mini" aria-label="Kopyala" id="sp-k-cp">${svg("copy")}</button>` : ""}</div>
+      ${known ? `<button type="button" class="sp-btn gh" id="sp-k-all" style="width:100%">Hamısını kopyala</button>` : `<div class="sp-warn">Bu şagird köhnə hesabdır — Firebase şifrəni heç kimə göstərmir. Şifrəni bilirsinizsə, aşağıda yazın: sistem yoxlayacaq və yadda saxlayacaq.</div>`}
+      ${cr.state === "denied" ? `<div class="sp-warn">Firebase-ə <b>studentCreds</b> qaydası əlavə edilməyib, ona görə şifrə saxlanmır.</div>` : ""}
+      <div class="sp-fld"><label>${known ? "Yeni şifrə" : "Şagirdin indiki şifrəsi"}</label><input type="text" id="sp-k-in" autocomplete="off" autocapitalize="none" placeholder="Ən azı 6 simvol" /></div>
+      <button type="button" class="sp-btn" id="sp-k-go" style="width:100%">${known ? "Şifrəni dəyiş" : "Yoxla və yadda saxla"}</button>`);
+    const q = id => o.querySelector(id);
+    q("#sp-k-cu").onclick = () => copy(user);
+    if (known) { q("#sp-k-cp").onclick = () => copy(cr.password); q("#sp-k-all").onclick = () => copy(shareText(s.fullName, user, cr.password), "Giriş məlumatı kopyalandı"); }
+    q("#sp-k-go").onclick = async () => {
+      const v = q("#sp-k-in").value.trim(), btn = q("#sp-k-go");
+      if (v.length < 6) { toast("Şifrə ən azı 6 simvol olmalıdır"); return; }
+      if (!user) { toast("İstifadəçi adı tapılmadı"); return; }
+      btn.disabled = true;
+      try {
+        const c = await secondaryAuth.signInWithEmailAndPassword(user + USERNAME_DOMAIN, known ? cr.password : v);
+        if (known) await c.user.updatePassword(v);
+        await secondaryAuth.signOut();
+        try { await saveCreds(s.id, user, v); } catch (e) { toast(known ? "Şifrə dəyişdi, amma yadda saxlanmadı (qayda lazımdır)" : "Şifrə düzdür, amma yadda saxlanmadı (qayda lazımdır)"); o._close(); return; }
+        toast(known ? "Şifrə dəyişdirildi" : "Şifrə yadda saxlandı");
+        o._close(); paintInfo();
+      } catch (e) {
+        console.error(e);
+        try { await secondaryAuth.signOut(); } catch (x) {}
+        const bad = /wrong-password|invalid-credential|invalid-login/.test(e.code || "");
+        toast(bad ? (known ? "Qeydə alınan şifrə köhnədir, şagird dəyişib" : "Bu şifrə düz deyil") : "Xəta: " + errAz(e));
+      } finally { btn.disabled = false; }
+    };
+  };
+  window.spMore = () => {
+    const s = stu(SP.cur); if (!s) return;
+    const o = sheet(s.fullName, `<div class="sp-menu">
+      ${s._enrolled ? "" : `<button type="button" data-a="edit">${svg("pen")}Ad və qrupu redaktə et</button>`}
+      <button type="button" data-a="key">${svg("key")}Giriş məlumatı</button>
+      <button type="button" data-a="pdf">${svg("doc")}Hesabat (PDF)</button>
+      <button type="button" data-a="xls">${svg("dl")}Excel-ə ixrac</button>
+      <button type="button" class="da" data-a="del">${svg("trash")}${s._enrolled ? "Siyahıdan çıxar" : "Şagirdi sil"}</button></div>`);
+    o.querySelector(".sp-menu").addEventListener("click", e => {
+      const b = e.target.closest("button"); if (!b) return; o._close();
+      ({ edit: () => window.editStudent(s.id), key: window.spKey, pdf: window.spPdf, xls: window.spExport, del: () => s._enrolled ? window.removeEnrolled(s._enrId) : window.deleteStudent(s.id) })[b.dataset.a]();
+    });
+  };
+
+  // ---------- Sınaqlar ----------
+  function tabEx(b) {
+    const list = SP.att.slice().reverse();
+    if (!list.length) { b.innerHTML = errBox() + `<div class="sp-c"><div class="sp-empty">Bu şagird hələ sınaq işləməyib</div></div>`; return; }
+    b.innerHTML = errBox() + list.map(a => {
+      const t = tally(a), c = t.wait ? "n" : bandC(t.score);
+      return `<div class="sp-ex" id="sp-x-${a.id}"><button type="button" class="sp-exh" onclick="spExT('${a.id}')"><span class="tx"><b>${esc(titleOf(a))}</b><small>${fmtD(ms(a.submittedAt))}${a.source === "paper" ? " · Kağız" : ""} · ✓ ${t.ok} düz · ✕ ${t.bad} səhv · – ${t.blank} boş${t.wait ? ` · ⏳ ${t.wait} yoxlanılır` : ""}</small></span><span class="sp-sc ${c}">${t.score}%</span></button>${SP.openEx === a.id ? `<div class="sp-exb" id="sp-xb-${a.id}"></div>` : ""}</div>`;
+    }).join("");
+    if (SP.openEx) renderExam(SP.openEx);
+  }
+  window.spExT = id => { SP.openEx = SP.openEx === id ? null : id; paintBody(); };
+  function questions(examId) {
+    if (!SP.qc[examId]) SP.qc[examId] = db.collection("exams").doc(examId).collection("questions").orderBy("order").get().then(s => s.docs.map(d => d.data())).catch(e => { console.warn(e); delete SP.qc[examId]; return []; });
+    return SP.qc[examId];
+  }
+  async function renderExam(id) {
+    const box = $("sp-xb-" + id), a = SP.att.find(x => x.id === id); if (!box || !a) return;
+    box.innerHTML = `<div class="sp-empty">Suallar yüklənir...</div>`;
+    const tk = SP.tk, qs = await questions(a.examId);
+    if ((a.perQuestion || []).some(p => p && p.type === "detailed") && !SP.photos[id]) {
+      SP.photos[id] = {};
+      try { const ph = await db.collection("detailedAnswers").where("attemptId", "==", id).get(); ph.forEach(d => { const x = d.data(); SP.photos[id][x.questionIndex] = x.photoBase64; }); } catch (e) { console.warn(e); }
+    }
+    if (SP.times[id] === undefined) { SP.times[id] = null; try { const d = await db.collection("attemptTimes").doc(id).get(); if (d.exists) SP.times[id] = d.data(); } catch (e) {} }
+    if (tk !== SP.tk || !$("sp-xb-" + id)) return;
+    paintExam(id, a, qs);
+  }
+  function paintExam(id, a, qs) {
+    const box = $("sp-xb-" + id); if (!box) return;
+    const t = tally(a), pq = a.perQuestion || [], tm = SP.times[id];
+    const def = t.bad ? "bad" : (t.blank ? "blank" : "all");
+    const f = SP.exF[id] || def, sel = SP.exQ[id];
+    const match = s => f === "all" || (f === "bad" && (s === "bad" || s === "part")) || f === s;
+    const shown = sel !== undefined ? [sel] : pq.map((p, i) => i).filter(i => pq[i] && match(pqSt(pq[i])));
+    const fb = (k, l, n) => n === 0 && k !== "all" ? "" : `<button type="button" class="sp-chip ${sel === undefined && f === k ? "on" : ""}" data-f="${k}">${l} · ${n}</button>`;
+    box.innerHTML = `<div class="sp-stats" style="margin-top:12px"><div><b>${t.ok}</b><span>Düz</span></div><div><b>${t.bad}</b><span>Səhv</span></div><div><b>${t.blank}</b><span>Boş</span></div><div><b>${t.score}%</b><span>Bal</span></div></div>
+      ${tm && tm.durationSec ? `<div class="muted-note" style="margin-top:8px">Ümumi vaxt: ${Math.floor(tm.durationSec / 60)} dəq ${tm.durationSec % 60} san</div>` : ""}
+      <div class="sp-fil">${fb("all", "Hamısı", t.total)}${fb("bad", "Səhv", t.bad)}${fb("ok", "Düz", t.ok)}${fb("blank", "Boş", t.blank)}${fb("wait", "Yoxlanılır", t.wait)}</div>
+      <div class="sp-qg">${pq.map((p, i) => p ? `<button type="button" class="sp-qn ${pqSt(p)} ${sel === i ? "on" : ""}" data-q="${i}" aria-label="Sual ${i + 1}">${i + 1}</button>` : "").join("")}</div>
+      <div class="sp-qlist">${shown.length ? shown.map(i => qCard(qs[i], pq[i], i, (SP.photos[id] || {})[i], tm && tm.times ? tm.times[i] : 0)).join("") : `<div class="sp-empty">Bu bölmədə sual yoxdur</div>`}</div>`;
+    box.onclick = e => {
+      const c = e.target.closest("[data-f]"), n = e.target.closest("[data-q]"), im = e.target.closest(".sp-q img");
+      if (c) { SP.exF[id] = c.dataset.f; delete SP.exQ[id]; paintExam(id, a, qs); }
+      else if (n) { const i = +n.dataset.q; if (SP.exQ[id] === i) delete SP.exQ[id]; else SP.exQ[id] = i; paintExam(id, a, qs); }
+      else if (im) openImageLightbox(im.src);
+    };
+    if (window.ttmTeX) ttmTeX(box.querySelector(".sp-qlist"));
+  }
+  const ST_L = { ok: "✓ Düz", bad: "✕ Səhv", blank: "– Boş", wait: "⏳ Yoxlanılır", part: "◐ Yarım bal" };
+  function qCard(q, p, i, photo, sec, extra) {
+    q = q || {}; p = p || {};
+    const st = pqSt(p), type = p.type || q.type;
+    let ans = "";
+    if (type === "detailed") {
+      ans = `<div class="sp-ans">${p.points !== null && p.points !== undefined ? `<span>Bal: <b>${p.points}/${p.maxPoints ?? 1}</b></span>` : ""}${p.selected ? `<span>Yazdığı: <b>${esc(p.selected)}</b></span>` : ""}</div>${photo ? `<img src="${photo}" alt="Şagirdin şəkli" />` : (p.hasPhoto ? `<div class="muted-note">Şəkil artıq silinib</div>` : "")}`;
+    } else if (type === "open") {
+      const c = q.correctAnswer !== undefined ? q.correctAnswer : p.correct;
+      ans = `<div class="sp-ans"><span>Şagird: <b class="${p.isCorrect ? "g" : "r"}">${esc(p.selected === null || p.selected === undefined || p.selected === "" ? "(boş)" : p.selected)}</b></span>${p.isCorrect ? "" : `<span>Düzgün: <b class="g">${esc(c ?? "—")}</b></span>`}</div>`;
+    } else {
+      const ci = q.correctIndex !== undefined ? q.correctIndex : p.correct;
+      const opts = Array.isArray(q.options) && q.options.length ? q.options : LET.slice(0, 5);
+      ans = `<div class="sp-opts">${opts.map((o, k) => { const m = k === ci ? "c" : (k === p.selected ? "w" : ""); const t = String(o).trim() === LET[k] ? LET[k] : LET[k] + ") " + o; return `<span class="sp-opt ${m}">${m === "c" ? "✓ " : (m === "w" ? "✕ " : "")}${esc(t)}</span>`; }).join("")}</div>`;
+    }
+    return `<div class="sp-q ${st}"><div class="sp-qh">Sual ${i + 1} · ${ST_L[st]}<small>${extra ? esc(extra) : ""}${sec ? (extra ? " · " : "") + sec + " san" : ""}</small></div>${q.text ? `<div>${esc(q.text)}</div>` : ""}${q.imageBase64 ? `<img src="${q.imageBase64}" alt="Sualın şəkli" />` : ""}${ans}</div>`;
+  }
+  // Səhv suallar pəncərəsi
+  window.spWrong = async topic => {
+    const o = sheet(topic ? "Səhv suallar — " + topic : "Səhv suallar", `<div class="sp-empty">Yüklənir...</div>`);
+    const body = o.querySelector(".sp-shb"), atts = SP.att.slice().reverse();
+    const QS = await Promise.all(atts.map(a => questions(a.examId)));
+    let h = "", n = 0;
+    atts.forEach((a, ai) => (a.perQuestion || []).forEach((p, i) => {
+      if (!p) return; const s = pqSt(p); if (s !== "bad" && s !== "part" && s !== "blank") return;
+      const q = QS[ai][i]; if (topic && ((q && q.topic) || a.topic || "Digər") !== topic) return;
+      h += qCard(q, p, i, null, 0, titleOf(a) + " · " + fmtS(ms(a.submittedAt))); n++;
+    }));
+    if (!o.isConnected) return;
+    body.innerHTML = n ? `<div class="muted-note" style="margin:0 0 10px">${n} sual</div>${h}` : `<div class="sp-empty">Səhv sual yoxdur 👍</div>`;
+    body.addEventListener("click", e => { const im = e.target.closest(".sp-q img"); if (im) openImageLightbox(im.src); });
+    if (window.ttmTeX) ttmTeX(body);
+  };
+
+  // ---------- Qrafik ----------
+  function drawTrend(el) {
+    if (!el) return;
+    const pts = SP.att.map(a => ({ y: tally(a).score, l: titleOf(a), d: fmtS(ms(a.submittedAt)) }));
+    if (!pts.length) { el.innerHTML = `<div class="sp-empty">Məlumat yoxdur</div>`; return; }
+    const W = Math.max(260, el.clientWidth || 320), H = 190, L = 32, R = 22, T = 22, B = 30;
+    const px = i => pts.length === 1 ? (L + (W - L - R) / 2) : L + i * (W - L - R) / (pts.length - 1), py = v => T + (100 - v) * (H - T - B) / 100;
+    const grid = [0, 25, 50, 75, 100].map(v => `<line x1="${L}" x2="${W - R}" y1="${py(v)}" y2="${py(v)}" stroke="#e8edf3"/><text x="${L - 6}" y="${py(v) + 4}" text-anchor="end" font-size="10.5" fill="#6b7686">${v}</text>`).join("");
+    const line = pts.map((p, i) => (i ? "L" : "M") + px(i).toFixed(1) + " " + py(p.y).toFixed(1)).join(" ");
+    const area = pts.length > 1 ? `<path d="${line} L${px(pts.length - 1)} ${py(0)} L${px(0)} ${py(0)}Z" fill="#1d6fd6" opacity=".12"/>` : "";
+    const every = Math.max(1, Math.ceil(pts.length / Math.floor((W - L - R) / 62)));
+    const xl = pts.map((p, i) => (i % every === 0 || i === pts.length - 1) && !(i !== pts.length - 1 && pts.length - 1 - i < every) ? `<text x="${px(i)}" y="${H - 9}" text-anchor="${pts.length === 1 ? "middle" : i === 0 ? "start" : i === pts.length - 1 ? "end" : "middle"}" font-size="10.5" fill="#6b7686">${esc(p.l.length > 9 ? p.l.slice(0, 8) + "…" : p.l)}</text>` : "").join("");
+    const last = pts[pts.length - 1], lx = px(pts.length - 1), ly = py(last.y);
+    el.innerHTML = `<div class="sp-chart"><div class="sp-tip"></div><svg height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Nəticə dinamikası">${grid}${area}<path d="${line}" fill="none" stroke="#1d6fd6" stroke-width="2" stroke-linejoin="round"/>${pts.map((p, i) => `<circle cx="${px(i)}" cy="${py(p.y)}" r="4.5" fill="#fff" stroke="#1d6fd6" stroke-width="2"/>`).join("")}<text x="${Math.min(lx, W - 18)}" y="${ly - 10}" text-anchor="middle" font-size="12" font-weight="800" fill="#0B3C5D">${last.y}%</text>${xl}${pts.map((p, i) => `<circle class="sp-hit" data-i="${i}" cx="${px(i)}" cy="${py(p.y)}" r="16" fill="transparent"/>`).join("")}</svg></div>`;
+    const tip = el.querySelector(".sp-tip");
+    const show = e => { const c = e.target.closest(".sp-hit"); if (!c) { tip.style.display = "none"; return; } const p = pts[+c.dataset.i]; tip.textContent = `${p.l} · ${p.d} · ${p.y}%`; tip.style.display = "block"; const x = +c.getAttribute("cx"), tw = tip.offsetWidth / 2; tip.style.left = Math.min(W - tw, Math.max(tw, x)) + "px"; tip.style.top = (+c.getAttribute("cy") - 10) + "px"; };
+    const sv = el.querySelector("svg"); sv.addEventListener("mousemove", show); sv.addEventListener("click", show); sv.addEventListener("mouseleave", () => { tip.style.display = "none"; });
+  }
+  let rzT = 0;
+  window.addEventListener("resize", () => { clearTimeout(rzT); rzT = setTimeout(() => { if (SP.cur && SP.view === "list") drawTrend($("sp-trend")); }, 200); });
+
+  // ---------- Analiz ----------
+  function examAttempts(examId) {
+    if (!SP.examAtt[examId]) SP.examAtt[examId] = db.collection("examAttempts").where("examId", "==", examId).get().then(s => s.docs.map(d => d.data())).catch(e => { console.warn(e); delete SP.examAtt[examId]; return null; });
+    return SP.examAtt[examId];
+  }
+  function tabAn(b, tk) {
+    const sc = SP.att.map(a => tally(a).score);
+    if (!sc.length) { b.innerHTML = errBox() + `<div class="sp-c"><div class="sp-empty">Təhlil üçün hələ sınaq yoxdur</div></div>`; return; }
+    const lastDelta = sc.length > 1 ? sc[sc.length - 1] - sc[sc.length - 2] : null;
+    b.innerHTML = `${errBox()}<div class="sp-grid">
+      <div class="sp-c wide"><div class="sp-stats"><div><b>${sc.length}</b><span>Sınaq</span></div><div><b>${mean(sc)}%</b><span>Ortalama</span></div><div><b>${Math.max(...sc)}%</b><span>Ən yüksək</span></div><div><b>${sc[sc.length - 1]}%</b><span>Son${lastDelta === null ? "" : " (" + (lastDelta >= 0 ? "+" : "") + lastDelta + ")"}</span></div></div></div>
+      <div class="sp-c wide"><h4>${svg("chart")}Nəticə dinamikası</h4><div id="sp-trend"></div></div>
+      <div class="sp-c wide"><h4>${svg("chart")}Qarşılaşdırma</h4><div class="sp-legend"><span><i style="background:#0B3C5D"></i>Şagird</span><span><i style="background:#94a3b8"></i>Sınaq ortalaması</span></div><div id="sp-cmp"><div class="sp-empty">Hesablanır...</div></div></div>
+    </div>`;
+    drawTrend($("sp-trend"));
+    const lastA = SP.att.slice(-8).reverse();
+    Promise.all(lastA.map(a => examAttempts(a.examId))).then(res => {
+      if (tk !== SP.tk) return; const e = $("sp-cmp"); if (!e) return;
+      e.innerHTML = lastA.map((a, i) => {
+        const me = tally(a).score, oth = res[i];
+        let avg = null, rank = "";
+        if (oth && oth.length) {
+          const ss = oth.map(x => computeAttemptStats(x.perQuestion).score).sort((x, y) => y - x);
+          avg = mean(ss); rank = `Yer: ${ss.indexOf(me) + 1} / ${ss.length}`;
+        }
+        return `<div class="sp-cmp"><div class="t"><span>${esc(titleOf(a))}</span><small>${rank}</small></div><div class="r"><span class="sp-track"><i style="width:${Math.max(2, me)}%;background:#0B3C5D"></i></span><b>${me}%</b></div>${avg === null ? "" : `<div class="r"><span class="sp-track"><i style="width:${Math.max(2, avg)}%;background:#94a3b8"></i></span><b>${avg}%</b></div>`}</div>`;
+      }).join("");
+    });
+  }
+
+  // ---------- Zəif mövzular ----------
+  async function practiceStats() {
+    if (SP.stats !== null) return SP.stats;
+    try { const d = await db.collection("practiceStats").doc(SP.cur).get(); SP.stats = d.exists ? d.data() : {}; }
+    catch (e) { SP.stats = {}; }
+    return SP.stats;
+  }
+  function topics() {
+    if (SP.topicsP) return SP.topicsP;
+    const atts = SP.att.slice();
+    SP.topicsP = (async () => {
+      const m = {}, add = (t, c, n) => { const o = m[t] = m[t] || { t, c: 0, n: 0 }; o.c += c; o.n += n; };
+      const QS = await Promise.all(atts.map(a => questions(a.examId)));
+      atts.forEach((a, ai) => (a.perQuestion || []).forEach((p, i) => {
+        if (!p || p.type === "detailed") return;
+        add((QS[ai][i] && QS[ai][i].topic) || a.topic || "Digər", p.isCorrect ? 1 : 0, 1);
+      }));
+      const st = await practiceStats();
+      Object.entries(st.topics || {}).forEach(([t, o]) => { if (o && o.done) add(t, o.correct || 0, o.done); });
+      return Object.values(m).map(o => ({ ...o, pct: Math.round(o.c / o.n * 100) })).sort((a, b) => a.pct - b.pct);
+    })();
+    return SP.topicsP;
+  }
+  function tabWk(b, tk) {
+    b.innerHTML = `<div class="sp-c"><div class="sp-empty">Hesablanır...</div></div>`;
+    topics().then(l => {
+      if (tk !== SP.tk) return;
+      b.innerHTML = errBox() + `<div class="sp-c"><h4>${svg("target")}Mövzular üzrə göstərici</h4>${l.length ? `<div class="muted-note" style="margin:0 0 10px">Sınaq və təkrar suallarından hesablanır. Mövzuya basın — səhv sualları açılır.</div>${l.map(topicBar).join("")}` : `<div class="sp-empty">Məlumat hələ yoxdur</div>`}</div>`;
+    });
+  }
+
+  // ---------- Ödənişlər ----------
+  const payOpen = () => (typeof paymentsUnlocked !== "undefined" && paymentsUnlocked) || SP.payOk;
+  const pinForm = () => `<div class="muted-note" style="margin:0">🔒 Ödənişlər bölməsinin kodunu yazın</div><div class="sp-pin"><input type="password" inputmode="numeric" id="sp-pin" placeholder="Kod" autocomplete="off" /><button type="button" class="sp-btn" style="margin:0" onclick="spPin()">Aç</button></div>`;
+  window.spPin = () => {
+    const i = $("sp-pin"); if (!i) return;
+    if (i.value !== PAYMENTS_PIN) { toast("Kod yanlışdır"); i.value = ""; return; }
+    SP.payOk = true; ensurePaymentsListener(); paintBody();
+  };
+  const oRecompute = recomputePaymentCaches;
+  recomputePaymentCaches = function () {
+    const r = oRecompute.apply(this, arguments);
+    try { if (SP.cur && SP.view === "list") { if (SP.tab === "pay") paintBody(); else if (SP.tab === "ov") paintOvPay(); } } catch (e) { console.error(e); }
+    return r;
+  };
+  const payOf = (id, key) => allPaymentsArr.find(p => p.studentId === id && p.monthKey === key);
+  function paintOvPay() {
+    const el = $("sp-ov-pay"), s = stu(SP.cur); if (!el || !s) return;
+    if (!payOpen()) { el.innerHTML = pinForm(); return; }
+    ensurePaymentsListener();
+    const now = new Date();
+    el.innerHTML = [0, 1, 2].map(k => {
+      const d = new Date(now.getFullYear(), now.getMonth() - k, 1), key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"), p = payOf(s.id, key);
+      return `<div class="sp-er"><i class="sp-dot ${p && p.paid ? "ok" : "bad"}" style="font-style:normal">${p && p.paid ? "✓" : "✕"}</i><b>${MONTHS_FULL[d.getMonth()]}</b><small style="font-weight:700;color:${p && p.paid ? "#15803d" : "#dc2626"}">${p && p.paid ? (s.monthlyFee ? esc(s.monthlyFee) + " AZN" : "Ödənilib") : "Ödənilməyib"}</small></div>`;
+    }).join("");
+  }
+  function tabPay(b) {
+    const s = stu(SP.cur);
+    if (!payOpen()) { b.innerHTML = `<div class="sp-c">${pinForm()}</div>`; return; }
+    ensurePaymentsListener();
+    const now = new Date(), y = SP.year, nowKey = now.getFullYear() * 12 + now.getMonth();
+    const created = ms(s.createdAt) ? new Date(ms(s.createdAt)) : null, startKey = created ? created.getFullYear() * 12 + created.getMonth() : null;
+    let paid = 0, due = 0;
+    const cells = MONTHS.map((m, i) => {
+      const key = y + "-" + String(i + 1).padStart(2, "0"), p = payOf(s.id, key), on = !!(p && p.paid), k = y * 12 + i;
+      const late = !on && k <= nowKey && (startKey === null ? true : k >= startKey);
+      if (on) paid++; else if (late) due++;
+      return `<button type="button" class="${on ? "p" : (late ? "d" : "")} ${k === nowKey ? "cur" : ""}" onclick="spPayT('${key}')"><span>${m}</span><span>${on ? "✓" : (late ? "✕" : "·")}</span></button>`;
+    }).join("");
+    b.innerHTML = `<div class="sp-c"><h4>${svg("card")}Ödənişlər</h4>
+      <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:10px"><button type="button" class="sp-mini" aria-label="Əvvəlki il" onclick="spY(-1)">‹</button><b>${y}</b><button type="button" class="sp-mini" aria-label="Növbəti il" onclick="spY(1)">›</button></div>
+      <div class="sp-mo">${cells}</div>
+      <div class="sp-stats" style="grid-template-columns:repeat(3,1fr);margin-top:12px"><div><b>${paid}</b><span>Ödənilib (ay)</span></div><div><b>${due}</b><span>Ödənilməyib (ay)</span></div><div><b>${s.monthlyFee ? esc(s.monthlyFee) : "—"}</b><span>Aylıq, AZN</span></div></div>
+      ${s.paymentDay ? `<div class="muted-note" style="margin-top:9px">Ödəniş günü: ${esc(s.paymentDay)}</div>` : ""}
+      <div class="muted-note" style="margin-top:6px">Aya basın — ödənilib / ödənilməyib dəyişir.</div></div>`;
+  }
+  window.spY = d => { SP.year += d; paintBody(); };
+  window.spPayT = async key => {
+    const s = stu(SP.cur); if (!s) return;
+    const p = payOf(s.id, key), nv = !(p && p.paid), mi = +key.split("-")[1] - 1;
+    if (!(await ttmConfirm(`${MONTHS_FULL[mi]} ayı «${nv ? "ödənilib" : "ödənilməyib"}» kimi qeyd olunsun?`))) return;
+    try {
+      await db.collection("payments").doc((p && p._id) || `${currentTeacherId}_${s.id}_${key}`).set({ studentId: s.id, teacherId: currentTeacherId, monthKey: key, paid: nv, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+      toast(nv ? "Ödənilib kimi qeyd olundu" : "Ödənilməyib kimi qeyd olundu");
+    } catch (e) { console.error(e); toast("Xəta: " + errAz(e)); }
+  };
+
+  // ---------- Davamiyyət ----------
+  async function loadDaily() {
+    if (SP.daily) return SP.daily;
+    const id = SP.cur;
+    const snap = await db.collection("dailyStatus").where("teacherId", "==", currentTeacherId).where("studentId", "==", id).get();
+    const l = snap.docs.map(d => d.data()).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+    if (SP.cur === id) SP.daily = l;
+    return l;
+  }
+  function tabAtt(b, tk) {
+    b.innerHTML = `<div class="sp-c"><div class="sp-empty">Yüklənir...</div></div>`;
+    loadDaily().then(l => {
+      if (tk !== SP.tk) return;
+      if (!l.length) { b.innerHTML = `<div class="sp-c"><div class="sp-empty">Gündəlik hesabatda bu şagird üçün qeyd yoxdur</div></div>`; return; }
+      const cnt = (f, v) => l.filter(r => r[f] === v).length;
+      const by = {}; l.forEach(r => { by[r.date] = r; });
+      const today = new Date(); let days = "";
+      for (let i = 34; i >= 0; i--) { const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i), k = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"), r = by[k]; const sc = r ? dailyScoreOf(r) : undefined; days += `<i class="${sc === undefined ? "" : sc === null ? "n" : bandC(sc)}" title="${fmtS(d.getTime())}${sc === undefined ? "" : sc === null ? " · qeyd var" : " · " + sc + "%"}"></i>`; }
+      const rowT = (lab, v) => v ? `<span class="t">${lab}: ${DAILY_LBL[v] || esc(v)}</span>` : "";
+      b.innerHTML = `<div class="sp-grid"><div class="sp-c wide"><h4>${svg("cal")}Son 35 gün</h4><div class="sp-days">${days}</div><div class="sp-legend" style="margin:8px 0 0"><span><i style="background:#22c55e"></i>Yaxşı</span><span><i style="background:#f59e0b"></i>Orta</span><span><i style="background:#ef4444"></i>Zəif</span><span><i style="background:#e8edf3"></i>Qeyd yoxdur</span></div></div>
+        <div class="sp-c wide"><div class="sp-stats"><div><b>${l.length}</b><span>Qeyd olunan gün</span></div><div><b>${cnt("homework", "done")}</b><span>Ev tapşırığı edib</span></div><div><b>${cnt("homework", "not")}</b><span>Etməyib</span></div><div><b>${cnt("homework", "copied")}</b><span>Köçürüb</span></div></div></div>
+        <div class="sp-c wide"><h4>Günlər üzrə</h4>${l.slice(0, 40).map(r => `<div class="sp-dr"><b>${r.date ? fmtD(new Date(r.date + "T00:00:00").getTime()) : "—"}</b>${rowT("Ev tapşırığı", r.homework)}${rowT("Sual-cavab", r.qa)}${rowT("Təkrar", r.repeat)}${r.note ? `<p>${esc(r.note)}</p>` : ""}</div>`).join("")}</div></div>`;
+    }).catch(e => { console.error(e); if (tk === SP.tk) b.innerHTML = `<div class="sp-c"><div class="sp-empty">Xəta: ${esc(errAz(e))}</div></div>`; });
+  }
+
+  // ---------- Fəaliyyət ----------
+  function tabAct(b, tk) {
+    b.innerHTML = `<div class="sp-c"><div class="sp-empty">Yüklənir...</div></div>`;
+    const s = stu(SP.cur);
+    Promise.all([loadDaily().catch(() => []), practiceStats()]).then(([daily, st]) => {
+      if (tk !== SP.tk) return;
+      const ev = [];
+      SP.att.forEach(a => { const t = tally(a); ev.push({ m: ms(a.submittedAt), h: `<b>${esc(titleOf(a))}</b> sınağını işlədi`, s: `${t.ok} düz · ${t.bad} səhv · ${t.blank} boş · ${t.score}%` }); });
+      daily.filter(r => r.note).forEach(r => { ev.push({ m: new Date((r.date || "1970-01-01") + "T12:00:00").getTime(), h: "Müəllim qeydi", s: r.note }); });
+      if (payOpen()) allPaymentsArr.filter(p => p.studentId === s.id && p.paid).forEach(p => { const [y, mo] = (p.monthKey || "").split("-"); ev.push({ m: ms(p.updatedAt) || new Date(+y, +mo - 1, 1).getTime(), h: `${MONTHS_FULL[+mo - 1] || ""} ayı ödənildi`, s: y }); });
+      if (s.createdAt) ev.push({ m: ms(s.createdAt), h: "Hesab yaradıldı", s: "" });
+      ev.sort((x, y) => y.m - x.m);
+      const tp = Object.values(st.topics || {}), done = tp.reduce((x, o) => x + (o.done || 0), 0), cor = tp.reduce((x, o) => x + (o.correct || 0), 0);
+      b.innerHTML = `<div class="sp-grid">${done ? `<div class="sp-c wide"><h4>Təkrar bölməsi</h4><div class="sp-stats" style="grid-template-columns:repeat(3,1fr)"><div><b>${done}</b><span>Həll etdiyi sual</span></div><div><b>${cor}</b><span>Düz</span></div><div><b>${Math.round(cor / done * 100)}%</b><span>Faiz</span></div></div></div>` : ""}
+        <div class="sp-c wide"><h4>${svg("pulse")}Fəaliyyət</h4>${ev.length ? `<div class="sp-tl">${ev.slice(0, 40).map(e => `<div>${e.h}<small>${fmtD(e.m)}${e.s ? " · " + esc(e.s) : ""}</small></div>`).join("")}</div>` : `<div class="sp-empty">Fəaliyyət yoxdur</div>`}</div></div>`;
+    });
+  }
+
+  // ---------- İxrac ----------
+  function dlBlob(blob, name) { const u = URL.createObjectURL(blob), a = document.createElement("a"); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 3000); }
+  const safe = s => String(s || "fayl").replace(/[\\/:*?"<>|]+/g, " ").trim();
+  async function saveTable(rows, name, sheetName) {
+    try {
+      await ensureLib("xlsx");
+      const ws = XLSX.utils.aoa_to_sheet(rows), wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, sheetName); XLSX.writeFile(wb, name + ".xlsx");
+    } catch (e) {
+      console.warn(e);
+      const csv = rows.map(r => r.map(c => `"${String(c ?? "").replace(/"/g, '""')}"`).join(";")).join("\r\n");
+      dlBlob(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }), name + ".csv");
+    }
+  }
+  async function exportList() {
+    toast("Excel hazırlanır...");
+    const pw = {};
+    try { const c = await db.collection("studentCreds").where("teacherId", "==", currentTeacherId).get(); c.forEach(d => { pw[d.id] = d.data().password; }); } catch (e) {}
+    await loadScores();
+    const rows = [["Ad Soyad", "Qrup", "İstifadəçi adı", "Şifrə", "İmtahan qrupu", "Ortalama %"]];
+    filtered().forEach(s => rows.push([s.fullName, gName(s.groupId), s.username || "", pw[s.id] || "", s.examGroup && window.ttmEG ? ttmEG.name(s.examGroup) : "", SP.scores[s.id] ?? ""]));
+    await saveTable(rows, "Sagirdler", "Şagirdlər");
+  }
+  window.spExport = async () => {
+    const s = stu(SP.cur); if (!s) return;
+    const rows = [["Sınaq", "Tarix", "Düz", "Səhv", "Boş", "Sual sayı", "Bal %"]];
+    SP.att.slice().reverse().forEach(a => { const t = tally(a); rows.push([titleOf(a), fmtD(ms(a.submittedAt)), t.ok, t.bad, t.blank, t.total, t.score]); });
+    await saveTable(rows, safe(s.fullName) + " netice", "Nəticələr");
+  };
+  window.spPdf = async () => {
+    const s = stu(SP.cur); if (!s) return;
+    toast("PDF hazırlanır...");
+    try {
+      await ensureLib("jspdf"); const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: "mm", format: "a4" }); await ensurePdfFont(doc);
+      const W = 210; let y = 34;
+      doc.setFillColor(11, 60, 93); doc.rect(0, 0, W, 24, "F"); doc.setTextColor(255, 255, 255); setPdfFont(doc); doc.setFontSize(15);
+      boldText(doc, "TTM Tədris Mərkəzi", W / 2, 15, { align: "center" });
+      doc.setTextColor(11, 60, 93); doc.setFontSize(14); boldText(doc, s.fullName, 14, y); y += 7;
+      doc.setFontSize(10.5); doc.setTextColor(60, 60, 60);
+      const sc = SP.att.map(a => tally(a).score);
+      doc.text(`Qrup: ${gName(s.groupId)}   |   Sınaq sayı: ${sc.length}   |   Ortalama: ${sc.length ? mean(sc) + "%" : "—"}`, 14, y); y += 10;
+      const page = () => { if (y > 280) { doc.addPage(); setPdfFont(doc); y = 18; } };
+      doc.setTextColor(11, 60, 93); doc.setFontSize(12); boldText(doc, "Sınaq nəticələri", 14, y); y += 7;
+      doc.setFontSize(10); doc.setTextColor(40, 40, 40);
+      SP.att.slice().reverse().forEach(a => { page(); const t = tally(a), n = titleOf(a); doc.text(n.length > 44 ? n.slice(0, 43) + "…" : n, 14, y); doc.text(fmtS(ms(a.submittedAt)), 112, y); doc.text(`${t.ok} düz · ${t.bad} səhv · ${t.blank} boş`, 132, y); doc.text(t.score + "%", 196, y, { align: "right" }); y += 6.5; });
+      const tp = (await topics()).filter(x => x.pct < 75);
+      if (tp.length) { y += 5; page(); doc.setTextColor(11, 60, 93); doc.setFontSize(12); boldText(doc, "Zəif mövzular", 14, y); y += 7; doc.setFontSize(10); doc.setTextColor(40, 40, 40); tp.slice(0, 20).forEach(r => { page(); doc.text(r.t.length > 60 ? r.t.slice(0, 59) + "…" : r.t, 14, y); doc.text(r.pct + "%", 196, y, { align: "right" }); y += 6.5; }); }
+      doc.save(safe(s.fullName) + " hesabat.pdf");
+    } catch (e) { console.error(e); toast("PDF alınmadı: " + errAz(e)); }
+  };
 })();
 </script>
 
