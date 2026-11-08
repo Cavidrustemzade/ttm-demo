@@ -2150,6 +2150,7 @@ function ttmConfirm(msg){return new Promise(function(res){var m=document.createE
       <button class="tab-btn" data-stab="stab-exams">Sınaqlar</button>
       <button class="tab-btn" data-stab="stab-more">Daha çox</button>
       <button class="tab-btn" data-stab="stab-roadmap">Yol Xəritəm</button>
+      <button class="tab-btn" data-stab="stab-fenler">Fənlərim</button>
       <button class="tab-btn" data-stab="stab-race">Yarış</button>
       <button class="tab-btn" data-stab="stab-teachers">👩‍🏫 Müəllimlər</button>
     </div>
@@ -2405,14 +2406,14 @@ function ttmConfirm(msg){return new Promise(function(res){var m=document.createE
       </div>
       <div class="tab-panel" id="stab-tv"><div class="v2-backrow"><button class="v2-back" onclick="v2Tab('stab-more')">←</button><div class="v2-backtitle">Təlim videoları</div></div><div class="card"><div id="tv-s-box"></div></div></div>
       <div class="tab-panel" id="stab-tprofile"><div id="v2-tprofile"></div></div>
+      <div class="tab-panel" id="stab-fenler"><div id="fn-root"></div></div>
       <div class="tab-panel" id="stab-subject"><div id="v2-subject"></div></div>
   </main>
-  <nav id="s-bottom-nav" class="v2-nav">
+  <nav id="s-bottom-nav" class="v2-nav v3-nav">
     <button class="v2-nav-btn active" data-go="stab-home" onclick="v2Tab('stab-home')"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span>Ana səhifə</span></button>
-    <button class="v2-nav-btn" data-go="stab-exams" onclick="v2Tab('stab-exams')"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg><span>Sınaqlar</span></button>
-    <button class="v2-nav-btn" data-go="stab-daily" onclick="v2Tab('stab-daily')"><svg viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4h6v3H9zM9 12h6M9 16h4"/></svg><span>Gündəlik</span></button>
-    <button class="v2-nav-btn" data-go="stab-teachers" onclick="v2Tab('stab-teachers')"><svg viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v14a2 2 0 0 0-2-2H2zM22 4h-7a3 3 0 0 0-3 3v14a2 2 0 0 1 2-2h8z"/></svg><span>Fənlər</span></button>
-    <button class="v2-nav-btn" data-go="stab-scores" onclick="v2Tab('stab-scores')"><svg viewBox="0 0 24 24"><path d="M5 21V10M12 21V3M19 21v-8"/></svg><span>Nəticələr</span></button>
+    <button class="v2-nav-btn" data-go="stab-fenler" onclick="v2Tab('stab-fenler')"><svg viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v14a2 2 0 0 0-2-2H2zM22 4h-7a3 3 0 0 0-3 3v14a2 2 0 0 1 2-2h8z"/></svg><span>Fənlər</span></button>
+    <div class="v3-mid"><button type="button" class="v3-ttm" aria-label="TTM — bugünkü məşq" onclick="window.r3MoodAny&&r3MoodAny()"><img id="v3-ttm-img" alt=""></button></div>
+    <button class="v2-nav-btn" data-go="stab-scores" onclick="v2Tab('stab-scores')"><svg viewBox="0 0 24 24"><path d="M5 21V10M12 21V3M19 21v-8"/></svg><span>Statistika</span></button>
     <button class="v2-nav-btn" data-go="stab-more" onclick="v2Tab('stab-more')"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="19" cy="12" r="1.3" fill="currentColor"/></svg><span>Daha çox</span></button>
   </nav>
 
@@ -13443,7 +13444,7 @@ function homeExtra(){
         <svg class="r3-mtn" viewBox="0 0 100 80" aria-hidden="true"><path d="M2 78 L34 30 L50 50 L66 22 L98 78Z" fill="#5B8BE8"/><path d="M34 30 L42 42 L37 40 L31 46 L28 39Z M66 22 L76 40 L70 37 L64 43 L60 33Z" fill="#fff"/><path d="M66 22 V2" stroke="#fff" stroke-width="2"/><path d="M66 3 L82 8 L66 13Z" fill="#FACC15"/></svg>
         <div class="r3-ttl">${esc(n)} üzrə ümumi hazırlıq</div>
         <div class="r3-pct"><b>${p}%</b>${gain > 0 ? `<span>↑ +${gain}%</span>` : ""}</div>
-        <div class="r3-ride big">${rider(n, p, 96, true)}</div>
+        <div class="r3-ride big">${rider(n, p, 84, true)}</div>
         <div class="r3-lb"><span>${level3(p)[2]}</span><span>Hədəf: 100%</span></div></div>
       <div class="r3-cards">
         ${card3("ex", "target", "Sınaqlarda səhvlərim", "Bütün sınaqlardakı səhv suallar", exN + " sual", "red")}
@@ -13521,7 +13522,7 @@ function homeExtra(){
     const v = V3.view;
     const cls = anim === false ? "" : " in-" + V3.dir + (V3.nav % 2);
     root.innerHTML = `<div class="r3${cls}">${v === "home" ? homeHTML() : v === "mark" ? markHTML() : listHTML()}</div>`;
-    if (v === "home") { const n = V3.subj, p = ready3(n), f = V3.shown[n] == null ? 0 : V3.shown[n]; V3.shown[n] = p; animRide(root.querySelector(".r3-hero"), f, p, 96, true); }
+    if (v === "home") { const n = V3.subj, p = ready3(n), f = V3.shown[n] == null ? 0 : V3.shown[n]; V3.shown[n] = p; animRide(root.querySelector(".r3-hero"), f, p, 84, true); }
     ttmBtn3();
   }
   async function rm3Home() {
@@ -13538,7 +13539,7 @@ function homeExtra(){
       root.innerHTML = `<div class="rs-empty"><b>Yol xəritəsi yüklənmədi</b><p>${esc(errAz(e))}</p><button onclick="loadRoadmap()">Yenidən cəhd et</button></div>`;
     }
   }
-  const go3 = (view, dir) => { V3.view = view; V3.dir = dir || "f"; V3.nav++; paint3(); window.scrollTo({ top: 0, behavior: "auto" }); };
+  const go3 = (view, dir) => { if (V3.view === "home") V3.homeY = window.scrollY; V3.view = view; V3.dir = dir || "f"; V3.nav++; paint3(); window.scrollTo({ top: view === "home" ? (V3.homeY || 0) : 0, behavior: "auto" }); };
   window.r3Go = v => go3(v);
   window.r3Back = () => go3(V3.view === "mark" ? "hard" : "home", "b");
   window.r3Sub = n => { if (n === V3.subj) return; V3.subj = n; V3.subN++; paint3(false); window.scrollTo({ top: 0, behavior: "auto" }); };
@@ -13599,6 +13600,13 @@ function homeExtra(){
       }
     });
     return S;
+  };
+  window.r3MoodAny = async () => {
+    if (V3.sheet || V3.busy) return;
+    V3.busy = true;
+    try { if (!V3.D) { toast("Məşq hazırlanır..."); await build3(); } const subs = subjects3(); if (!V3.subj || !subs.includes(V3.subj)) V3.subj = subs[0]; r3Mood(); }
+    catch (e) { console.error(e); toast(errAz(e)); }
+    finally { V3.busy = false; }
   };
   window.r3Chars = () => {
     if (V3.sheet) return;
@@ -19626,6 +19634,322 @@ input,textarea{caret-color:#1d6fd6}
     });
     if (typeof resetExamForm === "function") { const orf = resetExamForm; resetExamForm = function () { const r = orf.apply(this, arguments); const t = $("ts-tc-in"); if (t) t.value = ""; const m = $("ts-tc-msg"); if (m) m.textContent = ""; return r; }; }
   }
+})();
+</script>
+
+<style id="v3-css">
+/* ===== alt panel: TTM ortada ===== */
+.v3-nav{grid-template-columns:repeat(5,minmax(0,1fr))!important;align-items:end}
+.v3-mid{position:relative;display:flex;justify-content:center;align-items:flex-end;height:100%}
+.v3-ttm{position:absolute;bottom:2px;width:68px;height:66px;background:none;border:0;padding:0;-webkit-tap-highlight-color:transparent;transition:scale .22s cubic-bezier(.34,1.56,.64,1)}
+.v3-ttm:active{scale:.88}
+.v3-ttm img{width:100%;height:100%;display:block;filter:drop-shadow(0 6px 10px rgba(37,99,235,.35))}
+.v2-nav-btn{transition:color .2s,scale .2s cubic-bezier(.34,1.56,.64,1)}
+.v2-nav-btn:active{scale:.9}
+#r3-ttm{display:none!important}
+body.r3-on #s-bottom-nav{display:grid!important}
+/* ===== Yol xəritəm: yığcam ===== */
+body .r3{gap:10px;padding-bottom:18px}
+body .r3-head{gap:10px;align-items:center}
+body .r3-back{width:40px;height:40px;border-radius:13px}
+body .r3-ht h1{font-size:21px;letter-spacing:-.3px}
+body .r3-ht h2{font-size:19px}
+body .r3-ht p{font-size:12px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body .r3-head.wc{min-height:84px;padding-right:90px;align-items:flex-start}
+body .r3-head.wc .r3-ht p{white-space:normal}
+body .r3-hc{width:84px;height:84px}
+body .r3-av{width:44px;height:44px;padding:4px}
+body .r3-tile{height:70px;border-radius:17px;gap:3px}
+body .r3-tile img{width:32px;height:32px}
+body .r3-tile span{font-size:11.5px}
+body .r3-tile.sm img{width:28px;height:28px}
+body .r3-tile.sm span{font-size:10.5px}
+body .r3-hero{height:200px;border-radius:24px}
+body .r3-ttl{top:14px;font-size:14px}
+body .r3-pct{top:34px}
+body .r3-pct b{font-size:38px}
+body .r3-pct span{font-size:13px;padding:4px 9px}
+body .r3-ride.big{top:156px}
+body .r3-lb{top:178px;font-size:12px}
+body .r3-mtn{top:92px;width:80px;height:64px}
+body .r3-bub{font-size:12px;padding:5px 9px}
+body .r3-cards{gap:8px}
+body .r3-card{min-height:118px;padding:11px 12px;border-radius:20px;gap:4px}
+body .r3-card img{width:32px;height:32px}
+body .r3-card b{font-size:14px}
+body .r3-card span{font-size:11.5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+body .r3-card em{font-size:13px;padding:3px 10px}
+body .r3-note{display:none}
+body .r3-save{bottom:calc(var(--v3nav,74px) + env(safe-area-inset-bottom,0px))}
+body .r3-stat{padding:11px}
+body .r3-stat img{width:36px;height:36px}
+body .r3-stat b{font-size:24px}
+body .r3-pill{height:50px;font-size:17px}
+body .r3-row>button{min-height:70px;padding:11px 12px}
+body .r3-rm b{font-size:16.5px}
+body .r3-mix{height:54px;font-size:15.5px}
+/* ===== ana səhifə: Fənlərim kartı ===== */
+.v3-fq .v3-avs{display:flex;margin-top:6px}
+.v3-fq .v3-avs i{width:30px;height:30px;border-radius:50%;border:2px solid rgba(255,255,255,.9);background:#fff center/cover no-repeat;margin-left:-8px;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:12px;font-weight:800;color:#0B3C5D;box-shadow:0 2px 6px rgba(0,0,0,.18)}
+.v3-fq .v3-avs i:first-child{margin-left:0}
+/* ===== Fənlərim səhifəsi ===== */
+.fn{--c:#2563EB;--cl:#EAF1FF;font-family:Nunito,var(--font-main);color:#0D1B4C;max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:12px;padding-bottom:20px}
+.fn-bg{position:fixed;inset:0;z-index:-1;background:linear-gradient(180deg,var(--cl),#F6F8FC 55%);transition:background .5s}
+.fn-head{display:flex;align-items:center;gap:10px}
+.fn-head h1{flex:1;margin:0;font-size:21px;font-weight:900}
+.fn-join{padding:8px 12px;border-radius:12px;background:#fff;color:var(--c);font-weight:800;font-size:13px;box-shadow:0 3px 10px rgba(0,0,0,.06)}
+.fn-tch{display:flex;gap:14px;overflow-x:auto;padding:4px 2px 6px;scrollbar-width:none}
+.fn-tch::-webkit-scrollbar{display:none}
+.fn-t{flex:none;width:84px;display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:0;padding:0;font-family:inherit;color:inherit;transition:scale .22s cubic-bezier(.34,1.56,.64,1)}
+.fn-t:active{scale:.94}
+.fn-t .ph{width:68px;height:68px;border-radius:50%;padding:3px;background:#E3E8F2;transition:background .3s,transform .3s}
+.fn-t .ph>div{width:100%;height:100%;border-radius:50%;background:#fff center/cover no-repeat;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff}
+.fn-t b{font-size:12.5px;font-weight:800;line-height:1.15;text-align:center;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fn-t small{font-size:11px;font-weight:700;color:#5A6890;margin-top:-4px}
+.fn-t.on .ph{background:var(--c);transform:scale(1.06)}
+.fn-hero{border-radius:22px;padding:16px;color:#fff;background:linear-gradient(135deg,var(--c),color-mix(in srgb,var(--c) 60%,#0B1E4F));box-shadow:0 12px 26px color-mix(in srgb,var(--c) 35%,transparent);display:flex;align-items:center;gap:12px}
+.fn-hero .ic{width:50px;height:50px;border-radius:15px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:26px;flex:none}
+.fn-hero b{display:block;font-size:20px;font-weight:900;line-height:1.1}
+.fn-hero span{display:block;font-size:13px;font-weight:700;opacity:.9;margin-top:3px}
+.fn-topics{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.fn-topics::-webkit-scrollbar{display:none}
+.fn-topics button{flex:none;min-height:40px;padding:0 14px;border-radius:20px;background:#fff;font-weight:800;font-size:13.5px;font-family:inherit;color:#0D1B4C;box-shadow:0 3px 10px rgba(0,0,0,.06);transition:background .25s,color .25s,scale .2s}
+.fn-topics button.on{background:var(--c);color:#fff}
+.fn-body{display:grid;grid-template-columns:1fr;gap:12px}
+.fn-side{display:none}
+.fn-cat{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:900}
+.fn-cat i{width:10px;height:10px;border-radius:50%;background:var(--cc,var(--c))}
+.fn-cat button{margin-left:auto;font-family:inherit;font-size:12.5px;font-weight:800;color:var(--c);background:#fff;border-radius:10px;padding:6px 10px}
+.fn-vids{display:grid;grid-template-columns:1fr;gap:12px}
+.fn-v{border-radius:18px;background:#fff;padding:8px;box-shadow:0 6px 18px rgba(13,27,76,.08);animation:fnIn .35s cubic-bezier(.22,1,.36,1) both}
+.fn-v>b{display:block;font-size:14.5px;font-weight:800;padding:8px 4px 2px}
+.fn-v .ts-vid{margin-top:0}
+.fn-oz{border-radius:18px;background:#fff;padding:16px;font-size:15px;line-height:1.6;box-shadow:0 6px 18px rgba(13,27,76,.08);white-space:normal;animation:fnIn .35s ease-out both}
+.fn-empty{border-radius:18px;background:#fff;padding:22px;text-align:center;color:#5A6890;font-size:14.5px;line-height:1.5}
+.fn-empty b{display:block;color:#0D1B4C;font-size:16px;margin-bottom:4px}
+@keyframes fnIn{from{opacity:0;transform:translate3d(0,10px,0)}to{opacity:1;transform:none}}
+@media(min-width:760px){
+  .fn-body{grid-template-columns:260px 1fr;align-items:start}
+  .fn-side{display:flex;flex-direction:column;gap:4px;background:#fff;border-radius:20px;padding:12px;box-shadow:0 6px 18px rgba(13,27,76,.06);position:sticky;top:90px;max-height:calc(100vh - 200px);overflow:auto}
+  .fn-side h4{margin:8px 6px 4px;font-size:13px;color:#5A6890}
+  .fn-side button{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;background:none;font-family:inherit;font-size:14px;font-weight:700;color:#0D1B4C;text-align:left}
+  .fn-side button i{width:22px;height:22px;border-radius:50%;background:#E3E8F2;flex:none}
+  .fn-side button.on{background:var(--cl)}.fn-side button.on i{background:var(--c)}
+  .fn-vids{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+/* çarx */
+#fn-wbtn{position:fixed;left:-20px;top:50%;z-index:35;width:58px;height:58px;margin-top:-29px;border-radius:50%;border:0;background:var(--fnc,#2563EB);color:#fff;display:none;align-items:center;justify-content:flex-end;padding-right:9px;box-shadow:0 8px 20px rgba(13,27,76,.3);transition:left .3s cubic-bezier(.34,1.56,.64,1),scale .2s;-webkit-tap-highlight-color:transparent}
+#fn-wbtn:active{scale:.9}
+#fn-wbtn svg{width:24px;height:24px}
+body.fn-on #fn-wbtn{display:flex}
+.fn-wov{position:fixed;inset:0;z-index:1000}
+.fn-wov .dim{position:absolute;inset:0;background:rgba(13,27,76,.35);border:0;animation:r3fade .3s both}
+.fn-wheel{position:absolute;left:-150px;top:50%;width:300px;height:300px;margin-top:-150px;transform-origin:50% 50%;animation:fnSpin .5s cubic-bezier(.22,1,.36,1) both}
+.fn-wov.out .fn-wheel{animation:fnSpinOut .25s ease-in both}.fn-wov.out .dim{animation:r3fade .25s reverse both}
+@keyframes fnSpin{from{transform:rotate(-120deg) scale(.5);opacity:0}to{transform:none;opacity:1}}
+@keyframes fnSpinOut{to{transform:rotate(-90deg) scale(.6);opacity:0}}
+.fn-wheel svg{width:100%;height:100%;overflow:visible}
+.fn-wheel path.seg{cursor:pointer;transition:filter .2s}
+.fn-wheel path.seg:active{filter:brightness(1.15)}
+.fn-wheel text{font-family:Nunito,sans-serif;font-weight:900;fill:#fff;pointer-events:none}
+/* müəllim redaktoru */
+.fe-ov{position:fixed;inset:0;z-index:1000;background:#F4F7FE;overflow-y:auto;font-family:Nunito,var(--font-main);color:#0D1B4C;animation:r3fade .25s both}
+.fe{max-width:760px;margin:0 auto;padding:12px 14px 120px}
+.fe-h{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:10px;padding:10px 0;background:#F4F7FE}
+.fe-h b{flex:1;font-size:20px;font-weight:900}
+.fe-h button{font-family:inherit}
+.fe-btn{padding:10px 16px;border-radius:14px;font-weight:900;font-size:14.5px;background:linear-gradient(135deg,#2A6FE6,#1450C7);color:#fff;border:0}
+.fe-btn.g{background:#fff;color:#1D3D8F;box-shadow:0 3px 10px rgba(0,0,0,.06)}
+.fe-tp{background:#fff;border-radius:18px;padding:12px;margin-top:12px;box-shadow:0 4px 14px rgba(13,27,76,.06)}
+.fe-tp .row{display:flex;gap:6px;align-items:center}
+.fe-tp input,.fe-tp textarea{width:100%;padding:10px 11px;border:1.5px solid #D5DEEE;border-radius:12px;font-size:15px;font-family:inherit;background:#fff}
+.fe-tp textarea{min-height:110px;resize:vertical}
+.fe-ic{width:38px;height:38px;flex:none;border-radius:11px;border:0;background:#EEF2FA;font-size:15px;font-weight:900;color:#1D3D8F;font-family:inherit}
+.fe-ic.x{background:#FEE2E2;color:#B91C1C}
+.fe-tabs{display:flex;gap:6px;overflow-x:auto;margin:10px 0 8px;scrollbar-width:none}
+.fe-tabs button{flex:none;padding:8px 12px;border-radius:12px;border:0;background:#EEF2FA;font-family:inherit;font-weight:800;font-size:13px;color:#1D3D8F}
+.fe-tabs button.on{background:#1450C7;color:#fff}
+.fe-vr{display:grid;grid-template-columns:1fr 38px;gap:6px;margin-top:6px;padding:8px;border-radius:12px;background:#F7F9FD}
+.fe-vr .ins{display:flex;flex-direction:column;gap:6px}
+.fe-add{width:100%;margin-top:8px;padding:10px;border-radius:12px;border:1.5px dashed #9DB4E8;background:none;font-family:inherit;font-weight:800;color:#1D4ED8}
+.fe-note{font-size:12.5px;color:#5A6890;margin-top:6px}
+</style>
+<div id="fn-bg-holder"></div>
+<script>
+/* ===== Şagird: yeni alt panel, ana səhifə, Fənlərim (müəllimlər, dərslər, çarx) + müəllim dərs redaktoru ===== */
+(function () {
+  const $ = id => document.getElementById(id);
+  const TTM_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -2 186 186"><defs><linearGradient id="f" x1="40" y1="30" x2="140" y2="140" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#40B8FF"/><stop offset=".45" stop-color="#1668F2"/><stop offset="1" stop-color="#0A2EA6"/></linearGradient><linearGradient id="gl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".5"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs><path d="M62 42 L126 84 L60 126 Z" fill="#fff" stroke="#fff" stroke-width="60" stroke-linejoin="round"/><path d="M62 42 L126 84 L60 126 Z" fill="url(#f)" stroke="url(#f)" stroke-width="48" stroke-linejoin="round"/><path d="M44 34 Q52 24 66 30 L104 52 Q70 46 44 70 Q38 50 44 34Z" fill="url(#gl)"/><text x="83" y="96" text-anchor="middle" font-family="Nunito, Arial, sans-serif" font-size="36" font-weight="900" fill="#fff" letter-spacing="1">TTM</text></svg>';
+  const ti = $("v3-ttm-img"); if (ti) ti.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(TTM_SVG);
+
+  // ---------- nav aktivliyi ----------
+  if (typeof v2SyncNav === "function") {
+    const MAPN = { "stab-exams": "stab-home", "stab-roadmap": "stab-home", "stab-daily": "stab-more", "stab-race": "stab-more", "stab-tv": "stab-more", "stab-teachers": "stab-fenler", "stab-subject": "stab-fenler", "stab-tprofile": "stab-fenler" };
+    const osn = v2SyncNav;
+    v2SyncNav = function (t) { osn.call(this, MAPN[t] || t); document.querySelectorAll("#s-bottom-nav .v2-nav-btn").forEach(b => b.classList.toggle("active", b.dataset.go === (MAPN[t] || t))); fnOn(t === "stab-fenler"); };
+  }
+
+  // ---------- ana səhifə: statistika köçür, Nəticələr → Fənlərim ----------
+  function homeFix() {
+    const sc = $("stab-scores"), rs = $("rs-root");
+    ["stat-grid", "s-attendance-trend", "s-subject-breakdown"].forEach(id => { const c = $(id) && $(id).closest(".card"); if (c && sc && c.closest("#stab-home")) (rs || sc).insertAdjacentElement(rs ? "afterend" : "beforeend", c); });
+    // köçmə ardıcıllığı: statistika, trend, fənn göstəriciləri
+    if (rs) { const L = ["s-subject-breakdown", "s-attendance-trend", "stat-grid"].map(id => $(id) && $(id).closest(".card")).filter(Boolean); L.forEach(c => rs.insertAdjacentElement("afterend", c)); }
+    const sub = $("s-subject-cards"); if (sub) { const c = sub.closest(".card"); if (c) c.style.display = "none"; }
+    const q = document.querySelector('#stab-home .a-qc[onclick*="stab-scores"]');
+    if (q && !q.classList.contains("v3-fq")) {
+      q.classList.add("v3-fq"); q.setAttribute("onclick", "v2Tab('stab-fenler')");
+      q.style.background = "linear-gradient(135deg,#10b981,#047857)";
+      q.innerHTML = `<div class="ic a-svg"><svg viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v14a2 2 0 0 0-2-2H2zM22 4h-7a3 3 0 0 0-3 3v14a2 2 0 0 1 2-2h8z"/></svg></div><div><b>Fənlərim</b><span class="v3-fs">Müəllimlərin və dərslərin</span><div class="v3-avs"></div></div>`;
+    }
+    const more = document.querySelector('#stab-more .v2-more-row');
+    if (more && !$("v3-daily-row")) {
+      more.insertAdjacentHTML("beforebegin", `<div class="v2-more-row" id="v3-daily-row" onclick="v2Tab('stab-daily')"><span class="v2-more-ico" style="background:#0ea5e9;">📒</span><div style="flex:1;min-width:0;"><div class="v2-more-t">Gündəlik</div><div class="v2-more-s">Müəllimin qeydləri və dərs cədvəli</div></div></div>
+        <div class="v2-more-row" onclick="v2Tab('stab-teachers')"><span class="v2-more-ico" style="background:#10b981;">➕</span><div style="flex:1;min-width:0;"><div class="v2-more-t">Müəllimə qoşul</div><div class="v2-more-s">Yeni müəllim tap və sorğu göndər</div></div></div>`);
+    }
+  }
+  async function homeAvatars() {
+    const box = document.querySelector(".v3-fq .v3-avs"), fs = document.querySelector(".v3-fq .v3-fs"); if (!box || typeof v2Subjects !== "function") return;
+    const subs = v2Subjects(); if (!subs.length) { box.innerHTML = ""; if (fs) fs.textContent = "Müəllimə qoşul"; return; }
+    await Promise.all(subs.map(s => v2GetProfile(s.teacherId)));
+    box.innerHTML = subs.slice(0, 5).map(s => { const p = v2Profiles[s.teacherId] || {}; const nm = p.fullName || s.teacherName || "M"; return p.photo ? `<i style="background-image:url('${p.photo}')"></i>` : `<i>${esc(nm.trim()[0] || "M")}</i>`; }).join("");
+    if (fs) fs.textContent = [...new Set(subs.map(s => (v2Profiles[s.teacherId] || {}).subject || s.subject).filter(Boolean))].join(", ") || "Müəllimlərin və dərslərin";
+  }
+  { const nv = $("s-bottom-nav"); const setH = () => { if (nv && nv.offsetHeight) document.documentElement.style.setProperty("--v3nav", nv.offsetHeight + "px"); }; setH(); window.addEventListener("resize", setH); setTimeout(setH, 1500); }
+  homeFix();
+  window.v3HomeAvatars = homeAvatars;
+  setTimeout(homeAvatars, 1500); setTimeout(homeAvatars, 5000);
+  document.addEventListener("click", e => { if (e.target.closest('#s-bottom-nav [data-go="stab-home"]')) setTimeout(homeAvatars, 50); });
+  if (typeof v2RenderHome === "function") { const orh = v2RenderHome; v2RenderHome = async function () { const r = await orh.apply(this, arguments); homeAvatars(); if (fnIsOn()) fnRender(); return r; }; }
+
+  // ---------- Fənlərim ----------
+  const CATS = [["l", "Dərslər", "#2563EB"], ["d", "Dərəcə", "#F97316"], ["i", "İsbatlı izah", "#6366F1"], ["c", "Çox düşən suallar", "#E11D48"], ["o", "Qısa özət", "#0D9488"]];
+  const FN = { tid: null, t: 0, cat: "l" }, CRS = {};
+  const fnIsOn = () => { const p = $("stab-fenler"); return p && p.classList.contains("active"); };
+  function fnOn(on) { document.body.classList.toggle("fn-on", !!on); if (on) { fnRender(); } }
+  function course(tid) {
+    if (CRS[tid]) return CRS[tid];
+    return (CRS[tid] = db.collection("courses").doc(tid).get().then(d => d.exists ? (d.data().topics || []) : []).catch(e => { console.warn("courses:", e); delete CRS[tid]; return []; }));
+  }
+  const col = sub => { try { return (v2Icon(sub || "") || {}).bg || "#2563EB"; } catch (e) { return "#2563EB"; } };
+  const icT = sub => { try { return (v2Icon(sub || "") || {}).t || "📘"; } catch (e) { return "📘"; } };
+  let fnTok = 0;
+  async function fnRender() {
+    const root = $("fn-root"); if (!root) return;
+    const tok = ++fnTok;
+    const subs = typeof v2Subjects === "function" ? v2Subjects() : [];
+    if (!subs.length) { root.innerHTML = `<div class="fn"><div class="fn-head"><h1>Fənlərim</h1></div><div class="fn-empty"><b>Hələ müəllimin yoxdur</b>Müəllimə qoşul, onun dərsləri burada görünəcək.<br><br><button class="fe-btn" onclick="v2Tab('stab-teachers')">Müəllimə qoşul</button></div></div>`; return; }
+    await Promise.all(subs.map(s => v2GetProfile(s.teacherId)));
+    if (tok !== fnTok) return;
+    if (!FN.tid || !subs.some(s => s.teacherId === FN.tid)) { FN.tid = subs[0].teacherId; FN.t = 0; FN.cat = "l"; }
+    const cur = subs.find(s => s.teacherId === FN.tid), P = v2Profiles[FN.tid] || {}, subj = P.subject || cur.subject || "Fənn", C = col(subj);
+    const tops = await course(FN.tid); if (tok !== fnTok) return;
+    if (FN.t >= tops.length) FN.t = 0;
+    const T = tops[FN.t], cat = CATS.find(c => c[0] === FN.cat) || CATS[0];
+    document.documentElement.style.setProperty("--fnc", C);
+    const tch = subs.map(s => { const p = v2Profiles[s.teacherId] || {}, nm = p.fullName || s.teacherName || "Müəllim", sj = p.subject || s.subject || "", c = col(sj);
+      return `<button type="button" class="fn-t${s.teacherId === FN.tid ? " on" : ""}" style="--c:${c}" onclick="fnPick('${s.teacherId}')"><div class="ph"><div style="${p.photo ? `background-image:url('${p.photo}')` : `background:${c}`}">${p.photo ? "" : esc((nm.trim()[0] || "M").toUpperCase())}</div></div><b>${esc(nm.split(" ")[0])}</b><small>${esc(sj)}</small></button>`; }).join("");
+    let body;
+    if (!tops.length) body = `<div class="fn-empty"><b>Dərslər hələ əlavə olunmayıb</b>Müəllimin dərsləri əlavə edəndə burada görünəcək.</div>`;
+    else {
+      const items = (T && T[cat[0]]) || [];
+      let content;
+      if (cat[0] === "o") content = T.o ? `<div class="fn-oz">${esc(T.o).replace(/\n/g, "<br>")}</div>` : `<div class="fn-empty">Bu mövzunun qısa özəti hələ yoxdur.</div>`;
+      else content = items.length ? `<div class="fn-vids">${items.map((v, i) => { const id = window.ttmSol && ttmSol.ytId(v.u), st = window.ttmSol && ttmSol.tsec(v.s); return `<div class="fn-v" style="animation-delay:${Math.min(i, 6) * 50}ms"><b>${esc(v.t || (cat[0] === "l" ? (i + 1) + ". Dərs" : cat[1] + " " + (i + 1)))}</b>${id ? ttmSol.card(id, st || 0, "Videoya bax") : `<div class="fn-empty">Video linki düzgün deyil</div>`}</div>`; }).join("")}</div>`
+        : `<div class="fn-empty">Bu bölmədə hələ video yoxdur.${cat[0] !== "l" ? "<br>Soldakı çarxdan başqa bölmə seç." : ""}</div>`;
+      const side = `<aside class="fn-side"><h4>Mövzular</h4>${tops.map((t, i) => `<button type="button" class="${i === FN.t ? "on" : ""}" onclick="fnTopic(${i})"><i></i>${esc(t.n || "Mövzu")}</button>${i === FN.t ? (t.l || []).map((v, j) => `<button type="button" style="padding-left:42px;font-weight:600;font-size:13px" onclick="fnTopic(${i},'l')">▶ ${esc(v.t || (j + 1) + ". Dərs")}</button>`).join("") : ""}`).join("")}</aside>`;
+      body = `<div class="fn-topics">${tops.map((t, i) => `<button type="button" class="${i === FN.t ? "on" : ""}" onclick="fnTopic(${i})">${esc(t.n || "Mövzu")}</button>`).join("")}</div>
+        <div class="fn-body">${side}<div style="display:flex;flex-direction:column;gap:10px;min-width:0"><div class="fn-cat" style="--cc:${cat[2]}"><i></i>${esc(T.n || "")} · ${cat[1]}${cat[0] !== "l" ? `<button type="button" onclick="fnCat('l')">Dərslərə qayıt</button>` : `<button type="button" onclick="fnWheel()">◐ Çarx</button>`}</div>${content}</div></div>`;
+    }
+    root.innerHTML = `<div class="fn" style="--c:${C};--cl:color-mix(in srgb,${C} 14%,#fff)"><div class="fn-bg"></div>
+      <div class="fn-head"><h1>Fənlərim</h1><button type="button" class="fn-join" onclick="v2Tab('stab-teachers')">+ Müəllim</button></div>
+      <div class="fn-tch">${tch}</div>
+      <div class="fn-hero"><div class="ic">${icT(subj)}</div><div style="min-width:0"><b>${esc(subj)}</b><span>${esc(P.fullName || cur.teacherName || "Müəllim")} · ${tops.length} mövzu · ${tops.reduce((a, t) => a + (t.l || []).length, 0)} dərs</span></div></div>
+      ${body}</div>`;
+    try { ttmTeX(root); } catch (e) {}
+    ensureWheelBtn();
+  }
+  window.fnPick = tid => { if (tid === FN.tid) return; FN.tid = tid; FN.t = 0; FN.cat = "l"; fnRender(); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  window.fnTopic = (i, cat) => { FN.t = i; FN.cat = cat || "l"; fnRender(); };
+  window.fnCat = c => { FN.cat = c; fnRender(); };
+  function ensureWheelBtn() {
+    if ($("fn-wbtn")) return;
+    const b = document.createElement("button"); b.id = "fn-wbtn"; b.type = "button"; b.setAttribute("aria-label", "Bölmələr çarxı");
+    b.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8"/></svg>`;
+    b.onclick = () => fnWheel(); document.body.appendChild(b);
+  }
+  window.fnWheel = () => {
+    if (document.querySelector(".fn-wov")) return;
+    const segs = CATS.slice(1), R = 150, r0 = 52, a0 = -90, step = 180 / segs.length;
+    const pt = (r, a) => [150 + r * Math.cos(a * Math.PI / 180), 150 + r * Math.sin(a * Math.PI / 180)];
+    const paths = segs.map((c, i) => {
+      const s = a0 + i * step + 1, e = a0 + (i + 1) * step - 1, [x1, y1] = pt(R, s), [x2, y2] = pt(R, e), [x3, y3] = pt(r0, e), [x4, y4] = pt(r0, s), m = (s + e) / 2, [tx, ty] = pt((R + r0) / 2 + 4, m);
+      const words = c[1].split(" "), lines = words.length > 1 ? [words.slice(0, Math.ceil(words.length / 2)).join(" "), words.slice(Math.ceil(words.length / 2)).join(" ")] : [c[1]];
+      return `<path class="seg" data-c="${c[0]}" d="M${x1} ${y1} A${R} ${R} 0 0 1 ${x2} ${y2} L${x3} ${y3} A${r0} ${r0} 0 0 0 ${x4} ${y4}Z" fill="${c[2]}" stroke="#fff" stroke-width="3"${FN.cat === c[0] ? ' style="filter:brightness(1.12) drop-shadow(0 0 6px rgba(0,0,0,.3))"' : ""}/>
+        <text x="${tx}" y="${ty}" text-anchor="middle" font-size="13" transform="rotate(${m} ${tx} ${ty})">${lines.map((l, k) => `<tspan x="${tx}" dy="${k ? 15 : (lines.length > 1 ? -4 : 5)}">${esc(l)}</tspan>`).join("")}</text>`;
+    }).join("");
+    const ov = document.createElement("div"); ov.className = "fn-wov";
+    ov.innerHTML = `<button type="button" class="dim" aria-label="Bağla"></button><div class="fn-wheel"><svg viewBox="0 0 300 300">${paths}<circle cx="150" cy="150" r="${r0 - 6}" fill="#fff"/><path class="seg" data-c="l" d="M150 ${150 - r0 + 8} A${r0 - 8} ${r0 - 8} 0 0 1 150 ${150 + r0 - 8}Z" fill="#2563EB"/><text x="172" y="155" text-anchor="middle" font-size="11">Dərslər</text></svg></div>`;
+    document.body.appendChild(ov);
+    const close = () => { ov.classList.add("out"); setTimeout(() => ov.remove(), 260); };
+    ov.addEventListener("click", e => { const s = e.target.closest("[data-c]"); if (s) { try { navigator.vibrate && navigator.vibrate(12); } catch (er) {} FN.cat = s.dataset.c; close(); fnRender(); return; } close(); });
+  };
+
+  // ---------- müəllim: Dərslərim redaktoru ----------
+  if (typeof moreRender === "function") {
+    const omr = moreRender;
+    moreRender = function () { const r = omr.apply(this, arguments); const L = $("a-more-list"); if (L && !$("fe-row")) L.insertAdjacentHTML("afterbegin", `<div class="v2-more-row" id="fe-row" onclick="fnEdit()"><span class="v2-more-ico" style="background:#2563EB">🎬</span><div style="flex:1;min-width:0;"><div class="v2-more-t">Dərslərim (videolar)</div><div class="v2-more-s">Şagirdin «Fənlərim» bölməsindəki mövzular, dərslər və çarx</div></div></div>`); return r; };
+  }
+  let FE = null;
+  window.fnEdit = async () => {
+    const uid = auth.currentUser && auth.currentUser.uid; if (!uid) return;
+    const ov = document.createElement("div"); ov.className = "fe-ov"; ov.innerHTML = `<div class="fe"><div class="fe-h"><b>Dərslərim</b></div><div class="fn-empty">Yüklənir...</div></div>`; document.body.appendChild(ov); document.body.style.overflow = "hidden";
+    let tops = [];
+    try { const d = await db.collection("courses").doc(uid).get(); tops = d.exists ? (d.data().topics || []) : []; } catch (e) { toast(errAz(e)); }
+    FE = { uid, tops: JSON.parse(JSON.stringify(tops)), tab: {}, ov, dirty: false };
+    feRender();
+  };
+  function feRender() {
+    const F = FE; if (!F) return;
+    const vrow = (ti, k, j, v) => `<div class="fe-vr"><div class="ins"><input placeholder="Ad (məs. 1. Dərs)" value="${esc(v.t || "")}" data-f="t" data-ti="${ti}" data-k="${k}" data-j="${j}"><input placeholder="YouTube linki" inputmode="url" value="${esc(v.u || "")}" data-f="u" data-ti="${ti}" data-k="${k}" data-j="${j}"><input placeholder="Başlama vaxtı (istəyə bağlı, məs. 2:30)" value="${esc(v.s || "")}" data-f="s" data-ti="${ti}" data-k="${k}" data-j="${j}"></div><button type="button" class="fe-ic x" data-act="vdel" data-ti="${ti}" data-k="${k}" data-j="${j}" aria-label="Sil">✕</button></div>`;
+    F.ov.innerHTML = `<div class="fe"><div class="fe-h"><button type="button" class="fe-btn g" data-act="close">✕</button><b>Dərslərim</b><button type="button" class="fe-btn" data-act="save">Yadda saxla</button></div>
+      <div class="fe-note">Şagird «Fənlərim» bölməsində mövzuları, dərsləri və çarxdakı bölmələri (Dərəcə, İsbatlı izah, Çox düşən suallar, Qısa özət) görəcək. Videoları YouTube-a «Siyahıda olmayan» kimi yükləyib linkini bura yapışdır.</div>
+      ${F.tops.map((t, ti) => { const tab = F.tab[ti] || "l";
+        return `<div class="fe-tp"><div class="row"><input placeholder="Mövzu adı (məs. Natural ədədlər)" value="${esc(t.n || "")}" data-f="n" data-ti="${ti}"><button type="button" class="fe-ic" data-act="up" data-ti="${ti}" aria-label="Yuxarı">↑</button><button type="button" class="fe-ic" data-act="down" data-ti="${ti}" aria-label="Aşağı">↓</button><button type="button" class="fe-ic x" data-act="tdel" data-ti="${ti}" aria-label="Mövzunu sil">✕</button></div>
+          <div class="fe-tabs">${CATS.map(c => `<button type="button" class="${tab === c[0] ? "on" : ""}" data-act="tab" data-ti="${ti}" data-k="${c[0]}">${c[1]}${c[0] !== "o" && (t[c[0]] || []).length ? " (" + t[c[0]].length + ")" : ""}</button>`).join("")}</div>
+          ${tab === "o" ? `<textarea placeholder="Mövzunun qısa özəti: əsas qaydalar, düsturlar ($...$ ilə)" data-f="o" data-ti="${ti}">${esc(t.o || "")}</textarea>`
+            : (t[tab] || []).map((v, j) => vrow(ti, tab, j, v)).join("") + `<button type="button" class="fe-add" data-act="vadd" data-ti="${ti}" data-k="${tab}">+ Video əlavə et</button>`}</div>`; }).join("")}
+      <button type="button" class="fe-add" style="margin-top:14px;padding:14px;font-size:15px" data-act="tadd">+ Mövzu əlavə et</button></div>`;
+  }
+  document.addEventListener("input", e => {
+    const el = e.target; if (!FE || !el.closest(".fe-ov") || !el.dataset.f) return;
+    const t = FE.tops[+el.dataset.ti]; if (!t) return; FE.dirty = true;
+    if (el.dataset.f === "n" || el.dataset.f === "o") t[el.dataset.f] = el.value;
+    else { const v = (t[el.dataset.k] = t[el.dataset.k] || [])[+el.dataset.j]; if (v) v[el.dataset.f] = el.value.trim(); }
+  });
+  document.addEventListener("click", async e => {
+    const b = e.target.closest(".fe-ov [data-act]"); if (!b || !FE) return;
+    const F = FE, a = b.dataset.act, ti = +b.dataset.ti, k = b.dataset.k, T = F.tops;
+    if (a === "close") { if (F.dirty && !(await ttmConfirm("Yadda saxlanmamış dəyişikliklər itəcək. Bağlansın?"))) return; F.ov.remove(); FE = null; document.body.style.overflow = ""; return; }
+    if (a === "tadd") { T.push({ n: "", l: [] }); F.tab[T.length - 1] = "l"; F.dirty = true; feRender(); setTimeout(() => { const ins = F.ov.querySelectorAll('[data-f="n"]'); ins[ins.length - 1] && ins[ins.length - 1].focus(); }, 50); return; }
+    if (a === "tdel") { if (!(await ttmConfirm(`«${T[ti].n || "Mövzu"}» və içindəki bütün videolar silinsin?`))) return; T.splice(ti, 1); F.tab = {}; F.dirty = true; feRender(); return; }
+    if (a === "up" && ti > 0) { [T[ti - 1], T[ti]] = [T[ti], T[ti - 1]]; F.tab = {}; F.dirty = true; feRender(); return; }
+    if (a === "down" && ti < T.length - 1) { [T[ti + 1], T[ti]] = [T[ti], T[ti + 1]]; F.tab = {}; F.dirty = true; feRender(); return; }
+    if (a === "tab") { F.tab[ti] = k; feRender(); return; }
+    if (a === "vadd") { const L = T[ti][k] = T[ti][k] || []; L.push({ t: k === "l" ? (L.length + 1) + ". Dərs" : "", u: "" }); F.dirty = true; feRender(); return; }
+    if (a === "vdel") { T[ti][k].splice(+b.dataset.j, 1); F.dirty = true; feRender(); return; }
+    if (a === "save") {
+      const bad = []; T.forEach((t, i) => { if (!String(t.n || "").trim()) bad.push((i + 1) + "-ci mövzunun adı boşdur"); CATS.forEach(c => (t[c[0]] && Array.isArray(t[c[0]]) ? t[c[0]] : []).forEach((v, j) => { if (v.u && !(window.ttmSol && ttmSol.ytId(v.u))) bad.push(`«${t.n}» · ${c[1]} ${j + 1}: YouTube linki düzgün deyil`); })); });
+      if (bad.length) { toast(bad[0]); return; }
+      const clean = T.map(t => { const o = { n: String(t.n).trim() }; CATS.forEach(c => { if (c[0] === "o") { if (String(t.o || "").trim()) o.o = String(t.o).trim(); } else { const L = (t[c[0]] || []).filter(v => v.u); if (L.length) o[c[0]] = L.map(v => ({ t: String(v.t || "").trim(), u: v.u, ...(v.s ? { s: v.s } : {}) })); } }); return o; });
+      b.disabled = true; b.textContent = "Saxlanılır...";
+      try {
+        let subj = ""; try { const p = await db.collection("teacherProfiles").doc(F.uid).get(); subj = (p.exists && p.data().subject) || ""; } catch (er) {}
+        await db.collection("courses").doc(F.uid).set({ teacherId: F.uid, subject: subj, topics: clean, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        F.tops = clean; F.dirty = false; delete CRS[F.uid]; toast("Dərslər yadda saxlanıldı"); feRender();
+      } catch (er) { console.error(er); toast(errAz(er)); b.disabled = false; b.textContent = "Yadda saxla"; }
+    }
+  });
 })();
 </script>
 
