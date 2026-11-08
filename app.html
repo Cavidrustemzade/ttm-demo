@@ -19569,7 +19569,10 @@ input,textarea{caret-color:#1d6fd6}
   const card = (id, start, label) => `<button type="button" class="ts-vid" data-yt="${id}" data-s="${start || 0}" aria-label="${esc(label)}"><img src="https://i.ytimg.com/vi/${id}/hqdefault.jpg" alt="" loading="lazy">${play}<em>${esc(label)}</em></button>`;
   document.addEventListener("click", e => {
     const b = e.target.closest(".ts-vid[data-yt]"); if (!b || b.querySelector("iframe")) return;
-    b.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${b.dataset.yt}?start=${+b.dataset.s || 0}&autoplay=1&rel=0&playsinline=1" allow="autoplay; encrypted-media; fullscreen" allowfullscreen title="Video izah"></iframe>`;
+    // iframe <button> içində qalanda toxunuşlar videoya çatmır (pauza/davam işləmir) — ona görə div ilə əvəz edilir
+    const d = document.createElement("div"); d.className = "ts-vid on"; d.dataset.yt = b.dataset.yt; d.dataset.s = b.dataset.s;
+    d.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${b.dataset.yt}?start=${+b.dataset.s || 0}&autoplay=1&rel=0&playsinline=1" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen title="Video izah"></iframe>`;
+    b.replaceWith(d);
   });
   window.ttmSol = { ytId, tsec, sol, done, card };
 
@@ -19987,7 +19990,7 @@ select.fe-in{background-image:linear-gradient(45deg,transparent 50%,#5A6890 50%)
 .fn-dbtn{display:inline-flex;align-items:center;gap:7px;flex:none;height:42px;padding:0 12px 0 13px;border:0;border-radius:13px;background:var(--cl);color:color-mix(in srgb,var(--c) 85%,#0B1E4F);font-family:inherit;font-weight:900;font-size:15px;transition:scale .2s;-webkit-tap-highlight-color:transparent}
 .fn-dbtn:active{scale:.95}
 .fn-dbtn em{font-style:normal;font-size:20px;line-height:1;margin-left:2px}
-.fn-cat span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fn-cat span{flex:1;min-width:0;overflow-wrap:anywhere;line-height:1.25}
 .fn-cat{font-size:16px}
 .fn-body{display:flex;flex-direction:column;gap:12px}
 .fn-tree{display:flex;flex-direction:column;gap:10px}
@@ -20072,6 +20075,24 @@ select.fe-in{background-image:linear-gradient(45deg,transparent 50%,#5A6890 50%)
 .fe-tests .rd{width:22px;height:22px;border-radius:50%;border:2px solid #C3CEE3;flex:none;position:relative}
 .fe-tests button.on .rd{border-color:#2563EB}
 .fe-tests button.on .rd::after{content:"";position:absolute;inset:3px;border-radius:50%;background:#2563EB}
+/* Fənlərim v4: bölmə seçimi, çarx bölməyə görə */
+.ts-vid.on{scale:1!important;transition:none;cursor:default}
+.ts-vid.on:active{scale:1}
+.fn-crumb{font-size:12.5px;font-weight:800;color:#5A6890;margin:2px 2px -6px;text-transform:uppercase;letter-spacing:.03em}
+.fn-sh1{padding:12px 14px 6px}
+.fn-sh1 b{font-size:12.5px;font-weight:800;color:#5A6890}
+.fn-sec .fn-sb>div{padding-top:4px}
+.fn-soon{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;background:#fff;border-radius:18px;padding:24px 18px 18px;box-shadow:0 4px 14px rgba(13,27,76,.06);animation:fnIn .35s both}
+.fn-soon .fn-ki{width:56px;height:56px;border-radius:18px}.fn-soon .fn-ki svg{width:28px;height:28px}
+.fn-soon b{font-size:17px;font-weight:900}
+.fn-soon small{font-size:13.5px;color:#5A6890;font-weight:700;line-height:1.45;margin-bottom:6px}
+.fn-tp-g{display:flex;flex-direction:column;gap:6px}
+.fn-tp-g[hidden]{display:none}
+.fn-tp-g.multi{background:#F7F9FD;border-radius:18px;padding:10px 8px 8px}
+.fn-tp-g.multi button{background:#fff}
+.fn-tp-g.multi button.on{background:var(--fncl,#E3ECFD)}
+.fn-tp-gh{font-size:12.5px;font-weight:900;color:#5A6890;text-transform:uppercase;letter-spacing:.04em;padding:0 6px 2px}
+.fn-tp{touch-action:pan-y}
 </style>
 <div id="fn-bg-holder"></div>
 <script>
@@ -20160,7 +20181,7 @@ select.fe-in{background-image:linear-gradient(45deg,transparent 50%,#5A6890 50%)
   }
   const secMeta = items => { const v = items.filter(i => i.k === "v").length, h = items.filter(i => i.k === "h").length, o = items.length - v - h; return [v ? v + " dərs" : "", o ? o + " material" : "", h ? h + " tapşırıq" : ""].filter(Boolean).join(" · ") || "Boşdur"; };
 
-  const FN = { tid: null, t: 0, cat: "l", cur: null, closed: {} }, CRS = {}, CRSV = {};
+  const FN = { tid: null, t: 0, s: 0, cat: "l", cur: null, closed: {} }, CRS = {}, CRSV = {};
   const FNCTX = { st: FN, tops: [], render: () => fnRender(), preview: false, subj: () => FNCTX._subj || "", root: () => $("fn-root") };
   const fnIsOn = () => { const p = $("stab-fenler"); return p && p.classList.contains("active"); };
   function fnOn(on) { document.body.classList.toggle("fn-on", !!on); if (on) { fnRender(); } }
@@ -20200,25 +20221,29 @@ select.fe-in{background-image:linear-gradient(45deg,transparent 50%,#5A6890 50%)
     const it = f.it, K = KT[it.k] || KT.x, on = cur && cur.key === f.key, op = on && open;
     return `<div class="fn-li${on ? " on" : ""}${op ? " op" : ""}"><button type="button" class="fn-row" data-fn="item" data-key="${f.key}" aria-expanded="${op}">${kIco(it.k, 1)}<span class="tx"><b>${esc(itTitle(it))}</b>${it.k !== "v" ? `<small style="color:${K.c}">${K.n}</small>` : ""}</span><em>›</em></button>${op ? `<div class="fn-pv-in">${fnPlayer(f)}</div>` : ""}</div>`;
   }
+  // dərs siyahısında olanlar: video, tapşırıq, digər; çarx materialları (Dərəcə, İsbatlı izah, Çox düşən, Qısa xülasə) yalnız çarxda
+  const inWheel = it => { const c = (KT[it.k] || {}).cat; return !!c && c !== "l"; };
+  const lessonMeta = items => secMeta(items.filter(i => !inWheel(i)));
+  const visSecs = T => fnSecs(T).map(s => ({ n: s.n, items: (s.items || []).filter(vis) }));
+  const secName = (T, S, si, n) => String(S && S.n || "").trim() && !(n === 1 && /^\d+-c[iıuü] bölmə$/.test(String(S.n).trim())) ? S.n : (T.n || ord(si + 1) + " bölmə");
   function fnBody(tops, st) {
     if (!tops.length) return `<div class="fn-empty"><b>Dərslər hələ əlavə olunmayıb</b>Müəllimin dərsləri əlavə edəndə burada görünəcək.</div>`;
     if (st.t >= tops.length || st.t < 0) st.t = 0;
-    const T = tops[st.t], secs = fnSecs(T).map(s => ({ n: s.n, items: (s.items || []).filter(vis) }));
-    const flat = []; secs.forEach((s, si) => s.items.forEach((it, ii) => flat.push({ it, si, ii, key: si + "-" + ii })));
+    const T = tops[st.t], secs = visSecs(T);
+    if (!secs.length) return `<div class="fn-cat"><i></i><span>${esc(T.n || "Mövzu")}</span></div><div class="fn-empty">Bu mövzuda hələ dərs yoxdur.</div>`;
+    if (!(st.s >= 0 && st.s < secs.length)) st.s = 0;
+    const si = st.s, S = secs[si], name = secName(T, S, si, secs.length);
+    const all = S.items.map((it, ii) => ({ it, si, ii, key: si + "-" + ii }));
     const cat = CATS.find(c => c[0] === st.cat) || CATS[0];
-    const inCat = f => cat[0] === "l" || (KT[f.it.k] || {}).cat === cat[0];
-    let cur = flat.find(f => f.key === st.cur);
-    if (st.cur !== "-" && (!cur || !inCat(cur))) { cur = flat.find(f => inCat(f) && (KT[f.it.k] || {}).vid) || flat.find(inCat) || null; st.cur = cur ? cur.key : null; }
-    const capRow = `<div class="fn-cat" style="--cc:${cat[2]}"><i></i><span>${esc(T.n || "")} · ${cat[1]}</span>${cat[0] !== "l" ? `<button type="button" data-fn="cat" data-c="l">Dərslərə qayıt</button>` : ""}</div>`;
-    const secHTML = (s, si, L, open) => { const cl = !!st.closed[si];
-      return `<div class="fn-sec${cl ? " cl" : ""}"><button type="button" class="fn-sh" data-fn="sec" data-si="${si}" aria-expanded="${!cl}"><b>${esc(s.n || ord(si + 1) + " bölmə")}</b><small>${secMeta(s.items)}</small><svg class="chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button><div class="fn-sb"><div>${L.length ? L.map(f => fnRow(f, cur, open)).join("") : `<div class="fn-none">Bu bölmədə hələ material yoxdur</div>`}</div></div></div>`; };
+    const L = cat[0] === "l" ? all.filter(f => !inWheel(f.it)) : all.filter(f => (KT[f.it.k] || {}).cat === cat[0]);
+    let cur = L.find(f => f.key === st.cur);
+    if (st.cur !== "-" && !cur) { cur = L.find(f => (KT[f.it.k] || {}).vid) || L[0] || null; st.cur = cur ? cur.key : null; }
+    const crumb = secs.length > 1 || name !== T.n ? `<div class="fn-crumb">${esc(T.n || "")}</div>` : "";
+    const capRow = `${crumb}<div class="fn-cat" style="--cc:${cat[2]}"><i></i><span>${esc(name)}${cat[0] !== "l" ? " · " + cat[1] : ""}</span>${cat[0] !== "l" ? `<button type="button" data-fn="cat" data-c="l">Dərslərə qayıt</button>` : ""}</div>`;
     let main;
-    if (!flat.length) main = `<div class="fn-empty">Bu mövzuda hələ material yoxdur.</div>`;
-    else if (cat[0] !== "l") {
-      const L = flat.filter(inCat);
-      main = (L.length ? `<div class="fn-list">${L.map(f => fnRow(f, cur, true)).join("")}</div>` : `<div class="fn-empty">Bu mövzuda «${cat[1]}» hələ yoxdur.<br>Soldakı çarxdan başqa bölmə seç.</div>`)
-        + `<div class="fn-tree"><h5>Dərslər</h5>${secs.map((s, si) => secHTML(s, si, flat.filter(f => f.si === si), false)).join("")}</div>`;
-    } else main = `<div class="fn-tree">${secs.map((s, si) => secHTML(s, si, flat.filter(f => f.si === si), true)).join("")}</div>`;
+    if (cat[0] !== "l") main = L.length ? `<div class="fn-sec"><div class="fn-sb"><div>${L.map(f => fnRow(f, cur, true)).join("")}</div></div></div>`
+      : `<div class="fn-soon"><span>${kIco(Object.keys(KT).find(k => KT[k].cat === cat[0]) || "o")}</span><b>«${cat[1]}» yaxın zamanda olacaq 🙂</b><small>Müəllimin bu bölmə üçün video əlavə edəndə burada görünəcək.</small><button type="button" class="fn-go" data-fn="cat" data-c="l">Dərslərə qayıt</button></div>`;
+    else main = `<div class="fn-sec"><div class="fn-sh1"><b>${L.length ? lessonMeta(S.items) : ""}</b></div><div class="fn-sb"><div>${L.length ? L.map(f => fnRow(f, cur, true)).join("") : `<div class="fn-none">Bu bölmədə hələ dərs yoxdur</div>`}</div></div></div>`;
     return `<div class="fn-body">${capRow}${main}</div>`;
   }
   function fnPageHTML(o) {
@@ -20229,29 +20254,55 @@ select.fe-in{background-image:linear-gradient(45deg,transparent 50%,#5A6890 50%)
       <div class="fn-hero"><div class="ic">${icT(o.subj)}</div><b>${esc(o.subj)}</b>${tops.length ? `<button type="button" class="fn-dbtn" data-fn="tpanel"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h7a3 3 0 0 1 3 3v14a2 2 0 0 0-2-2H2zM22 4h-7a3 3 0 0 0-3 3v14a2 2 0 0 1 2-2h8z"/></svg>Dərslər<em>›</em></button>` : ""}</div>
       ${fnBody(tops, o.st)}</div>`;
   }
-  // sağdan açılan mövzular pəncərəsi
+  // sağdan açılan pəncərə: mövzular və onların bölmələri
   function fnTopicPanel(ctx) {
     if (document.querySelector(".fn-tp-ov")) return;
     const tops = ctx.tops || [], subj = ctx.subj ? ctx.subj() : "";
+    let n = 0;
+    const rows = tops.map((T, i) => { const secs = visSecs(T); const on = s => i === ctx.st.t && s === (ctx.st.s || 0);
+      if (secs.length <= 1) { n++; return `<div class="fn-tp-g"><button type="button" class="${on(0) ? "on" : ""}" data-i="${i}" data-s="0" data-q="${esc(String(T.n || "").toLocaleLowerCase("az"))}"><span class="no">${String(n).padStart(2, "0")}</span><span class="tx"><b>${esc(T.n || "Mövzu")}</b><small>${secs.length ? lessonMeta(secs[0].items) : "Boşdur"}</small></span><em>›</em></button></div>`; }
+      return `<div class="fn-tp-g multi"><div class="fn-tp-gh" data-q="${esc(String(T.n || "").toLocaleLowerCase("az"))}">${esc(T.n || "Mövzu")}</div>${secs.map((S, s) => { n++; return `<button type="button" class="${on(s) ? "on" : ""}" data-i="${i}" data-s="${s}" data-q="${esc((String(T.n || "") + " " + String(S.n || "")).toLocaleLowerCase("az"))}"><span class="no">${String(n).padStart(2, "0")}</span><span class="tx"><b>${esc(secName(T, S, s, secs.length))}</b><small>${lessonMeta(S.items)}</small></span><em>›</em></button>`; }).join("")}</div>`;
+    }).join("");
     const m = document.createElement("div"); m.className = "fn-tp-ov";
-    const cnt = t => { const it = fnSecs(t).reduce((a, s) => a.concat((s.items || []).filter(vis)), []); return secMeta(it); };
-    m.innerHTML = `<button type="button" class="dim" aria-label="Bağla"></button><div class="fn-tp" role="dialog" aria-label="Mövzular"><div class="fn-tp-h"><div><b>${esc(subj || "Mövzular")}</b><small>Mövzular (${tops.length})</small></div><button type="button" class="fn-tp-x" aria-label="Bağla">✕</button></div>
-      ${tops.length > 5 ? `<label class="fn-tp-s"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input type="search" placeholder="Mövzu axtar..." aria-label="Mövzu axtar"></label>` : ""}
-      <div class="fn-tp-l">${tops.map((t, i) => `<button type="button" class="${i === ctx.st.t ? "on" : ""}" data-i="${i}" data-q="${esc(String(t.n || "").toLocaleLowerCase("az"))}"><span class="no">${String(i + 1).padStart(2, "0")}</span><span class="tx"><b>${esc(t.n || "Mövzu")}</b><small>${cnt(t)}</small></span><em>›</em></button>`).join("")}<div class="fn-tp-0" hidden>Belə mövzu tapılmadı</div></div></div>`;
-    (ctx.preview ? document.body : document.body).appendChild(m);
+    m.innerHTML = `<button type="button" class="dim" aria-label="Bağla"></button><div class="fn-tp" role="dialog" aria-label="Dərslər"><div class="fn-tp-h"><div><b>${esc(subj || "Dərslər")}</b><small>Dərslər (${n})</small></div><button type="button" class="fn-tp-x" aria-label="Bağla">✕</button></div>
+      ${n > 5 ? `<label class="fn-tp-s"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input type="search" placeholder="Dərs axtar..." aria-label="Dərs axtar"></label>` : ""}
+      <div class="fn-tp-l">${rows}<div class="fn-tp-0" hidden>Belə dərs tapılmadı</div></div></div>`;
+    document.body.appendChild(m);
+    const P = m.querySelector(".fn-tp");
     requestAnimationFrame(() => m.classList.add("on"));
     const on = m.querySelector("button.on"); if (on) setTimeout(() => on.scrollIntoView({ block: "center" }), 30);
-    const close = () => { m.classList.remove("on"); setTimeout(() => m.remove(), 300); };
+    let closing = false;
+    const close = () => { if (closing) return; closing = true; P.style.transition = ""; P.style.transform = ""; m.classList.remove("on"); setTimeout(() => m.remove(), 320); };
     m.addEventListener("click", e => {
+      if (m._drag) return;
       if (e.target.closest(".dim,.fn-tp-x")) { close(); return; }
-      const b = e.target.closest("[data-i]"); if (!b) return;
-      const i = +b.dataset.i; try { navigator.vibrate && navigator.vibrate(10); } catch (er) {}
-      if (i !== ctx.st.t) { ctx.st.t = i; ctx.st.cat = "l"; ctx.st.cur = null; ctx.st.closed = {}; ctx.render(); }
+      const b = e.target.closest("button[data-i]"); if (!b) return;
+      const i = +b.dataset.i, s = +b.dataset.s; try { navigator.vibrate && navigator.vibrate(10); } catch (er) {}
+      if (i !== ctx.st.t || s !== (ctx.st.s || 0) || ctx.st.cat !== "l") { ctx.st.t = i; ctx.st.s = s; ctx.st.cat = "l"; ctx.st.cur = null; ctx.render(); }
       close();
       setTimeout(() => { const r = ctx.root && ctx.root(); const c = r && r.querySelector(".fn-cat"); if (c) c.scrollIntoView({ behavior: "smooth", block: "start" }); }, 60);
     });
+    // sağa sürüşdürəndə bağlanır
+    let x0 = null, y0 = 0, dx = 0, lock = null;
+    P.addEventListener("touchstart", e => { const t = e.touches[0]; x0 = t.clientX; y0 = t.clientY; dx = 0; lock = null; }, { passive: true });
+    P.addEventListener("touchmove", e => {
+      if (x0 == null) return; const t = e.touches[0], ddx = t.clientX - x0, ddy = t.clientY - y0;
+      if (lock == null && (Math.abs(ddx) > 8 || Math.abs(ddy) > 8)) lock = Math.abs(ddx) > Math.abs(ddy) ? "x" : "y";
+      if (lock !== "x") return;
+      dx = Math.max(0, ddx); P.style.transition = "none"; P.style.transform = `translateX(${dx}px)`; m.querySelector(".dim").style.opacity = String(Math.max(0, 1 - dx / P.offsetWidth));
+    }, { passive: true });
+    const end = () => {
+      if (x0 == null) return; x0 = null; m.querySelector(".dim").style.opacity = "";
+      if (lock === "x") { m._drag = true; setTimeout(() => { m._drag = false; }, 50); }
+      if (lock === "x" && dx > Math.min(110, P.offsetWidth * 0.28)) { P.style.transition = "transform .25s ease-out"; P.style.transform = "translateX(105%)"; m.classList.remove("on"); closing = true; setTimeout(() => m.remove(), 260); }
+      else { P.style.transition = ""; P.style.transform = ""; }
+    };
+    P.addEventListener("touchend", end); P.addEventListener("touchcancel", end);
     const inp = m.querySelector("input");
-    if (inp) inp.addEventListener("input", () => { const q = inp.value.trim().toLocaleLowerCase("az"); let n = 0; m.querySelectorAll(".fn-tp-l [data-i]").forEach(b => { const ok = !q || b.dataset.q.includes(q); b.hidden = !ok; if (ok) n++; }); m.querySelector(".fn-tp-0").hidden = n > 0; });
+    if (inp) inp.addEventListener("input", () => { const q = inp.value.trim().toLocaleLowerCase("az"); let c = 0;
+      m.querySelectorAll(".fn-tp-g").forEach(g => { let gc = 0; const gh = g.querySelector(".fn-tp-gh"), gm = !!gh && !!q && gh.dataset.q.includes(q);
+        g.querySelectorAll("button[data-i]").forEach(b => { const ok = !q || gm || b.dataset.q.includes(q); b.hidden = !ok; if (ok) gc++; }); g.hidden = !gc; c += gc; });
+      m.querySelector(".fn-tp-0").hidden = c > 0; });
   }
   const tchBtn = (tid, p, s, on, click) => { const nm = p.fullName || (s && s.teacherName) || "Müəllim", sj = p.subject || (s && s.subject) || "", c = col(sj);
     return `<button type="button" class="fn-t${on ? " on" : ""}" style="--c:${c}" ${click}><div class="ph"><div style="${p.photo ? `background-image:url('${p.photo}')` : `background:${c}`}">${p.photo ? "" : esc((nm.trim()[0] || "M").toUpperCase())}</div></div><b>${esc(nm.split(" ")[0])}</b><small>${esc(sj)}</small></button>`; };
@@ -20263,7 +20314,7 @@ select.fe-in{background-image:linear-gradient(45deg,transparent 50%,#5A6890 50%)
     if (!subs.length) { root.innerHTML = `<div class="fn"><div class="fn-head"><h1>Fənlərim</h1></div><div class="fn-empty"><b>Hələ müəllimin yoxdur</b>Müəllimə qoşul, onun dərsləri burada görünəcək.<br><br><button class="fe-btn" onclick="v2Tab('stab-teachers')">Müəllimə qoşul</button></div></div>`; return; }
     await Promise.all(subs.map(s => v2GetProfile(s.teacherId)));
     if (tok !== fnTok) return;
-    if (!FN.tid || !subs.some(s => s.teacherId === FN.tid)) { FN.tid = subs[0].teacherId; FN.t = 0; FN.cat = "l"; FN.cur = null; FN.closed = {}; }
+    if (!FN.tid || !subs.some(s => s.teacherId === FN.tid)) { FN.tid = subs[0].teacherId; FN.t = 0; FN.s = 0; FN.cat = "l"; FN.cur = null; FN.closed = {}; }
     const cur = subs.find(s => s.teacherId === FN.tid), P = v2Profiles[FN.tid] || {}, subj = P.subject || cur.subject || "Fənn", C = col(subj);
     const tops = await course(FN.tid); if (tok !== fnTok) return;
     document.documentElement.style.setProperty("--fnc", C); document.documentElement.style.setProperty("--fncl", `color-mix(in srgb,${C} 14%,#fff)`);
@@ -20275,8 +20326,8 @@ select.fe-in{background-image:linear-gradient(45deg,transparent 50%,#5A6890 50%)
     try { ttmTeX(root); } catch (e) {}
     ensureWheelBtn();
   }
-  window.fnPick = tid => { if (tid === FN.tid) return; FN.tid = tid; FN.t = 0; FN.cat = "l"; FN.cur = null; FN.closed = {}; fnRender(); window.scrollTo({ top: 0, behavior: "smooth" }); };
-  window.fnTopic = (i, cat) => { FN.t = i; FN.cat = cat || "l"; FN.cur = null; FN.closed = {}; fnRender(); };
+  window.fnPick = tid => { if (tid === FN.tid) return; FN.tid = tid; FN.t = 0; FN.s = 0; FN.cat = "l"; FN.cur = null; FN.closed = {}; fnRender(); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  window.fnTopic = (i, cat) => { FN.t = i; FN.s = 0; FN.cat = cat || "l"; FN.cur = null; FN.closed = {}; fnRender(); };
   window.fnCat = c => { FN.cat = c; FN.cur = null; fnRender(); };
   window.fnLesson = j => { FN.cat = "l"; fnRender(); };
   // ev tapşırığı / material açmaq
@@ -20302,9 +20353,7 @@ select.fe-in{background-image:linear-gradient(45deg,transparent 50%,#5A6890 50%)
     const st = ctx.st, a = b.dataset.fn;
     if (a === "tpanel") fnTopicPanel(ctx);
     else if (a === "item") {
-      const k = b.dataset.key, inTree = !!b.closest(".fn-tree"), filtered = st.cat !== "l";
-      if (filtered && inTree) { st.cat = "l"; st.cur = k; }
-      else st.cur = st.cur === k ? "-" : k;
+      const k = b.dataset.key; st.cur = st.cur === k ? "-" : k;
       ctx.render();
       setTimeout(() => { const r = root.querySelector(`.fn-li.op .fn-row[data-key="${k}"]`); if (!r) return; const rr = r.getBoundingClientRect(), vh = ctx.preview ? root.getBoundingClientRect().bottom : window.innerHeight; if (rr.top < 70 || rr.top > vh * 0.45) r.scrollIntoView({ behavior: "smooth", block: "start" }); }, 30);
     }
@@ -20403,7 +20452,7 @@ select.fe-in{background-image:linear-gradient(45deg,transparent 50%,#5A6890 50%)
               <div class="fe-sn"><input class="fe-in sm${F.err["s" + si] ? " bad" : ""}" data-f="sn" data-si="${si}" value="${esc(s.n)}" placeholder="Bölmənin adı" maxlength="60"><small>${secMeta(s.items)}</small>${errLine("s" + si)}</div>
               <button type="button" class="fe-ib g" data-act="smenu" data-si="${si}" aria-label="Bölmə əməliyyatları">⋯</button></div>
             <div class="fe-sb"><div class="fe-sbi"><div class="fe-il" data-si="${si}">${s.items.map((it, ii) => { const K = KT[it.k] || KT.x, ek = "i" + si + "-" + ii;
-              return `<div class="fe-it${F.err[ek] ? " bad" : ""}${it.hid ? " hid" : ""}" data-si="${si}" data-ii="${ii}"><span class="fe-drag" aria-label="Sürüşdür" title="Sıranı dəyişmək üçün sürüşdür"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></span>${kIco(it.k, 1)}<button type="button" class="tx" data-act="iedit" data-si="${si}" data-ii="${ii}"><b>${esc(itTitle(it))}</b><small><span style="color:${K.c}">${K.n}</span>${it.hid ? ' · <span class="fe-hb">Gizli</span>' : ""}</small>${F.err[ek] ? `<span class="fe-err">${esc(F.err[ek])}</span>` : ""}</button><button type="button" class="fe-ib g sm" data-act="iedit" data-si="${si}" data-ii="${ii}" aria-label="Redaktə et"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button><button type="button" class="fe-ib x sm" data-act="idel" data-si="${si}" data-ii="${ii}" aria-label="Sil"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button></div>`; }).join("") || `<div class="fe-none">Bu bölmə boşdur — material əlavə et</div>`}</div>
+              return `<div class="fe-it${F.err[ek] ? " bad" : ""}${it.hid ? " hid" : ""}" data-si="${si}" data-ii="${ii}"><span class="fe-drag" aria-label="Sürüşdür" title="Sıranı dəyişmək üçün sürüşdür"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></span>${kIco(it.k, 1)}<button type="button" class="tx" data-act="iedit" data-si="${si}" data-ii="${ii}"><b>${esc(itTitle(it))}</b><small><span style="color:${K.c}">${K.n}</span>${inWheel(it) ? ' · <span class="fe-hb">çarxda</span>' : ""}${it.hid ? ' · <span class="fe-hb">Gizli</span>' : ""}</small>${F.err[ek] ? `<span class="fe-err">${esc(F.err[ek])}</span>` : ""}</button><button type="button" class="fe-ib g sm" data-act="iedit" data-si="${si}" data-ii="${ii}" aria-label="Redaktə et"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button><button type="button" class="fe-ib x sm" data-act="idel" data-si="${si}" data-ii="${ii}" aria-label="Sil"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button></div>`; }).join("") || `<div class="fe-none">Bu bölmə boşdur — material əlavə et</div>`}</div>
             <div class="fe-qa"><button type="button" class="v" data-act="qv" data-si="${si}"><span>${kIco("v", 1)}</span>Video</button><button type="button" class="h" data-act="qh" data-si="${si}"><span>${kIco("h", 1)}</span>Tapşırıq</button><button type="button" class="o" data-act="iadd" data-si="${si}"><span class="pl">+</span>Digər</button></div></div></div></div>`; }).join("")}
         <button type="button" class="fe-add big dark" data-act="sadd">+ Yeni bölmə yarat</button>`;
     }
@@ -20478,7 +20527,7 @@ select.fe-in{background-image:linear-gradient(45deg,transparent 50%,#5A6890 50%)
     }
     function draw() {
       if (!D.k) {
-        m.innerHTML = `<div class="fe-sheet"><div class="fe-sh-h"><b>Material əlavə et</b><button type="button" class="fe-ib g" data-x aria-label="Bağla">✕</button></div><p class="fe-hint" style="margin:0 0 10px">«${esc(s.n || "Bölmə")}» bölməsinə nə əlavə edirsiniz?</p><div class="fe-kg">${only.map(k => `<button type="button" data-k="${k}">${kIco(k)}<b>${KT[k].n}</b></button>`).join("")}</div></div>`;
+        m.innerHTML = `<div class="fe-sheet"><div class="fe-sh-h"><b>Material əlavə et</b><button type="button" class="fe-ib g" data-x aria-label="Bağla">✕</button></div><p class="fe-hint" style="margin:0 0 10px">«${esc(s.n || "Bölmə")}» bölməsinə nə əlavə edirsiniz?${kind === "*" ? "<br>Dərəcə, İsbatlı izah, Çox düşən suallar və Qısa xülasə şagirddə <b>soldakı çarxda</b>, yalnız bu bölmə üçün görünür." : ""}</p><div class="fe-kg">${only.map(k => `<button type="button" data-k="${k}">${kIco(k)}<b>${KT[k].n}</b></button>`).join("")}</div></div>`;
       } else {
         m.innerHTML = `<div class="fe-sheet"><div class="fe-sh-h">${editing ? "" : `<button type="button" class="fe-ib g" data-back aria-label="Geri">←</button>`}${kIco(D.k, 1)}<b>${KT[D.k].n}</b><button type="button" class="fe-ib g" data-x aria-label="Bağla">✕</button></div><div class="fe-form">${form()}</div><div class="fe-sh-f"><button type="button" class="fe-btn g" data-x>Ləğv et</button><button type="button" class="fe-btn" data-ok>${editing ? "Yadda saxla" : "Əlavə et"}</button></div></div>`;
       }
@@ -20537,7 +20586,7 @@ select.fe-in{background-image:linear-gradient(45deg,transparent 50%,#5A6890 50%)
   // ---- şagird kimi önizləmə (eyni görünüş funksiyası) ----
   function fePreview() {
     const F = FE, uid = F.uid, tops = F.tops.map(fromEdit);
-    const st = { t: F.ti, cat: "l", cur: null, closed: {} };
+    const st = { t: F.ti, s: 0, cat: "l", cur: null, closed: {} };
     const m = document.createElement("div"); m.className = "fe-pv";
     m.innerHTML = `<div class="fe-pv-h"><button type="button" class="fe-ib g" data-x aria-label="Bağla">✕</button><div><b>Şagird kimi baxış</b><small>Şagird bu səhifəni belə görəcək${F.dirty ? " (yadda saxlanmamış dəyişikliklər daxil)" : ""}</small></div></div><div class="fe-pv-f"><div class="fe-pv-w" data-fnroot><div class="fe-pv-s"><div class="fe-pv-body"></div></div><button type="button" class="fe-pv-wh" data-fn="wheel" aria-label="Bölmələr çarxı"><i></i></button></div></div>`;
     document.body.appendChild(m);
