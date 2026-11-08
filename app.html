@@ -13357,7 +13357,7 @@ function homeExtra(){
 
   // ---------- məlumat ----------
   async function build3() {
-    const s = await getStats(); RM(s); await loadRT(); await sync(s);
+    const s = await getStats(); RM(s); await Promise.all([loadRT(), bk3Load().catch(() => {})]); await sync(s);
     const r = s.rm; r.hard = r.hard || {}; r.rb = r.rb || {};
     const atts = (studentAttemptsCache || []).slice().sort((a, b) => ms(b) - ms(a));
     const QS = await Promise.all(atts.map(a => exQs(a.examId)));
@@ -13409,7 +13409,108 @@ function homeExtra(){
     return tops.map(t => ({ t, p: Math.round(acc(t) * 100), keys: d.topicKeys[t] || [] })).sort((x, y) => x.p - y.p || y.keys.length - x.keys.length).slice(0, 6);
   }
   const hard3 = n => { const r = window._PQ.stats.rm; return (r.hard && r.hard[n]) || {}; };
-  const hardCount = n => Object.values(hard3(n)).reduce((a, x) => a + x.length, 0);
+  const hardCount = n => Object.values(hard3(n)).reduce((a, x) => a + x.length, 0) + bkCount(n);
+  // ---------- test toplusu (kitab): «Səhv suallarım» ilə eyni məlumat (bookMistakes) + sualın şəkli (bookQ) ----------
+  const BK = { list: null, notes: {}, at: 0 };
+  const book3 = () => (window.PZ_BOOKS || [])[0];
+  const bookSub = n => !!book3() && typeof window.mqUnits === "function" && /riyaz/i.test(String(n || ""));
+  const units3 = () => { const b = book3(); try { return b && window.mqUnits ? mqUnits(b) : []; } catch (e) { return []; } };
+  const bkId = (b, uk) => currentStudentUid + "_" + b.id + "_" + String(uk).replace(".", "-");
+  const qSuf = n => { const t = { 1: "ci", 2: "ci", 3: "cü", 4: "cü", 5: "ci", 6: "cı", 7: "ci", 8: "ci", 9: "cu", 0: n % 100 === 0 ? "cü" : ({ 1: "cu", 2: "ci", 3: "cu", 4: "cı", 5: "ci", 6: "cı", 7: "ci", 8: "ci", 9: "cı" })[Math.floor(n / 10) % 10] }; return n + "-" + (t[n % 10] || "ci"); };
+  async function bk3Load(force) {
+    const b = book3(); if (!b || typeof currentStudentUid === "undefined" || !currentStudentUid) { BK.list = BK.list || []; return; }
+    if (BK.list && !force && Date.now() - BK.at < 45000) return;
+    try {
+      const [ms, ns] = await Promise.all([db.collection("bookMistakes").where("studentId", "==", currentStudentUid).get(), db.collection("bookNotes").where("studentIds", "array-contains", currentStudentUid).get()]);
+      BK.list = ms.docs.map(d => d.data()).filter(x => x.book === b.id && (x.nums || []).length);
+      BK.notes = {}; ns.docs.forEach(d => { const x = d.data(); if (x.book === b.id && x.done) BK.notes[x.unit + "|" + x.num] = 1; });
+      BK.at = Date.now();
+    } catch (e) { console.warn("bookMistakes:", e); BK.list = BK.list || []; }
+  }
+  const bkCount = n => bookSub(n) ? (BK.list || []).reduce((a, x) => a + x.nums.length, 0) : 0;
+  const bkTids = () => { const a = (typeof myEnrollments !== "undefined" ? myEnrollments : []).filter(e => e.status === "active").map(e => e.teacherId); try { if (legacySub && legacySub.teacherId) a.push(legacySub.teacherId); } catch (e) {} return [...new Set(a)]; };
+  async function bkWrite(uk, nums) {
+    const b = book3(), ref = db.collection("bookMistakes").doc(bkId(b, uk));
+    nums = [...new Set(nums)].sort((p, q) => p - q);
+    if (nums.length) { const T = bkTids(); if (!T.length) throw Object.assign(new Error("Əvvəlcə müəllimə qoşulun («Fənlər» bölməsi)"), { code: "no-teacher" }); const u = units3().find(x => x.key === uk);
+      await ref.set({ studentId: currentStudentUid, studentName: ($("student-name") || {}).textContent || "Şagird", teacherIds: T, book: b.id, unit: uk, unitTitle: u ? u.t : "", nums, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); }
+    else await ref.delete();
+    const L = BK.list || (BK.list = []), i = L.findIndex(x => x.unit === uk);
+    if (nums.length) { if (i >= 0) L[i].nums = nums; else L.push({ book: b.id, unit: uk, nums }); } else if (i >= 0) L.splice(i, 1);
+  }
+  function bkRowsHTML() {
+    const U = units3(), ix = {}; U.forEach((u, i) => ix[u.key] = u);
+    const L = (BK.list || []).filter(x => ix[x.unit]).sort((a, c) => U.indexOf(ix[a.unit]) - U.indexOf(ix[c.unit]));
+    return L.map(x => { const u = ix[x.unit], q = JSON.stringify(x.unit).replace(/"/g, "&quot;");
+      return row3({ on: `r3BkSolve(${q})`, ic: "star", ib: "#FFF6E5", t: esc(u.t), s: (u.parent ? esc(u.parent) + " · " : "") + x.nums.length + " sual", chip: x.nums.length + " sual", cb: "#FDECC8", cf: "#8A4B00", small: u.t.length > 40,
+        extra: `<div class="r3-nums">${x.nums.map(n => `<i${BK.notes[x.unit + "|" + n] ? ' class="ok" title="Müəllim izah edib"' : ""}>${n}</i>`).join("")}</div><div class="r3-two"><button type="button" class="b" onclick="r3BkSolve(${q})">İşlə</button><button type="button" onclick="r3BkMark(${q})">Düzəliş et</button></div>` }); }).join("");
+  }
+  // işarələmə: mövzu → bölmə → nömrələr (kitabdakı real say)
+  function bkMarkHTML() {
+    const U = units3(), M = V3.bm, mains = [];
+    U.forEach(u => { const g = +String(u.key).split(".")[0]; let m = mains.find(x => x.g === g); if (!m) mains.push(m = { g, t: u.parent || u.t, units: [] }); if (u.q && u.q.length) m.units.push(u); });
+    const MS = mains.filter(m => m.units.length);
+    if (!MS.length) return `<div class="r3-mark">${head3("Çətin sual əlavə et", "", false)}${empty3("Test toplusu tapılmadı", "")}</div>`;
+    if (M.g == null || !MS.some(m => m.g === M.g)) M.g = MS[0].g;
+    const m = MS.find(x => x.g === M.g);
+    if (!M.u || !m.units.some(u => u.key === M.u)) { M.u = m.units[0].key; M.picks = ((BK.list || []).find(x => x.unit === M.u) || { nums: [] }).nums.slice(); M.page = 0; }
+    const u = m.units.find(x => x.key === M.u), N = u.q.length, pages = Math.ceil(N / 50); if (M.page >= pages) M.page = 0;
+    const from = M.page * 50 + 1, to = Math.min(N, from + 49), nums = Array.from({ length: to - from + 1 }, (_, i) => from + i);
+    const cnt = k => ((BK.list || []).find(x => x.unit === k) || { nums: [] }).nums.length;
+    return `<div class="r3-mark">${head3("Çətin sual əlavə et", "Test toplusunda yaza bilmədiyin sualları işarələ. Müəllimin də görəcək və izah edəcək.", false)}
+      <h4>1. Mövzunu seç</h4><div class="r3-chips">${MS.map(x => { const c = x.units.reduce((a, y) => a + cnt(y.key), 0); return `<button type="button" class="${x.g === M.g ? "on" : ""}" onclick="r3BkG(${x.g})">${esc(x.t)}${c ? ` <em>${c}</em>` : ""}</button>`; }).join("")}</div>
+      ${m.units.length > 1 ? `<h4>2. Bölməni seç</h4><div class="r3-ul">${m.units.map(y => { const c = cnt(y.key); return `<button type="button" class="${y.key === M.u ? "on" : ""}" onclick='r3BkU(${JSON.stringify(y.key)})'><span>${esc(y.t)}</span><small>${y.q.length} sual${c ? " · " + c + " işarəli" : ""}</small></button>`; }).join("")}</div>` : ""}
+      <h4>${m.units.length > 1 ? "3" : "2"}. Yaza bilmədiyin sualların nömrəsinə bas</h4>
+      ${pages > 1 ? `<div class="r3-chips sm">${Array.from({ length: pages }, (_, i) => `<button type="button" class="${i === M.page ? "on" : ""}" onclick="r3BkPage(${i})">${i * 50 + 1}–${Math.min(N, i * 50 + 50)}</button>`).join("")}</div>` : ""}
+      <div class="r3-grid">${nums.map(x => `<button type="button" class="${M.picks.includes(x) ? "on" : ""}" aria-pressed="${M.picks.includes(x)}" onclick="r3BkNum(${x})">${x}</button>`).join("")}</div>
+      <div class="r3-save"><button type="button" class="r3-primary" onclick="r3BkSave()"${M.busy ? " disabled" : ""}>${M.busy ? "Saxlanılır..." : `Yadda saxla (${M.picks.length})`}</button></div></div>`;
+  }
+  window.r3BkMark = uk => { const U = units3(), u = U.find(x => x.key === uk); V3.bm = { g: u ? +String(u.key).split(".")[0] : null, u: uk || null, picks: uk ? (((BK.list || []).find(x => x.unit === uk) || { nums: [] }).nums.slice()) : [], page: 0 }; if (!uk) V3.bm.u = null; go3("bmark"); bk3Load(true).then(() => { if (V3.view === "bmark" && V3.bm.u && !V3.bm.dirty) { V3.bm.picks = (((BK.list || []).find(x => x.unit === V3.bm.u) || { nums: [] }).nums.slice()); paint3(false); } }); };
+  window.r3BkG = g => { if (V3.bm.g === g) return; V3.bm.g = g; V3.bm.u = null; V3.bm.dirty = false; paint3(false); };
+  window.r3BkU = k => { if (V3.bm.u === k) return; V3.bm.u = k; V3.bm.page = 0; V3.bm.dirty = false; V3.bm.picks = (((BK.list || []).find(x => x.unit === k) || { nums: [] }).nums.slice()); paint3(false); };
+  window.r3BkPage = i => { V3.bm.page = i; paint3(false); };
+  window.r3BkNum = x => { const a = V3.bm.picks, i = a.indexOf(x); if (i >= 0) a.splice(i, 1); else { a.push(x); a.sort((p, q) => p - q); } V3.bm.dirty = true;
+    const b = [...document.querySelectorAll(".r3-grid button")].find(y => +y.textContent === x); if (b) { b.classList.toggle("on", i < 0); b.setAttribute("aria-pressed", i < 0); }
+    const sv = document.querySelector(".r3-save .r3-primary"); if (sv) sv.textContent = `Yadda saxla (${a.length})`; };
+  window.r3BkSave = async () => {
+    const M = V3.bm; if (M.busy) return; M.busy = true; paint3(false);
+    try { await bkWrite(M.u, M.picks); toast(M.picks.length ? "Yadda saxlanıldı — müəllimin də görəcək" : "Siyahı təmizləndi"); M.busy = false; go3("hard", "b"); }
+    catch (e) { console.error(e); M.busy = false; paint3(false); toast(e.code === "no-teacher" ? e.message : "Yadda saxlanmadı: " + errAz(e)); }
+  };
+  // işlə: sualın şəkli + «Həll etdim»
+  window.r3BkSolve = async uk => {
+    const b = book3(), u = units3().find(x => x.key === uk), rec = (BK.list || []).find(x => x.unit === uk); if (!b || !u || !rec) return;
+    let nums = rec.nums.slice(), i = 0, zm = false; const IMG = {};
+    const ov = document.createElement("div"); ov.className = "tq-ov"; ov.setAttribute("data-zoom-ok", "");
+    document.body.appendChild(ov); document.body.classList.add("tq-open");
+    const close = () => { ov.classList.remove("on"); document.body.classList.remove("tq-open"); setTimeout(() => ov.remove(), 250); paint3(false); };
+    const draw = () => {
+      if (!nums.length) { ov.innerHTML = `<div class="tq-top"><button type="button" data-x aria-label="Bağla">✕</button><div><b>${esc(u.t)}</b></div></div><div class="tq-sc"><div class="tq-done"><b>Hamısını həll etdin! 🎉</b><p>Bu bölmədəki çətin suallarının hamısı siyahıdan çıxdı.</p><button type="button" class="r3-primary" data-x>Bağla</button></div></div>`; return; }
+      if (i >= nums.length) i = nums.length - 1;
+      const n = nums[i], im = IMG[n], ex = BK.notes[uk + "|" + n];
+      ov.innerHTML = `<div class="tq-top"><button type="button" data-x aria-label="Bağla">✕</button><div><b>${esc(u.t)}</b><small>${qSuf(n)} sual · ${i + 1} / ${nums.length}</small></div></div>
+        <div class="tq-sc"><div class="tq-q${zm ? " zm" : ""}">${im === undefined ? `<div class="pq-sk" style="height:220px"></div>` : im ? `<img src="${im}" alt="${n}-ci sual" data-zm>` : `<div class="tq-no"><b>${qSuf(n)} sual</b><p>Bu sualın şəkli hələ hazır deyil. Test toplusunu (kitabı) aç: <b>${esc(u.t)}</b>, ${qSuf(n)} sual.</p></div>`}</div>
+          ${im ? `<p class="tq-hint">Şəklə toxun — böyüsün. Dəftərində həll et, sonra aşağıdan seç.</p>` : ""}
+          ${ex ? `<button type="button" class="tq-ex" data-ex>⭐ Müəllim bu sualı izah edib — izaha bax</button>` : `<p class="tq-sent">✓ Müəllimə göndərilib — dərsdə izah edəcək</p>`}</div>
+        <div class="tq-bar"><button type="button" data-prev ${i ? "" : "disabled"} aria-label="Əvvəlki">‹</button><button type="button" class="ok" data-ok>✓ Həll etdim</button><button type="button" data-next ${i < nums.length - 1 ? "" : "disabled"}>Növbəti ›</button></div>`;
+    };
+    const load = async n => { if (n in IMG) return; try { const d = await db.collection("bookQ").doc(b.id + "_" + String(uk).replace(/\./g, "-") + "_" + n).get(); IMG[n] = d.exists ? d.data().img || null : null; } catch (e) { console.warn("bookQ:", e); IMG[n] = null; } };
+    draw(); requestAnimationFrame(() => ov.classList.add("on"));
+    const show = async () => { draw(); const n = nums[i]; if (n == null) return; await load(n); if (nums[i] === n) draw(); if (nums[i + 1] != null) load(nums[i + 1]); };
+    show();
+    ov.addEventListener("click", async e => {
+      if (e.target.closest("[data-x]")) { close(); return; }
+      if (e.target.closest("[data-zm]")) { zm = !zm; draw(); return; }
+      if (e.target.closest("[data-prev]")) { i = Math.max(0, i - 1); zm = false; show(); return; }
+      if (e.target.closest("[data-next]")) { i = Math.min(nums.length - 1, i + 1); zm = false; show(); return; }
+      if (e.target.closest("[data-ex]")) { close(); if (window.zyOpen) zyOpen(); return; }
+      const ok = e.target.closest("[data-ok]");
+      if (ok) { ok.disabled = true; const n = nums[i], rest = nums.filter(x => x !== n);
+        try { await bkWrite(uk, rest); nums = rest; zm = false; try { ttmSound("ok"); ttmBuzz(20); } catch (er) {} toast("Əla! Sual siyahıdan çıxdı"); show(); }
+        catch (er) { console.error(er); ok.disabled = false; toast("Yadda saxlanmadı: " + errAz(er)); } }
+    });
+  };
+
 
   // ---------- görünüş ----------
   const chev = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0D1B4C" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>`;
@@ -13474,11 +13575,11 @@ function homeExtra(){
     if (v === "hard") {
       const H = hard3(n), ks = Object.keys(H);
       return head3("Test toplusunda çətin suallarım", "Evdə test işləyəndə yaza bilmədiyin sualları qeyd et, sonra yenidən həll et.", true) +
-        `<div class="r3-stats">${stat3("star", "Yadda saxladığın", hardCount(n), "#B45309")}${stat3("bookmark", "Bölmə", ks.length, "#1D4ED8")}</div>
-        <button type="button" class="r3-primary" onclick="r3Mark()">+ Yeni sual əlavə et</button>` +
+        `<div class="r3-stats">${stat3("star", "Yadda saxladığın", hardCount(n), "#B45309")}${stat3("bookmark", "Bölmə", ks.length + (bookSub(n) ? (BK.list || []).length : 0), "#1D4ED8")}</div>
+        <button type="button" class="r3-primary" onclick="${bookSub(n) ? "r3BkMark()" : "r3Mark()"}">+ Yeni sual əlavə et</button>` + (bookSub(n) ? bkRowsHTML() + (ks.length ? `<div class="r3-old">Köhnə qeydlər</div>` : (bkCount(n) ? "" : empty3("Hələ çətin sual əlavə etməmisən", "Evdə test toplusundan yaza bilmədiyin sualların nömrəsini işarələ — sonra buradan şəklinə baxıb işləyərsən."))) : "") +
         (ks.length ? ks.map(k => row3({ on: `r3Solve(${JSON.stringify(k).replace(/"/g, "&quot;")})`, ic: "star", ib: "#FFF6E5", t: esc(k), s: H[k].length + " sual · " + esc(n) + " test toplusu", chip: H[k].length + " sual", cb: "#FDECC8", cf: "#8A4B00",
           extra: `<div class="r3-nums">${H[k].map(x => `<i>${x}</i>`).join("")}</div><div class="r3-two"><button type="button" class="b" onclick="r3Solve(${JSON.stringify(k).replace(/"/g, "&quot;")})">İşlə</button><button type="button" onclick="r3Mark(${JSON.stringify(k).replace(/"/g, "&quot;")})">Düzəliş et</button></div>` })).join("")
-          : empty3("Hələ çətin sual əlavə etməmisən", "Evdə test toplusundan yaza bilmədiyin sualların nömrəsini işarələ — sabah buradan işləyərsən."));
+          : bookSub(n) ? "" : empty3("Hələ çətin sual əlavə etməmisən", "Evdə test toplusundan yaza bilmədiyin sualların nömrəsini işarələ — sabah buradan işləyərsən."));
     }
     if (v === "slow") {
       return head3("Çox vaxt sərf etdiyim suallar", "Sınaqda ən uzun düşündüyün suallar. Düz yazsan da, sürətini burada artır.", true) +
@@ -13522,7 +13623,7 @@ function homeExtra(){
     const root = $("roadmap-content"); if (!root || !V3.D) return;
     const v = V3.view;
     const cls = anim === false ? "" : " in-" + V3.dir + (V3.nav % 2);
-    root.innerHTML = `<div class="r3${cls}">${v === "home" ? homeHTML() : v === "mark" ? markHTML() : listHTML()}</div>`;
+    root.innerHTML = `<div class="r3${cls}">${v === "home" ? homeHTML() : v === "mark" ? markHTML() : v === "bmark" ? bkMarkHTML() : listHTML()}</div>`;
     if (v === "home") { const n = V3.subj, p = ready3(n), f = V3.shown[n] == null ? 0 : V3.shown[n]; V3.shown[n] = p; animRide(root.querySelector(".r3-hero"), f, p, 84, true); }
     ttmBtn3();
   }
@@ -13541,8 +13642,8 @@ function homeExtra(){
     }
   }
   const go3 = (view, dir) => { if (V3.view === "home") V3.homeY = window.scrollY; V3.view = view; V3.dir = dir || "f"; V3.nav++; paint3(); window.scrollTo({ top: view === "home" ? (V3.homeY || 0) : 0, behavior: "auto" }); };
-  window.r3Go = v => go3(v);
-  window.r3Back = () => go3(V3.view === "mark" ? "hard" : "home", "b");
+  window.r3Go = v => { go3(v); if (v === "hard" && bookSub(V3.subj)) bk3Load(true).then(() => { if (V3.view === "hard") paint3(false); }); };
+  window.r3Back = () => go3(V3.view === "mark" || V3.view === "bmark" ? "hard" : "home", "b");
   window.r3Sub = n => { if (n === V3.subj) return; V3.subj = n; V3.subN++; paint3(false); window.scrollTo({ top: 0, behavior: "auto" }); };
 
   // ---------- TTM düyməsi + vərəqlər ----------
@@ -13553,7 +13654,7 @@ function homeExtra(){
       ttmEl.innerHTML = `<img src="${svgU("ttm")}" alt="">`; ttmEl.onclick = () => r3Mood();
       document.body.appendChild(ttmEl);
     }
-    const on = document.body.classList.contains("r3-on") && V3.view !== "mark" && !V3.sheet && !stEl;
+    const on = document.body.classList.contains("r3-on") && V3.view !== "mark" && V3.view !== "bmark" && !V3.sheet && !stEl;
     ttmEl.classList.toggle("show", on);
   }
   function sheet3(html, onClick) {
@@ -17970,6 +18071,27 @@ function texPlain(s){
     catch(e){ console.error(e); const c=$("mq-cnt"); if(c) c.textContent=/permission/i.test(e.message||"")?"Firestore qaydası lazımdır":"—"; }
   }
   const IMP={high:"Çox vacib",mid:"Orta",low:"Önəmsiz"};
+  // test toplusunun şəkilləri: şagird «Yol xəritəm»də sualın şəklini görüb işləsin
+  async function tqCard(B,rows){
+    const L=$("mq-l"); if(!L) return;
+    L.insertAdjacentHTML("afterbegin",`<div class="tq-card" id="tq-card"><b>📷 Sual şəkilləri şagirdlər üçün</b><p id="tq-st">Yoxlanılır...</p><div class="tq-pr"><i id="tq-bar"></i></div><button type="button" class="mq-go" id="tq-all">Bütün test toplusunu hazırla</button></div>`);
+    const st=$("tq-st"), bar=$("tq-bar"), btn=$("tq-all"), tot=B.toc.reduce((a,e)=>a+(e[3]?e[3].length:0),0);
+    const show=(d,t)=>{ if(bar) bar.style.width=Math.round(d/Math.max(1,t)*100)+"%"; };
+    const meta=await tqMeta(B,true), n0=Object.keys(meta).length; show(n0,tot);
+    st.textContent=n0>=tot?"Bütün suallar hazırdır ✓ Şagird «Yol xəritəm»də sualın şəklini görüb işləyir.":`Hazır: ${n0} / ${tot}. Şagird işarələdiyi sualın şəklini görüb işləməsi üçün bir dəfə hazırlayın (PDF bu cihazda olmalıdır). Proses dayansa, yenidən basın — qaldığı yerdən davam edir.`;
+    if(n0>=tot) btn.hidden=true;
+    btn.onclick=async()=>{ if(btn.dataset.run){ tqStop(); btn.textContent="Dayandırılır..."; return; }
+      btn.dataset.run=1; btn.textContent="Dayandır"; let last=0;
+      const r=await tqPrepare(B,null,(d,t)=>{ show(d,t); st.textContent=`Hazırlanır: ${d} / ${t} — səhifəni bağlamayın`; last=d; });
+      delete btn.dataset.run; btn.textContent="Bütün test toplusunu hazırla";
+      if(r==="ok"){ st.textContent="Bütün suallar hazırdır ✓"; btn.hidden=true; toast("Sual şəkilləri hazırdır"); }
+      else if(r==="nopdf"){ st.textContent="«"+B.name+"» PDF-i bu cihazda yoxdur. Əvvəlcə «PDF əlavə et» ilə yükləyin."; }
+      else if(r==="stop"){ st.textContent=`Dayandırıldı: ${last} / ${tot}. Yenidən basanda davam edəcək.`; }
+      else if(r!=="busy"){ st.textContent="Xəta: "+r.replace(/^err:/,"")+". Yenidən cəhd edin."; } };
+    // şagirdlərin işarələdiyi suallar avtomatik hazırlanır
+    const want=[]; rows.forEach(a=>Object.keys(a.nums).forEach(n=>{ if(!meta[a.unit+"|"+n]) want.push({u:a.unit,n:+n}); }));
+    if(want.length&&!btn.dataset.run){ const r=await tqPrepare(B,want,(d,t)=>{}); if(r==="ok"){ const m=await tqMeta(B), k=Object.keys(m).length; show(k,tot); if(k<tot) st.textContent=`Hazır: ${k} / ${tot}. Şagirdlərin işarələdiyi suallar hazırdır ✓`; } }
+  }
   async function mqView(){
     const B=MQB(); if(!B) return;
     list.innerHTML=`<div class="ih-back"><button type="button" class="v2-back" id="mq-bk">←</button><h3>Şagirdlərin səhv sualları</h3></div><div id="mq-l"><div class="pq-sk"></div><div class="pq-sk"></div></div>`;
@@ -17983,6 +18105,7 @@ function texPlain(s){
         <div class="mq-chips">${ns.map(n=>{ const x=D.N[a.book+"|"+a.unit+"|"+n], c=a.nums[n].length; return `<span class="mq-chip ${x&&x.done?"ok":""}" title="${esc(a.nums[n].map(s=>s.name).join(", "))}">${x&&x.done?"✓ ":""}${n}${c>1?`<i>×${c}</i>`:""}</span>`; }).join("")}</div>
         <div class="mq-who">${[...new Set(ns.flatMap(n=>a.nums[n].map(s=>s.name)))].map(esc).join(" · ")}</div>
         <div class="mq-acts"><button type="button" class="mq-go" data-mqu="${a.unit}" data-all="0" ${open.length?"":"disabled"}>▶ İzah et (${open.length} yeni)</button>${open.length<ns.length?`<button type="button" class="mq-go2" data-mqu="${a.unit}" data-all="1">Hamısı (${ns.length})</button>`:""}</div></div>`; }).join("");
+    tqCard(B,rows);
     $("mq-l").onclick=e=>{ const b=e.target.closest("[data-mqu]"); if(!b) return; const a=D.A[B.id+"|"+b.dataset.mqu];
       let ns=Object.keys(a.nums).map(Number).sort((x,y)=>x-y); if(b.dataset.all==="0") ns=ns.filter(n=>{ const x=D.N[a.book+"|"+a.unit+"|"+n]; return !x||!x.done; });
       mqStart(B,by[a.unit],ns,a.nums,D.N); };
@@ -18005,6 +18128,40 @@ function texPlain(s){
     let y=0; parts.forEach(([c,x,yy,w,h],i)=>{ g.drawImage(c,x,yy,w,h,0,y,w,h); y+=h; if(i<parts.length-1){ g.strokeStyle="#cbd5e1"; g.setLineDash([8,6]); g.beginPath(); g.moveTo(10,y+gap/2); g.lineTo(W-10,y+gap/2); g.stroke(); g.setLineDash([]); y+=gap; } });
     return {url:o.toDataURL("image/jpeg",.88),full,w:W};
   }
+  // ---- test toplusu sual şəkilləri şagirdlər üçün bazada (bookQ/{kitab}_{bölmə}_{nömrə}) ----
+  const tqId=(B,uk,n)=>B.id+"_"+String(uk).replace(/\./g,"-")+"_"+n;
+  const TQS={meta:null,run:false,stop:false};
+  async function tqMeta(B,force){ if(TQS.meta&&!force) return TQS.meta; try{ const d=await db.collection("bookQ").doc("_meta_"+B.id).get(); TQS.meta=(d.exists&&d.data().has)||{}; }catch(e){ console.warn("bookQ meta:",e); TQS.meta=TQS.meta||{}; } return TQS.meta; }
+  async function tqPdf(B){ const all=await allMeta(), m=all.find(x=>!x.blank&&((B.fp||[]).includes(x.fp)||x.pages===B.pages)); if(!m) return null; await ensureLib("pdfjs"); const buf=await tx("files","readonly",s=>s.get(m.id)); return pdfjsLib.getDocument({data:buf}).promise; }
+  // kiçik ölçüdə kəs (yaddaş üçün: yalnız son səhifələr saxlanılır)
+  async function tqCrop(pdf,b,cache){
+    for(let k=0;k<b.length;k+=5){ const p=b[k]; if(!cache[p]){ Object.keys(cache).forEach(x=>{ if(Math.abs(+x-p)>1){ cache[x].width=0; delete cache[x]; } }); const pg=await pdf.getPage(p), v=pg.getViewport({scale:1}), vp=pg.getViewport({scale:1500/v.width}), c=document.createElement("canvas"); c.width=vp.width; c.height=vp.height; await pg.render({canvasContext:c.getContext("2d"),viewport:vp}).promise; cache[p]=c; } }
+    const r=await cropQ(pdf,b,cache); return tqSmall(r.url);
+  }
+  function tqSmall(url){ return new Promise(res=>{ const im=new Image(); im.onload=()=>{ const k=Math.min(1,900/im.width), c=document.createElement("canvas"); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k); const g=c.getContext("2d"); g.fillStyle="#fff"; g.fillRect(0,0,c.width,c.height); g.drawImage(im,0,0,c.width,c.height); let q=.8, d=c.toDataURL("image/jpeg",q); while(d.length>180000&&q>.4){ q-=.1; d=c.toDataURL("image/jpeg",q); } res(d); }; im.onerror=()=>res(url); im.src=url; }); }
+  async function tqPut(B,items){ // items: [{u,n,img}]
+    if(!items.length) return; const meta=await tqMeta(B), has={};
+    for(let i=0;i<items.length;i+=8){ const bt=db.batch(); items.slice(i,i+8).forEach(x=>{ bt.set(db.collection("bookQ").doc(tqId(B,x.u,x.n)),{book:B.id,unit:x.u,num:x.n,img:x.img,at:firebase.firestore.FieldValue.serverTimestamp()}); has[x.u+"|"+x.n]=1; }); await bt.commit(); }
+    await db.collection("bookQ").doc("_meta_"+B.id).set({has},{merge:true}); Object.assign(meta,has);
+  }
+  // want: [{u,n}] və ya null (bütün kitab). onP(hazır, ümumi)
+  window.tqPrepare=async(B,want,onP)=>{
+    if(TQS.run) return "busy"; TQS.run=true; TQS.stop=false;
+    try{
+      const U=bookUnits(B), by={}; U.forEach(u=>by[u.key]=u); const meta=await tqMeta(B,true);
+      let L=want||U.flatMap(u=>(u.q||[]).map((_,i)=>({u:u.key,n:i+1})));
+      L=L.filter(x=>by[x.u]&&by[x.u].q&&by[x.u].q[x.n-1]); const tot=L.length; L=L.filter(x=>!meta[x.u+"|"+x.n]);
+      let done=tot-L.length; onP&&onP(done,tot); if(!L.length) return "ok";
+      const pdf=await tqPdf(B); if(!pdf) return "nopdf";
+      const cache={}; let buf=[];
+      for(const x of L){ if(TQS.stop) break; buf.push({u:x.u,n:x.n,img:await tqCrop(pdf,by[x.u].q[x.n-1],cache)}); if(buf.length>=8){ await tqPut(B,buf); done+=buf.length; buf=[]; onP&&onP(done,tot); } }
+      if(buf.length){ await tqPut(B,buf); done+=buf.length; onP&&onP(done,tot); }
+      Object.values(cache).forEach(c=>c.width=0); try{ pdf.destroy(); }catch(e){}
+      return TQS.stop?"stop":"ok";
+    }catch(e){ console.error("bookQ:",e); return "err:"+errAz(e); }
+    finally{ TQS.run=false; }
+  };
+  window.tqStop=()=>{ TQS.stop=true; };
   async function mqStart(B,u,ns,who,N){
     if(!ns.length) return;
     const all=await allMeta(), m=all.find(x=>!x.blank&&((B.fp||[]).includes(x.fp)||x.pages===B.pages));
@@ -18014,6 +18171,7 @@ function texPlain(s){
     const pc={}, IM=[];
     try{ for(const n of ns){ const i=n-1; IM.push(await cropQ(pdf,u.q[i],pc)); } }catch(e){ console.error(e); toast("Sual kəsilmədi: "+errAz(e)); return; }
     try{ pdf.destroy(); }catch(e){}
+    (async()=>{ try{ const meta=await tqMeta(B), L=[]; for(let k=0;k<ns.length;k++){ if(!meta[u.key+"|"+ns[k]]) L.push({u:u.key,n:ns[k],img:await tqSmall(IM[k].url)}); } await tqPut(B,L); }catch(e){ console.warn("bookQ yazılmadı:",e); } })();
     const sid="mq_"+B.id+"_"+u.key, store=(await tx("meta","readonly",s=>s.get(sid)))||{id:sid,owner:currentTeacherId,cat:"mq",inkByNum:{}};
     const ink={}; ns.forEach((n,i)=>{ if(store.inkByNum[n]) ink[i]=store.inkByNum[n]; });
     let cur=0; const nk=n=>B.id+"|"+u.key+"|"+n;
@@ -20093,6 +20251,43 @@ select.fe-in{background-image:linear-gradient(45deg,transparent 50%,#5A6890 50%)
 .fn-tp-g.multi button.on{background:var(--fncl,#E3ECFD)}
 .fn-tp-gh{font-size:12.5px;font-weight:900;color:#5A6890;text-transform:uppercase;letter-spacing:.04em;padding:0 6px 2px}
 .fn-tp{touch-action:pan-y}
+.tq-card{background:#fff;border-radius:16px;padding:14px;margin-bottom:12px;border:1px solid #DBEAFE;box-shadow:var(--shadow-sm)}
+.tq-card b{display:block;font-size:15px;color:#0B3C5D}
+.tq-card p{font-size:13px;color:#475569;margin:6px 0 10px;line-height:1.45}
+.tq-pr{height:8px;border-radius:5px;background:#E2E8F0;overflow:hidden;margin-bottom:10px}
+.tq-pr i{display:block;height:100%;width:0;background:linear-gradient(90deg,#22C55E,#16A34A);transition:width .4s}
+/* Yol xəritəm: test toplusu sualları */
+.r3-nums i.ok{background:#DCFCE7;color:#15803D}
+.r3-old{margin:18px 4px 8px;font-size:12.5px;font-weight:900;color:#5A6890;text-transform:uppercase;letter-spacing:.04em}
+.r3-chips em{font-style:normal;background:#FDE68A;color:#92400E;border-radius:8px;padding:0 6px;margin-left:4px;font-size:12px}
+.r3-ul{display:flex;flex-direction:column;gap:6px;margin-bottom:6px}
+.r3-ul button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;padding:11px 13px;border-radius:14px;border:1.5px solid #E1E7F2;background:#fff;font-family:inherit;text-align:left;color:#0D1B4C}
+.r3-ul button span{font-size:14px;font-weight:800;line-height:1.3}
+.r3-ul button small{font-size:12px;font-weight:700;color:#5A6890}
+.r3-ul button.on{border-color:#2563EB;background:#EEF5FF}
+.tq-ov{position:fixed;inset:0;z-index:2000;background:#EEF3FC;display:flex;flex-direction:column;font-family:Nunito,var(--font-main);color:#0D1B4C;opacity:0;transition:opacity .25s}
+.tq-ov.on{opacity:1}
+.tq-top{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;background:#fff;box-shadow:0 2px 10px rgba(13,27,76,.06)}
+.tq-top button{width:42px;height:42px;border:0;border-radius:13px;background:#EEF2FA;font-size:17px;font-weight:900;color:#0D1B4C;flex:none}
+.tq-top div{min-width:0}
+.tq-top b{font-size:15px;font-weight:900;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.tq-top small{display:block;font-size:13px;font-weight:800;color:#2563EB;margin-top:2px}
+.tq-sc{flex:1;overflow:auto;padding:14px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.tq-q{background:#fff;border-radius:16px;padding:8px;box-shadow:0 6px 18px rgba(13,27,76,.08);overflow:auto;animation:fnIn .3s both}
+.tq-q img{display:block;width:100%;height:auto;border-radius:10px;cursor:zoom-in}
+.tq-q.zm img{width:200%;max-width:none;cursor:zoom-out}
+.tq-no{padding:22px 12px;text-align:center}.tq-no b{font-size:18px}.tq-no p{font-size:14px;color:#475569;line-height:1.5;margin:8px 0 0}
+.tq-hint{text-align:center;font-size:12.5px;color:#5A6890;font-weight:700;margin:10px 0 0}
+.tq-sent{text-align:center;font-size:13px;color:#15803D;font-weight:800;margin:10px 0 0}
+.tq-ex{display:block;width:100%;margin-top:12px;padding:13px;border:0;border-radius:14px;background:#7C3AED;color:#fff;font-family:inherit;font-weight:900;font-size:14.5px}
+.tq-bar{display:flex;gap:8px;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:#fff;box-shadow:0 -2px 12px rgba(13,27,76,.07)}
+.tq-bar button{height:52px;border:0;border-radius:15px;background:#EEF2FA;color:#1D3D8F;font-family:inherit;font-weight:900;font-size:15px;padding:0 14px;transition:scale .2s}
+.tq-bar button:active{scale:.95}
+.tq-bar button:disabled{opacity:.35}
+.tq-bar [data-prev]{width:52px;font-size:22px;padding:0}
+.tq-bar .ok{flex:1;background:linear-gradient(135deg,#22C55E,#15803D);color:#fff;box-shadow:0 6px 14px rgba(21,128,61,.25)}
+.tq-done{text-align:center;padding:40px 16px}.tq-done b{font-size:20px}.tq-done p{color:#475569;margin:8px 0 18px}
+body.tq-open #r3-ttm,body.tq-open #s-bottom-nav{visibility:hidden}
 </style>
 <div id="fn-bg-holder"></div>
 <script>
