@@ -4833,10 +4833,14 @@ document.getElementById("exam-save-btn").addEventListener("click", async () => {
       examId = ref.id;
     }
     const writeBatch = db.batch();
+    const solItems = {}; // izah + video vaxtı ayrıca, kilidli yerdə (yalnız sınağı bitirən şagird görür)
     examQuestions.forEach((q, i) => {
       const qRef = db.collection("exams").doc(examId).collection("questions").doc(String(i));
-      writeBatch.set(qRef, { ...q, order: i });
+      const { izah, vt, ...qDoc } = q;
+      if (String(izah || "").trim() || String(vt || "").trim()) solItems[i] = { izah: String(izah || "").trim(), vt: String(vt || "").trim() };
+      writeBatch.set(qRef, { ...qDoc, order: i });
     });
+    writeBatch.set(db.collection("exams").doc(examId).collection("solutions").doc("all"), { items: solItems, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
     // Mətnlər ayrıca alt-kolleksiyada saxlanılır ki, əsas sınaq sənədi şəkillərdən ağırlaşıb limitə çarpmasın
     examTexts.forEach((t) => {
       const tRef = db.collection("exams").doc(examId).collection("texts").doc(t.id);
@@ -4927,6 +4931,7 @@ window.editExam = async (id) => {
   try {
     const qSnap = await db.collection("exams").doc(id).collection("questions").orderBy("order").get();
     examQuestions = qSnap.docs.map(d => d.data());
+    try { const sd = await db.collection("exams").doc(id).collection("solutions").doc("all").get(); const it = sd.exists ? (sd.data().items || {}) : {}; examQuestions.forEach((q, i) => { if (it[i]) { q.izah = it[i].izah || ""; q.vt = it[i].vt || ""; } }); } catch (e) { console.warn("izahlar yüklənmədi:", e); }
   } catch (err) {
     console.error("Suallar yüklənmədi:", err);
     toast("Xəta: suallar yüklənmədi (" + (err.code || errAz(err)) + ")");
@@ -13659,19 +13664,35 @@ function homeExtra(){
     } catch (e) { console.error(e); closeStage(); toast(errAz(e)); ttmBtn3(); }
   }
   const IZ = {};
-  async function izah3(key, q, sel) {
-    if (IZ[key]) return IZ[key];
-    const own = q.explanation || q.izah || q.solution;
-    if (own) return (IZ[key] = String(own));
-    try { const c = localStorage.getItem("ttm_iz_" + key); if (c) return (IZ[key] = c); } catch (e) {}
-    const L = "ABCDE", token = await auth.currentUser.getIdToken(), ctrl = new AbortController(), tm = setTimeout(() => ctrl.abort(), 45000);
-    const isOpen = q.type === "open";
-    const res = await fetch(AI_WORKER_URL, { method: "POST", signal: ctrl.signal, headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
-      body: JSON.stringify({ image: q.imageBase64 || "", text: q.text || "", type: q.type || "mcq", selected: isOpen ? (sel || "") : (sel != null && sel >= 0 ? L[sel] : ""), correct: isOpen ? q.correctAnswer : L[q.correctIndex] }) });
-    clearTimeout(tm);
-    const d = await res.json(); if (!res.ok) throw new Error(d.error || res.status);
-    IZ[key] = d.answer; try { localStorage.setItem("ttm_iz_" + key, d.answer); } catch (e) {}
-    return d.answer;
+  // İzah: əvvəl müəllimin yazdığı (kilidli yer), sonra video; AI yalnız müəllim sınağında izah yoxdursa (gündə 20)
+  async function izah3(it, sel) {
+    if (IZ[it.key]) return IZ[it.key];
+    const S = window.ttmSol, q = it.q, p = it.key.split(":"), o = { text: "", vid: null, start: 0, vt: "" };
+    if (p[0] === "e") {
+      const items = S ? await S.sol(p[1]) : {}, x = items[+p[2]] || {}, ex = (studentExamsCache || []).find(e => e.id === p[1]) || {};
+      o.text = x.izah || q.izah || ""; o.vid = S && S.ytId(ex.videoUrl); o.vt = x.vt || ""; o.start = (S && S.tsec(x.vt)) || 0;
+      if (!o.text) {
+        const ref = db.collection("exams").doc(p[1]).collection("ai").doc(p[2]);
+        try { const d = await ref.get(); if (d.exists && d.data().text) o.text = d.data().text; } catch (e) {}
+        if (!o.text) {
+          const r = RM(window._PQ.stats); if (!r.aiDay || r.aiDay.d !== today()) r.aiDay = { d: today(), n: 0 };
+          if (r.aiDay.n >= 20) o.limit = 1;
+          else {
+            const L = "ABCDE", token = await auth.currentUser.getIdToken(), ctrl = new AbortController(), tm = setTimeout(() => ctrl.abort(), 45000), isOpen = q.type === "open";
+            const res = await fetch(AI_WORKER_URL, { method: "POST", signal: ctrl.signal, headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+              body: JSON.stringify({ image: q.imageBase64 || "", text: q.text || "", type: q.type || "mcq", selected: isOpen ? (sel || "") : (sel != null && sel >= 0 ? L[sel] : ""), correct: isOpen ? q.correctAnswer : L[q.correctIndex] }) });
+            clearTimeout(tm);
+            const d = await res.json(); if (!res.ok) throw new Error(d.error || res.status);
+            o.text = d.answer; o.ai = 1; r.aiDay.n++; save();
+            ref.set({ text: d.answer, at: firebase.firestore.FieldValue.serverTimestamp() }).catch(e => console.warn("AI izah saxlanmadı:", e));
+          }
+        }
+      }
+    } else {
+      o.text = q.izah || q.explanation || ""; o.vid = S && S.ytId(q.video || q.videoUrl); o.vt = q.vt || q.videoStart || ""; o.start = (S && S.tsec(o.vt)) || 0;
+    }
+    if (!o.limit) IZ[it.key] = o;
+    return o;
   }
   const _rs3 = renderStep;
   renderStep = function () {
@@ -13686,11 +13707,16 @@ function homeExtra(){
     if (S.v3.anim) { const h = mini.querySelector(".r3-hop"), pl = mini.querySelector(".r3-plus"); if (h) h.classList.add("go"); if (pl && S.v3.anim > 0) { pl.textContent = "+" + S.v3.anim + "%"; pl.classList.add("go"); } S.v3.anim = 0; }
     const a = S.ans[S.i], it = S.items[S.i];
     if (a && !a.ok) {
-      const box = document.createElement("div"); box.className = "r3-iz"; box.innerHTML = `<b>İZAH</b><div class="r3-izt">İzah hazırlanır...</div>`;
+      const box = document.createElement("div"); box.className = "r3-iz"; box.innerHTML = `<b>İZAH</b><div class="r3-izt">İzah yüklənir...</div>`;
       const card = b.querySelector(".pq-qc"); (card || b).insertAdjacentElement("afterend", box);
       const sel = it.q.type === "open" ? "" : a.s;
-      izah3(it.key, it.q, sel).then(t => { const el = box.querySelector(".r3-izt"); if (el && ST === S) { el.innerHTML = esc(t).replace(/\n/g, "<br>"); try { ttmTeX(el); } catch (e) {} } })
-        .catch(e => { const el = box.querySelector(".r3-izt"); if (el) el.innerHTML = `İzah alınmadı. <button type="button" class="r3-ag">Yenidən cəhd et</button>`; const g = box.querySelector(".r3-ag"); if (g) g.onclick = () => renderStep(); });
+      izah3(it, sel).then(o => {
+        if (ST !== S || !box.isConnected) return;
+        const el = box.querySelector(".r3-izt");
+        if (o.text) { el.innerHTML = esc(o.text).replace(/\n/g, "<br>"); try { ttmTeX(el); } catch (e) {} }
+        else el.innerHTML = o.limit ? "Bu gün üçün AI izah limiti doldu. Sabah yenə açılacaq." : (o.vid ? "Bu sualın yazılı izahı yoxdur — videoya bax." : "Bu sualın izahı hələ əlavə olunmayıb.");
+        if (o.vid && window.ttmSol) box.insertAdjacentHTML("beforeend", ttmSol.card(o.vid, o.start, o.vt ? "Videoda bu sualın izahı · " + o.vt : "Sınağın video izahı"));
+      }).catch(e => { const el = box.querySelector(".r3-izt"); if (el) el.innerHTML = `İzah alınmadı. <button type="button" class="r3-ag">Yenidən cəhd et</button>`; const g = box.querySelector(".r3-ag"); if (g) g.onclick = () => renderStep(); });
     }
   };
   const _ans3 = answer;
@@ -14035,6 +14061,23 @@ function homeExtra(){
     return (BQ.qs[t] = sortQ(s.docs.map(d => ({ id: d.id, ...d.data() })).filter(q => !q.set)));
   }
   const added = () => new Set(examQuestions.map(q => q.bankId).filter(Boolean));
+  // Müəllim yalnız öz fənninin bazasını görür (admin hamısını)
+  const SUBK = [["Riyaziyyat", ["riyaz", "həndəs", "cəbr"]], ["Azərbaycan dili", ["azərbaycan dili", "ana dili", "az dili"]], ["İngilis dili", ["ingilis", "english"]], ["Fizika", ["fizik"]], ["Kimya", ["kimya"]], ["İnformatika", ["informat"]], ["Tarix", ["tarix"]], ["Coğrafiya", ["coğraf", "cografiya"]], ["Ədəbiyyat", ["ədəbiyy", "edebiyy"]], ["Biologiya", ["biolog"]]];
+  let ALW = null, alwP = null;
+  function loadAllowed() {
+    if (alwP) return alwP;
+    return (alwP = (async () => {
+      try {
+        const u = auth.currentUser; if (!u) return;
+        const ud = await db.collection("users").doc(u.uid).get();
+        if (!ud.exists || ud.data().role !== "teacher") return;
+        const td = await db.collection("teachers").doc(u.uid).get(), sj = String(td.exists && td.data().subject || "").toLocaleLowerCase("az");
+        const m = SUBK.filter(x => x[1].some(k => sj.includes(k)) || sj === x[0].toLocaleLowerCase("az")).map(x => x[0]);
+        if (m.length) ALW = m;
+      } catch (e) { console.warn("müəllim fənni:", e); }
+    })());
+  }
+  const okS = sub => !ALW || ALW.includes(sub || "Riyaziyyat");
 
   // ---------- pəncərə ----------
   let ov = null;
@@ -14046,6 +14089,7 @@ function homeExtra(){
     ov.innerHTML = `<div class="pq-sheet bq-sheet"></div>`;
     ov.addEventListener("click", e => { if (e.target === ov) close(); });
     document.body.appendChild(ov); document.body.style.overflow = "hidden";
+    await loadAllowed();
     if (topic) {
       sheet("Yüklənir...", `<div class="pq-sk"></div><div class="pq-sk"></div>`);
       try { const I = await getIdx(); BQ.subj = (I[topic] || {}).subject || "Riyaziyyat"; } catch (e) {}
@@ -14071,21 +14115,22 @@ function homeExtra(){
     let I;
     try { I = await getIdx(); } catch (e) { sheet("Bazadan əlavə et", `<div class="pq-empty">Baza yüklənmədi: ${esc(errAz(e))}</div>`); return; }
     const cnt = {};
-    Object.values(I).forEach(o => { const s = o.subject || "Riyaziyyat"; cnt[s] = (cnt[s] || 0) + o.count; });
+    Object.values(I).forEach(o => { const s = o.subject || "Riyaziyyat"; if (!okS(s)) return; cnt[s] = (cnt[s] || 0) + o.count; });
     const subs = Object.keys(cnt).sort((a, b) => a.localeCompare(b, "az"));
     const SF = BQ_SF, sets = BQ.sets || {};
-    const fold = Object.keys(SF).map(f => { const n = Object.values(sets).filter(o => (o.folder || "buraxilis") === f).length;
+    const fold = Object.keys(SF).map(f => { const n = Object.values(sets).filter(o => (o.folder || "buraxilis") === f && okS(o.subject)).length;
       return `<button class="bq-it" onclick="bqFolder('${f}')"><span class="ic" style="background:${SF[f][1]}">📁</span><div><div class="t">${SF[f][0]}</div><div class="s">${n ? n + " hazır sınaq · hamısını bir dəfəyə seç" : "Hələ boşdur"}</div></div><span class="v2-chev" style="margin-left:auto">›</span></button>`; }).join("");
     sheet("Fənni seçin", `<div class="pq-lbl" style="margin-top:0">Hazır sınaqlar</div>${fold}<div class="pq-lbl">Mövzular üzrə</div>` + (subs.length ? subs.map(s => { const ic = icon(s); return `<button class="bq-it" onclick='bqSubj(${JSON.stringify(s).replace(/'/g, "&#39;")})'><span class="ic" style="background:${ic.bg}">${ic.t}</span><div><div class="t">${esc(s)}</div><div class="s">${cnt[s]} sual</div></div><span class="v2-chev" style="margin-left:auto">›</span></button>`; }).join("") : `<div class="pq-empty">Baza boşdur. «Sual bazası» bölməsindən JSON yükləyin.</div>`), footHtml());
   }
   const BQ_SF = { buraxilis: ["Buraxılış sınaqları", "#ef4444"], blok: ["Blok sınaqları", "#6366f1"], kuiz: ["Kuizlər", "#10b981"] };
   window.bqFolder = async (f) => {
     BQ.view = "folder"; BQ.folder = f; await getIdx();
-    const L2 = Object.entries(BQ.sets || {}).filter(([, o]) => (o.folder || "buraxilis") === f).sort((a, b) => a[0].localeCompare(b[0], "az"));
+    const L2 = Object.entries(BQ.sets || {}).filter(([, o]) => (o.folder || "buraxilis") === f && okS(o.subject)).sort((a, b) => a[0].localeCompare(b[0], "az"));
     sheet((BQ_SF[f] || BQ_SF.buraxilis)[0], L2.length ? L2.map(([n, o]) => `<button class="bq-it" onclick='bqTopic(${JSON.stringify("set:" + n).replace(/'/g, "&#39;")})'><div style="min-width:0"><div class="t">${esc(n)}</div><div class="s">${esc(o.subject || "")} · ${o.count} sual</div></div><span class="v2-chev" style="margin-left:auto">›</span></button>`).join("")
       : `<div class="pq-empty">Bu papka boşdur. «Sual bazası» bölməsindən sınaq JSON-u yükləyin.</div>`, footHtml(), "bqSubjects()");
   };
   window.bqSubj = async (s) => {
+    if (!okS(s)) return;
     BQ.subj = s; BQ.view = "topics";
     const I = await getIdx();
     const ts = Object.keys(I).filter(t => (I[t].subject || "Riyaziyyat") === s).sort((a, b) => a.localeCompare(b, "az"));
@@ -14151,7 +14196,7 @@ function homeExtra(){
       type: et(q), text: q.text || "", imageBase64: q.imageBase64 || "",
       options: (Array.isArray(q.options) && q.options.length === 5 ? q.options : L.split("")).map(String),
       correctIndex: Number(q.correctIndex) || 0, correctAnswer: et(q) === "open" ? String(q.openAnswer || q.answer || "").replace(/\$/g, "") : et(q) === "detailed" ? String(q.openAnswer || q.answer || q.solution || "") : "", textId: "",
-      topic: q.topic || "", bankId: q.id, year: q.year || "", exam: q.exam || ""
+      topic: q.topic || "", bankId: q.id, year: q.year || "", exam: q.exam || "", izah: q.izah || ""
     }));
     const tp = $("exam-topic"), tt = $("exam-title");
     if (arr[0].set) { if (tt && !tt.value.trim()) tt.value = arr[0].set; if (tp && !tp.value.trim()) tp.value = arr[0].subject || "Riyaziyyat"; }
@@ -19452,6 +19497,135 @@ input,textarea{caret-color:#1d6fd6}
   ["username", "tr-username", "sr-username", "student-username", "student-password"].forEach(id => { const e = document.getElementById(id); if (e) { e.setAttribute("autocapitalize", "none"); e.setAttribute("autocorrect", "off"); e.spellcheck = false; } });
   const pw = document.getElementById("password"); if (pw) pw.setAttribute("enterkeyhint", "go");
   const pin = document.getElementById("payments-pin-input"); if (pin) pin.setAttribute("inputmode", "numeric");
+})();
+</script>
+
+<style id="ts-css">
+.ts-res{display:flex;flex-direction:column;gap:10px;width:100%;margin-top:6px}
+.ts-btns{display:flex;gap:8px;flex-wrap:wrap}
+.ts-btn{display:inline-flex;align-items:center;gap:8px;padding:11px 16px;border-radius:14px;font-weight:800;font-size:14.5px;background:linear-gradient(135deg,#2A6FE6,#1450C7);color:#fff;box-shadow:0 6px 14px rgba(20,80,199,.25);transition:scale .2s cubic-bezier(.34,1.56,.64,1)}
+.ts-btn:active{scale:.95}
+.ts-btn.g{background:#EAF1FF;color:#1D3D8F;box-shadow:none}
+.ts-iz{border-radius:16px;background:#fff;border:2px solid #2563EB;padding:12px 14px;font-size:15px;line-height:1.55;color:#0D1B4C;animation:tsIn .3s ease-out}
+.ts-iz>b{display:block;font-size:11.5px;letter-spacing:1.4px;color:#1D4ED8;margin-bottom:4px}
+.ts-vid{position:relative;display:block;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:#0B2A5E;border:0;padding:0;margin-top:10px;box-shadow:0 8px 20px rgba(11,42,94,.25);transition:scale .2s cubic-bezier(.34,1.56,.64,1)}
+.ts-vid:active{scale:.98}
+.ts-vid img{width:100%;height:100%;object-fit:cover;display:block}
+.ts-vid i{position:absolute;left:50%;top:50%;width:62px;height:62px;margin:-31px 0 0 -31px;border-radius:50%;background:rgba(255,255,255,.95);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.3)}
+.ts-vid em{position:absolute;left:10px;bottom:10px;right:10px;font-style:normal;text-align:left;color:#fff;font-weight:800;font-size:14px;text-shadow:0 1px 6px rgba(0,0,0,.7)}
+.ts-vid iframe{width:100%;height:100%;border:0;display:block}
+.ts-qiz{margin:8px 0 4px;padding:10px;border-radius:12px;background:#F4F7FE;border:1px dashed #9DB4E8}
+.ts-qiz label{display:block;font-size:12.5px;font-weight:700;color:#1D3D8F;margin-bottom:4px}
+.ts-qiz textarea{width:100%;min-height:64px;padding:9px 10px;border:1.5px solid var(--color-gray);border-radius:10px;font-size:14px;font-family:inherit;resize:vertical}
+.ts-qiz input{width:130px;padding:8px 10px;border:1.5px solid var(--color-gray);border-radius:10px;font-size:14px;margin-top:6px}
+.ts-prev{margin:-4px 0 10px;padding:8px 10px;border-radius:10px;background:#F4F7FE;font-size:14.5px;line-height:1.6;overflow-wrap:anywhere}
+.ts-prev small{display:block;font-size:11.5px;font-weight:700;color:#5A6890}
+.ts-tc textarea{width:100%;min-height:70px;padding:9px 10px;border:1.5px solid var(--color-gray);border-radius:10px;font-size:14px;font-family:inherit}
+@keyframes tsIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+<script>
+/* ===== Sual izahları: müəllimin yazdığı izah + video vaxtı (sınaq bitəndən sonra açılır) ===== */
+(function () {
+  const $ = id => document.getElementById(id);
+  const ytId = u => { const m = String(u || "").match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/))([\w-]{11})/); return m ? m[1] : null; };
+  const tsec = v => { const t = String(v || "").trim(); if (!/^\d{1,2}(:\d{1,2}){0,2}$/.test(t)) return null; return t.split(":").map(Number).reduce((a, b) => a * 60 + b, 0); };
+  const DONE = {}, SOL = {};
+  function done(examId) {
+    if (DONE[examId]) return DONE[examId];
+    const a = (window.studentAttemptsCache || studentAttemptsCache || []).find(x => x.examId === examId);
+    if (!a || !currentStudentUid) return Promise.resolve(false);
+    return (DONE[examId] = db.collection("examDone").doc(examId + "_" + currentStudentUid).set({ studentId: currentStudentUid, examId, attemptId: a.id })
+      .then(() => true).catch(e => { console.warn("examDone:", e); delete DONE[examId]; return false; }));
+  }
+  function sol(examId) {
+    if (SOL[examId]) return SOL[examId];
+    return (SOL[examId] = (async () => {
+      if (currentStudentUid) await done(examId);
+      try { const d = await db.collection("exams").doc(examId).collection("solutions").doc("all").get(); return d.exists ? (d.data().items || {}) : {}; }
+      catch (e) { console.warn("izahlar:", e); delete SOL[examId]; return {}; }
+    })());
+  }
+  const play = `<i><svg width="26" height="26" viewBox="0 0 24 24" fill="#1450C7" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg></i>`;
+  const card = (id, start, label) => `<button type="button" class="ts-vid" data-yt="${id}" data-s="${start || 0}" aria-label="${esc(label)}"><img src="https://i.ytimg.com/vi/${id}/hqdefault.jpg" alt="" loading="lazy">${play}<em>${esc(label)}</em></button>`;
+  document.addEventListener("click", e => {
+    const b = e.target.closest(".ts-vid[data-yt]"); if (!b || b.querySelector("iframe")) return;
+    b.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${b.dataset.yt}?start=${+b.dataset.s || 0}&autoplay=1&rel=0&playsinline=1" allow="autoplay; encrypted-media; fullscreen" allowfullscreen title="Video izah"></iframe>`;
+  });
+  window.ttmSol = { ytId, tsec, sol, done, card };
+
+  // ---------- nəticə ekranı: "Cəld izah" + videoda həmin sualın saniyəsi ----------
+  if (typeof openResultQuestionDetail === "function") {
+    const o = openResultQuestionDetail;
+    openResultQuestionDetail = function (i) {
+      const r = o.apply(this, arguments);
+      deco(i).catch(e => console.warn(e));
+      return r;
+    };
+  }
+  async function deco(i) {
+    const c = window._resultCtx, box = $("exam-result-question-detail"); if (!c || !box) return;
+    const ex = c.ex, q = ex.questions && ex.questions[i]; if (!q || q.type === "detailed") return;
+    const items = await sol(ex.id), x = items[i] || {}, vid = ytId(ex.videoUrl);
+    if (window._resultExpandedIndex !== i || box.querySelector(".ts-res")) return;
+    const row = box.querySelector(".exam-result-row") || box;
+    if (!x.izah && !vid) return;
+    const st = tsec(x.vt);
+    row.insertAdjacentHTML("beforeend", `<div class="ts-res"><div class="ts-btns">${x.izah ? `<button type="button" class="ts-btn" data-tsiz="1">Cəld izah</button>` : ""}${vid ? `<button type="button" class="ts-btn g" data-tsv="1">▶ Videoda bax${x.vt ? " · " + esc(x.vt) : ""}</button>` : ""}</div><div class="ts-slot"></div></div>`);
+    const res = row.querySelector(".ts-res"), slot = res.querySelector(".ts-slot");
+    res.addEventListener("click", e => {
+      if (e.target.closest("[data-tsiz]")) { const ex0 = slot.querySelector(".ts-iz"); if (ex0) { ex0.remove(); return; } slot.insertAdjacentHTML("afterbegin", `<div class="ts-iz"><b>İZAH</b><div>${esc(x.izah).replace(/\n/g, "<br>")}</div></div>`); try { ttmTeX(slot); } catch (er) {} }
+      if (e.target.closest("[data-tsv]")) { const v0 = slot.querySelector(".ts-vid"); if (v0) { v0.remove(); return; } slot.insertAdjacentHTML("beforeend", card(vid, st, x.vt ? "Bu sualın izahı · " + x.vt : "Sınağın video izahı")); slot.querySelector(".ts-vid").click(); }
+    });
+  }
+
+  // ---------- müəllim: sınaq yaradanda hər suala izah + video vaxtı ----------
+  if (typeof renderQuestionBuilder === "function") {
+    const orb = renderQuestionBuilder;
+    renderQuestionBuilder = function () {
+      const r = orb.apply(this, arguments);
+      document.querySelectorAll("#exam-questions-builder .q-builder-item").forEach((it, qi) => {
+        const q = examQuestions[qi]; if (!q || it.querySelector(".ts-qiz")) return;
+        it.insertAdjacentHTML("beforeend", `<div class="ts-qiz"><label>İzah (şagird yalnız sınağı bitirəndən sonra görür)</label>
+          <textarea placeholder="Məs: Tənlikləri toplayaq: $2x=10$, $x=5$..." oninput="examQuestions[${qi}].izah=this.value">${esc(q.izah || "")}</textarea>
+          <label style="margin-top:6px">Videoda bu sualın başladığı vaxt</label><input type="text" inputmode="numeric" placeholder="məs. 12:45" value="${esc(q.vt || "")}" oninput="examQuestions[${qi}].vt=this.value.trim()"></div>`);
+      });
+      // Bazadan gələn sualda xam mətn (düstur kodu) və şəkil seçimi gizlənir — müəllim yalnız hazır görünüşü görür
+      document.querySelectorAll("#exam-questions-builder .q-builder-item").forEach((it, qi) => {
+        const q = examQuestions[qi]; if (!q) return;
+        const tf = it.querySelector('input[oninput^="updateQuestionText"]'), ff = it.querySelector('input[type="file"][onchange^="uploadQuestionImage"]');
+        const fld = el => el && (el.closest(".field") || el);
+        if (q.bankId) { [fld(tf), fld(ff)].forEach(f => { if (f) f.style.display = "none"; }); return; }
+        // Əl ilə yazılan sualda düstur varsa, altında necə görünəcəyi göstərilir
+        if (tf && !it.querySelector(".ts-prev")) {
+          const pv = document.createElement("div"); pv.className = "ts-prev";
+          const upd = () => { const v = tf.value; pv.style.display = v.includes("$") ? "" : "none"; if (!v.includes("$")) return; pv.innerHTML = `<small>Şagird belə görəcək:</small><div>${esc(v)}</div>`; try { ttmTeX(pv); } catch (e) {} };
+          fld(tf).insertAdjacentElement("afterend", pv); tf.addEventListener("input", upd); upd();
+        }
+      });
+      return r;
+    };
+  }
+  // video vaxt kodlarını bir dəfəyə yapışdırmaq
+  const vf = $("exam-video");
+  if (vf && !$("ts-tc")) {
+    vf.closest(".field").insertAdjacentHTML("afterend", `<div class="field ts-tc" id="ts-tc"><label>Video vaxt kodları (istəyə bağlı) — hər sətirdə: sual nömrəsi və vaxt</label>
+      <textarea id="ts-tc-in" placeholder="1 0:00&#10;2 1:35&#10;20 12:45&#10;(YouTube təsvirindəki fəsilləri də olduğu kimi yapışdıra bilərsən)"></textarea>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap"><button type="button" class="btn-outline" id="ts-tc-go">Suallara tətbiq et</button><span class="muted-note" id="ts-tc-msg"></span></div></div>`);
+    $("ts-tc-go").addEventListener("click", () => {
+      const lines = $("ts-tc-in").value.split(/\n+/).map(l => l.trim()).filter(Boolean), found = [];
+      lines.forEach(l => {
+        const tm = l.match(/\b(\d{1,2}:\d{2}(?::\d{2})?)\b/); if (!tm) return;
+        const rest = l.replace(tm[0], " "), n = rest.match(/(?:^|\D)(\d{1,3})(?:\D|$)/);
+        found.push({ n: n ? +n[1] : null, t: tm[1] });
+      });
+      const numbered = found.some(f => f.n);
+      let k = 0, c = 0;
+      found.forEach(f => { const qi = numbered ? (f.n ? f.n - 1 : -1) : k++; if (qi >= 0 && examQuestions[qi]) { examQuestions[qi].vt = f.t; c++; } });
+      $("ts-tc-msg").textContent = c ? c + " sual üçün vaxt yazıldı" : "Vaxt tapılmadı (məs: 20 12:45)";
+      if (c) { renderQuestionBuilder(); toast(c + " suala video vaxtı əlavə olundu"); }
+    });
+    if (typeof resetExamForm === "function") { const orf = resetExamForm; resetExamForm = function () { const r = orf.apply(this, arguments); const t = $("ts-tc-in"); if (t) t.value = ""; const m = $("ts-tc-msg"); if (m) m.textContent = ""; return r; }; }
+  }
 })();
 </script>
 
