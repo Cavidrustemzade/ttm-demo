@@ -13608,6 +13608,8 @@ function homeExtra(){
     catch (e) { console.error(e); toast(errAz(e)); }
     finally { V3.busy = false; }
   };
+  window.r3CharImg = async () => { const s = await getStats(); const r = RM(s); return A3.ch[(CH3[r.char || 0] || CH3[0]).k]; };
+  window.r3CharsAny = async () => { try { await getStats(); RM(window._PQ.stats); r3Chars(); } catch (e) { toast(errAz(e)); } };
   window.r3Chars = () => {
     if (V3.sheet) return;
     const r = window._PQ.stats.rm;
@@ -13616,7 +13618,7 @@ function homeExtra(){
       <button type="button" class="r3-primary" data-ok="1">Hazırdır</button>`;
     sheet3(body(), (e, close, ov) => {
       const b = e.target.closest("[data-c]");
-      if (b) { r.char = +b.dataset.c; save(); ov.querySelector(".r3-sheet").innerHTML = `<i class="r3-grab"></i>` + body(); return; }
+      if (b) { r.char = +b.dataset.c; save(); ov.querySelector(".r3-sheet").innerHTML = `<i class="r3-grab"></i>` + body(); try { document.dispatchEvent(new CustomEvent("r3char", { detail: A3.ch[(CH3[r.char] || CH3[0]).k] })); } catch (er) {} return; }
       if (e.target.closest("[data-ok]")) { close(); paint3(false); }
     });
   };
@@ -13633,9 +13635,9 @@ function homeExtra(){
   };
   window.r3Solve = sec => {
     const r = window._PQ.stats.rm, n = V3.subj, H = r.hard[n] || {}, nums = (H[sec] || []).slice();
-    const body = () => `<div class="r3-sh-h"><div><b>${esc(sec)}</b><span>Test toplusunu aç və bu sualları yenidən həll et. Həll etdiyinin üstünə bas — siyahıdan çıxacaq.</span></div></div>
-      <div class="r3-grid solve">${(H[sec] || []).map(x => `<button type="button" data-x="${x}">${x}</button>`).join("") || `<div class="r3-empty" style="grid-column:1/-1"><b>Hamısını həll etdin!</b></div>`}</div>
-      <button type="button" class="r3-primary" data-ok="1">Bağla</button>`;
+    const body = () => `<div class="r3-sh-h"><div><b>${esc(sec)}</b><span>Test toplusunu (kitabı) aç, bu sualları yenidən həll et. Bacardığın sualın yanında «Həll etdim» düyməsinə bas — sual siyahıdan çıxacaq.</span></div></div>
+      <div class="r3-sv">${(H[sec] || []).map(x => `<div class="r3-svr"><i>${x}</i><span>Sual ${x}</span><button type="button" data-x="${x}">✓ Həll etdim</button></div>`).join("") || `<div class="r3-empty"><b>Hamısını həll etdin! 🎉</b></div>`}</div>
+      <button type="button" class="r3-sec" data-ok="1">Bağla</button>`;
     sheet3(body(), (e, close, ov) => {
       const b = e.target.closest("[data-x]");
       if (b) { const x = +b.dataset.x; H[sec] = (H[sec] || []).filter(y => y !== x); if (!H[sec].length) delete H[sec]; save(); ttmSound("ok"); ttmBuzz(20); ov.querySelector(".r3-sheet").innerHTML = `<i class="r3-grab"></i>` + body(); return; }
@@ -19950,6 +19952,134 @@ body.fn-on #fn-wbtn{display:flex}
       } catch (er) { console.error(er); toast(errAz(er)); b.disabled = false; b.textContent = "Yadda saxla"; }
     }
   });
+})();
+</script>
+
+<style id="v3me-css">
+body{display:flow-root}
+html{touch-action:manipulation}
+/* test toplusu: həll pəncərəsi */
+.r3-sv{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.r3-svr{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:16px;background:#fff;box-shadow:0 4px 12px rgba(37,72,160,.07);animation:r3fade .3s ease-out both}
+.r3-svr i{width:42px;height:42px;flex:none;border-radius:13px;background:linear-gradient(160deg,#FBBF24,#F59E0B);color:#fff;display:flex;align-items:center;justify-content:center;font-style:normal;font-weight:900;font-size:16px}
+.r3-svr span{flex:1;font-weight:800;font-size:15px}
+.r3-svr button{flex:none;height:42px;padding:0 14px;border-radius:13px;border:0;background:#DCFCE7;color:#166534;font-weight:900;font-size:14px}
+.r3-sec{width:100%;height:50px;border-radius:16px;border:0;background:#EEF2FA;color:#1D3D8F;font-weight:900;font-size:16px}
+/* ana səhifə: minimalist salamlama */
+#stab-home .v2-welcome{position:relative;padding:16px 16px 16px 18px;min-height:0;align-items:center}
+#stab-home .v2-welcome .v2-datebox,#stab-home .v2-welcome .v2-welcome-sub{display:none!important}
+#stab-home .v2-welcome h3{font-size:20px;margin:0 0 4px;line-height:1.2}
+#stab-home .v2-welcome>div:first-child{padding-right:112px}
+#stab-home .v2-welcome>div:first-child *:not(h3){font-size:12.5px!important;line-height:1.45}
+#stab-home .v2-welcome #s-group-badge{margin:2px 0}
+.v3-me{position:absolute;right:14px;top:50%;transform:translateY(-50%);display:flex;align-items:flex-end}
+.v3-ph{position:relative;width:76px;height:76px;border-radius:50%;padding:3px;border:0;background:linear-gradient(135deg,#2A6FE6,#10b981);box-shadow:0 6px 16px rgba(20,80,199,.25);transition:scale .22s cubic-bezier(.34,1.56,.64,1)}
+.v3-ph:active,.v3-ch:active{scale:.92}
+.v3-ph>div{width:100%;height:100%;border-radius:50%;background:#EEF3FC center/cover no-repeat;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;color:#1450C7}
+.v3-ph>i{position:absolute;right:-2px;bottom:2px;width:24px;height:24px;border-radius:50%;background:#1450C7;border:2px solid #fff;display:flex;align-items:center;justify-content:center}
+.v3-ch{width:46px;height:46px;margin-left:-14px;border-radius:50%;border:2px solid #fff;background:#fff;padding:2px;box-shadow:0 4px 12px rgba(0,0,0,.15);transition:scale .22s cubic-bezier(.34,1.56,.64,1)}
+.v3-ch img{width:100%;height:100%;object-fit:contain;display:block}
+/* şəkil kəsmə */
+.v3-crop{position:fixed;inset:0;z-index:1100;background:rgba(9,18,45,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px;font-family:Nunito,var(--font-main);color:#fff;animation:r3fade .25s both}
+.v3-crop h3{margin:0;font-size:19px;font-weight:900}
+.v3-stage{position:relative;width:280px;height:280px;border-radius:20px;overflow:hidden;touch-action:none;background:#000;cursor:grab}
+.v3-stage img{position:absolute;left:0;top:0;transform-origin:0 0;user-select:none;-webkit-user-drag:none;pointer-events:none;max-width:none}
+.v3-stage::after{content:"";position:absolute;inset:0;border-radius:50%;box-shadow:0 0 0 400px rgba(0,0,0,.55);border:2px solid rgba(255,255,255,.9);pointer-events:none}
+.v3-cr-row{display:flex;align-items:center;gap:14px;width:280px}
+.v3-cr-row input{flex:1;accent-color:#60A5FA}
+.v3-prev{display:flex;align-items:center;gap:12px;font-size:13.5px;font-weight:700;opacity:.95}
+.v3-prev canvas{width:56px;height:56px;border-radius:50%;border:2px solid #fff;background:#223}
+.v3-cr-b{display:flex;gap:10px;width:280px}
+.v3-cr-b button{flex:1;height:50px;border-radius:15px;border:0;font-family:inherit;font-weight:900;font-size:15.5px}
+.v3-cr-b .n{background:rgba(255,255,255,.14);color:#fff}.v3-cr-b .y{background:linear-gradient(135deg,#3B82F6,#1450C7);color:#fff}
+</style>
+<script>
+/* ===== Ana səhifə: şagird şəkli (kəsmə ilə) + personaj; iki barmaqla böyütməni bağla ===== */
+(function () {
+  const $ = id => document.getElementById(id);
+  // iki barmaqla yaxınlaşdırma: tətbiqdə lazım deyil (İzah Studiyası lövhəsi istisna)
+  document.addEventListener("touchmove", e => { if (e.touches && e.touches.length > 1 && !(e.target.closest && e.target.closest("#iz-ov,.iz-ov,.v3-stage,[data-zoom-ok]"))) e.preventDefault(); }, { passive: false });
+  document.addEventListener("gesturestart", e => { if (!(e.target.closest && e.target.closest("#iz-ov,.iz-ov,.v3-stage,[data-zoom-ok]"))) e.preventDefault(); }, { passive: false });
+
+  const camSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>`;
+  let PHOTO = null, phLoaded = false;
+  function meBox() {
+    const w = document.querySelector("#stab-home .v2-welcome"); if (!w) return null;
+    let b = w.querySelector(".v3-me");
+    if (!b) {
+      w.insertAdjacentHTML("beforeend", `<div class="v3-me"><button type="button" class="v3-ph" aria-label="Profil şəklini dəyiş" onclick="v3Photo()"><div></div><i>${camSvg}</i></button><button type="button" class="v3-ch" aria-label="Personajı dəyiş" onclick="window.r3CharsAny&&r3CharsAny()"><img alt=""></button></div>`);
+      b = w.querySelector(".v3-me");
+    }
+    return b;
+  }
+  function paintMe() {
+    const b = meBox(); if (!b) return;
+    const d = b.querySelector(".v3-ph>div"), nm = ($("s-welcome-name") && $("s-welcome-name").textContent.replace(/^Xoş gəldin,?\s*/i, "").trim()) || "";
+    if (PHOTO) { d.style.backgroundImage = `url('${PHOTO}')`; d.textContent = ""; } else { d.style.backgroundImage = ""; d.textContent = (nm[0] || "🙂").toUpperCase(); }
+    if (window.r3CharImg) r3CharImg().then(src => { const im = b.querySelector(".v3-ch img"); if (im && src) im.src = src; }).catch(() => {});
+  }
+  async function loadPhoto() {
+    if (phLoaded || !window.currentStudentUid && typeof currentStudentUid === "undefined") return;
+    const uid = typeof currentStudentUid !== "undefined" ? currentStudentUid : null; if (!uid) return;
+    phLoaded = true;
+    try { const d = await db.collection("studentPhotos").doc(uid).get(); PHOTO = d.exists ? d.data().photo || null : null; } catch (e) { console.warn("şəkil:", e); phLoaded = false; }
+    paintMe();
+  }
+  document.addEventListener("r3char", e => { const im = document.querySelector(".v3-me .v3-ch img"); if (im && e.detail) im.src = e.detail; });
+  const tick = () => { if (typeof currentStudentUid !== "undefined" && currentStudentUid) { paintMe(); loadPhoto(); } };
+  setTimeout(tick, 1200); setTimeout(tick, 4000);
+  document.addEventListener("click", e => { if (e.target.closest('#s-bottom-nav [data-go="stab-home"]')) setTimeout(paintMe, 60); });
+
+  // ---------- şəkil seçmə + kəsmə ----------
+  window.v3Photo = () => {
+    const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*";
+    inp.onchange = () => { const f = inp.files && inp.files[0]; if (!f) return; const rd = new FileReader(); rd.onload = () => crop(rd.result); rd.readAsDataURL(f); };
+    inp.click();
+  };
+  window.v3Crop = src => crop(src);
+  function crop(src) {
+    const ov = document.createElement("div"); ov.className = "v3-crop";
+    ov.innerHTML = `<h3>Şəkli yerləşdir</h3><div class="v3-stage"><img alt=""></div>
+      <div class="v3-cr-row"><span>−</span><input type="range" min="1" max="4" step="0.01" value="1" aria-label="Böyüt"><span>+</span></div>
+      <div class="v3-prev"><canvas width="112" height="112"></canvas><span>Profildə belə görünəcək</span></div>
+      <div class="v3-cr-b"><button type="button" class="n">Ləğv et</button><button type="button" class="y">Yadda saxla</button></div>`;
+    document.body.appendChild(ov);
+    const st = ov.querySelector(".v3-stage"), im = st.querySelector("img"), rg = ov.querySelector("input"), pv = ov.querySelector("canvas"), S = 280;
+    const C = { z: 1, x: 0, y: 0, base: 1 };
+    const img = new Image();
+    img.onload = () => { C.base = Math.max(S / img.width, S / img.height); C.x = (S - img.width * C.base) / 2; C.y = (S - img.height * C.base) / 2; im.src = src; draw(); };
+    img.src = src;
+    function clamp() { const k = C.base * C.z, w = img.width * k, h = img.height * k; C.x = Math.min(0, Math.max(S - w, C.x)); C.y = Math.min(0, Math.max(S - h, C.y)); }
+    function draw() {
+      clamp(); const k = C.base * C.z;
+      im.style.transform = `translate(${C.x}px,${C.y}px) scale(${k})`; im.style.width = img.width + "px"; im.style.height = img.height + "px";
+      const g = pv.getContext("2d"), r = pv.width / S; g.clearRect(0, 0, pv.width, pv.height); g.save(); g.beginPath(); g.arc(pv.width / 2, pv.height / 2, pv.width / 2, 0, Math.PI * 2); g.clip(); g.drawImage(img, C.x * r, C.y * r, img.width * k * r, img.height * k * r); g.restore();
+    }
+    function zoomTo(z, cx, cy) { const k0 = C.base * C.z; C.z = Math.max(1, Math.min(4, z)); const k1 = C.base * C.z; cx = cx == null ? S / 2 : cx; cy = cy == null ? S / 2 : cy; C.x = cx - (cx - C.x) * k1 / k0; C.y = cy - (cy - C.y) * k1 / k0; rg.value = C.z; draw(); }
+    rg.oninput = () => zoomTo(+rg.value);
+    const P = new Map(); let pd = 0;
+    st.addEventListener("pointerdown", e => { st.setPointerCapture(e.pointerId); P.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (P.size === 2) { const [a, b] = [...P.values()]; pd = Math.hypot(a.x - b.x, a.y - b.y); } });
+    st.addEventListener("pointermove", e => {
+      if (!P.has(e.pointerId)) return; const prev = P.get(e.pointerId), cur = { x: e.clientX, y: e.clientY }; P.set(e.pointerId, cur);
+      if (P.size === 1) { C.x += cur.x - prev.x; C.y += cur.y - prev.y; draw(); }
+      else if (P.size === 2) { const [a, b] = [...P.values()], d = Math.hypot(a.x - b.x, a.y - b.y), r = st.getBoundingClientRect(); if (pd) zoomTo(C.z * d / pd, (a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top); pd = d; }
+    });
+    const up = e => { P.delete(e.pointerId); pd = 0; };
+    st.addEventListener("pointerup", up); st.addEventListener("pointercancel", up);
+    st.addEventListener("wheel", e => { e.preventDefault(); const r = st.getBoundingClientRect(); zoomTo(C.z * (e.deltaY < 0 ? 1.08 : 0.93), e.clientX - r.left, e.clientY - r.top); }, { passive: false });
+    const close = () => ov.remove();
+    ov.querySelector(".n").onclick = close;
+    ov.querySelector(".y").onclick = async ev => {
+      const btn = ev.currentTarget, out = document.createElement("canvas"), N = 320, r = N / S, k = C.base * C.z;
+      out.width = out.height = N; const g = out.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, N, N); g.drawImage(img, C.x * r, C.y * r, img.width * k * r, img.height * k * r);
+      let q = 0.86, data = out.toDataURL("image/jpeg", q); while (data.length > 140000 && q > 0.4) { q -= 0.1; data = out.toDataURL("image/jpeg", q); }
+      btn.disabled = true; btn.textContent = "Saxlanılır...";
+      try {
+        await db.collection("studentPhotos").doc(currentStudentUid).set({ photo: data, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        PHOTO = data; paintMe(); toast("Şəkil yadda saxlanıldı"); close();
+      } catch (e) { console.error(e); toast(errAz(e)); btn.disabled = false; btn.textContent = "Yadda saxla"; }
+    };
+  }
 })();
 </script>
 
