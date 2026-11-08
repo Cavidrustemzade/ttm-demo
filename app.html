@@ -19981,6 +19981,97 @@ select.fe-in{background-image:linear-gradient(45deg,transparent 50%,#5A6890 50%)
 .fe-pv-wh{position:absolute;left:0;top:50%;width:16px;height:74px;margin-top:-37px;border:0;border-radius:0 12px 12px 0;background:var(--fnc,#2563EB);display:flex;align-items:center;justify-content:center;padding:0;box-shadow:2px 4px 12px rgba(13,27,76,.22);z-index:2}
 .fe-pv-wh i{display:block;width:3px;height:30px;border-radius:2px;background:rgba(255,255,255,.85)}
 @media(min-width:700px){.fe-pv-f{padding-bottom:16px}.fe-pv-w{border-radius:22px}}
+/* ===== Fənlərim v3: Dərslər düyməsi, sağ panel, siyahı ===== */
+.fn-hero{align-items:center}
+.fn-hero>b{flex:1;min-width:0;font-size:16.5px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fn-dbtn{display:inline-flex;align-items:center;gap:7px;flex:none;height:42px;padding:0 12px 0 13px;border:0;border-radius:13px;background:var(--cl);color:color-mix(in srgb,var(--c) 85%,#0B1E4F);font-family:inherit;font-weight:900;font-size:15px;transition:scale .2s;-webkit-tap-highlight-color:transparent}
+.fn-dbtn:active{scale:.95}
+.fn-dbtn em{font-style:normal;font-size:20px;line-height:1;margin-left:2px}
+.fn-cat span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fn-cat{font-size:16px}
+.fn-body{display:flex;flex-direction:column;gap:12px}
+.fn-tree{display:flex;flex-direction:column;gap:10px}
+.fn-tree h5{margin:6px 2px 0}
+.fn-sec{margin:0}
+.fn-sh{display:flex;align-items:center;gap:8px;padding:13px 14px 9px}
+.fn-sh b{font-size:15.5px;flex:none;max-width:60%}
+.fn-sh small{flex:1;margin:0;font-size:12px;text-align:right}
+.fn-sb>div{padding:0 6px 6px}
+.fn-li{border-radius:13px;transition:background .2s}
+.fn-li+.fn-li{margin-top:2px}
+.fn-li.on{background:var(--cl)}
+.fn-li .fn-row{padding:9px 8px}
+.fn-li .fn-row:active{scale:1;background:rgba(13,27,76,.04)}
+.fn-li.on .fn-row b{color:color-mix(in srgb,var(--c) 80%,#0B1E4F)}
+.fn-li .fn-row b{white-space:normal;overflow-wrap:anywhere;font-size:14.5px;line-height:1.25}
+.fn-li .fn-row em{transition:transform .25s}
+.fn-li.op .fn-row em{transform:rotate(90deg);color:var(--c)}
+.fn-li .fn-ki.sm{border-radius:50%}
+.fn-li .fn-ki[style*="#2563EB"]{background:var(--c);color:#fff}
+.fn-pv-in{padding:0 6px 8px;animation:fnIn .3s cubic-bezier(.22,1,.36,1) both}
+.fn-pv-in .ts-vid{margin:0;max-width:640px}
+.fn-pv-in .fn-oz{box-shadow:none;padding:6px 6px 10px;animation:none;background:transparent}
+.fn-list{gap:8px}
+.fn-list .fn-li{background:#fff;box-shadow:0 3px 10px rgba(13,27,76,.06)}
+.fn-list .fn-li.on{background:#fff}
+.fn-tp-ov{position:fixed;inset:0;z-index:1250}
+.fn-tp-ov .dim{position:absolute;inset:0;border:0;background:rgba(13,27,76,0);transition:background .3s;backdrop-filter:blur(0);-webkit-backdrop-filter:blur(0)}
+.fn-tp-ov.on .dim{background:rgba(13,27,76,.38);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+.fn-tp{position:absolute;top:0;right:0;bottom:0;width:min(86vw,420px);background:#fff;border-radius:26px 0 0 26px;box-shadow:-12px 0 40px rgba(13,27,76,.22);display:flex;flex-direction:column;padding:calc(16px + env(safe-area-inset-top)) 16px 0;transform:translateX(105%);transition:transform .34s cubic-bezier(.22,1,.36,1);font-family:Nunito,var(--font-main);color:#0D1B4C}
+.fn-tp-ov.on .fn-tp{transform:none}
+.fn-tp-h{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
+.fn-tp-h>div{flex:1;min-width:0}
+.fn-tp-h b{display:block;font-size:24px;font-weight:900;line-height:1.1}
+.fn-tp-h small{display:block;font-size:16px;font-weight:800;color:#5A6890;margin-top:2px}
+.fn-tp-x{width:44px;height:44px;border:0;border-radius:14px;background:#EEF2FA;color:#0D1B4C;font-size:18px;font-weight:900;flex:none}
+.fn-tp-s{display:flex;align-items:center;gap:10px;height:48px;padding:0 14px;border-radius:15px;background:#fff;border:1.5px solid #E1E7F2;box-shadow:0 3px 10px rgba(13,27,76,.05);margin-bottom:12px;color:#0D1B4C}
+.fn-tp-s input{flex:1;min-width:0;border:0;outline:0;background:none;font-family:inherit;font-size:16px;font-weight:700;color:#0D1B4C}
+.fn-tp-l{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:2px 2px calc(20px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px}
+.fn-tp-l button{display:flex;align-items:center;gap:12px;width:100%;padding:9px 12px 9px 9px;border:0;border-radius:16px;background:#F7F9FD;font-family:inherit;text-align:left;color:#0D1B4C;transition:background .2s,scale .2s;flex:none}
+.fn-tp-l button[hidden]{display:none}
+.fn-tp-l button:active{scale:.98}
+.fn-tp-l button.on{background:var(--fncl,#E3ECFD)}
+.fn-tp-l .no{width:44px;height:44px;border-radius:13px;background:color-mix(in srgb,var(--fnc,#2563EB) 18%,#fff);color:color-mix(in srgb,var(--fnc,#2563EB) 80%,#0B1E4F);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;flex:none}
+.fn-tp-l button.on .no{background:var(--fnc,#2563EB);color:#fff}
+.fn-tp-l .tx{flex:1;min-width:0}
+.fn-tp-l b{display:block;font-size:15.5px;font-weight:900;line-height:1.25;overflow-wrap:anywhere}
+.fn-tp-l small{display:block;font-size:12px;font-weight:700;color:#5A6890;margin-top:1px}
+.fn-tp-l em{font-style:normal;font-size:22px;color:#9AA6C4;font-weight:700}
+.fn-tp-l button.on em{color:var(--fnc,#2563EB)}
+.fn-tp-0{text-align:center;color:#5A6890;padding:20px;font-weight:700}
+@media(min-width:760px){.fn-body{align-items:stretch;max-width:820px;width:100%;margin:0 auto}.fn-body .fn-tree{position:static;max-height:none;overflow:visible}}
+/* müəllim: sadə əlavə düymələri */
+.fn-cat,.fn-row{scroll-margin-top:84px}
+.fe-qa{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-top:10px}
+.fe-qa button{display:flex;align-items:center;justify-content:center;gap:8px;height:52px;padding:0 12px;border-radius:15px;border:0;font-family:inherit;font-weight:900;font-size:15.5px;transition:scale .2s;-webkit-tap-highlight-color:transparent}
+.fe-qa button:active{scale:.95}
+.fe-qa .v{background:#2563EB;color:#fff;box-shadow:0 6px 14px rgba(37,99,235,.28)}
+.fe-qa .h{background:#FEF3C7;color:#92400E}
+.fe-qa .o{background:#EEF2FA;color:#1D3D8F}
+.fe-qa .v .fn-ki{background:rgba(255,255,255,.22);color:#fff}
+.fe-qa .h .fn-ki{background:#fff}
+.fe-qa .fn-ki.sm{width:28px;height:28px;border-radius:9px}
+.fe-qa .pl{font-size:22px;line-height:1}
+.fe-url{display:flex;gap:8px}
+.fe-url .fe-in{flex:1;min-width:0}
+.fe-paste{flex:none;padding:0 14px;border:0;border-radius:12px;background:#1450C7;color:#fff;font-family:inherit;font-weight:900;font-size:14px}
+.fe-paste:active{scale:.95}
+.fe-yt{display:flex;align-items:center;gap:10px;margin-top:8px;padding:6px;border-radius:12px;background:#ECFDF5;animation:fnIn .3s both}
+.fe-yt img{width:96px;height:54px;border-radius:9px;object-fit:cover;background:#DCE4F3}
+.fe-yt span{color:#047857;font-weight:900;font-size:14px}
+.fe-more{margin-top:12px}
+.fe-more summary{cursor:pointer;color:#1450C7;font-weight:800;font-size:13.5px;list-style:none;padding:4px 2px}
+.fe-more summary::-webkit-details-marker{display:none}
+.fe-more summary::before{content:"+ "}
+.fe-more[open] summary::before{content:"− "}
+.fe-tests{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;padding:2px;border-radius:14px}
+.fe-tests.bad{box-shadow:0 0 0 2px #EF4444}
+.fe-tests button{display:flex;align-items:center;gap:10px;padding:12px;border-radius:13px;border:1.5px solid #E1E7F2;background:#fff;font-family:inherit;text-align:left;color:#0D1B4C;flex:none}
+.fe-tests button.on{border-color:#2563EB;background:#EEF5FF}
+.fe-tests b{font-size:14.5px;font-weight:800;flex:1;min-width:0}
+.fe-tests .rd{width:22px;height:22px;border-radius:50%;border:2px solid #C3CEE3;flex:none;position:relative}
+.fe-tests button.on .rd{border-color:#2563EB}
+.fe-tests button.on .rd::after{content:"";position:absolute;inset:3px;border-radius:50%;background:#2563EB}
 </style>
 <div id="fn-bg-holder"></div>
 <script>
@@ -20070,7 +20161,7 @@ select.fe-in{background-image:linear-gradient(45deg,transparent 50%,#5A6890 50%)
   const secMeta = items => { const v = items.filter(i => i.k === "v").length, h = items.filter(i => i.k === "h").length, o = items.length - v - h; return [v ? v + " dərs" : "", o ? o + " material" : "", h ? h + " tapşırıq" : ""].filter(Boolean).join(" · ") || "Boşdur"; };
 
   const FN = { tid: null, t: 0, cat: "l", cur: null, closed: {} }, CRS = {}, CRSV = {};
-  const FNCTX = { st: FN, tops: [], render: () => fnRender(), preview: false };
+  const FNCTX = { st: FN, tops: [], render: () => fnRender(), preview: false, subj: () => FNCTX._subj || "", root: () => $("fn-root") };
   const fnIsOn = () => { const p = $("stab-fenler"); return p && p.classList.contains("active"); };
   function fnOn(on) { document.body.classList.toggle("fn-on", !!on); if (on) { fnRender(); } }
   // şagird: müəllimin dərsləri canlı izlənir (müəllim yadda saxlayan kimi yenilənir)
@@ -20095,18 +20186,19 @@ select.fe-in{background-image:linear-gradient(45deg,transparent 50%,#5A6890 50%)
   const icT = sub => { try { return (v2Icon(sub || "") || {}).t || "📘"; } catch (e) { return "📘"; } };
 
   // ---- şagird görünüşü (həm şagird paneli, həm də müəllimin «Şagird kimi bax» önizləməsi bunu istifadə edir) ----
+  // material məzmunu (sətir açılanda altında görünür)
   function fnPlayer(f) {
     if (!f) return "";
-    const it = f.it, K = KT[it.k] || KT.x, ttl = esc(itTitle(it));
-    const head = `<div class="fn-pl-h">${kIco(it.k)}<div><b>${ttl}</b><small style="color:${K.c}">${K.n}</small></div></div>`;
-    if (K.vid) { const id = ytOf(it.u); return `<div class="fn-pl" data-key="${f.key}">${head}${id ? ttmSol.card(id, (window.ttmSol && ttmSol.tsec(it.s)) || 0, "Videoya bax") : `<div class="fn-empty">Video linki düzgün deyil</div>`}</div>`; }
-    if (it.k === "o") { const id = ytOf(it.u); return `<div class="fn-pl" data-key="${f.key}">${head}<div class="fn-oz">${esc(it.x || "").replace(/\n/g, "<br>")}</div>${id ? ttmSol.card(id, (window.ttmSol && ttmSol.tsec(it.s)) || 0, "Videoya bax") : ""}</div>`; }
-    if (it.k === "h") return `<div class="fn-pl" data-key="${f.key}">${head}<div class="fn-task"><p>${it.ex ? `Test: <b>${esc(it.exT || "Test")}</b>` : "Tapşırıq linki"}</p><button type="button" class="fn-go" data-fn="hw" data-key="${f.key}">Tapşırığı aç ›</button></div></div>`;
-    return `<div class="fn-pl" data-key="${f.key}">${head}<div class="fn-task">${it.x ? `<p>${esc(it.x).replace(/\n/g, "<br>")}</p>` : ""}<button type="button" class="fn-go" data-fn="hw" data-key="${f.key}">Materialı aç ›</button></div></div>`;
+    const it = f.it, K = KT[it.k] || KT.x;
+    if (K.vid) { const id = ytOf(it.u); return id ? ttmSol.card(id, (window.ttmSol && ttmSol.tsec(it.s)) || 0, "Videoya bax") : `<div class="fn-empty">Video linki düzgün deyil</div>`; }
+    if (it.k === "o") { const id = ytOf(it.u); return `<div class="fn-oz">${esc(it.x || "").replace(/\n/g, "<br>")}</div>${id ? ttmSol.card(id, (window.ttmSol && ttmSol.tsec(it.s)) || 0, "Videoya bax") : ""}`; }
+    if (it.k === "h") return `<div class="fn-task"><p>${it.ex ? `Test: <b>${esc(it.exT || "Test")}</b>` : "Tapşırığı açmaq üçün düyməyə bas"}</p><button type="button" class="fn-go" data-fn="hw" data-key="${f.key}">Tapşırığı aç ›</button></div>`;
+    return `<div class="fn-task">${it.x ? `<p>${esc(it.x).replace(/\n/g, "<br>")}</p>` : ""}<button type="button" class="fn-go" data-fn="hw" data-key="${f.key}">Materialı aç ›</button></div>`;
   }
-  function fnRow(f, cur) {
-    const it = f.it, K = KT[it.k] || KT.x, id = K.vid ? ytOf(it.u) : null;
-    return `<button type="button" class="fn-row${cur && cur.key === f.key ? " on" : ""}" data-fn="item" data-key="${f.key}">${id ? `<span class="fn-th"><img src="https://i.ytimg.com/vi/${id}/mqdefault.jpg" alt="" loading="lazy"><i></i></span>` : kIco(it.k)}<span class="tx"><b>${esc(itTitle(it))}</b><small style="color:${K.c}">${K.n}</small></span><em>›</em></button>`;
+  // bir sətir: ikon + ad; açıq olanda altında video / tapşırıq
+  function fnRow(f, cur, open) {
+    const it = f.it, K = KT[it.k] || KT.x, on = cur && cur.key === f.key, op = on && open;
+    return `<div class="fn-li${on ? " on" : ""}${op ? " op" : ""}"><button type="button" class="fn-row" data-fn="item" data-key="${f.key}" aria-expanded="${op}">${kIco(it.k, 1)}<span class="tx"><b>${esc(itTitle(it))}</b>${it.k !== "v" ? `<small style="color:${K.c}">${K.n}</small>` : ""}</span><em>›</em></button>${op ? `<div class="fn-pv-in">${fnPlayer(f)}</div>` : ""}</div>`;
   }
   function fnBody(tops, st) {
     if (!tops.length) return `<div class="fn-empty"><b>Dərslər hələ əlavə olunmayıb</b>Müəllimin dərsləri əlavə edəndə burada görünəcək.</div>`;
@@ -20116,27 +20208,50 @@ select.fe-in{background-image:linear-gradient(45deg,transparent 50%,#5A6890 50%)
     const cat = CATS.find(c => c[0] === st.cat) || CATS[0];
     const inCat = f => cat[0] === "l" || (KT[f.it.k] || {}).cat === cat[0];
     let cur = flat.find(f => f.key === st.cur);
-    if (!cur || !inCat(cur)) { cur = flat.find(f => inCat(f) && (KT[f.it.k] || {}).vid) || flat.find(inCat) || null; st.cur = cur ? cur.key : null; }
-    const chips = `<div class="fn-topics">${tops.map((t, i) => `<button type="button" class="${i === st.t ? "on" : ""}" data-fn="topic" data-i="${i}">${esc(t.n || "Mövzu")}</button>`).join("")}</div>`;
-    const capRow = `<div class="fn-cat" style="--cc:${cat[2]}"><i></i>${esc(T.n || "")} · ${cat[1]}${cat[0] !== "l" ? `<button type="button" data-fn="cat" data-c="l">Dərslərə qayıt</button>` : `<button type="button" data-fn="wheel">◐ Çarx</button>`}</div>`;
+    if (st.cur !== "-" && (!cur || !inCat(cur))) { cur = flat.find(f => inCat(f) && (KT[f.it.k] || {}).vid) || flat.find(inCat) || null; st.cur = cur ? cur.key : null; }
+    const capRow = `<div class="fn-cat" style="--cc:${cat[2]}"><i></i><span>${esc(T.n || "")} · ${cat[1]}</span>${cat[0] !== "l" ? `<button type="button" data-fn="cat" data-c="l">Dərslərə qayıt</button>` : ""}</div>`;
+    const secHTML = (s, si, L, open) => { const cl = !!st.closed[si];
+      return `<div class="fn-sec${cl ? " cl" : ""}"><button type="button" class="fn-sh" data-fn="sec" data-si="${si}" aria-expanded="${!cl}"><b>${esc(s.n || ord(si + 1) + " bölmə")}</b><small>${secMeta(s.items)}</small><svg class="chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button><div class="fn-sb"><div>${L.length ? L.map(f => fnRow(f, cur, open)).join("") : `<div class="fn-none">Bu bölmədə hələ material yoxdur</div>`}</div></div></div>`; };
     let main;
     if (!flat.length) main = `<div class="fn-empty">Bu mövzuda hələ material yoxdur.</div>`;
     else if (cat[0] !== "l") {
       const L = flat.filter(inCat);
-      main = L.length ? fnPlayer(cur) + (L.length > 1 ? `<div class="fn-list">${L.map(f => fnRow(f, cur)).join("")}</div>` : "") : `<div class="fn-empty">Bu mövzuda «${cat[1]}» hələ yoxdur.<br>Soldakı çarxdan başqa bölmə seç.</div>`;
-    } else main = fnPlayer(cur);
-    const tree = secs.length ? secs.map((s, si) => { const cl = !!st.closed[si]; const L = flat.filter(f => f.si === si);
-      return `<div class="fn-sec${cl ? " cl" : ""}"><button type="button" class="fn-sh" data-fn="sec" data-si="${si}" aria-expanded="${!cl}"><span class="tx"><b>${esc(s.n || ord(si + 1) + " bölmə")}</b><small>${secMeta(s.items)}</small></span><svg class="chev" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button><div class="fn-sb"><div>${L.length ? L.map(f => fnRow(f, cur)).join("") : `<div class="fn-none">Bu bölmədə hələ material yoxdur</div>`}</div></div></div>`; }).join("") : "";
-    const treeBox = tree ? `<div class="fn-tree"><h5>${cat[0] !== "l" ? "Dərslər" : "Dərs planı"} <small>${secs.length} bölmə · ${flat.length} material</small></h5>${tree}</div>` : "";
-    return `${chips}<div class="fn-body"><div class="fn-main">${capRow}${main}</div>${treeBox}</div>`;
+      main = (L.length ? `<div class="fn-list">${L.map(f => fnRow(f, cur, true)).join("")}</div>` : `<div class="fn-empty">Bu mövzuda «${cat[1]}» hələ yoxdur.<br>Soldakı çarxdan başqa bölmə seç.</div>`)
+        + `<div class="fn-tree"><h5>Dərslər</h5>${secs.map((s, si) => secHTML(s, si, flat.filter(f => f.si === si), false)).join("")}</div>`;
+    } else main = `<div class="fn-tree">${secs.map((s, si) => secHTML(s, si, flat.filter(f => f.si === si), true)).join("")}</div>`;
+    return `<div class="fn-body">${capRow}${main}</div>`;
   }
   function fnPageHTML(o) {
-    const tops = o.tops || [], nV = tops.reduce((a, t) => a + fnSecs(t).reduce((b, s) => b + (s.items || []).filter(i => vis(i) && i.k === "v").length, 0), 0);
+    const tops = o.tops || [];
     return `<div class="fn" style="--c:${o.C};--cl:color-mix(in srgb,${o.C} 14%,#fff)"><div class="fn-bg"></div>
       <div class="fn-head"><h1>Fənlərim</h1>${o.join || ""}</div>
       <div class="fn-tch">${o.tch}</div>
-      <div class="fn-hero"><div class="ic">${icT(o.subj)}</div><div style="min-width:0"><b>${esc(o.subj)}</b><span>${esc(o.tname)} · ${tops.length} mövzu · ${nV} dərs</span></div></div>
+      <div class="fn-hero"><div class="ic">${icT(o.subj)}</div><b>${esc(o.subj)}</b>${tops.length ? `<button type="button" class="fn-dbtn" data-fn="tpanel"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h7a3 3 0 0 1 3 3v14a2 2 0 0 0-2-2H2zM22 4h-7a3 3 0 0 0-3 3v14a2 2 0 0 1 2-2h8z"/></svg>Dərslər<em>›</em></button>` : ""}</div>
       ${fnBody(tops, o.st)}</div>`;
+  }
+  // sağdan açılan mövzular pəncərəsi
+  function fnTopicPanel(ctx) {
+    if (document.querySelector(".fn-tp-ov")) return;
+    const tops = ctx.tops || [], subj = ctx.subj ? ctx.subj() : "";
+    const m = document.createElement("div"); m.className = "fn-tp-ov";
+    const cnt = t => { const it = fnSecs(t).reduce((a, s) => a.concat((s.items || []).filter(vis)), []); return secMeta(it); };
+    m.innerHTML = `<button type="button" class="dim" aria-label="Bağla"></button><div class="fn-tp" role="dialog" aria-label="Mövzular"><div class="fn-tp-h"><div><b>${esc(subj || "Mövzular")}</b><small>Mövzular (${tops.length})</small></div><button type="button" class="fn-tp-x" aria-label="Bağla">✕</button></div>
+      ${tops.length > 5 ? `<label class="fn-tp-s"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input type="search" placeholder="Mövzu axtar..." aria-label="Mövzu axtar"></label>` : ""}
+      <div class="fn-tp-l">${tops.map((t, i) => `<button type="button" class="${i === ctx.st.t ? "on" : ""}" data-i="${i}" data-q="${esc(String(t.n || "").toLocaleLowerCase("az"))}"><span class="no">${String(i + 1).padStart(2, "0")}</span><span class="tx"><b>${esc(t.n || "Mövzu")}</b><small>${cnt(t)}</small></span><em>›</em></button>`).join("")}<div class="fn-tp-0" hidden>Belə mövzu tapılmadı</div></div></div>`;
+    (ctx.preview ? document.body : document.body).appendChild(m);
+    requestAnimationFrame(() => m.classList.add("on"));
+    const on = m.querySelector("button.on"); if (on) setTimeout(() => on.scrollIntoView({ block: "center" }), 30);
+    const close = () => { m.classList.remove("on"); setTimeout(() => m.remove(), 300); };
+    m.addEventListener("click", e => {
+      if (e.target.closest(".dim,.fn-tp-x")) { close(); return; }
+      const b = e.target.closest("[data-i]"); if (!b) return;
+      const i = +b.dataset.i; try { navigator.vibrate && navigator.vibrate(10); } catch (er) {}
+      if (i !== ctx.st.t) { ctx.st.t = i; ctx.st.cat = "l"; ctx.st.cur = null; ctx.st.closed = {}; ctx.render(); }
+      close();
+      setTimeout(() => { const r = ctx.root && ctx.root(); const c = r && r.querySelector(".fn-cat"); if (c) c.scrollIntoView({ behavior: "smooth", block: "start" }); }, 60);
+    });
+    const inp = m.querySelector("input");
+    if (inp) inp.addEventListener("input", () => { const q = inp.value.trim().toLocaleLowerCase("az"); let n = 0; m.querySelectorAll(".fn-tp-l [data-i]").forEach(b => { const ok = !q || b.dataset.q.includes(q); b.hidden = !ok; if (ok) n++; }); m.querySelector(".fn-tp-0").hidden = n > 0; });
   }
   const tchBtn = (tid, p, s, on, click) => { const nm = p.fullName || (s && s.teacherName) || "Müəllim", sj = p.subject || (s && s.subject) || "", c = col(sj);
     return `<button type="button" class="fn-t${on ? " on" : ""}" style="--c:${c}" ${click}><div class="ph"><div style="${p.photo ? `background-image:url('${p.photo}')` : `background:${c}`}">${p.photo ? "" : esc((nm.trim()[0] || "M").toUpperCase())}</div></div><b>${esc(nm.split(" ")[0])}</b><small>${esc(sj)}</small></button>`; };
@@ -20151,12 +20266,12 @@ select.fe-in{background-image:linear-gradient(45deg,transparent 50%,#5A6890 50%)
     if (!FN.tid || !subs.some(s => s.teacherId === FN.tid)) { FN.tid = subs[0].teacherId; FN.t = 0; FN.cat = "l"; FN.cur = null; FN.closed = {}; }
     const cur = subs.find(s => s.teacherId === FN.tid), P = v2Profiles[FN.tid] || {}, subj = P.subject || cur.subject || "Fənn", C = col(subj);
     const tops = await course(FN.tid); if (tok !== fnTok) return;
-    document.documentElement.style.setProperty("--fnc", C);
+    document.documentElement.style.setProperty("--fnc", C); document.documentElement.style.setProperty("--fncl", `color-mix(in srgb,${C} 14%,#fff)`);
     const tch = subs.map(s => tchBtn(s.teacherId, v2Profiles[s.teacherId] || {}, s, s.teacherId === FN.tid, `onclick="fnPick('${s.teacherId}')"`)).join("");
     root.setAttribute("data-fnroot", "");
     root.__fn = FNCTX;
     root.innerHTML = fnPageHTML({ C, tch, subj, tname: P.fullName || cur.teacherName || "Müəllim", tops, st: FN, join: `<button type="button" class="fn-join" onclick="v2Tab('stab-teachers')">+ Müəllim</button>` });
-    FNCTX.tops = tops;
+    FNCTX.tops = tops; FNCTX._subj = subj;
     try { ttmTeX(root); } catch (e) {}
     ensureWheelBtn();
   }
@@ -20185,10 +20300,13 @@ select.fe-in{background-image:linear-gradient(45deg,transparent 50%,#5A6890 50%)
     const b = e.target.closest("[data-fn]"); if (!b) return;
     const root = b.closest("[data-fnroot]"), ctx = root && root.__fn; if (!ctx) return;
     const st = ctx.st, a = b.dataset.fn;
-    if (a === "topic") { const i = +b.dataset.i; if (i === st.t) return; st.t = i; st.cat = "l"; st.cur = null; st.closed = {}; ctx.render(); }
+    if (a === "tpanel") fnTopicPanel(ctx);
     else if (a === "item") {
-      st.cur = b.dataset.key; ctx.render();
-      setTimeout(() => { const pl = root.querySelector(".fn-pl"); if (pl) { const r = pl.getBoundingClientRect(), vh = (ctx.preview ? root.getBoundingClientRect().bottom : window.innerHeight); if (r.top < 70 || r.top > vh - 120) pl.scrollIntoView({ behavior: "smooth", block: "start" }); } }, 30);
+      const k = b.dataset.key, inTree = !!b.closest(".fn-tree"), filtered = st.cat !== "l";
+      if (filtered && inTree) { st.cat = "l"; st.cur = k; }
+      else st.cur = st.cur === k ? "-" : k;
+      ctx.render();
+      setTimeout(() => { const r = root.querySelector(`.fn-li.op .fn-row[data-key="${k}"]`); if (!r) return; const rr = r.getBoundingClientRect(), vh = ctx.preview ? root.getBoundingClientRect().bottom : window.innerHeight; if (rr.top < 70 || rr.top > vh * 0.45) r.scrollIntoView({ behavior: "smooth", block: "start" }); }, 30);
     }
     else if (a === "sec") { const si = +b.dataset.si; st.closed[si] = !st.closed[si]; const s = b.closest(".fn-sec"); s.classList.toggle("cl", !!st.closed[si]); b.setAttribute("aria-expanded", String(!st.closed[si])); }
     else if (a === "cat") { st.cat = b.dataset.c; st.cur = null; ctx.render(); }
@@ -20286,7 +20404,7 @@ select.fe-in{background-image:linear-gradient(45deg,transparent 50%,#5A6890 50%)
               <button type="button" class="fe-ib g" data-act="smenu" data-si="${si}" aria-label="Bölmə əməliyyatları">⋯</button></div>
             <div class="fe-sb"><div class="fe-sbi"><div class="fe-il" data-si="${si}">${s.items.map((it, ii) => { const K = KT[it.k] || KT.x, ek = "i" + si + "-" + ii;
               return `<div class="fe-it${F.err[ek] ? " bad" : ""}${it.hid ? " hid" : ""}" data-si="${si}" data-ii="${ii}"><span class="fe-drag" aria-label="Sürüşdür" title="Sıranı dəyişmək üçün sürüşdür"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></span>${kIco(it.k, 1)}<button type="button" class="tx" data-act="iedit" data-si="${si}" data-ii="${ii}"><b>${esc(itTitle(it))}</b><small><span style="color:${K.c}">${K.n}</span>${it.hid ? ' · <span class="fe-hb">Gizli</span>' : ""}</small>${F.err[ek] ? `<span class="fe-err">${esc(F.err[ek])}</span>` : ""}</button><button type="button" class="fe-ib g sm" data-act="iedit" data-si="${si}" data-ii="${ii}" aria-label="Redaktə et"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button><button type="button" class="fe-ib x sm" data-act="idel" data-si="${si}" data-ii="${ii}" aria-label="Sil"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button></div>`; }).join("") || `<div class="fe-none">Bu bölmə boşdur — material əlavə et</div>`}</div>
-            <button type="button" class="fe-add" data-act="iadd" data-si="${si}">+ Bu bölməyə material əlavə et</button></div></div></div>`; }).join("")}
+            <div class="fe-qa"><button type="button" class="v" data-act="qv" data-si="${si}"><span>${kIco("v", 1)}</span>Video</button><button type="button" class="h" data-act="qh" data-si="${si}"><span>${kIco("h", 1)}</span>Tapşırıq</button><button type="button" class="o" data-act="iadd" data-si="${si}"><span class="pl">+</span>Digər</button></div></div></div></div>`; }).join("")}
         <button type="button" class="fe-add big dark" data-act="sadd">+ Yeni bölmə yarat</button>`;
     }
     F.ov.innerHTML = `<div class="fe">${h}</div>`;
@@ -20331,29 +20449,36 @@ select.fe-in{background-image:linear-gradient(45deg,transparent 50%,#5A6890 50%)
     const uid = FE && FE.uid; const mine = L.filter(x => !x.teacherId || x.teacherId === uid);
     return (mine.length ? mine : L).map(x => ({ id: x.id, t: x.title || "Test" }));
   }
-  function feSheet(si, ii) {
+  function feSheet(si, ii, kind) {
     const F = FE, t = F.tops[F.ti], s = t.sec[si], editing = ii != null;
     const D = editing ? deep(s.items[ii]) : { k: null, t: "", u: "", s: "", x: "", ex: "", hid: false };
+    const only = kind === "*" ? ["d", "i", "c", "o", "x"] : KORD;
+    // yeni material üçün ad özü yazılır (müəllim dəyişə bilər)
+    const autoName = k => { if (k === "v") return (s.items.filter(i => i.k === "v").length + 1) + ". Dərs"; if (k === "h") { const c = s.items.filter(i => i.k === "h").length; return "Ev tapşırığı " + (si + 1) + (c ? "ABCDEFGHIJ"[c] : ""); } return k === "x" ? "" : KT[k].n; };
+    const pick = k => { D.k = k; if (!editing && !D.t) D.t = autoName(k); if (k === "h") src = "t"; };
     let src = D.ex ? "t" : (D.k === "h" && D.u ? "u" : "t");
+    if (kind && kind !== "*" && !editing) pick(kind);
     const m = document.createElement("div"); m.className = "fe-sheet-ov";
     document.body.appendChild(m);
     const err = {};
     const field = (lb, f, ph, extra) => `<label class="fe-lb">${lb}</label><input class="fe-in${err[f] ? " bad" : ""}" data-sf="${f}" placeholder="${esc(ph || "")}" value="${esc(D[f] || "")}" ${extra || ""}>${err[f] ? `<div class="fe-err">${esc(err[f])}</div>` : ""}`;
+    const ytPrev = u => { const id = ytOf(u); return id ? `<div class="fe-yt"><img src="https://i.ytimg.com/vi/${id}/mqdefault.jpg" alt=""><span>✓ Video tapıldı</span></div>` : ""; };
+    const urlField = lb => `<label class="fe-lb">${lb}</label><div class="fe-url"><input class="fe-in${err.u ? " bad" : ""}" data-sf="u" placeholder="Linki bura yapışdırın" value="${esc(D.u || "")}" inputmode="url" autocomplete="off"><button type="button" class="fe-paste" data-paste>Yapışdır</button></div>${err.u ? `<div class="fe-err">${esc(err.u)}</div>` : ""}<div class="fe-ytb">${ytPrev(D.u)}</div>`;
     function form() {
       const K = KT[D.k], tests = feTests();
       let f = "";
-      if (K.vid) f = field("Video adı", "t", D.k === "v" ? "Məs. " + (s.items.filter(i => i.k === "v").length + (editing ? 0 : 1)) + ". Dərs" : "Məs. " + K.n) + field("YouTube linki", "u", "https://youtu.be/...", 'inputmode="url" autocomplete="off"') + field("Başlama vaxtı <span>(istəyə bağlı)</span>", "s", "Məs. 2:30", 'inputmode="numeric"');
+      if (K.vid) f = urlField("YouTube linki") + field("Video adı", "t", "Məs. " + K.n) + `<details class="fe-more"${D.s || err.s ? " open" : ""}><summary>Videonu müəyyən dəqiqədən başlat</summary>${field("Başlama vaxtı", "s", "Məs. 2:30", 'inputmode="numeric"')}</details>`;
       else if (D.k === "o") f = field("Adı", "t", "Qısa xülasə") + `<label class="fe-lb">Xülasə mətni</label><textarea class="fe-in${err.x ? " bad" : ""}" data-sf="x" rows="6" placeholder="Əsas qaydalar, düsturlar ($...$ ilə)">${esc(D.x || "")}</textarea>${err.x ? `<div class="fe-err">${esc(err.x)}</div>` : ""}` + field("Video linki <span>(istəyə bağlı)</span>", "u", "https://youtu.be/...", 'inputmode="url"');
-      else if (D.k === "h") f = field("Tapşırığın adı", "t", "Məs. Ev tapşırığı 1A") + `<label class="fe-lb">Tapşırıq</label><div class="fe-seg"><button type="button" class="${src === "t" ? "on" : ""}" data-src="t">Testdən seç</button><button type="button" class="${src === "u" ? "on" : ""}" data-src="u">Link</button></div>` +
-        (src === "t" ? (tests.length ? `<select class="fe-in${err.ex ? " bad" : ""}" data-sf="ex"><option value="">— Test seçin —</option>${tests.map(x => `<option value="${esc(x.id)}"${x.id === D.ex ? " selected" : ""}>${esc(x.t)}</option>`).join("")}${D.ex && !tests.some(x => x.id === D.ex) ? `<option value="${esc(D.ex)}" selected>${esc(D.exT || "Test")}</option>` : ""}</select>${err.ex ? `<div class="fe-err">${esc(err.ex)}</div>` : ""}<div class="fe-hint">Şagird bu testi yalnız ona təyin olunubsa aça bilər (Sınaqlar bölməsindən qrupa təyin edin).</div>` : `<div class="fe-hint">Hələ testiniz yoxdur. «Sınaqlar» bölməsində test yaradın və ya «Link» seçin.</div>${err.ex ? `<div class="fe-err">${esc(err.ex)}</div>` : ""}`)
-          : field("Materialın linki", "u", "https://...", 'inputmode="url"'));
+      else if (D.k === "h") f = `<label class="fe-lb">Tapşırıq</label><div class="fe-seg"><button type="button" class="${src === "t" ? "on" : ""}" data-src="t">Testdən seç</button><button type="button" class="${src === "u" ? "on" : ""}" data-src="u">Link</button></div>` +
+        (src === "t" ? (tests.length ? `<div class="fe-tests${err.ex ? " bad" : ""}">${tests.concat(D.ex && !tests.some(x => x.id === D.ex) ? [{ id: D.ex, t: D.exT || "Test" }] : []).map(x => `<button type="button" data-ex="${esc(x.id)}" class="${x.id === D.ex ? "on" : ""}"><span class="rd"></span><b>${esc(x.t)}</b></button>`).join("")}</div>${err.ex ? `<div class="fe-err">${esc(err.ex)}</div>` : ""}<div class="fe-hint">Şagird testi yalnız ona təyin olunubsa aça bilər.</div>` : `<div class="fe-hint">Hələ testiniz yoxdur. «Sınaqlar» bölməsində test yaradın və ya «Link» seçin.</div>${err.ex ? `<div class="fe-err">${esc(err.ex)}</div>` : ""}`)
+          : field("Materialın linki", "u", "https://...", 'inputmode="url"')) + field("Tapşırığın adı", "t", "Məs. Ev tapşırığı 1A");
       else f = field("Materialın adı", "t", "Məs. Əlavə test (PDF)") + field("Link", "u", "https://...", 'inputmode="url"') + `<label class="fe-lb">Qeyd <span>(istəyə bağlı)</span></label><textarea class="fe-in" data-sf="x" rows="3" placeholder="Şagird üçün qısa izah">${esc(D.x || "")}</textarea>`;
       f += `<label class="fe-sw"><input type="checkbox" data-sf="vis"${D.hid ? "" : " checked"}><i></i><span>Şagirdə görünsün</span></label>`;
       return f;
     }
     function draw() {
       if (!D.k) {
-        m.innerHTML = `<div class="fe-sheet"><div class="fe-sh-h"><b>Material əlavə et</b><button type="button" class="fe-ib g" data-x aria-label="Bağla">✕</button></div><p class="fe-hint" style="margin:0 0 10px">«${esc(s.n || "Bölmə")}» bölməsinə nə əlavə edirsiniz?</p><div class="fe-kg">${KORD.map(k => `<button type="button" data-k="${k}">${kIco(k)}<b>${KT[k].n}</b></button>`).join("")}</div></div>`;
+        m.innerHTML = `<div class="fe-sheet"><div class="fe-sh-h"><b>Material əlavə et</b><button type="button" class="fe-ib g" data-x aria-label="Bağla">✕</button></div><p class="fe-hint" style="margin:0 0 10px">«${esc(s.n || "Bölmə")}» bölməsinə nə əlavə edirsiniz?</p><div class="fe-kg">${only.map(k => `<button type="button" data-k="${k}">${kIco(k)}<b>${KT[k].n}</b></button>`).join("")}</div></div>`;
       } else {
         m.innerHTML = `<div class="fe-sheet"><div class="fe-sh-h">${editing ? "" : `<button type="button" class="fe-ib g" data-back aria-label="Geri">←</button>`}${kIco(D.k, 1)}<b>${KT[D.k].n}</b><button type="button" class="fe-ib g" data-x aria-label="Bağla">✕</button></div><div class="fe-form">${form()}</div><div class="fe-sh-f"><button type="button" class="fe-btn g" data-x>Ləğv et</button><button type="button" class="fe-btn" data-ok>${editing ? "Yadda saxla" : "Əlavə et"}</button></div></div>`;
       }
@@ -20398,12 +20523,15 @@ select.fe-in{background-image:linear-gradient(45deg,transparent 50%,#5A6890 50%)
     const close = () => { m.classList.remove("on"); setTimeout(() => m.remove(), 250); };
     m.addEventListener("click", e => {
       if (e.target === m || e.target.closest("[data-x]")) { close(); return; }
-      const k = e.target.closest("[data-k]"); if (k) { D.k = k.dataset.k; if (D.k === "h") src = "t"; draw(); setTimeout(() => { const i = m.querySelector(".fe-form .fe-in"); if (i) i.focus(); }, 60); return; }
+      const k = e.target.closest("[data-k]"); if (k) { pick(k.dataset.k); draw(); setTimeout(() => { const i = m.querySelector(".fe-form .fe-in"); if (i) i.focus(); }, 60); return; }
       if (e.target.closest("[data-back]")) { readForm(); D.k = null; draw(); return; }
       const sb = e.target.closest("[data-src]"); if (sb) { readForm(); src = sb.dataset.src; delete err.ex; delete err.u; draw(); return; }
+      const tx = e.target.closest("[data-ex]"); if (tx) { readForm(); D.ex = tx.dataset.ex; delete err.ex; draw(); return; }
+      if (e.target.closest("[data-paste]")) { const inp = m.querySelector('[data-sf="u"]'); const put = v => { inp.value = String(v || "").trim(); inp.dispatchEvent(new Event("input", { bubbles: true })); };
+        try { navigator.clipboard.readText().then(put).catch(() => { inp.focus(); feToast("Linki xanaya barmağınızla basıb saxlayın və «Yapışdır» seçin", "bad"); }); } catch (er) { inp.focus(); } return; }
       if (e.target.closest("[data-ok]")) commit();
     });
-    m.addEventListener("input", e => { const el = e.target; if (el.classList.contains("bad")) { el.classList.remove("bad"); const n = el.nextElementSibling; if (n && n.classList.contains("fe-err")) n.remove(); } });
+    m.addEventListener("input", e => { const el = e.target; if (el.dataset.sf === "u") { const b = m.querySelector(".fe-ytb"); if (b) b.innerHTML = ytPrev(el.value.trim()); } if (el.classList.contains("bad")) { el.classList.remove("bad"); const n = el.parentNode.classList.contains("fe-url") ? el.parentNode.nextElementSibling : el.nextElementSibling; if (n && n.classList.contains("fe-err")) n.remove(); } });
     draw(); requestAnimationFrame(() => m.classList.add("on"));
   }
   // ---- şagird kimi önizləmə (eyni görünüş funksiyası) ----
@@ -20416,7 +20544,7 @@ select.fe-in{background-image:linear-gradient(45deg,transparent 50%,#5A6890 50%)
     const scr = m.querySelector(".fe-pv-w"), body = m.querySelector(".fe-pv-body");
     const P = (window.v2Profiles && v2Profiles[uid]) || {};
     const prof = { fullName: P.fullName || ($("admin-name") && $("admin-name").textContent) || "Müəllim", subject: F.subj, photo: P.photo };
-    const ctx = { st, tops, preview: true, render() { const C = col(F.subj); body.innerHTML = fnPageHTML({ C, tch: tchBtn(uid, prof, null, true, ""), subj: F.subj || "Fənn", tname: prof.fullName, tops, st }); scr.style.setProperty("--fnc", C); try { ttmTeX(body); } catch (e) {} } };
+    const ctx = { st, tops, preview: true, subj: () => F.subj || "Fənn", root: () => body, render() { const C = col(F.subj); body.innerHTML = fnPageHTML({ C, tch: tchBtn(uid, prof, null, true, ""), subj: F.subj || "Fənn", tname: prof.fullName, tops, st }); scr.style.setProperty("--fnc", C); try { ttmTeX(body); } catch (e) {} } };
     scr.__fn = ctx; ctx.render();
     if (!P.photo) db.collection("teacherProfiles").doc(uid).get().then(d => { if (d.exists && d.data().photo) { prof.photo = d.data().photo; prof.fullName = d.data().fullName || prof.fullName; ctx.render(); } }).catch(() => {});
     requestAnimationFrame(() => m.classList.add("on"));
@@ -20482,7 +20610,7 @@ select.fe-in{background-image:linear-gradient(45deg,transparent 50%,#5A6890 50%)
       try { const d = await Promise.race([ref.get({ source: "server" }), tmo(12000)]); ok = d.exists && stable(d.data().topics || []) === stable(clean); } catch (er) { console.warn("yoxlama oxunuşu:", er); }
       if (!ok) throw Object.assign(new Error("verify"), { code: "verify" });
       if (!FE) return;
-      F.saving = false; F.dirty = false; delete CRS[F.uid]; delete CRSV[F.uid];
+      feSaving(false); F.dirty = false; delete CRS[F.uid]; delete CRSV[F.uid];
       F.tops = clean.map(toEdit); feRender();
       feToast("Dəyişikliklər uğurla yadda saxlanıldı!", "ok");
     } catch (er) {
@@ -20524,7 +20652,9 @@ select.fe-in{background-image:linear-gradient(45deg,transparent 50%,#5A6890 50%)
         { t: "↓ Aşağı", off: si === S.length - 1, fn: () => { [S[si + 1], S[si]] = [S[si], S[si + 1]]; F.err = {}; F.dirty = true; feRender(); } },
         { t: "Bölməni sil", bad: 1, fn: async () => { if (S[si].items.length && !(await ttmConfirm(`«${S[si].n || "Bölmə"}» bölməsi və içindəki ${S[si].items.length} material silinsin?`))) return; S.splice(si, 1); F.err = {}; F.dirty = true; feRender(); } }
       ]); return; }
-    if (a === "iadd") { feSheet(+b.dataset.si); return; }
+    if (a === "iadd") { feSheet(+b.dataset.si, null, "*"); return; }
+    if (a === "qv") { feSheet(+b.dataset.si, null, "v"); return; }
+    if (a === "qh") { feSheet(+b.dataset.si, null, "h"); return; }
     if (a === "iedit") { feSheet(+b.dataset.si, +b.dataset.ii); return; }
     if (a === "idel") { const si = +b.dataset.si, ii = +b.dataset.ii, it = t.sec[si].items[ii]; if (!(await ttmConfirm(`«${itTitle(it)}» silinsin?`))) return; t.sec[si].items.splice(ii, 1); F.err = {}; F.dirty = true; feRender(); return; }
   });
