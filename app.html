@@ -12922,9 +12922,9 @@ function homeExtra(){
     const r = _rqb.apply(this, arguments);
     loadTopics();
     document.querySelectorAll("#exam-questions-builder .q-builder-item").forEach((it, qi) => {
-      const q = examQuestions[qi], f = it.querySelector('input[oninput^="updateQuestionText"]');
+      const q = examQuestions[qi], f = it.querySelector(".q-item-settings-panel");
       if (!q || !f || it.querySelector(".qt-in")) return;
-      f.closest(".field").insertAdjacentHTML("afterend", `<div class="field qt-in" style="margin:0 0 10px"><input type="text" list="qt-dl" value="${esc(q.topic || "")}" placeholder="Mövzu (məs: Faiz) — Yol xəritəsi üçün" oninput="examQuestions[${qi}].topic=this.value.trim()" /></div>`);
+      f.insertAdjacentHTML("beforeend", `<div class="field qt-in" style="margin:8px 0 0"><label>Mövzu</label><input type="text" list="qt-dl" value="${esc(q.topic || "")}" placeholder="Mövzu (məs: Faiz) — Yol xəritəsi üçün" oninput="examQuestions[${qi}].topic=this.value.trim()" /></div>`);
     });
     return r;
   };
@@ -19765,8 +19765,8 @@ input,textarea{caret-color:#1d6fd6}
     renderQuestionBuilder = function () {
       const r = orb.apply(this, arguments);
       document.querySelectorAll("#exam-questions-builder .q-builder-item").forEach((it, qi) => {
-        const q = examQuestions[qi]; if (!q || it.querySelector(".ts-qiz")) return;
-        it.insertAdjacentHTML("beforeend", `<div class="ts-qiz"><label>İzah (şagird yalnız sınağı bitirəndən sonra görür)</label>
+        const q = examQuestions[qi], sp = it.querySelector(".q-item-settings-panel"); if (!q || !sp || it.querySelector(".ts-qiz")) return;
+        sp.insertAdjacentHTML("beforeend", `<div class="ts-qiz"><label>İzah (şagird yalnız sınağı bitirəndən sonra görür)</label>
           <textarea placeholder="Məs: Tənlikləri toplayaq: $2x=10$, $x=5$..." oninput="examQuestions[${qi}].izah=this.value">${esc(q.izah || "")}</textarea>
           <label style="margin-top:6px">Videoda bu sualın başladığı vaxt</label><input type="text" inputmode="numeric" placeholder="məs. 12:45" value="${esc(q.vt || "")}" oninput="examQuestions[${qi}].vt=this.value.trim()"></div>`);
       });
