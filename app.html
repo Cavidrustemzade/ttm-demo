@@ -14386,42 +14386,36 @@ function homeExtra(){
     d.innerHTML = h;
     return d;
   }
-  // KaTeX kök (√) xəttini 400em-lik "slice" SVG ilə çəkir — html2canvas bunu düz çəkmir, uzun kök altında xətt itir.
-  // Ona görə SVG-yə dəqiq ölçü və uyğun viewBox veririk (görünüş eyni qalır).
-  function fixKaSvg(root) {
-    root.querySelectorAll(".katex svg").forEach(s => {
-      if (!/slice/.test(s.getAttribute("preserveAspectRatio") || "")) return;
-      const vb = (s.getAttribute("viewBox") || "").trim().split(/[\s,]+/).map(Number);
-      if (vb.length !== 4 || !vb[3]) return;
-      const W = s.parentNode.getBoundingClientRect().width, H = s.getBoundingClientRect().height;
-      if (!W || !H) return;
-      s.setAttribute("width", W + "px"); s.setAttribute("height", H + "px");
-      s.setAttribute("viewBox", `${vb[0]} ${vb[1]} ${vb[3] * W / H} ${vb[3]}`);
-      s.setAttribute("preserveAspectRatio", "none");
-      s.style.width = W + "px"; s.style.height = H + "px";
-    });
-  }
-  // KÖK (√): KaTeX kökü 400em enində "slice" SVG ilə, vlist içində çəkir. html2canvas (xüsusən telefonda) bu SVG-ni
-  // düz yerləşdirmir — xətt itir və ya yuxarıdakı suala düşür. Həll: kökün yerini brauzerin özündən (ekrandakı kimi dəqiq)
-  // ölçürük, şəkil çəkiləndə SVG-ni gizlədirik, sonra kökü həmin yerə birbaşa canvas-a özümüz çəkirik.
+  // PDF ÇƏKİLİŞİ — ölçülər html2canvas-ın ÖZ nüsxəsindən (klon) götürülür.
+  // Telefonda klonun düzülüşü ekrandakı ilə piksel-piksel eyni olmur (fərq aşağı getdikcə yığılır). Əvvəl sualların kəsim yerləri
+  // və kökün yeri canlı səhifədən ölçülürdü: nəticədə kökün xətti yuxarıdakı suala düşür, kök mətndən sürüşür, sonda qara zolaq qalırdı.
+  // İndi hər şey (sualların yeri + köklərin yeri) klonda ölçülür — şəkil də məhz o klondan çəkilir, ona görə həmişə üst-üstə düşür.
+  // KÖK (√): KaTeX onu 400em enində "slice" SVG ilə çəkir, html2canvas bunu düz çəkmir — SVG gizlədilir, kök canvas-a özümüz çəkirik.
   function sqrtGeo(host) {
-    const hR = host.getBoundingClientRect(), out = [];
+    const hR = host.getBoundingClientRect(), dv = host.ownerDocument.defaultView || window, out = [];
     host.querySelectorAll(".katex .hide-tail > svg").forEach(sv => {
       const pth = sv.querySelector("path"); if (!pth) return;
       const vb = (sv.getAttribute("viewBox") || "").trim().split(/[\s,]+/).map(Number);
       const r = sv.getBoundingClientRect(), W = sv.parentNode.getBoundingClientRect().width;
       if (vb.length !== 4 || !vb[3] || !r.height || !W || !r.width) return; // görünməyən (display:none) suallar
-      out.push({ x: r.left - hR.left, y: r.top - hR.top, w: W, h: r.height, k: r.height / vb[3], d: pth.getAttribute("d"), col: getComputedStyle(sv).color || "#1e1e1e" });
+      out.push({ x: r.left - hR.left, y: r.top - hR.top, w: W, h: r.height, k: r.height / vb[3], d: pth.getAttribute("d"), col: dv.getComputedStyle(sv).color || "#1e1e1e" });
     });
     return out;
   }
-  function drawSqrt(c, list, kc) {
+  function cloneGeo(x, idxs) {
+    const hR = x.getBoundingClientRect();
+    if (!hR.width || !hR.height) return null;
+    const els = idxs.map(i => { const e = x.children[i]; if (!e) return null; const r = e.getBoundingClientRect(); return { y: r.top - hR.top, h: r.height }; });
+    if (els.some(e => !e || !e.h)) return null;
+    return { w: hR.width, h: hR.height, els, sq: sqrtGeo(x) };
+  }
+  function drawSqrt(c, list, kx, ky) {
     const g = c.getContext("2d");
     list.forEach(o => {
       try {
-        g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.translate(o.x * kc, o.y * kc); // html2canvas öz miqyasını kontekstdə saxlayır — sıfırlayırıq
-        g.beginPath(); g.rect(0, 0, o.w * kc, o.h * kc); g.clip();
-        g.scale(o.k * kc, o.k * kc); g.fillStyle = o.col; g.fill(new Path2D(o.d));
+        g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.translate(o.x * kx, o.y * ky); // html2canvas öz miqyasını kontekstdə saxlayır — sıfırlayırıq
+        g.beginPath(); g.rect(0, 0, o.w * kx, o.h * ky); g.clip();
+        g.scale(o.k * kx, o.k * ky); g.fillStyle = o.col; g.fill(new Path2D(o.d));
       } catch (e) { console.warn("kök çəkilmədi:", e); } finally { g.restore(); }
     });
   }
@@ -14434,7 +14428,7 @@ function homeExtra(){
       <div style="position:relative;width:110px;height:110px;margin:0 auto 14px"><svg width="110" height="110" viewBox="0 0 110 110" style="transform:rotate(-90deg)"><circle cx="55" cy="55" r="48" fill="none" stroke="#e8edf3" stroke-width="10"/><circle id="bq-pc" cx="55" cy="55" r="48" fill="none" stroke="#1d6fd6" stroke-width="10" stroke-linecap="round" stroke-dasharray="301.6" stroke-dashoffset="301.6" style="transition:stroke-dashoffset .35s ease"/></svg>
       <b id="bq-pp" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;color:#0B3C5D">0%</b></div>
       <div id="bq-pt" style="font-weight:800;color:#0B3C5D;font-size:16px">PDF hazırlanır</div>
-      <div id="bq-ps" style="font-size:13px;color:#6b7686;margin-top:4px">Düsturlar çəkilir...</div><div style="font-size:10px;color:#b3bcc8;margin-top:8px">v 10.11-k4</div></div>`;
+      <div id="bq-ps" style="font-size:13px;color:#6b7686;margin-top:4px">Düsturlar çəkilir...</div><div style="font-size:10px;color:#b3bcc8;margin-top:8px">v 10.11-k5</div></div>`;
     document.body.appendChild(o);
     let cur = 0;
     return {
@@ -14455,7 +14449,7 @@ function homeExtra(){
     examQuestions.forEach(q => { if (isRich(q) && !cache.has(keyOf(q)) && !todo.some(t => t.k === keyOf(q))) todo.push({ q, k: keyOf(q) }); });
     if (todo.length) {
       const host = document.createElement("div");
-      host.id = "bq-host"; host.style.cssText = `position:fixed;left:0;top:0;width:${wPx}px;background:#fff;z-index:-9999;opacity:0;pointer-events:none`;
+      host.id = "bq-host"; host.style.cssText = `position:fixed;left:0;top:0;width:${wPx}px;background:#fff;z-index:-9999;opacity:0;pointer-events:none;-webkit-text-size-adjust:100%;text-size-adjust:100%`;
       document.body.appendChild(host);
       try {
         todo.forEach(t => { t.el = build(t.q, wPx, color); t.el.style.paddingBottom = "4px"; host.appendChild(t.el); });
@@ -14470,18 +14464,28 @@ function homeExtra(){
         let done = 0;
         for (const grp of groups) {
           todo.forEach(t => { t.el.style.display = grp.includes(t) ? "" : "none"; });
-          const H = host.offsetHeight, sq = sqrtGeo(host);
+          const H = host.offsetHeight, idxs = grp.map(t => todo.indexOf(t));
+          let geo = null;
           const c = await window.html2canvas(host, {
             scale: SC, backgroundColor: "#ffffff", logging: false, useCORS: true, windowHeight: Math.max(innerHeight, H + 40),
             ignoreElements: n => n.parentNode === document.body && n.id !== "bq-host" && n.tagName !== "STYLE" && n.tagName !== "LINK",
-            onclone: d => { const x = d.getElementById("bq-host"); if (x) { x.style.opacity = "1"; fixKaSvg(x); if (sq.length) x.querySelectorAll(".katex .hide-tail > svg").forEach(v => { v.style.visibility = "hidden"; }); } }
+            onclone: async d => {
+              const x = d.getElementById("bq-host"); if (!x) return;
+              x.style.opacity = "1";
+              try { x.getBoundingClientRect(); if (d.fonts && d.fonts.ready) await Promise.race([d.fonts.ready, new Promise(r => setTimeout(r, 3000))]); } catch (er) {}
+              try { geo = cloneGeo(x, idxs); } catch (er) { console.warn("klon ölçüsü:", er); }
+              if (geo) x.querySelectorAll(".katex .hide-tail > svg").forEach(v => { v.style.visibility = "hidden"; });
+            }
           });
-          const k = c.width / host.offsetWidth;
-          if (sq.length) drawSqrt(c, sq, k);
-          grp.forEach(t => {
-            const y = Math.round(t.el.offsetTop * k), hh = Math.max(1, Math.round(t.el.offsetHeight * k));
+          // geo yoxdursa (gözlənilmir) köhnə üsul: canlı səhifənin ölçüləri
+          const kx = geo ? c.width / geo.w : c.width / host.offsetWidth, ky = geo ? c.height / geo.h : kx;
+          if (geo && geo.sq.length) drawSqrt(c, geo.sq, kx, ky);
+          grp.forEach((t, gi) => {
+            const e = geo ? geo.els[gi] : { y: t.el.offsetTop, h: t.el.offsetHeight };
+            const y = Math.round(e.y * ky), hh = Math.max(1, Math.round(e.h * ky));
             const s = document.createElement("canvas"); s.width = c.width; s.height = hh;
-            s.getContext("2d").drawImage(c, 0, y, c.width, hh, 0, 0, c.width, hh);
+            const g2 = s.getContext("2d"); g2.fillStyle = "#fff"; g2.fillRect(0, 0, s.width, hh);
+            g2.drawImage(c, 0, y, c.width, hh, 0, 0, c.width, hh);
             cache.set(t.k, s.toDataURL("image/jpeg", 0.9));
           });
           done += grp.length;
