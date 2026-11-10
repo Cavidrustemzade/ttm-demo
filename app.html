@@ -14399,6 +14399,13 @@ function homeExtra(){
       s.setAttribute("viewBox", `${vb[0]} ${vb[1]} ${vb[3] * W / H} ${vb[3]}`);
       s.setAttribute("preserveAspectRatio", "none");
       s.style.width = W + "px"; s.style.height = H + "px";
+      // Telefonda SVG-dəki nazik xətt yenə itə bilir — kökün üst xəttini ayrıca div kimi də çəkirik (eyni yerdə)
+      const pth = s.querySelector("path"), ms = pth ? [...(pth.getAttribute("d") || "").matchAll(/M\s*([\d.]+)[\s,]+([\d.]+)\s*[hH]400000\s*v([\d.]+)/g)] : [];
+      const m = ms[ms.length - 1]; if (!m) return;
+      const k = H / vb[3], dv = s.ownerDocument.defaultView || window, ln = s.ownerDocument.createElement("div"), hp = s.parentNode;
+      if (dv.getComputedStyle(hp).position === "static") hp.style.position = "relative";
+      ln.style.cssText = `position:absolute;left:${(+m[1]) * k}px;top:${(+m[2]) * k}px;width:${Math.max(0, W - (+m[1]) * k)}px;height:${Math.max(0.8, (+m[3]) * k)}px;background:${dv.getComputedStyle(s).color || "#000"}`;
+      hp.appendChild(ln);
     });
   }
   // ---- irəliləyiş pəncərəsi ----
