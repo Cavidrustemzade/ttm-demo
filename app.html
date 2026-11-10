@@ -14399,13 +14399,30 @@ function homeExtra(){
       s.setAttribute("viewBox", `${vb[0]} ${vb[1]} ${vb[3] * W / H} ${vb[3]}`);
       s.setAttribute("preserveAspectRatio", "none");
       s.style.width = W + "px"; s.style.height = H + "px";
-      // Telefonda SVG-dəki nazik xətt yenə itə bilir — kökün üst xəttini ayrıca div kimi də çəkirik (eyni yerdə)
-      const pth = s.querySelector("path"), ms = pth ? [...(pth.getAttribute("d") || "").matchAll(/M\s*([\d.]+)[\s,]+([\d.]+)\s*[hH]400000\s*v([\d.]+)/g)] : [];
-      const m = ms[ms.length - 1]; if (!m) return;
-      const k = H / vb[3], dv = s.ownerDocument.defaultView || window, ln = s.ownerDocument.createElement("div"), hp = s.parentNode;
-      if (dv.getComputedStyle(hp).position === "static") hp.style.position = "relative";
-      ln.style.cssText = `position:absolute;left:${(+m[1]) * k}px;top:${(+m[2]) * k}px;width:${Math.max(0, W - (+m[1]) * k)}px;height:${Math.max(0.8, (+m[3]) * k)}px;background:${dv.getComputedStyle(s).color || "#000"}`;
-      hp.appendChild(ln);
+    });
+  }
+  // KÖK (√): KaTeX kökü 400em enində "slice" SVG ilə, vlist içində çəkir. html2canvas (xüsusən telefonda) bu SVG-ni
+  // düz yerləşdirmir — xətt itir və ya yuxarıdakı suala düşür. Həll: kökün yerini brauzerin özündən (ekrandakı kimi dəqiq)
+  // ölçürük, şəkil çəkiləndə SVG-ni gizlədirik, sonra kökü həmin yerə birbaşa canvas-a özümüz çəkirik.
+  function sqrtGeo(host) {
+    const hR = host.getBoundingClientRect(), out = [];
+    host.querySelectorAll(".katex .hide-tail > svg").forEach(sv => {
+      const pth = sv.querySelector("path"); if (!pth) return;
+      const vb = (sv.getAttribute("viewBox") || "").trim().split(/[\s,]+/).map(Number);
+      const r = sv.getBoundingClientRect(), W = sv.parentNode.getBoundingClientRect().width;
+      if (vb.length !== 4 || !vb[3] || !r.height || !W || !r.width) return; // görünməyən (display:none) suallar
+      out.push({ x: r.left - hR.left, y: r.top - hR.top, w: W, h: r.height, k: r.height / vb[3], d: pth.getAttribute("d"), col: getComputedStyle(sv).color || "#1e1e1e" });
+    });
+    return out;
+  }
+  function drawSqrt(c, list, kc) {
+    const g = c.getContext("2d");
+    list.forEach(o => {
+      try {
+        g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.translate(o.x * kc, o.y * kc); // html2canvas öz miqyasını kontekstdə saxlayır — sıfırlayırıq
+        g.beginPath(); g.rect(0, 0, o.w * kc, o.h * kc); g.clip();
+        g.scale(o.k * kc, o.k * kc); g.fillStyle = o.col; g.fill(new Path2D(o.d));
+      } catch (e) { console.warn("kök çəkilmədi:", e); } finally { g.restore(); }
     });
   }
   // ---- irəliləyiş pəncərəsi ----
@@ -14417,7 +14434,7 @@ function homeExtra(){
       <div style="position:relative;width:110px;height:110px;margin:0 auto 14px"><svg width="110" height="110" viewBox="0 0 110 110" style="transform:rotate(-90deg)"><circle cx="55" cy="55" r="48" fill="none" stroke="#e8edf3" stroke-width="10"/><circle id="bq-pc" cx="55" cy="55" r="48" fill="none" stroke="#1d6fd6" stroke-width="10" stroke-linecap="round" stroke-dasharray="301.6" stroke-dashoffset="301.6" style="transition:stroke-dashoffset .35s ease"/></svg>
       <b id="bq-pp" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;color:#0B3C5D">0%</b></div>
       <div id="bq-pt" style="font-weight:800;color:#0B3C5D;font-size:16px">PDF hazırlanır</div>
-      <div id="bq-ps" style="font-size:13px;color:#6b7686;margin-top:4px">Düsturlar çəkilir...</div></div>`;
+      <div id="bq-ps" style="font-size:13px;color:#6b7686;margin-top:4px">Düsturlar çəkilir...</div><div style="font-size:10px;color:#b3bcc8;margin-top:8px">v 10.11-k4</div></div>`;
     document.body.appendChild(o);
     let cur = 0;
     return {
@@ -14453,13 +14470,14 @@ function homeExtra(){
         let done = 0;
         for (const grp of groups) {
           todo.forEach(t => { t.el.style.display = grp.includes(t) ? "" : "none"; });
-          const H = host.offsetHeight;
+          const H = host.offsetHeight, sq = sqrtGeo(host);
           const c = await window.html2canvas(host, {
             scale: SC, backgroundColor: "#ffffff", logging: false, useCORS: true, windowHeight: Math.max(innerHeight, H + 40),
             ignoreElements: n => n.parentNode === document.body && n.id !== "bq-host" && n.tagName !== "STYLE" && n.tagName !== "LINK",
-            onclone: d => { const x = d.getElementById("bq-host"); if (x) { x.style.opacity = "1"; fixKaSvg(x); } }
+            onclone: d => { const x = d.getElementById("bq-host"); if (x) { x.style.opacity = "1"; fixKaSvg(x); if (sq.length) x.querySelectorAll(".katex .hide-tail > svg").forEach(v => { v.style.visibility = "hidden"; }); } }
           });
           const k = c.width / host.offsetWidth;
+          if (sq.length) drawSqrt(c, sq, k);
           grp.forEach(t => {
             const y = Math.round(t.el.offsetTop * k), hh = Math.max(1, Math.round(t.el.offsetHeight * k));
             const s = document.createElement("canvas"); s.width = c.width; s.height = hh;
