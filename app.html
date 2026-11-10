@@ -4681,7 +4681,8 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
 
     function placeQuestion(q, qNum) {
       const h = measureQuestionHeight(q);
-      if (cursorY + h > pageBottomLimit()) moveToNextColumnOrPage();
+      // Sualdan sonrakı boşluq (spacing) sütunun sonunda lazım deyil — yerləşməni yalnız sualın özünə görə yoxlayırıq
+      if (cursorY + h - spacing > pageBottomLimit()) moveToNextColumnOrPage();
       drawQuestionAt(q, colX[cursorCol], cursorY, qNum);
       cursorY += h;
     }
@@ -14385,6 +14386,21 @@ function homeExtra(){
     d.innerHTML = h;
     return d;
   }
+  // KaTeX kök (√) xəttini 400em-lik "slice" SVG ilə çəkir — html2canvas bunu düz çəkmir, uzun kök altında xətt itir.
+  // Ona görə SVG-yə dəqiq ölçü və uyğun viewBox veririk (görünüş eyni qalır).
+  function fixKaSvg(root) {
+    root.querySelectorAll(".katex svg").forEach(s => {
+      if (!/slice/.test(s.getAttribute("preserveAspectRatio") || "")) return;
+      const vb = (s.getAttribute("viewBox") || "").trim().split(/[\s,]+/).map(Number);
+      if (vb.length !== 4 || !vb[3]) return;
+      const W = s.parentNode.getBoundingClientRect().width, H = s.getBoundingClientRect().height;
+      if (!W || !H) return;
+      s.setAttribute("width", W + "px"); s.setAttribute("height", H + "px");
+      s.setAttribute("viewBox", `${vb[0]} ${vb[1]} ${vb[3] * W / H} ${vb[3]}`);
+      s.setAttribute("preserveAspectRatio", "none");
+      s.style.width = W + "px"; s.style.height = H + "px";
+    });
+  }
   // ---- irəliləyiş pəncərəsi ----
   function prog() {
     const o = document.createElement("div");
@@ -14434,7 +14450,7 @@ function homeExtra(){
           const c = await window.html2canvas(host, {
             scale: SC, backgroundColor: "#ffffff", logging: false, useCORS: true, windowHeight: Math.max(innerHeight, H + 40),
             ignoreElements: n => n.parentNode === document.body && n.id !== "bq-host" && n.tagName !== "STYLE" && n.tagName !== "LINK",
-            onclone: d => { const x = d.getElementById("bq-host"); if (x) x.style.opacity = "1"; }
+            onclone: d => { const x = d.getElementById("bq-host"); if (x) { x.style.opacity = "1"; fixKaSvg(x); } }
           });
           const k = c.width / host.offsetWidth;
           grp.forEach(t => {
