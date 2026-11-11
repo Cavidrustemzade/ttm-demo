@@ -11849,7 +11849,7 @@ function homeExtra(){
       if (c && c.id === "tab-students" && window.spBackInner && window.spBackInner()) return true;
     }
     const p = document.querySelector(`#view-${r === "a" ? "admin" : "student"} .tab-panel.active`);
-    const ib = p && Array.from(p.querySelectorAll('button[onclick^="tvList"],button[onclick^="ppRenderList"]')).find(vis);
+    const ib = p && Array.from(p.querySelectorAll('button[onclick^="tvList"],button[onclick^="ppRenderList"],button.r3-back[onclick^="r3Back"]')).find(vis);
     if (ib) { ib.click(); return true; }
     return false;
   }
@@ -13537,7 +13537,7 @@ function homeExtra(){
     const gain = p - r.rb[n].v, d = sd(n), exN = d.exams.reduce((a, e) => a + e.keys.length, 0), hN = hardCount(n), wk3 = weak3(n);
     const cols = subs.length <= 4 ? subs.length : 5;
     const eg = window.ttmEG && ttmEG.get();
-    return `<div class="r3-head"><button type="button" class="r3-back" aria-label="Geri" onclick="v2Tab('stab-more')">${backSvg}</button>
+    return `<div class="r3-head"><button type="button" class="r3-back" aria-label="Geri" onclick="window.ttmBack?ttmBack({id:'stab-home'}):v2Tab('stab-home')">${backSvg}</button>
         <div class="r3-ht"><h1>Yol xəritəm</h1><p>Hazırlığını izlə, zəif mövzularını gücləndir və səhvlərini aradan qaldır.</p></div>
         <button type="button" class="r3-av" aria-label="Personajı dəyiş" onclick="r3Chars()"><img src="${A3.ch[(CH3[r.char || 0] || CH3[0]).k]}" alt=""><i><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></i></button></div>
       ${eg ? "" : `<button type="button" class="r3-egn" onclick="ttmEG.pick()">İmtahan qrupunu seç — fənlərin ona görə çıxacaq ›</button>`}
@@ -21063,11 +21063,20 @@ html{touch-action:manipulation}
     try {
       const d = await db.collection("studentPhotos").doc(uid).get();
       if (phUid !== uid) return;
-      PHOTO = d.exists ? d.data().photo || null : null; phCache(uid, PHOTO);
+      PHOTO = d.exists ? d.data().photo || null : null; phCache(uid, PHOTO); document.dispatchEvent(new CustomEvent("v3photo"));
     } catch (e) { console.warn("şəkil:", e); phLoaded = false; if (!c) setTimeout(() => { if (!phLoaded && phUid === uid) loadPhoto(uid); }, 4000); }
     paintMe();
   }
   window.v3PhotoInit = uid => { paintMe(); loadPhoto(uid); };
+  window.v3PhotoHas = () => !!PHOTO;
+  window.v3PhotoGet = () => PHOTO;
+  window.v3PhotoDel = async () => {
+    const uid = currentStudentUid, ref = db.collection("studentPhotos").doc(uid);
+    try { await ref.delete(); }
+    catch (e) { await ref.set({ photo: "", updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); }
+    PHOTO = null; phUid = uid; phLoaded = true; phCache(uid, null); paintMe();
+    document.dispatchEvent(new CustomEvent("v3photo"));
+  };
   document.addEventListener("r3char", e => { const im = document.querySelector(".v3-me .v3-ch img"); if (im && e.detail) im.src = e.detail; });
   const tick = () => { if (typeof currentStudentUid !== "undefined" && currentStudentUid) { paintMe(); loadPhoto(); } };
   setTimeout(tick, 1200); setTimeout(tick, 4000); setTimeout(tick, 9000);
@@ -21119,12 +21128,271 @@ html{touch-action:manipulation}
       btn.disabled = true; btn.textContent = "Saxlanılır...";
       try {
         await db.collection("studentPhotos").doc(currentStudentUid).set({ photo: data, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
-        PHOTO = data; phUid = currentStudentUid; phLoaded = true; phCache(currentStudentUid, data); paintMe(); toast("Şəkil yadda saxlanıldı"); close();
+        PHOTO = data; phUid = currentStudentUid; phLoaded = true; phCache(currentStudentUid, data); paintMe(); document.dispatchEvent(new CustomEvent("v3photo")); toast("Şəkil yadda saxlanıldı"); close();
       } catch (e) { console.error(e); toast(errAz(e)); btn.disabled = false; btn.textContent = "Yadda saxla"; }
     };
   }
 })();
 </script>
 
+<style id="v4-css">
+/* ===== v4: ümumi arayüz cilası — alt panel, yan panel (planşet/kompüter), üst zolaq, ana səhifə kartları, keçidlər ===== */
+:root{--v4-blue:#1D6FD6;--v4-tint:rgba(29,111,214,.13);--v4-rail:92px}
+
+/* ---------- üst zolaq ---------- */
+.panel-topbar{height:60px;padding:0 14px;gap:10px}
+.panel-brand{min-width:0;flex:0 1 auto}
+.panel-brand span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.panel-brand .brand-icon{flex:none;border-radius:11px;background:linear-gradient(145deg,#12507a,#0B3C5D);box-shadow:0 4px 10px rgba(11,60,93,.25);font-weight:800;font-size:13px;letter-spacing:.3px}
+.panel-user{gap:8px;min-width:0;flex:0 0 auto}
+.panel-user>span{max-width:190px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;color:#33475b}
+.panel-user .nt-bell{width:40px;height:40px;border-radius:13px;flex:none}
+.panel-user .logout-btn{flex:none;width:40px;height:40px;padding:0;border-radius:13px;font-size:0;background:#FDECEC url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23C62828' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 16l-4-4 4-4M6 12h10'/%3E%3C/svg%3E") center/20px no-repeat;transition:background-color .15s ease,scale 140ms var(--ease-out)}
+.v4-tav{flex:none;width:40px;height:40px;border-radius:50%;padding:2px;border:0;background:linear-gradient(135deg,#2A6FE6,#10b981);cursor:pointer}
+.v4-tav>span{display:flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:50%;border:2px solid #fff;background:#EEF3FC center/cover no-repeat;font-weight:900;font-size:15px;color:#1450C7}
+@media (max-width:599px){.panel-user>span{display:none}}
+@media (min-width:768px){
+  .panel-topbar{padding:0 22px}
+  .panel-user .logout-btn{width:auto;padding:0 14px 0 38px;font-size:13px;font-weight:700;color:#C62828;background-position:12px center}
+}
+@media (hover:hover){.panel-user .logout-btn:hover{background-color:#FAD9D9}}
+
+/* ---------- alt panel (telefon, planşet) ---------- */
+#view-admin .v2-nav,#view-student .v2-nav{left:50%;right:auto;bottom:calc(8px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(540px,calc(100% - 20px));padding:7px 6px;border:1px solid rgba(11,60,93,.08);border-radius:24px;background:rgba(255,255,255,.94);-webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%);box-shadow:0 12px 32px rgba(11,60,93,.18),0 2px 6px rgba(11,60,93,.06)}
+.v2-nav .v2-nav-btn{position:relative;z-index:1;gap:4px;padding:5px 2px 3px;color:#7A8797;font-size:10.5px;font-weight:700;letter-spacing:.1px;min-height:48px;justify-content:center;transition:color .2s ease,scale .2s cubic-bezier(.34,1.56,.64,1)}
+.v2-nav .v2-nav-btn svg{width:23px;height:23px;stroke-width:1.85;transition:transform .28s cubic-bezier(.2,1.5,.4,1),stroke-width .2s ease}
+.v2-nav .v2-nav-btn.active{color:#0B3C5D}
+.v2-nav .v2-nav-btn.active svg{stroke:var(--v4-blue);stroke-width:2.2;transform:translateY(-1px) scale(1.06)}
+.v2-nav .v2-nav-btn.active span{font-weight:800}
+.v2-nav .v2-nav-btn:before{display:none}
+.v4-ind{position:absolute;left:0;top:0;z-index:0;width:54px;height:32px;border-radius:16px;background:var(--v4-tint);pointer-events:none;opacity:0;transition:transform .34s cubic-bezier(.3,1.3,.5,1),width .25s var(--ease-out),height .25s var(--ease-out),opacity .2s ease;will-change:transform}
+.v4-ind.nt{transition:none}
+#view-admin .panel-main,#view-student .panel-main{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px));overflow-x:clip}
+.toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+
+@media (max-width:359px){.v2-nav .v2-nav-btn{font-size:9.5px;letter-spacing:0}.v2-nav .v2-nav-btn span{overflow:visible;text-overflow:clip}.panel-brand span{font-size:15px}}
+/* ---------- keçid animasiyası (istiqamətli) ---------- */
+@keyframes v4Fwd{from{opacity:0;transform:translate3d(18px,0,0)}to{opacity:1;transform:none}}
+@keyframes v4Back{from{opacity:0;transform:translate3d(-18px,0,0)}to{opacity:1;transform:none}}
+@keyframes v4Up{from{opacity:0;transform:translate3d(0,10px,0)}to{opacity:1;transform:none}}
+#view-admin .tab-panel.active,#view-student .tab-panel.active{animation:v4Up .26s var(--ease-out)}
+html[data-nv=fwd] #view-admin .tab-panel.active,html[data-nv=fwd] #view-student .tab-panel.active{animation-name:v4Fwd}
+html[data-nv=back] #view-admin .tab-panel.active,html[data-nv=back] #view-student .tab-panel.active{animation-name:v4Back}
+
+/* ---------- ana səhifə: Tez giriş kartları ---------- */
+.a-qc{position:relative;overflow:hidden;isolation:isolate;border-radius:22px;box-shadow:0 10px 22px rgba(11,60,93,.16),inset 0 1px 0 rgba(255,255,255,.25);transition:transform .25s var(--ease-out),box-shadow .25s ease}
+.a-qc:before{content:"";position:absolute;z-index:-1;right:-38px;top:-42px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.13);transition:transform .5s var(--ease-out)}
+.a-qc:after{content:"";position:absolute;z-index:-1;right:22px;bottom:-56px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.08);transition:transform .5s var(--ease-out)}
+.a-qc .a-svg{animation:v4Float 5.5s ease-in-out infinite}
+.a-qc:nth-child(2) .a-svg{animation-delay:-1.4s}.a-qc:nth-child(3) .a-svg{animation-delay:-2.8s}.a-qc:nth-child(4) .a-svg{animation-delay:-4.1s}
+@keyframes v4Float{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-4px) rotate(-3deg)}}
+.a-qc:active:before{transform:scale(1.25)}
+.a-qc:active:after{transform:scale(1.35)}
+@media (hover:hover) and (pointer:fine){
+  .a-qc:hover{transform:translateY(-4px);box-shadow:0 18px 34px rgba(11,60,93,.22),inset 0 1px 0 rgba(255,255,255,.25)}
+  .a-qc:hover:before{transform:scale(1.18)}
+  .a-qc:hover .a-svg{animation-duration:2.2s}
+  .v2-more-row{transition:transform .2s var(--ease-out),box-shadow .2s ease}
+  .v2-more-row:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(11,60,93,.1)}
+}
+
+/* sınaq nəticəsi: sual nömrələri kartın üstünə minməsin (planşet/kompüter) */
+@media (min-width:700px){
+  #exam-view-result .exam-result-nav-grid{position:static;width:auto;left:auto;top:auto;grid-template-columns:repeat(auto-fill,minmax(42px,1fr));gap:8px;padding:14px;margin-bottom:14px;background:#fff;border:1px solid rgba(11,60,93,.08);border-radius:18px;box-shadow:0 6px 18px rgba(11,60,93,.05)}
+  #exam-view-result .exam-result-nav-grid:empty{display:none}
+  #exam-view-result .exam-result-nav-btn{aspect-ratio:auto;height:42px;font-size:13px}
+}
+/* ---------- planşet (768+) ---------- */
+@media (min-width:768px){
+  #view-admin .panel-main,#view-student .panel-main{padding-left:28px;padding-right:28px}
+  #view-admin .panel-main>.tab-panel,#view-student .panel-main>.tab-panel{max-width:1120px;margin-left:auto;margin-right:auto}
+  .a-qgrid,.a-q4,.sq-grid{gap:16px}
+  .a-qgrid .a-qc,.a-q4 .a-qc{min-height:168px;padding:20px 18px}
+  .a-qc b{font-size:18px}.a-qc span{font-size:13px}
+  #stab-more>.card,#a-more-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 14px;align-items:stretch}
+  #stab-more>.card>.v2-sec-head{grid-column:1/-1}
+  .v2-welcome h3{font-size:23px!important}
+}
+/* ---------- kompüter və üfüqi planşet (1024+): yan panel ---------- */
+@media (min-width:1024px){
+  #view-admin .v2-nav,#view-student .v2-nav{grid-template-columns:minmax(0,1fr)!important;grid-auto-rows:min-content;align-content:start;align-items:stretch;gap:6px;left:0;top:60px;bottom:0;width:var(--v4-rail);transform:none;padding:18px 10px;border:0;border-right:1px solid rgba(11,60,93,.08);border-radius:0;background:#fff;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;z-index:19}
+  .v2-nav .v2-nav-btn{flex:none;min-height:62px;padding:9px 4px;border-radius:16px;font-size:11px}
+  .v2-nav .v2-nav-btn span{white-space:normal;line-height:1.15;text-align:center}
+  .v4-ind{border-radius:16px}
+  #view-student .v3-mid{height:auto;padding:6px 0;align-items:center}
+  #view-student .v3-ttm{position:static;width:62px;height:60px}
+  #view-admin .panel-main,#view-student .panel-main{margin-left:var(--v4-rail);width:auto;padding:30px 36px 48px}
+  .toast{bottom:28px}
+  #pdf-fab-btn{bottom:28px!important}
+  .a-qgrid,.a-q4,.sq-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .a-qgrid .a-qc,.a-q4 .a-qc,.sq-grid .a-qc{min-height:176px}
+  body.v4-norail #view-admin .panel-main,body.v4-norail #view-student .panel-main{margin-left:0}
+}
+@media (min-width:1360px){
+  :root{--v4-rail:224px}
+  #view-admin .v2-nav,#view-student .v2-nav{padding:20px 14px}
+  .v2-nav .v2-nav-btn{flex-direction:row;justify-content:flex-start;gap:12px;min-height:50px;padding:0 14px;font-size:14px}
+  .v2-nav .v2-nav-btn span{text-align:left;white-space:nowrap}
+  #view-student .v3-mid{justify-content:flex-start;padding:4px 8px}
+  #view-student .v3-ttm{display:flex;align-items:center;gap:10px;width:100%;height:52px}
+  #view-student .v3-ttm img{width:46px;height:44px;flex:none}
+  #view-student .v3-ttm:after{content:"Bugünkü məşq";font:800 14px/1 inherit;font-family:inherit;color:#1450C7;white-space:nowrap}
+  #stab-more>.card,#a-more-list{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
+/* ---------- vərəq: şəkil seçimi, çıxış təsdiqi ---------- */
+.v4-ov{position:fixed;inset:0;z-index:4000;display:flex;align-items:flex-end;justify-content:center;background:rgba(8,24,44,.45);opacity:0;transition:opacity .2s ease}
+.v4-ov.on{opacity:1}
+.v4-sh{width:min(440px,100%);background:#fff;border-radius:26px 26px 0 0;padding:10px 16px calc(16px + env(safe-area-inset-bottom,0px));transform:translateY(100%);transition:transform .34s var(--ease-drawer);overscroll-behavior:contain}
+.v4-ov.on .v4-sh{transform:none}
+.v4-sh:before{content:"";display:block;width:40px;height:4px;border-radius:2px;background:#D6DEE8;margin:0 auto 14px}
+.v4-sh h3{font-size:18px;color:#0B3C5D;text-align:center;margin:0 0 4px}
+.v4-sh p{font-size:13.5px;color:#5A6B7D;text-align:center;margin:0 0 14px;line-height:1.45}
+.v4-pv{width:92px;height:92px;border-radius:50%;margin:2px auto 12px;padding:3px;background:linear-gradient(135deg,#2A6FE6,#10b981)}
+.v4-pv>div{width:100%;height:100%;border-radius:50%;border:3px solid #fff;background:#EEF3FC center/cover no-repeat}
+.v4-sh button{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:52px;border-radius:16px;border:0;font:inherit;font-size:15.5px;font-weight:800;margin-top:8px;cursor:pointer}
+.v4-sh button svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.v4-sh .p{background:linear-gradient(135deg,#2A6FE6,#1450C7);color:#fff;box-shadow:0 8px 18px rgba(20,80,199,.25)}
+.v4-sh .d{background:#FDECEC;color:#C62828}
+.v4-sh .n{background:#EEF2F7;color:#0B3C5D}
+.v4-sh button:disabled{opacity:.6}
+@media (min-width:768px){.v4-ov{align-items:center}.v4-sh{border-radius:26px;transform:translateY(14px) scale(.96);opacity:0;transition:transform .22s var(--ease-out),opacity .2s ease}.v4-ov.on .v4-sh{opacity:1}.v4-sh:before{display:none}.v4-sh{padding-top:22px}}
+
+@media (prefers-reduced-motion:reduce){
+  #view-admin .tab-panel.active,#view-student .tab-panel.active{animation:none}
+  .a-qc .a-svg{animation:none}
+  .v4-ind,.v4-sh,.a-qc,.a-qc:before,.a-qc:after{transition:opacity .2s ease}
+}
+</style>
+<script id="v4-js">
+(function () {
+  const $ = id => document.getElementById(id);
+  const vis = el => !!el && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== "hidden";
+  const navs = [$("a-nav"), $("s-bottom-nav")].filter(Boolean);
+  const rail = matchMedia("(min-width:1024px)");
+
+  /* ---- alt/yan panel: sürüşən göstərici ---- */
+  function place(nav, instant) {
+    const ind = nav._ind, a = nav.querySelector(".v2-nav-btn.active");
+    if (!a || !a.offsetWidth) { ind.style.opacity = 0; return; }
+    let w, h, x, y;
+    if (rail.matches) { w = a.offsetWidth; h = a.offsetHeight; x = a.offsetLeft; y = a.offsetTop; }
+    else { w = 54; h = 32; x = a.offsetLeft + (a.offsetWidth - w) / 2; y = a.offsetTop + 1; }
+    if (instant || ind.style.opacity !== "1") { ind.classList.add("nt"); requestAnimationFrame(() => requestAnimationFrame(() => ind.classList.remove("nt"))); }
+    ind.style.width = w + "px"; ind.style.height = h + "px";
+    ind.style.transform = "translate3d(" + x + "px," + y + "px,0)"; ind.style.opacity = 1;
+  }
+  navs.forEach(nav => {
+    const ind = document.createElement("i"); ind.className = "v4-ind"; ind.setAttribute("aria-hidden", "true");
+    nav.appendChild(ind); nav._ind = ind;
+    new MutationObserver(() => place(nav)).observe(nav, { subtree: true, attributes: true, attributeFilter: ["class"] });
+    new MutationObserver(() => { syncRail(); place(nav, true); }).observe(nav, { attributes: true, attributeFilter: ["style"] });
+  });
+  const placeAll = instant => navs.forEach(n => place(n, instant));
+  addEventListener("resize", () => placeAll(true));
+  (rail.addEventListener ? rail.addEventListener.bind(rail, "change") : rail.addListener.bind(rail))(() => placeAll(true));
+  ["view-admin", "view-student"].forEach(id => { const v = $(id); if (v) new MutationObserver(() => { placeAll(true); syncRail(); }).observe(v, { attributes: true, attributeFilter: ["style"] }); });
+  setTimeout(() => placeAll(true), 400);
+
+  /* ---- yan panel gizlənəndə (sınaq və s.) məzmun tam eni tutsun ---- */
+  function syncRail() {
+    const v = [["view-admin", "a-nav"], ["view-student", "s-bottom-nav"]].find(p => $(p[0]) && $(p[0]).style.display !== "none");
+    const hidden = !!v && !vis($(v[1]));
+    document.body.classList.toggle("v4-norail", hidden);
+  }
+  new MutationObserver(syncRail).observe(document.body, { attributes: true, attributeFilter: ["class"] });
+  document.addEventListener("click", () => setTimeout(syncRail, 60), true);
+
+  /* ---- keçid istiqaməti: irəli / geri ---- */
+  const root = document.documentElement; let dt = 0;
+  const dir = d => { root.dataset.nv = d; clearTimeout(dt); dt = setTimeout(() => { root.dataset.nv = "fwd"; }, 450); };
+  root.dataset.nv = "up";
+  setTimeout(() => { if (root.dataset.nv === "up") root.dataset.nv = "fwd"; }, 3000);
+  document.addEventListener("click", e => {
+    const b = e.target.closest && e.target.closest(".v2-nav .v2-nav-btn"); if (!b) return;
+    const all = Array.from(b.parentNode.querySelectorAll(".v2-nav-btn")), cur = all.findIndex(x => x.classList.contains("active")), nx = all.indexOf(b);
+    dir(cur < 0 || nx === cur ? "up" : nx > cur ? "fwd" : "back");
+  }, true);
+  if (typeof window.ttmBack === "function") {
+    const ob = window.ttmBack;
+    window.ttmBack = function () { dir("back"); return ob.apply(this, arguments); };
+    window.adminBack = () => window.ttmBack();
+  }
+  addEventListener("popstate", () => dir("back"), true);
+
+  /* ---- vərəq (aşağıdan açılan pəncərə) ---- */
+  function sheet(html) {
+    const ov = document.createElement("div"); ov.className = "v4-ov";
+    ov.innerHTML = '<div class="v4-sh" role="dialog" aria-modal="true">' + html + "</div>";
+    document.body.appendChild(ov);
+    requestAnimationFrame(() => requestAnimationFrame(() => ov.classList.add("on")));
+    const close = () => { if (ov._c) return; ov._c = 1; ov.classList.remove("on"); ov.classList.add("out"); setTimeout(() => ov.remove(), 280); };
+    ov.addEventListener("click", e => { if (e.target === ov) close(); });
+    ov.querySelectorAll("[data-x]").forEach(b => b.addEventListener("click", close));
+    return { ov, close };
+  }
+  const ICO = {
+    cam: '<svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+    del: '<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg>',
+    out: '<svg viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 16l-4-4 4-4M6 12h10"/></svg>'
+  };
+
+  /* ---- şagird profil şəkli: dəyiş / sil ---- */
+  if (typeof window.v3Photo === "function") {
+    const pick = window.v3Photo;
+    window.v3Photo = function () {
+      if (!(window.v3PhotoHas && v3PhotoHas())) return pick();
+      const s = sheet('<h3>Profil şəkli</h3><div class="v4-pv"><div></div></div>' +
+        '<button type="button" class="p" data-a="new">' + ICO.cam + 'Yeni şəkil seç</button>' +
+        '<button type="button" class="d" data-a="del">' + ICO.del + 'Şəkli sil</button>' +
+        '<button type="button" class="n" data-x>Ləğv et</button>');
+      s.ov.querySelector(".v4-pv>div").style.backgroundImage = "url('" + v3PhotoGet() + "')";
+      s.ov.querySelector('[data-a="new"]').onclick = () => { s.close(); pick(); };
+      const d = s.ov.querySelector('[data-a="del"]'); let armed = false;
+      d.onclick = async () => {
+        if (!armed) { armed = true; d.lastChild.textContent = "Silməyi təsdiqlə"; return; }
+        d.disabled = true; d.lastChild.textContent = "Silinir...";
+        try { await v3PhotoDel(); if (typeof toast === "function") toast("Şəkil silindi"); s.close(); }
+        catch (e) { console.error(e); if (typeof toast === "function") toast(typeof errAz === "function" ? errAz(e) : "Şəkil silinmədi, yenidən yoxla"); d.disabled = false; armed = false; d.lastChild.textContent = "Şəkli sil"; }
+      };
+    };
+  }
+  /* üst zolaqda şagirdin şəkli */
+  (function () {
+    const pu = document.querySelector("#view-student .panel-user"), nm = $("student-name"); if (!pu || !nm) return;
+    const b = document.createElement("button"); b.type = "button"; b.className = "v4-tav"; b.setAttribute("aria-label", "Profil şəkli");
+    b.innerHTML = "<span></span>"; b.onclick = () => window.v3Photo && v3Photo();
+    pu.insertBefore(b, nm);
+    const paint = () => {
+      const sp = b.firstChild, ph = window.v3PhotoGet && v3PhotoGet(), n = (nm.textContent || "").trim();
+      if (ph) { sp.style.backgroundImage = "url('" + ph + "')"; sp.textContent = ""; }
+      else { sp.style.backgroundImage = ""; sp.textContent = (n[0] || "").toUpperCase(); }
+    };
+    document.addEventListener("v3photo", paint);
+    new MutationObserver(paint).observe(nm, { childList: true, characterData: true, subtree: true });
+    paint();
+  })();
+
+  /* ---- geri düyməsi olmayan şagird səhifələri ---- */
+  [["exam-view-list", "stab-home", "Sınaqlar"], ["stab-daily", "stab-more", "Gündəlik"], ["stab-teachers", "stab-fenler", "Müəllimlər"]].forEach(r => {
+    const el = $(r[0]); if (!el || el.querySelector(":scope > .v2-backrow")) return;
+    el.insertAdjacentHTML("afterbegin", '<div class="v2-backrow"><button type="button" class="v2-back" aria-label="Geri" onclick="v2Tab(\'' + r[1] + '\')">←</button><div class="v2-backtitle">' + r[2] + "</div></div>");
+  });
+
+  /* ---- çıxış: təsadüfi toxunuşa qarşı təsdiq ---- */
+  ["logout-btn-admin", "logout-btn-student"].forEach(id => {
+    const btn = $(id); if (!btn) return;
+    btn.setAttribute("aria-label", "Çıxış"); btn.title = "Çıxış";
+    btn.addEventListener("click", e => {
+      if (btn._ok) { btn._ok = false; return; }
+      if (typeof examExitGuardActive !== "undefined" && examExitGuardActive) return;   // sınaq vaxtı öz xəbərdarlığı var
+      e.stopImmediatePropagation(); e.preventDefault();
+      const s = sheet('<h3>Hesabdan çıxırsan?</h3><p>Yenidən daxil olmaq üçün istifadəçi adı və şifrə lazım olacaq.</p>' +
+        '<button type="button" class="d" data-a="out">' + ICO.out + 'Bəli, çıx</button><button type="button" class="n" data-x>Ləğv et</button>');
+      s.ov.querySelector('[data-a="out"]').onclick = () => { s.close(); btn._ok = true; btn.click(); };
+    }, true);
+  });
+})();
+</script>
 </body>
 </html>
