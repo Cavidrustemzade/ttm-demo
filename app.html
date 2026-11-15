@@ -14132,7 +14132,30 @@ function homeExtra(){
 .bq-xopt.on{border-color:var(--color-primary);background:rgba(11,60,93,.06)}
 .bq-xopt.on b{background:var(--color-primary);color:#fff}
 .bq-xopt span{overflow-wrap:anywhere;min-width:0}
+/* variant düzülüşü: yer çatırsa 5-i bir sətirdə, yoxsa A B C / D E (3 sütun), çox uzun olanda alt-alta */
+.bq-xopts[data-c="5"],.bq-xopts[data-c="3"]{display:grid;gap:8px}
+.bq-xopts[data-c="5"]{grid-template-columns:repeat(5,minmax(0,1fr))}
+.bq-xopts[data-c="3"]{grid-template-columns:repeat(3,minmax(0,1fr))}
+.bq-xopts[data-c="5"] .bq-xopt,.bq-xopts[data-c="3"] .bq-xopt{padding:9px 8px;gap:8px;min-width:0}
+.bq-xopts[data-c="5"] .bq-xopt b,.bq-xopts[data-c="3"] .bq-xopt b{width:28px;height:28px;border-radius:9px}
+.bq-xopts[data-c="5"] .bq-xopt>span,.bq-xopts[data-c="3"] .bq-xopt>span{display:block;flex:1;min-width:0;white-space:nowrap;overflow-wrap:normal}
 </style>
+<script>
+/* variant düzülüşü: əvvəl 5 sütun yoxlanır, sığmırsa 3 (A B C / D E), o da sığmırsa alt-alta */
+window.bqFit = function (el) {
+  if (!el || !el.isConnected || !el.clientWidth) return;
+  const sp = [...el.querySelectorAll(".bq-xopt > span")];
+  if (!sp.length) return;
+  const fits = n => { el.dataset.c = n; return sp.every(s => s.scrollWidth <= s.clientWidth + 1); };
+  if (!fits(5) && !fits(3)) el.dataset.c = "1";
+};
+window.bqFitLater = function (el) {
+  if (!el) return;
+  bqFit(el);
+  [120, 450, 1200].forEach(t => setTimeout(() => bqFit(el), t)); // KaTeX gec yüklənəndə yenidən ölç
+};
+window.addEventListener("resize", () => { clearTimeout(window._bqFitT); window._bqFitT = setTimeout(() => document.querySelectorAll(".bq-xopts").forEach(bqFit), 150); });
+</script>
 <script>
 /* ===== Sual bazasından sınağa əlavə + düsturlu PDF (yalnız admin) ===== */
 (function () {
@@ -14367,6 +14390,7 @@ function homeExtra(){
         if (row) row.outerHTML = `<div class="bq-xopts">${q.options.map((o, k) => `<button type="button" class="bq-xopt ${sel === k ? "on" : ""}" onclick="selectExamOption(${k})"><b>${L[k]}</b><span>${esc(o)}</span></button>`).join("")}</div>`;
       }
       if (q && box && TEX.test((q.text || "") + (q.options || []).join(" "))) ttmTeX(box);
+      if (box) bqFitLater(box.querySelector(".bq-xopts"));
     } catch (e) { console.error(e); }
     return r;
   };
@@ -16257,6 +16281,7 @@ body.xn-open #xn-bd{opacity:1;pointer-events:auto}
         return `<div class="bq-xopt" style="${r?"border-color:#16a34a;background:#dcfce7":w?"border-color:#dc2626;background:#fee2e2":""}"><b style="${r?"background:#16a34a;color:#fff":w?"background:#dc2626;color:#fff":""}">${L[k]}</b><span>${esc(t)}</span></div>`;
       }).join("")}</div>`;
       ttmTeX(box);
+      if(window.bqFitLater) bqFitLater(box.querySelector(".bq-xopts"));
     }catch(e){console.error(e);}
   };
 })();
