@@ -12015,6 +12015,13 @@ function homeExtra(){
 .qb-acts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
 .qb-acts label,.qb-acts button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;border-radius:14px;background:#fff;border:1.5px solid var(--color-gray);font-size:12px;font-weight:700;color:var(--color-primary);cursor:pointer;text-align:center}
 .qb-acts span{font-size:22px}
+#qb-fd{flex-wrap:wrap}
+.pq-chip.qb-newf{background:#fff;border-style:dashed;color:var(--color-primary)}
+.qb-file{padding:12px}
+.qb-fic{width:40px;height:40px;border-radius:12px;background:#e0f2fe;display:flex;align-items:center;justify-content:center;font-size:20px;flex:none}
+.qb-ftt{font-weight:800;font-size:14px;color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qb-back{display:inline-flex;align-items:center;gap:4px;padding:7px 12px;border-radius:10px;background:var(--color-light-gray);border:1px solid var(--color-gray);font-weight:700;font-size:13px;color:var(--color-primary);margin-bottom:8px;cursor:pointer}
+.qb-seth{font-weight:800;font-size:15px;color:var(--color-text);margin-bottom:6px;overflow-wrap:anywhere}
 .qb-oi{display:flex;gap:8px;align-items:center;margin-bottom:6px}
 .qb-oi button{width:36px;height:36px;border-radius:10px;font-weight:800;border:2px solid var(--color-gray);background:#fff;flex:none}
 .qb-oi button.on{background:#22c55e;border-color:#22c55e;color:#fff}
@@ -12447,6 +12454,13 @@ function homeExtra(){
   const L = "ABCDE";
   const QB = { all: null, f: { t: "", y: "", s: "", d: "" } };
   const QB_F = { buraxilis: "Buraxılış sınaqları", blok: "Blok sınaqları", kuiz: "Kuizlər" };
+  const QB_BASE = Object.keys(QB_F), QB_COL = ["#f59e0b", "#0ea5e9", "#8b5cf6", "#ec4899", "#14b8a6", "#f97316", "#84cc16"];
+  QB.folders = {}; QB.fOk = false; // admin özü yaratdığı qovluqlar: qbankMeta/index.folders = { key: { name, color } }
+  async function qbFolders() {
+    try { const m = await db.collection("qbankMeta").doc("index").get(); QB.folders = (m.exists && m.data().folders) || {}; QB.fOk = true; } catch (e) { console.warn("qbFolders", e); }
+    Object.keys(QB_F).forEach(k => { if (!QB_BASE.includes(k)) delete QB_F[k]; });
+    Object.keys(QB.folders).forEach(k => { QB_F[k] = QB.folders[k].name; });
+  }
   const main = document.querySelector("#view-admin .panel-main"), tabs = document.querySelector("#view-admin .tabs");
   if (!main || !tabs) return;
   const tb = document.createElement("button");
@@ -12488,6 +12502,7 @@ function homeExtra(){
     try {
       const s = await db.collection("questions").get();
       QB.all = s.docs.map(d => ({ id: d.id, ...d.data() }));
+      await qbFolders();
       render();
     } catch (e) { console.error(e); $("qb-list").innerHTML = `<div class="empty-state">Xəta: ${esc(e.code === "permission-denied" ? "Firestore qaydalarına «questions» əlavə edilməyib" : errAz(e))}</div>`; }
   }
@@ -12507,17 +12522,20 @@ function homeExtra(){
   }
   async function saveIdx() {
     const topics = buildIdx(QB.all);
-    await db.collection("qbankMeta").doc("index").set({ topics, sets: buildSets(QB.all), total: QB.all.length, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    if (!QB.fOk) await qbFolders();
+    await db.collection("qbankMeta").doc("index").set({ topics, sets: buildSets(QB.all), folders: QB.folders || {}, total: QB.all.length, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
     if (window._PQ) window._PQ.idx = null;
   }
   function render() {
     const all = QB.all || [], fd = QB.f.d, key = q => fd ? q.set : (q.topic || "Digər");
     const a = all.filter(q => fd ? q.set && (q.folder || "buraxilis") === fd : !q.set);
     $("qb-fd").innerHTML = [["", "Mövzular", all.filter(q => !q.set).length]].concat(Object.keys(QB_F).map(k => [k, QB_F[k], new Set(all.filter(q => q.set && (q.folder || "buraxilis") === k).map(q => q.set)).size + " sınaq"]))
-      .map(x => `<button class="pq-chip ${fd === x[0] ? "on" : ""}" onclick="qbD('${x[0]}')">📁 ${x[1]} · ${x[2]}</button>`).join("");
+      .map(x => `<button class="pq-chip ${fd === x[0] ? "on" : ""}" data-f="${x[0]}" onclick="qbD('${x[0]}')">📁 ${esc(x[1])} · ${x[2]}</button>`).join("")
+      + `<button class="pq-chip qb-newf" onclick="qbNewFolder()">➕ Yeni qovluq</button>`;
     $("qb-ftl").textContent = fd ? "Sınaq" : "Mövzu";
     $("qb-n").textContent = a.length;
     $("qb-t").textContent = new Set(a.map(key)).size;
+    try { $("qb-t").nextElementSibling.textContent = fd ? "fayl" : "mövzu"; } catch (e) {}
     $("qb-i").textContent = a.filter(q => q.imageBase64).length;
     const topics = [...new Set(a.map(key))].sort((x, y) => x.localeCompare(y, "az"));
     const years = [...new Set(a.map(q => q.year).filter(Boolean))].sort();
@@ -12526,13 +12544,57 @@ function homeExtra(){
     const s = QB.f.s.trim().toLowerCase();
     const list = a.filter(q => (!QB.f.t || key(q) === QB.f.t) && (!QB.f.y || String(q.year) === String(QB.f.y)) && (!s || (q.text || "").toLowerCase().includes(s) || q.id.toLowerCase().includes(s)))
       .sort((x, y) => String(key(x)).localeCompare(String(key(y)), "az") || (fd ? (x.setOrder || x.no || 0) - (y.setOrder || y.no || 0) : (x.year || 0) - (y.year || 0) || (x.no || 0) - (y.no || 0)));
-    $("qb-list").innerHTML = list.length ? `<div class="muted-note" style="margin-bottom:8px;">${list.length} sual</div>` + list.map(q => `<div class="qb-row" onclick="qbEdit('${q.id}')">
+    if (fd && !QB.f.t) { qbSets(a, fd); return; }
+    const back = fd ? `<button class="qb-back" onclick="qbF('t','')">‹ ${esc(QB_F[fd] || "Qovluq")}</button><div class="qb-seth">📄 ${esc(QB.f.t)}</div>` : "";
+    $("qb-list").innerHTML = back + (list.length ? `<div class="muted-note" style="margin-bottom:8px;">${list.length} sual</div>` + list.map(q => `<div class="qb-row" onclick="qbEdit('${q.id}')">
       <div class="qb-no">${q.no || "•"}</div>
       <div style="flex:1;min-width:0;"><div class="qb-txt">${esc(q.text || "(şəkilli sual)")}</div><div class="qb-sub">${esc((fd ? [q.topic, { open: "Açıq (kodlaşdırılan)", detailed: "Yazılı (ətraflı)" }[q.examType]] : [q.year, q.exam, q.topic]).filter(Boolean).join(" · "))}</div></div>
       ${q.imageBase64 ? `<img class="qb-th" src="${q.imageBase64}" alt="">` : ""}
-      <span class="qb-ans">${L[q.correctIndex] || "?"}</span></div>`).join("") : `<div class="empty-state">Sual yoxdur. «JSON yüklə» ilə əlavə edin.</div>`;
+      <span class="qb-ans">${L[q.correctIndex] || "?"}</span></div>`).join("") : `<div class="empty-state">Sual yoxdur. «JSON yüklə» ilə əlavə edin.</div>`);
     ttmTeX($("qb-list"));
   }
+  // qovluğun içindəki fayllar (sınaqlar)
+  function qbSets(a, fd) {
+    const g = {};
+    a.forEach(q => { const o = g[q.set] = g[q.set] || { n: 0, img: 0, open: 0, subj: q.subject || "" }; o.n++; if (q.imageBase64) o.img++; if (q.examType === "open" || q.examType === "detailed") o.open++; });
+    const names = Object.keys(g).sort((x, y) => x.localeCompare(y, "az")), custom = !QB_BASE.includes(fd);
+    $("qb-list").innerHTML = `<div class="muted-note" style="margin-bottom:8px;">📁 ${esc(QB_F[fd] || "")} · ${names.length} fayl</div>` + (names.length ? names.map(n => { const o = g[n];
+      return `<div class="qb-row qb-file" data-set="${esc(n)}" onclick="qbF('t',this.dataset.set)"><div class="qb-fic">📄</div>
+        <div style="flex:1;min-width:0;"><div class="qb-ftt">${esc(n)}</div><div class="qb-sub">${[o.subj, o.n + " sual", o.open ? o.open + " açıq/yazılı" : "", o.img ? o.img + " şəkilli" : ""].filter(Boolean).map(esc).join(" · ")}</div></div>
+        <span class="v2-chev">›</span></div>`; }).join("")
+      : `<div class="empty-state">Bu qovluq boşdur. «JSON yüklə» ilə fayl əlavə edin.${custom ? `<br><button class="btn-small" style="margin-top:12px" onclick="qbDelFolder('${fd}')">🗑 Qovluğu sil</button>` : ""}</div>`);
+  }
+  window.qbNewFolder = () => {
+    const ov = sheet(`<div class="pq-sh-h"><b>Yeni qovluq</b><button class="pq-x" onclick="this.closest('.pq-ov').remove()">✕</button></div>
+      <div class="field" style="margin-bottom:10px;"><label>Qovluğun adı</label><input type="text" id="qb-nf" maxlength="40" placeholder="Məs.: Olimpiada sualları"></div>
+      <button class="pq-go" id="qb-nfgo">Yarat</button>`);
+    const inp = ov.querySelector("#qb-nf"); setTimeout(() => inp.focus(), 60);
+    const go = ov.querySelector("#qb-nfgo");
+    const make = async () => {
+      const name = inp.value.trim().replace(/\s+/g, " ");
+      if (!name) { toast("Qovluğa ad yazın"); return; }
+      if (Object.values(QB_F).some(v => v.toLocaleLowerCase("az") === name.toLocaleLowerCase("az"))) { toast("Bu adda qovluq artıq var"); return; }
+      go.disabled = true;
+      const key = "f" + Date.now().toString(36), n = Object.keys(QB.folders || {}).length;
+      try {
+        if (!QB.fOk) await qbFolders();
+        await db.collection("qbankMeta").doc("index").set({ folders: { [key]: { name, color: QB_COL[n % QB_COL.length] } } }, { merge: true });
+        QB.folders = { ...(QB.folders || {}), [key]: { name, color: QB_COL[n % QB_COL.length] } }; QB_F[key] = name;
+        if (window._PQ) window._PQ.idx = null;
+        ov.remove(); QB.f.d = key; QB.f.t = ""; QB.f.y = ""; render();
+        toast(`📁 «${name}» qovluğu yaradıldı`);
+      } catch (e) { console.error(e); go.disabled = false; toast("Xəta: " + (e.code === "permission-denied" ? "icazə yoxdur" : errAz(e))); }
+    };
+    go.onclick = make; inp.onkeydown = e => { if (e.key === "Enter") make(); };
+  };
+  window.qbDelFolder = async (key) => {
+    if (QB_BASE.includes(key) || (QB.all || []).some(q => q.set && q.folder === key)) return;
+    if (!confirm(`«${QB_F[key]}» qovluğu silinsin?`)) return;
+    try {
+      await db.collection("qbankMeta").doc("index").update({ ["folders." + key]: firebase.firestore.FieldValue.delete() });
+      delete QB.folders[key]; delete QB_F[key]; QB.f.d = ""; QB.f.t = ""; render(); toast("Qovluq silindi");
+    } catch (e) { console.error(e); toast("Xəta: " + errAz(e)); }
+  };
   window.qbF = (k, v) => { QB.f[k] = v; render(); };
   window.qbD = d => { QB.f.d = d; QB.f.t = ""; QB.f.y = ""; render(); };
 
@@ -12545,11 +12607,19 @@ function homeExtra(){
 
   // ---------- JSON yükləmə ----------
   window.qbImport = async (inp) => {
-    const f = inp.files[0]; inp.value = "";
+    const f = inp.files[0];
     if (!f) return;
-    let arr, meta = {};
-    try { const d = JSON.parse(await f.text()); arr = Array.isArray(d) ? d : d.questions; meta = (d && d.meta) || {}; if (!Array.isArray(arr)) throw 0; }
-    catch (e) { toast("Bu fayl düzgün sual faylı deyil"); return; }
+    let arr, meta = {}, raw = "";
+    // faylı əvvəl oxu, sonra input-u təmizlə (bəzi telefonlarda əvvəl təmizləyəndə fayl oxunmur)
+    try { raw = await f.text(); }
+    catch (e1) {
+      try { raw = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result || "")); r.onerror = () => rej(r.error); r.readAsText(f, "utf-8"); }); }
+      catch (e2) { inp.value = ""; toast("Fayl oxunmadı (" + ((e2 && e2.name) || (e1 && e1.name) || "xəta") + "). Faylı yenidən endirib seçin"); return; }
+    }
+    inp.value = "";
+    raw = raw.replace(/^﻿/, "").trim();
+    try { const d = JSON.parse(raw); arr = Array.isArray(d) ? d : d && d.questions; meta = (d && d.meta) || {}; if (!Array.isArray(arr)) throw new Error("questions yoxdur"); }
+    catch (e) { console.error("qbImport", f.name, f.size, raw.length, e); toast(`Bu fayl düzgün sual faylı deyil (${f.name}, ${Math.round(f.size / 1024)} KB, oxunan: ${raw.length} simvol): ${(e && e.message || "").slice(0, 60)}`); return; }
     if (!QB.all) await qbLoad();
     const ok = [], bad = [];
     arr.forEach((q, i) => {
@@ -14185,7 +14255,7 @@ window.addEventListener("resize", () => { clearTimeout(window._bqFitT); window._
   const sortQ = a => a.sort((x, y) => (x.year || 0) - (y.year || 0) || (x.no || 0) - (y.no || 0));
   async function getIdx() {
     if (BQ.idx) return BQ.idx;
-    try { const d = await db.collection("qbankMeta").doc("index").get(); if (d.exists && d.data().topics) { BQ.sets = d.data().sets || {}; return (BQ.idx = d.data().topics); } } catch (e) { console.warn(e); }
+    try { const d = await db.collection("qbankMeta").doc("index").get(); if (d.exists && d.data().topics) { BQ.sets = d.data().sets || {}; BQ.folders = d.data().folders || {}; return (BQ.idx = d.data().topics); } } catch (e) { console.warn(e); }
     const s = await db.collection("questions").get(), t = {}; BQ.sets = {};
     s.forEach(x => {
       const q = { id: x.id, ...x.data() };
@@ -14263,16 +14333,17 @@ window.addEventListener("resize", () => { clearTimeout(window._bqFitT); window._
     const cnt = {};
     Object.values(I).forEach(o => { const s = o.subject || "Riyaziyyat"; if (!okS(s)) return; cnt[s] = (cnt[s] || 0) + o.count; });
     const subs = Object.keys(cnt).sort((a, b) => a.localeCompare(b, "az"));
-    const SF = BQ_SF, sets = BQ.sets || {};
+    const SF = sfAll(), sets = BQ.sets || {};
     const fold = Object.keys(SF).map(f => { const n = Object.values(sets).filter(o => (o.folder || "buraxilis") === f && okS(o.subject)).length;
-      return `<button class="bq-it" onclick="bqFolder('${f}')"><span class="ic" style="background:${SF[f][1]}">📁</span><div><div class="t">${SF[f][0]}</div><div class="s">${n ? n + " hazır sınaq · hamısını bir dəfəyə seç" : "Hələ boşdur"}</div></div><span class="v2-chev" style="margin-left:auto">›</span></button>`; }).join("");
+      return `<button class="bq-it" onclick="bqFolder('${f}')"><span class="ic" style="background:${SF[f][1]}">📁</span><div><div class="t">${esc(SF[f][0])}</div><div class="s">${n ? n + " hazır sınaq · hamısını bir dəfəyə seç" : "Hələ boşdur"}</div></div><span class="v2-chev" style="margin-left:auto">›</span></button>`; }).join("");
     sheet("Fənni seçin", `<div class="pq-lbl" style="margin-top:0">Hazır sınaqlar</div>${fold}<div class="pq-lbl">Mövzular üzrə</div>` + (subs.length ? subs.map(s => { const ic = icon(s); return `<button class="bq-it" onclick='bqSubj(${JSON.stringify(s).replace(/'/g, "&#39;")})'><span class="ic" style="background:${ic.bg}">${ic.t}</span><div><div class="t">${esc(s)}</div><div class="s">${cnt[s]} sual</div></div><span class="v2-chev" style="margin-left:auto">›</span></button>`; }).join("") : `<div class="pq-empty">Baza boşdur. «Sual bazası» bölməsindən JSON yükləyin.</div>`), footHtml());
   }
   const BQ_SF = { buraxilis: ["Buraxılış sınaqları", "#ef4444"], blok: ["Blok sınaqları", "#6366f1"], kuiz: ["Kuizlər", "#10b981"] };
+  const sfAll = () => { const o = { ...BQ_SF }; Object.entries(BQ.folders || {}).forEach(([k, v]) => { if (v && v.name) o[k] = [v.name, v.color || "#f59e0b"]; }); return o; };
   window.bqFolder = async (f) => {
     BQ.view = "folder"; BQ.folder = f; await getIdx();
     const L2 = Object.entries(BQ.sets || {}).filter(([, o]) => (o.folder || "buraxilis") === f && okS(o.subject)).sort((a, b) => a[0].localeCompare(b[0], "az"));
-    sheet((BQ_SF[f] || BQ_SF.buraxilis)[0], L2.length ? L2.map(([n, o]) => `<button class="bq-it" onclick='bqTopic(${JSON.stringify("set:" + n).replace(/'/g, "&#39;")})'><div style="min-width:0"><div class="t">${esc(n)}</div><div class="s">${esc(o.subject || "")} · ${o.count} sual</div></div><span class="v2-chev" style="margin-left:auto">›</span></button>`).join("")
+    sheet(esc((sfAll()[f] || BQ_SF.buraxilis)[0]), L2.length ? L2.map(([n, o]) => `<button class="bq-it" onclick='bqTopic(${JSON.stringify("set:" + n).replace(/'/g, "&#39;")})'><div style="min-width:0"><div class="t">${esc(n)}</div><div class="s">${esc(o.subject || "")} · ${o.count} sual</div></div><span class="v2-chev" style="margin-left:auto">›</span></button>`).join("")
       : `<div class="pq-empty">Bu papka boşdur. «Sual bazası» bölməsindən sınaq JSON-u yükləyin.</div>`, footHtml(), "bqSubjects()");
   };
   window.bqSubj = async (s) => {
@@ -14359,7 +14430,7 @@ window.addEventListener("resize", () => { clearTimeout(window._bqFitT); window._
     const t = ($("qb-ft") || {}).value;
     if (!t) { toast("Əvvəlcə yuxarıdan mövzu seçin"); return; }
     adminNewExam();
-    setTimeout(() => { try { wzGo(2, true); } catch (e) {} const qs = (document.getElementById("qb-ftl") || {}).textContent === "Sınaq"; if (qs) BQ.folder = (document.querySelector("#qb-fd .on") || {}).textContent.includes("Blok") ? "blok" : (document.querySelector("#qb-fd .on") || {}).textContent.includes("Kuiz") ? "kuiz" : "buraxilis"; bqOpen(qs ? "set:" + t : t); }, 80);
+    setTimeout(() => { try { wzGo(2, true); } catch (e) {} const qs = (document.getElementById("qb-ftl") || {}).textContent === "Sınaq"; if (qs) BQ.folder = ((document.querySelector("#qb-fd .on") || {}).dataset || {}).f || "buraxilis"; bqOpen(qs ? "set:" + t : t); }, 80);
   };
 
   // ---------- sınaq yaradanda ön baxış ----------
