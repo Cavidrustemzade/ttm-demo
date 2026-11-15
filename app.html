@@ -299,8 +299,35 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .upload-choice-sub { font-size:11px; color:var(--color-text-muted); }
 .upload-choice-card input[type="file"] { position:absolute; inset:0; opacity:0; cursor:pointer; }
 
-.crop-modal-box { background:var(--color-white); border-radius:var(--radius-lg); max-width:520px; width:100%; max-height:92vh; overflow-y:auto; padding:18px; box-shadow:var(--shadow-lg); position:relative; }
-.crop-canvas-wrap { position:relative; width:100%; overflow:hidden; border-radius:10px; border:1px solid var(--color-gray); background:#666; touch-action:none; margin-bottom:10px; }
+.crop-modal-box { background:var(--color-white); border-radius:var(--radius-lg); max-width:560px; width:100%; max-height:92vh; max-height:calc(100dvh - 20px); display:flex; flex-direction:column; overflow:hidden; box-shadow:var(--shadow-lg); position:relative; }
+.crop-head { display:flex; align-items:center; gap:10px; padding:12px 12px 10px 18px; flex-shrink:0; }
+.crop-head h3 { flex:1; margin:0; font-size:17px; }
+.crop-x { width:40px; height:40px; border-radius:50%; background:var(--color-light-gray); color:var(--color-text-muted); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.crop-x svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; }
+.crop-nav { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:0 14px 10px; flex-shrink:0; border-bottom:1px solid var(--color-gray); }
+.crop-nav .btn-outline { min-height:40px; min-width:92px; }
+.crop-nav .btn-outline:disabled { opacity:.4; }
+.crop-nav span { margin:0; font-size:13px; font-weight:600; font-variant-numeric:tabular-nums; }
+.crop-body { flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; padding:12px 14px 14px; }
+.crop-tools { display:flex; gap:8px; margin-bottom:10px; }
+.crop-tools button { min-height:44px; }
+.crop-tools #crop-auto-btn { flex:1; }
+.crop-tools #crop-manual-btn.on { background:var(--color-primary); color:#fff; }
+.crop-opts { display:flex; flex-wrap:wrap; gap:6px 16px; margin-bottom:10px; }
+.crop-opts label { display:flex; gap:8px; align-items:center; min-height:32px; margin:0; font-size:13px; color:var(--color-text-muted); cursor:pointer; }
+.crop-opts input { width:18px; height:18px; flex-shrink:0; }
+.crop-foot { flex-shrink:0; padding:10px 14px; padding-bottom:calc(10px + env(safe-area-inset-bottom, 0px)); border-top:1px solid var(--color-gray); background:var(--color-white); box-shadow:0 -6px 16px rgba(11,60,93,.06); }
+.crop-foot-info { display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:8px; }
+.crop-foot-info .muted-note { margin:0; font-variant-numeric:tabular-nums; }
+.crop-foot-info #crop-added-count { white-space:nowrap; }
+.crop-foot-row { display:flex; gap:8px; }
+.crop-foot-row button { min-height:46px; }
+.crop-foot-row .btn-small { flex:1; font-size:14px; }
+.crop-foot-row .btn-small:disabled { opacity:.6; }
+.crop-canvas-wrap { position:relative; width:100%; overflow:hidden; border-radius:10px; border:1px solid var(--color-gray); background:#666; touch-action:pan-y; }
+.crop-canvas-wrap.manual { touch-action:none; cursor:crosshair; }
+.crop-canvas-wrap.manual .crop-auto-box { pointer-events:none; opacity:.4; }
+@media (max-width:480px) { #crop-modal-overlay { padding:10px !important; } }
 .crop-auto-layer { position:absolute; inset:0; pointer-events:none; }
 .crop-auto-box { position:absolute; border:2px solid #16a34a; background:rgba(22,163,74,.10); border-radius:4px; pointer-events:auto; cursor:pointer; }
 .crop-auto-box.txt { border-color:#2563eb; background:rgba(37,99,235,.10); }
@@ -313,6 +340,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 .crop-auto-num { position:absolute; top:-2px; right:-2px; background:#16a34a; color:#fff; font-size:10px; font-weight:700; padding:1px 5px; border-radius:0 4px 0 4px; }
 .crop-auto-box.off .crop-auto-num { background:#dc2626; }
 .crop-h { position:absolute; width:18px; height:18px; border-radius:50%; background:#fff; border:2px solid #16a34a; touch-action:none; }
+.crop-h::after { content:""; position:absolute; inset:-11px; }
 .crop-h.tl { left:-9px; top:-9px; } .crop-h.br { right:-9px; bottom:-9px; }
 .crop-auto-box.off .crop-h { display:none; }
 .crop-selection-box { position:absolute; border:2px dashed #fff; background:rgba(11,60,93,.25); box-shadow:0 0 0 2000px rgba(0,0,0,.35); display:none; }
@@ -1981,43 +2009,56 @@ function ttmConfirm(msg){return new Promise(function(res){var m=document.createE
 
       <!-- KIRPMA ALƏTİ MODALI -->
       <div id="crop-modal-overlay" style="display:none; position:fixed; inset:0; z-index:70; background:rgba(11,60,93,.35); backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:16px;">
-        <div class="crop-modal-box">
-          <button id="crop-modal-close-btn" style="position:absolute; top:14px; right:14px; width:30px; height:30px; border-radius:50%; background:var(--color-light-gray); color:var(--color-text-muted); font-size:16px;">✕</button>
-          <h3 style="margin-bottom:6px;">Kəsmə aləti</h3>
-          <p class="muted-note" style="margin-bottom:12px;">PDF-i seçin və "Sualları avtomatik tap" basın — sistem sualları və oxu mətnlərini özü tapıb kəsəcək, mətnə aid sualları mətnə bağlayacaq. İstəsəniz əl ilə də çərçivə çəkib "Kəs və əlavə et" basa bilərsiniz.</p>
-
-          <div id="crop-step-upload">
-            <div class="field"><input type="file" accept="application/pdf" id="crop-pdf-input" /></div>
+        <div class="crop-modal-box" role="dialog" aria-label="Kəsmə aləti">
+          <div class="crop-head">
+            <h3>Kəsmə aləti</h3>
+            <button id="crop-modal-close-btn" class="crop-x" aria-label="Bağla"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+          </div>
+          <div class="crop-nav" id="crop-nav" style="display:none;">
+            <button class="btn-outline" id="crop-prev-page-btn">← Səhifə</button>
+            <span class="muted-note" id="crop-page-label">Səhifə 1/1</span>
+            <button class="btn-outline" id="crop-next-page-btn">Səhifə →</button>
           </div>
 
-          <div id="crop-step-editor" style="display:none;">
-            <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px; flex-wrap:wrap;">
-              <button class="btn-small" id="crop-auto-btn" style="flex:1; min-width:180px;">Sualları avtomatik tap</button>
-              <label class="muted-note" style="display:flex; gap:6px; align-items:center; cursor:pointer;"><input type="checkbox" id="crop-auto-wm" checked style="width:auto;" /> Su nişanını təmizlə</label>
-              <label class="muted-note" style="display:flex; gap:6px; align-items:center; cursor:pointer;" title="Söndürsəniz, şəkildə PDF-in öz nömrəsi qalır və kağız PDF-də ikinci nömrə yazılmır"><input type="checkbox" id="crop-auto-num" checked style="width:auto;" /> PDF-dəki sual nömrələrini sil</label>
+          <div class="crop-body" id="crop-body">
+            <div id="crop-step-upload">
+              <p class="muted-note" style="margin:0 0 12px;">PDF seçin. Sistem sualları və oxu mətnlərini özü tapıb kəsir, mətnə aid sualları mətnə bağlayır. İstəsəniz əl ilə də kəsə bilərsiniz.</p>
+              <div class="field" style="margin-bottom:4px;"><input type="file" accept="application/pdf" id="crop-pdf-input" /></div>
             </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-              <button class="btn-outline" id="crop-prev-page-btn">← Səhifə</button>
-              <span class="muted-note" id="crop-page-label">Səhifə 1/1</span>
-              <button class="btn-outline" id="crop-next-page-btn">Səhifə →</button>
-            </div>
-            <div class="crop-canvas-wrap" id="crop-canvas-wrap">
-              <canvas id="crop-canvas" style="width:100%; display:block;"></canvas>
-              <div class="crop-selection-box" id="crop-selection-box"></div>
-              <div class="crop-auto-layer" id="crop-auto-layer"></div>
-            </div>
-            <div id="crop-auto-review" style="display:none; margin-bottom:10px; padding:10px; border-radius:10px; background:rgba(22,163,74,.08);">
-              <div class="muted-note" id="crop-auto-info" style="margin-bottom:8px;"></div>
-              <div style="display:flex; gap:8px;">
-                <button class="btn-small" id="crop-auto-add-btn" style="flex:1;">Hamısını əlavə et</button>
-                <button class="btn-outline" id="crop-auto-clear-btn">Ləğv et</button>
+
+            <div id="crop-step-editor" style="display:none;">
+              <div class="crop-tools">
+                <button class="btn-small" id="crop-auto-btn">Sualları avtomatik tap</button>
+                <button class="btn-outline" id="crop-manual-btn" aria-pressed="false">Əl ilə kəs</button>
+              </div>
+              <div class="crop-opts">
+                <label><input type="checkbox" id="crop-auto-wm" checked /> Su nişanını təmizlə</label>
+                <label title="Söndürsəniz, şəkildə PDF-in öz nömrəsi qalır və kağız PDF-də ikinci nömrə yazılmır"><input type="checkbox" id="crop-auto-num" checked /> PDF-dəki sual nömrələrini sil</label>
+              </div>
+              <div class="muted-note" id="crop-hint" style="margin:0 0 8px;"></div>
+              <div class="crop-canvas-wrap" id="crop-canvas-wrap">
+                <canvas id="crop-canvas" style="width:100%; display:block;"></canvas>
+                <div class="crop-selection-box" id="crop-selection-box"></div>
+                <div class="crop-auto-layer" id="crop-auto-layer"></div>
               </div>
             </div>
-            <div style="display:flex; gap:8px;">
-              <button class="btn-small" id="crop-confirm-btn" style="flex:1;">Kəs və əlavə et</button>
-              <button class="btn-outline" id="crop-new-pdf-btn">Başqa PDF</button>
+          </div>
+
+          <div class="crop-foot" id="crop-foot" style="display:none;">
+            <div class="crop-foot-info">
+              <div class="muted-note" id="crop-auto-info"></div>
+              <div class="muted-note" id="crop-added-count" style="display:none;"></div>
             </div>
-            <div class="muted-note" style="margin-top:8px;" id="crop-added-count">Əlavə edilmiş sual: 0</div>
+            <div class="crop-foot-row" id="crop-auto-review" style="display:none;">
+              <button class="btn-small" id="crop-auto-add-btn">Hamısını əlavə et</button>
+              <button class="btn-outline" id="crop-auto-clear-btn">Ləğv et</button>
+            </div>
+            <div class="crop-foot-row" id="crop-manual-row" style="display:none;">
+              <button class="btn-small" id="crop-confirm-btn">Kəs və əlavə et</button>
+            </div>
+            <div class="crop-foot-row" id="crop-idle-row">
+              <button class="btn-outline" id="crop-new-pdf-btn" style="flex:1;">Başqa PDF seç</button>
+            </div>
           </div>
         </div>
       </div>
@@ -4212,11 +4253,57 @@ let cropAddedCount = 0;
 let cropSelecting = false;
 let cropStartPt = null;
 
+let cropManual = false;   // əl ilə çərçivə çəkmə rejimi (söndürülübsə səhifə barmaqla sürüşür)
+let cropClosing = false;
+
+function cropShowStep(editor) {
+  document.getElementById("crop-step-upload").style.display = editor ? "none" : "block";
+  document.getElementById("crop-step-editor").style.display = editor ? "block" : "none";
+  document.getElementById("crop-nav").style.display = editor ? "flex" : "none";
+  document.getElementById("crop-foot").style.display = editor ? "block" : "none";
+}
+function cropShowAdded() {
+  const el = document.getElementById("crop-added-count");
+  el.textContent = `Əlavə edilib: ${cropAddedCount}`;
+  el.style.display = cropAddedCount ? "block" : "none";
+}
+function cropSetManual(on) {
+  cropManual = !!on;
+  const b = document.getElementById("crop-manual-btn");
+  b.classList.toggle("on", cropManual);
+  b.setAttribute("aria-pressed", cropManual ? "true" : "false");
+  document.getElementById("crop-canvas-wrap").classList.toggle("manual", cropManual);
+  if (!cropManual) hideCropSelection();
+  if (typeof autoUpdateInfo === "function") autoUpdateInfo();
+}
+// Aləti ilkin vəziyyətə qaytarır (PDF yaddan çıxır)
+function cropResetTool() {
+  autoReset();
+  cropSetManual(false);
+  const d = cropPdfDoc;
+  cropPdfDoc = null;
+  if (d && !autoBusy) { try { d.destroy(); } catch (e) {} }
+  document.getElementById("crop-pdf-input").value = "";
+  const cv = document.getElementById("crop-canvas");
+  cv.width = cv.height = 0;
+  cropShowStep(false);
+}
 function openCropModal() {
   document.getElementById("crop-modal-overlay").style.display = "flex";
   document.body.style.overflow = "hidden";
 }
-function closeCropModal() {
+async function closeCropModal() {
+  if (cropClosing) return;
+  if (autoAdding) { toast("Suallar kəsilir — bitənə qədər gözləyin"); return; }
+  const c = autoCounts();
+  if (autoBusy || c.qAll || c.tAll) {
+    cropClosing = true;
+    const msg = "Kəsmə aləti bağlansın?\nTapılmış, amma hələ əlavə edilməmiş suallar itəcək.";
+    let ok;
+    try { ok = typeof ttmConfirm === "function" ? await ttmConfirm(msg) : confirm(msg); } finally { cropClosing = false; }
+    if (!ok) return;
+  }
+  cropResetTool();
   document.getElementById("crop-modal-overlay").style.display = "none";
   document.body.style.overflow = "";
 }
@@ -4225,12 +4312,11 @@ document.getElementById("crop-modal-close-btn").addEventListener("click", closeC
 document.getElementById("crop-modal-overlay").addEventListener("click", (e) => {
   if (e.target.id === "crop-modal-overlay") closeCropModal();
 });
+document.getElementById("crop-manual-btn").addEventListener("click", () => cropSetManual(!cropManual));
 
 document.getElementById("crop-new-pdf-btn").addEventListener("click", () => {
-  document.getElementById("crop-step-editor").style.display = "none";
-  document.getElementById("crop-step-upload").style.display = "block";
-  document.getElementById("crop-pdf-input").value = "";
-  cropPdfDoc = null;
+  if (autoAdding) return;
+  cropResetTool();
 });
 
 document.getElementById("crop-pdf-input").addEventListener("change", async (e) => {
@@ -4244,12 +4330,13 @@ document.getElementById("crop-pdf-input").addEventListener("change", async (e) =
     cropTotalPages = cropPdfDoc.numPages;
     cropCurrentPage = 1;
     cropAddedCount = 0;
-    document.getElementById("crop-added-count").textContent = "Əlavə edilmiş sual: 0";
-    document.getElementById("crop-step-upload").style.display = "none";
-    document.getElementById("crop-step-editor").style.display = "block";
+    cropShowAdded();
+    cropShowStep(true);
     await renderCropPage();
   } catch (err) {
     console.error(err);
+    cropPdfDoc = null;
+    cropShowStep(false);
     toast("PDF açıla bilmədi: " + errAz(err));
   }
 });
@@ -4263,15 +4350,17 @@ async function renderCropPage() {
   const ctx = canvas.getContext("2d");
   await page.render({ canvasContext: ctx, viewport }).promise;
   document.getElementById("crop-page-label").textContent = `Səhifə ${cropCurrentPage}/${cropTotalPages}`;
+  document.getElementById("crop-prev-page-btn").disabled = cropCurrentPage <= 1;
+  document.getElementById("crop-next-page-btn").disabled = cropCurrentPage >= cropTotalPages;
   hideCropSelection();
   if (typeof renderAutoBoxes === "function") renderAutoBoxes();
 }
 
 document.getElementById("crop-prev-page-btn").addEventListener("click", async () => {
-  if (cropCurrentPage > 1) { cropCurrentPage--; await renderCropPage(); }
+  if (cropPdfDoc && cropCurrentPage > 1) { cropCurrentPage--; await renderCropPage(); document.getElementById("crop-body").scrollTop = 0; }
 });
 document.getElementById("crop-next-page-btn").addEventListener("click", async () => {
-  if (cropCurrentPage < cropTotalPages) { cropCurrentPage++; await renderCropPage(); }
+  if (cropPdfDoc && cropCurrentPage < cropTotalPages) { cropCurrentPage++; await renderCropPage(); document.getElementById("crop-body").scrollTop = 0; }
 });
 
 // ---- Toxunma/mouse ilə çərçivə çəkmə ----
@@ -4292,6 +4381,7 @@ function getRelPos(e) {
 }
 
 cropWrap.addEventListener("pointerdown", (e) => {
+  if (!cropManual) return; // adi halda toxunuş səhifəni sürüşdürür, kəsmir
   cropSelecting = true;
   cropStartPt = getRelPos(e);
   cropBox.style.display = "block";
@@ -4310,31 +4400,35 @@ cropWrap.addEventListener("pointermove", (e) => {
   cropBox.style.height = ((y1 - y0) * wrapRect.height) + "px";
 });
 cropWrap.addEventListener("pointerup", () => { cropSelecting = false; });
+cropWrap.addEventListener("pointercancel", () => { cropSelecting = false; });
 
-document.getElementById("crop-confirm-btn").addEventListener("click", () => {
+document.getElementById("crop-confirm-btn").addEventListener("click", async () => {
+  if (!cropPdfDoc || autoBusy) return;
   if (!cropRectNorm || cropRectNorm.x1 - cropRectNorm.x0 < 0.02 || cropRectNorm.y1 - cropRectNorm.y0 < 0.02) {
     toast("Əvvəlcə sualın ətrafında çərçivə çəkin");
     return;
   }
-  const srcCanvas = document.getElementById("crop-canvas");
-  const sx = cropRectNorm.x0 * srcCanvas.width;
-  const sy = cropRectNorm.y0 * srcCanvas.height;
-  const sw = (cropRectNorm.x1 - cropRectNorm.x0) * srcCanvas.width;
-  const sh = (cropRectNorm.y1 - cropRectNorm.y0) * srcCanvas.height;
-
-  const outCanvas = document.createElement("canvas");
-  outCanvas.width = sw;
-  outCanvas.height = sh;
-  const ctx = outCanvas.getContext("2d");
-  ctx.drawImage(srcCanvas, sx, sy, sw, sh, 0, 0, sw, sh);
-  const base64 = outCanvas.toDataURL("image/jpeg", 0.85);
-
-  examQuestions.push({ type: "mcq", text: "", imageBase64: base64, options: OPTION_LETTERS.slice(), correctIndex: 0, correctAnswer: "", textId: "" });
-  renderQuestionBuilder();
-  cropAddedCount++;
-  document.getElementById("crop-added-count").textContent = `Əlavə edilmiş sual: ${cropAddedCount}`;
-  hideCropSelection();
-  toast(`Sual əlavə edildi (${cropAddedCount})`);
+  const btn = document.getElementById("crop-confirm-btn");
+  btn.disabled = true;
+  try {
+    // seçilmiş hissə səhifədən ayrıca, yüksək dəqiqliklə çəkilir
+    const page = await cropPdfDoc.getPage(cropCurrentPage);
+    const c = await autoCutRegion(page, cropRectNorm, document.getElementById("crop-auto-wm").checked, false, false);
+    if (!c) { toast("Çərçivə çox kiçikdir"); return; }
+    const base64 = autoEncode([c], 700000)[0];
+    c.width = c.height = 0;
+    examQuestions.push({ type: "mcq", text: "", imageBase64: base64, options: OPTION_LETTERS.slice(), correctIndex: 0, correctAnswer: "", textId: "" });
+    renderQuestionBuilder();
+    cropAddedCount++;
+    cropShowAdded();
+    hideCropSelection();
+    toast(`Sual əlavə edildi (${cropAddedCount})`);
+  } catch (err) {
+    console.error(err);
+    toast("Kəsmə zamanı xəta: " + errAz(err));
+  } finally {
+    btn.disabled = false;
+  }
 });
 
 
@@ -4346,9 +4440,14 @@ TTM_LIBS.tess = "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.
 let autoBoxes = {};        // səhifə → [{kind:"q"|"t", ...}] (koordinatlar 0-1 nisbətində)
 let autoGroups = {};       // mətn qrupları: gid → {range, qSeqs, label}
 let autoBusy = false;
+let autoAdding = false;    // "Hamısını əlavə et" işləyir (bu vaxt alət bağlanmır)
 let autoCancel = false;
 let autoOcrWorker = null;
 
+// OCR Azərbaycan hərflərini (ş, ı, ə) səhv oxuya bilər — skan üçün dözümlü variant
+const AUTO_STOP_OCR_RE = /(oxuyun|cavabland|tap[sşg$][ıi1l!]r[ıi1l!]q|t[əeao]l[əeao]b olunan|read the (text|passage)|answer the questions)/i;
+const AUTO_CUT_W = 1600;      // kəsilən şəklin hədəf eni (piksel) — yazı böyüdəndə də aydın qalsın
+const AUTO_CUT_AREA = 9e6;    // bir kəsiyin maksimum sahəsi (telefon yaddaşını qorumaq üçün)
 const AUTO_STOP_RE = /(oxuyun|cavabland|tapşırıq|tələb olunan|read the (text|passage)|answer the questions|прочитайте|выполните задани)/i;
 // Bölmə başlıqları (məs. boz zolaqda "Riyaziyyat") — sual orada bitir
 const AUTO_SEC_RE = /^\s*(riyaziyyat|azərbaycan dili|ingilis dili|rus dili|русский язык|english|ədəbiyyat|tarix|azərbaycan tarixi|ümumi tarix|fizika|kimya|biologiya|coğrafiya|informatika|məntiq|alman dili|fransız dili)\s*$/i;
@@ -4414,7 +4513,7 @@ async function autoNumbersFromText(page, vp) {
       const maxR = line.length ? line[line.length - 1].r : it.r;
       const nf = items.filter(o => o.y > it.y + it.h * 0.5 && o.y < it.y + it.h * 1.9 && o.x > it.x - W * 0.1 && o.x < maxR + W * 0.02).sort((a, b) => a.x - b.x)[0];
       const next = nf ? lineOf(nf).map(o => o.s).join("") : "";
-    out.push({ k: "s", x: it.x, top: it.y - it.h, h: it.h, range: autoParseRange(lineTxt + " " + next) });
+    out.push({ k: "s", x: it.x, top: it.y - it.h, h: it.h, range: autoParseRange(lineTxt + " " + next), sec: !AUTO_STOP_RE.test(lineTxt) });
     }
   });
   return out;
@@ -4424,26 +4523,81 @@ async function autoNumbersFromOcr(cv) {
   await ensureLib("tess");
   if (!autoOcrWorker) autoOcrWorker = await Tesseract.createWorker("eng");
   const { data } = await autoOcrWorker.recognize(cv);
-  const out = [], lines = data.lines || [];
+  const out = [], lines = (data && data.lines) || [], W = cv.width;
   lines.forEach((L, li) => {
-    const w = L.words && L.words[0];
-    if (!w) return;
-    L.words.forEach(o => { if (/^[EЕ]\)/.test(o.text)) out.push({ k: "e", x: o.bbox.x0, y: o.bbox.y1 }); });
-    let m = w.text.match(/^(\d{1,3})[.,)]/);
-    if (!m && /^\d{1,3}$/.test(w.text) && L.words[1] && /^[.,)]/.test(L.words[1].text)) m = [0, w.text];
-    const h = Math.max(8, w.bbox.y1 - w.bbox.y0);
-    if (m) out.push({ k: "n", n: +m[1], x: w.bbox.x0, top: w.bbox.y0, h, ny0: w.bbox.y0 - 1, ny1: w.bbox.y1 + 1 });
-    else if (AUTO_STOP_RE.test(L.text || "") || AUTO_SEC_RE.test(L.text || "")) {
-      const next = lines[li + 1] ? lines[li + 1].text : "";
-      out.push({ k: "s", x: w.bbox.x0, top: w.bbox.y0, h, range: autoParseRange((L.text || "") + " " + next) });
+    const ws = (L.words || []).filter(o => o && o.text && o.bbox);
+    ws.forEach((w, wi) => {
+      if (/^[EЕ][)\]}]/.test(w.text)) out.push({ k: "e", x: w.bbox.x0, y: w.bbox.y1 });
+      // sətrin başı: birinci söz, və ya böyük boşluqdan (qonşu sütundan) sonrakı söz —
+      // OCR bəzən iki sütunun sətirlərini bir sətir kimi qaytarır
+      if (wi > 0 && w.bbox.x0 - ws[wi - 1].bbox.x1 <= W * 0.035) return;
+      let end = wi;
+      while (end + 1 < ws.length && ws[end + 1].bbox.x0 - ws[end].bbox.x1 <= W * 0.035) end++;
+      const seg = ws.slice(wi, end + 1).map(o => o.text).join(" ");
+      let m = w.text.match(/^(\d{1,3})[.,)]/);
+      if (!m && /^\d{1,3}$/.test(w.text) && end > wi && /^[.,)]/.test(ws[wi + 1].text)) m = [0, w.text];
+      const h = Math.max(8, w.bbox.y1 - w.bbox.y0);
+      const pos = { x: w.bbox.x0, top: w.bbox.y0, h, ny0: w.bbox.y0 - 1, ny1: w.bbox.y1 + 1 };
+      if (m) out.push(Object.assign({ k: "n", n: +m[1] }, pos));
+      else if (AUTO_STOP_RE.test(seg) || AUTO_STOP_OCR_RE.test(seg) || AUTO_SEC_RE.test(seg)) {
+        const next = lines[li + 1] ? lines[li + 1].text : "";
+        out.push({ k: "s", x: w.bbox.x0, top: w.bbox.y0, h, range: autoParseRange(seg + " " + next), sec: !(AUTO_STOP_RE.test(seg) || AUTO_STOP_OCR_RE.test(seg)) });
+      }
+      // səhv oxunmuş nömrə ola bilər ("6S.", "l1.") — sonra boşluqları doldurmaq üçün
+      else if (/^[0-9A-Za-z|!?]{1,3}[.,)]/.test(w.text) && !/^[A-Ea-eА-Е][.,)]/.test(w.text)) out.push(Object.assign({ k: "u" }, pos));
+    });
+  });
+  return out;
+}
+
+// Alt-alta düşən başlıq sətirlərini ("Mətni oxuyun və 41-50-ci tapşırıqları" / "cavablandırın.") bir başlıq sayır
+function autoMergeStops(marks, W, k) {
+  const ss = marks.filter(m => m.k === "s" && !m.sec).sort((a, b) => a.top - b.top);
+  const drop = new Set();
+  ss.forEach((m, i) => {
+    for (let j = i - 1; j >= 0; j--) {
+      const p = ss[j];
+      if (drop.has(p) || Math.abs(p.x - m.x) > W * 0.1) continue;
+      if (m.top - p.top < p.h * k) { drop.add(m); if (!p.range) p.range = m.range; }
+      break;
     }
+  });
+  return drop.size ? marks.filter(m => !drop.has(m)) : marks;
+}
+
+// Skan PDF: OCR bir nömrəni səhv oxuyubsa (zəncirdə boşluq), həmin yerdəki uyğun sətir başını nömrə sayır
+function autoFillGaps(chain, marks, W, expect) {
+  if (!chain.length) return chain;
+  const inChain = new Set(chain);
+  const cand = marks.filter(m => (m.k === "u" || m.k === "n") && !inChain.has(m));
+  const near = (m, q) => Math.abs(m.x - q.x) < W * 0.022;
+  const order = (a, b) => (Math.abs(a.x - b.x) < W * 0.1 ? a.top - b.top : a.x - b.x);
+  const out = [];
+  const fill = (list, firstN) => list.sort(order).forEach((m, i) => out.push(Object.assign({}, m, { k: "n", n: firstN + i })));
+  const first = chain[0];
+  if (expect && first.n > expect && first.n - expect <= 3) {
+    const list = cand.filter(m => (near(m, first) && m.top < first.top) || m.x < first.x - W * 0.2);
+    if (list.length === first.n - expect) fill(list, expect);
+  }
+  chain.forEach((b, i) => {
+    const a = chain[i - 1];
+    if (a && b.n - a.n > 1) {
+      const same = Math.abs(a.x - b.x) < W * 0.1;
+      const list = cand.filter(m => same
+        ? (m.top > a.top + a.h && m.top < b.top - b.h && Math.abs(m.x - (a.x + (b.x - a.x) * (m.top - a.top) / Math.max(1, b.top - a.top))) < W * 0.022)
+        : ((near(m, a) && m.top > a.top + a.h) || (near(m, b) && m.top < b.top - b.h)));
+      if (list.length === b.n - a.n - 1) fill(list, a.n + 1);
+    }
+    out.push(b);
   });
   return out;
 }
 
 // Ardıcıl nömrələrin ən uzun zəncirini seçir (səhv tapılanları atır).
 // expect: əvvəlki səhifənin son nömrəsi + 1 (varsa, o nömrədən başlayan zəncir üstündür)
-function autoBestChain(all, W, expect) {
+// gap: neçə nömrənin buraxılmasına icazə var (yalnız skan/OCR üçün; mətnli PDF-də 0)
+function autoBestChain(all, W, expect, gap) {
+  gap = gap || 0;
   let c = (all || []).filter(q => q.k === "n");
   if (!c.length) return [];
   c = c.slice().sort((a, b) => a.n - b.n || a.top - b.top);
@@ -4452,8 +4606,9 @@ function autoBestChain(all, W, expect) {
   const len = c.map(() => 1), dev = c.map(() => 0), prev = c.map(() => -1), st = c.map((_, i) => i);
   for (let i = 0; i < c.length; i++)
     for (let j = 0; j < i; j++) {
-      if (c[j].n !== c[i].n - 1 || !ok(j, i)) continue;
-      const dv = dev[j] + (Math.abs(c[j].x - c[i].x) < W * 0.1 ? Math.abs(c[j].x - c[i].x) : 0);
+      const dn = c[i].n - c[j].n;
+      if (dn < 1 || dn > 1 + gap || !ok(j, i)) continue;
+      const dv = dev[j] + (Math.abs(c[j].x - c[i].x) < W * 0.1 ? Math.abs(c[j].x - c[i].x) : 0) + (dn - 1) * W * 2;
       if (len[j] + 1 > len[i] || (len[j] + 1 === len[i] && dv < dev[i])) { len[i] = len[j] + 1; dev[i] = dv; prev[i] = j; st[i] = st[j]; }
     }
   const score = i => len[i] * 1e6 - dev[i] + (expect && c[st[i]].n === expect ? 1e9 : 0);
@@ -4638,7 +4793,9 @@ async function autoDetectPage(pnum, st, doc) {
   let ocr = false;
   let marks = await autoNumbersFromText(page, vp);
   if (marks === null) { ocr = true; marks = await autoNumbersFromOcr(cv); }
-  const chain = autoBestChain(marks, W, st.expect);
+  marks = autoMergeStops(marks, W, ocr ? 3.2 : 2.2);
+  let chain = autoBestChain(marks, W, st.expect, ocr ? 3 : 0);
+  if (ocr) chain = autoFillGaps(chain, marks, W, st.expect);
   if (chain.length) st.expect = chain[chain.length - 1].n + 1;
   const d = ctx.getImageData(0, 0, W, H).data;
   const A = autoAnalyze(chain, marks, d, W, H);
@@ -4649,7 +4806,7 @@ async function autoDetectPage(pnum, st, doc) {
     const s = autoTrimSeg(d, W, col.a, ya, col.b, yb, A.pad);
     if (!s) return;
     st.open.rows += s.rows;
-    boxes.push(Object.assign({ kind: "t", gid: st.open.gid, on: true }, norm(s)));
+    boxes.push(Object.assign({ kind: "t", gid: st.open.gid, on: true, sc: ocr }, norm(s)));
   };
   const closeOpen = () => {
     if (!st.open) return;
@@ -4675,7 +4832,7 @@ async function autoDetectPage(pnum, st, doc) {
       if (e.t === "q") {
         closeOpen();
         const q = e.q;
-        boxes.push(Object.assign({ kind: "q", n: q.n, seq: ++st.seq, on: true, warn: (q.y1 - q.y0) > H * 0.45, nb: q.nb ? norm(q.nb) : null }, norm(q)));
+        boxes.push(Object.assign({ kind: "q", n: q.n, seq: ++st.seq, on: true, sc: ocr, warn: (q.y1 - q.y0) > H * 0.45, nb: q.nb ? norm(q.nb) : null }, norm(q)));
         cur = Math.max(cur, q.y1);
       } else {
         closeOpen();
@@ -4747,13 +4904,19 @@ function autoCounts() {
 }
 
 function autoUpdateInfo() {
-  const c = autoCounts();
+  const c = autoCounts(), has = !!(c.qAll || c.tAll);
   const here = (autoBoxes[cropCurrentPage] || []).filter(b => b.kind === "q").length;
-  document.getElementById("crop-auto-review").style.display = (c.qAll || c.tAll) ? "block" : "none";
-  document.getElementById("crop-auto-info").innerHTML =
-    `Bu səhifədə: ${here} sual · Seçilmiş: <b>${c.qOn}</b>/${c.qAll} sual${c.tAll ? `, <b>${c.tOn}</b>/${c.tAll} mətn` : ""}.<br>` +
-    `Yaşıl — sual, mavi — mətn, narıncı — yoxlayın (çox uzundur). Toxunsanız çıxarılar (qırmızı), künclərdən çəkib ölçünü düzəldin.`;
-  document.getElementById("crop-auto-add-btn").textContent = `Hamısını əlavə et (${c.qOn} sual${c.tOn ? ", " + c.tOn + " mətn" : ""})`;
+  document.getElementById("crop-auto-review").style.display = (has && !cropManual) ? "flex" : "none";
+  document.getElementById("crop-manual-row").style.display = cropManual ? "flex" : "none";
+  document.getElementById("crop-idle-row").style.display = (!has && !cropManual) ? "flex" : "none";
+  document.getElementById("crop-auto-info").innerHTML = has
+    ? `Seçilib: <b>${c.qOn}</b>/${c.qAll} sual${c.tAll ? `, <b>${c.tOn}</b>/${c.tAll} mətn` : ""} · bu səhifədə ${here}`
+    : (cropManual ? "Əl ilə kəsmə" : "");
+  document.getElementById("crop-hint").textContent = cropManual
+    ? "Sualın ətrafında barmaqla çərçivə çəkin, sonra aşağıdakı «Kəs və əlavə et» düyməsini basın. Bitirəndə «Əl ilə kəs»i söndürün."
+    : (has ? "Yaşıl — sual, mavi — mətn, narıncı — yoxlayın (çox uzundur). Toxunsanız çıxarılar (qırmızı); künclərdən çəkib ölçünü düzəldin." : "");
+  document.getElementById("crop-hint").style.display = (cropManual || has) ? "block" : "none";
+  if (!autoAdding) document.getElementById("crop-auto-add-btn").textContent = `Hamısını əlavə et (${c.qOn} sual${c.tOn ? ", " + c.tOn + " mətn" : ""})`;
 }
 
 function renderAutoBoxes() {
@@ -4821,21 +4984,41 @@ function autoCleanWatermark(ctx, w, h) {
   ctx.putImageData(im, 0, 0);
 }
 
-// Səhifədən bir qutunu ayrıca kətana kəsir
-function autoCutCanvas(cv, b, clean, delNum) {
-  const sx = Math.max(0, Math.round(b.x0 * cv.width)), sy = Math.max(0, Math.round(b.y0 * cv.height));
-  const sw = Math.min(cv.width - sx, Math.round((b.x1 - b.x0) * cv.width)), sh = Math.min(cv.height - sy, Math.round((b.y1 - b.y0) * cv.height));
+// Seçilmiş hissəni səhifədən AYRICA, yüksək dəqiqliklə çəkir (bütün səhifəni böyütmədən —
+// ona görə telefon yaddaşı dolmur, amma yazı 2 dəfə aydın çıxır). b: 0-1 nisbətində qutu
+async function autoRenderRegion(page, b, scan) {
+  const base = page.getViewport({ scale: 1 });
+  const x0 = Math.max(0, b.x0), y0 = Math.max(0, b.y0), x1 = Math.min(1, b.x1), y1 = Math.min(1, b.y1);
+  const wPt = (x1 - x0) * base.width, hPt = (y1 - y0) * base.height;
+  if (wPt < 3 || hPt < 3) return null;
+  const big = Math.max(base.width, base.height);
+  const lo = Math.min(3, 3600 / big);                       // ən azı əvvəlki keyfiyyət
+  const hi = scan ? Math.min(4, 4800 / big) : Math.min(6, 7200 / big); // skanı həddən çox böyütmək fayda vermir
+  let S = Math.max(lo, Math.min(hi, AUTO_CUT_W / wPt));
+  S = Math.min(S, Math.sqrt(AUTO_CUT_AREA / (wPt * hPt)));
+  const sx = Math.round(x0 * base.width * S), sy = Math.round(y0 * base.height * S);
+  const sw = Math.max(1, Math.round(wPt * S)), sh = Math.max(1, Math.round(hPt * S));
   if (sw < 5 || sh < 5) return null;
-  const out = document.createElement("canvas");
-  out.width = sw; out.height = sh;
-  const octx = out.getContext("2d", { willReadFrequently: true });
-  octx.fillStyle = "#fff"; octx.fillRect(0, 0, sw, sh);
-  octx.drawImage(cv, sx, sy, sw, sh, 0, 0, sw, sh);
+  const vp = page.getViewport({ scale: S, offsetX: -sx, offsetY: -sy });
+  const cv = document.createElement("canvas");
+  cv.width = sw; cv.height = sh;
+  const ctx = cv.getContext("2d", { willReadFrequently: true });
+  ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, sw, sh);
+  await page.render({ canvasContext: ctx, viewport: vp }).promise;
+  return { cv, ctx, sx, sy, pw: base.width * S, ph: base.height * S };
+}
+
+// Bir qutunu kəsir: su nişanı təmizlənməsi və nömrə silinməsi istəyə görə.
+// clean=false olduqda şəkil PDF-dəki kimi, heç bir dəyişiklik edilmədən qalır
+async function autoCutRegion(page, b, clean, delNum, scan) {
+  const r = await autoRenderRegion(page, b, scan);
+  if (!r) return null;
+  const out = r.cv, octx = r.ctx, sw = out.width, sh = out.height;
   if (clean) autoCleanWatermark(octx, sw, sh);
   // PDF-dəki nömrəni sil və soldakı boşluğu kəs (öz nömrələrimiz təkrarlanmasın)
   if (delNum && b.nb) {
-    const nx0 = Math.round(b.nb.x0 * cv.width) - sx, ny0 = Math.round(b.nb.y0 * cv.height) - sy;
-    const nx1 = Math.round(b.nb.x1 * cv.width) - sx, ny1 = Math.round(b.nb.y1 * cv.height) - sy;
+    const nx0 = Math.round(b.nb.x0 * r.pw) - r.sx, ny0 = Math.round(b.nb.y0 * r.ph) - r.sy;
+    const nx1 = Math.round(b.nb.x1 * r.pw) - r.sx, ny1 = Math.round(b.nb.y1 * r.ph) - r.sy;
     if (nx1 > 0 && ny1 > 0 && nx0 < sw && ny0 < sh) {
       octx.fillStyle = "#fff";
       octx.fillRect(Math.max(0, nx0), Math.max(0, ny0), Math.min(sw, nx1) - Math.max(0, nx0), Math.min(sh, ny1) - Math.max(0, ny0));
@@ -4846,7 +5029,7 @@ function autoCutCanvas(cv, b, clean, delNum) {
         for (let y = 0; y < sh; y += 1) { const i = (y * sw + x) * 4; if (0.299 * dd[i] + 0.587 * dd[i + 1] + 0.114 * dd[i + 2] < 200) { ink = true; break; } }
         if (ink) { left = x; break; }
       }
-      const cut = Math.max(0, left - Math.round(cv.width * 0.008));
+      const cut = Math.max(0, left - Math.round(r.pw * 0.008));
       if (cut > 0 && cut < sw - 20) {
         const o2 = document.createElement("canvas");
         o2.width = sw - cut; o2.height = sh;
@@ -4863,7 +5046,7 @@ function autoCutCanvas(cv, b, clean, delNum) {
 // Kətanları JPEG-ə çevirir; ümumi ölçü limiti keçməsin deyə keyfiyyəti/ölçünü azaldır
 // (Firestore sənədi 1 MB-dan böyük ola bilməz)
 function autoEncode(canvases, maxChars) {
-  let q = 0.92, sc = 1, urls = [];
+  let q = 0.95, sc = 1, urls = [];
   for (let k = 0; k < 10; k++) {
     urls = canvases.map(c => {
       if (sc === 1) return c.toDataURL("image/jpeg", q);
@@ -4932,21 +5115,24 @@ document.getElementById("crop-auto-add-btn").addEventListener("click", async () 
   const pages = Object.keys(snapB).map(Number).sort((a, b) => a - b);
   const qOut = [];          // {seq, url}
   const tCanv = {};         // gid → [canvas]
-  autoBusy = true; btn.disabled = true;
-  toast("Suallar kəsilir...");
+  autoBusy = true; autoAdding = true; btn.disabled = true;
+  let added = false;
+  const totalOn = pages.reduce((n, p) => n + (snapB[p] || []).filter(b => b.on).length, 0);
+  let done = 0;
+  toast("Suallar yüksək keyfiyyətlə kəsilir — bir az çəkə bilər");
   try {
     for (const p of pages) {
       const list = (snapB[p] || []).filter(b => b.on);
       if (!list.length) continue;
-      btn.textContent = `Kəsilir... səhifə ${p}`;
-      const { cv } = await autoRenderPage(p, doc, true);
-      list.forEach(b => {
-        const c = autoCutCanvas(cv, b, clean, delNum && b.kind === "q");
-        if (!c) return;
+      const page = await doc.getPage(p);
+      for (const b of list) {
+        btn.textContent = `Kəsilir... ${++done}/${totalOn}`;
+        const c = await autoCutRegion(page, b, clean, delNum && b.kind === "q", !!b.sc);
+        if (!c) continue;
         if (b.kind === "q") { qOut.push({ seq: b.seq, url: autoEncode([c], 700000)[0] }); c.width = c.height = 0; }
         else (tCanv[b.gid] = tCanv[b.gid] || []).push(c);
-      });
-      cv.width = cv.height = 0;
+      }
+      try { page.cleanup(); } catch (e) {}
     }
     // mətnləri yarat
     const seqToText = {};
@@ -4968,9 +5154,10 @@ document.getElementById("crop-auto-add-btn").addEventListener("click", async () 
     if (qOut.length || textsAdded) {
       if (textsAdded) renderTextsBuilder(); else renderQuestionBuilder();
       cropAddedCount += qOut.length;
-      document.getElementById("crop-added-count").textContent = `Əlavə edilmiş sual: ${cropAddedCount}`;
+      cropShowAdded();
       autoBoxes = {}; autoGroups = {};
       renderAutoBoxes();
+      added = true;
       toast(`${qOut.length} sual${textsAdded ? " və " + textsAdded + " mətn" : ""} əlavə edildi — düzgün cavabları seçin`);
     } else {
       toast("Seçilmiş sual yoxdur");
@@ -4979,13 +5166,14 @@ document.getElementById("crop-auto-add-btn").addEventListener("click", async () 
     console.error(err);
     toast("Kəsmə zamanı xəta: " + errAz(err));
   } finally {
-    autoBusy = false; btn.disabled = false;
+    autoBusy = false; autoAdding = false; btn.disabled = false;
     autoUpdateInfo();
   }
+  // iş bitdi — alət bağlanır ki, müəllim birbaşa suallara qayıtsın
+  if (added && cropPdfDoc === doc) closeCropModal();
 });
 
-document.getElementById("crop-auto-clear-btn").addEventListener("click", autoReset);
-document.getElementById("crop-new-pdf-btn").addEventListener("click", autoReset);
+document.getElementById("crop-auto-clear-btn").addEventListener("click", () => { if (!autoAdding) autoReset(); });
 document.getElementById("crop-pdf-input").addEventListener("change", autoReset);
 
 // ---- PDF HAZIRLAMA (jsPDF) ----
