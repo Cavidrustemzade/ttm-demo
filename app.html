@@ -1870,6 +1870,14 @@ function ttmConfirm(msg){return new Promise(function(res){var m=document.createE
         <div class="field-row">
           <div class="field"><label>Sınaq adı</label><input type="text" id="exam-title" placeholder="Məs: Riyaziyyat 1-ci sınaq" /></div>
         </div>
+        <div class="field" id="exam-cover-field">
+          <label>Fənn və üz qabığı</label>
+          <input type="hidden" id="exam-cover-subject" value="" /><input type="hidden" id="exam-cover-id" value="" />
+          <div class="ec-subj" id="exam-cover-subjects"></div>
+          <div class="ec-pvw"><div id="exam-cover-preview"></div></div>
+          <button type="button" class="ec-altbtn" id="exam-cover-altbtn">Başqa şablon seç</button>
+          <div class="ec-alts" id="exam-cover-alts" hidden></div>
+        </div>
         <div class="field" style="margin-bottom:12px;">
           <label>Qruplar (birdən çox seçə bilərsiniz)</label>
           <div id="exam-groups-checklist" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;">
@@ -4106,6 +4114,7 @@ function resetExamForm() {
   document.getElementById("exam-timelimit").value = "30";
   document.getElementById("exam-activation").value = "";
   document.getElementById("exam-video").value = "";
+  if (window.ttmCoverSet) ttmCoverSet(null);
   document.getElementById("exam-form-title").textContent = "Yeni sınaq yarat";
   document.getElementById("exam-cancel-btn").style.display = "none";
   examQuestions = [];
@@ -4802,7 +4811,7 @@ document.getElementById("exam-save-btn").addEventListener("click", async () => {
   if (videoUrl && !/^https?:\/\//i.test(videoUrl)) { toast("Video linki http:// və ya https:// ilə başlamalıdır"); return; }
 
   const activationAt = new Date(activationInput).toISOString();
-  const meta = { title, groupIds, topic, timeLimitMinutes, activationAt, videoUrl, questionCount: examQuestions.length };
+  const meta = { title, groupIds, topic, timeLimitMinutes, activationAt, videoUrl, questionCount: examQuestions.length, ...(window.ttmCoverMeta ? ttmCoverMeta() : {}) };
 
   const badMetaPath = findInvalidNesting(meta);
   const badQPath = !badMetaPath && examQuestions.map((q, i) => findInvalidNesting(q, "sual" + (i + 1))).find(Boolean);
@@ -4928,6 +4937,7 @@ window.editExam = async (id) => {
   document.getElementById("exam-activation").value = ex.activationAt ? ex.activationAt.slice(0, 16) : "";
   document.getElementById("exam-video").value = ex.videoUrl || "";
   document.getElementById("exam-form-title").textContent = "Sınağı redaktə et: " + ex.title;
+  if (window.ttmCoverSet) ttmCoverSet(ex);
   document.getElementById("exam-cancel-btn").style.display = "inline-block";
   toast("Suallar və mətnlər yüklənir...");
   try {
@@ -19029,7 +19039,7 @@ html.sp-vt::view-transition-group(sp-av){animation-duration:.28s;animation-timin
   // ---------- Keçid animasiyası (avatar yerindən keçir, səhifə sürüşür) ----------
   function inView(e) { if (!e) return false; const r = e.getBoundingClientRect(); return r.bottom > 64 && r.top < innerHeight - 64 && r.width > 0; }
   function vt(dir, fn, from, to) {
-    const off = !document.startViewTransition || matchMedia("(prefers-reduced-motion: reduce)").matches || innerWidth >= 980 || document.hidden;
+    const off = true || !document.startViewTransition || matchMedia("(prefers-reduced-motion: reduce)").matches || innerWidth >= 980 || document.hidden;
     if (off) { fn(); return; }
     const root = document.documentElement; root.classList.add("sp-vt", dir === "back" ? "sp-vt-b" : "sp-vt-f");
     const old = from && from() && inView(from()) ? from() : null; let nw = null;
@@ -20372,7 +20382,8 @@ body.tq-open #r3-ttm,body.tq-open #s-bottom-nav{visibility:hidden}
     const box = document.querySelector(".v3-fq .v3-avs"), fs = document.querySelector(".v3-fq .v3-fs"); if (!box || typeof v2Subjects !== "function") return;
     const subs = v2Subjects(); if (!subs.length) { box.innerHTML = ""; if (fs) fs.textContent = "Müəllimə qoşul"; return; }
     await Promise.all(subs.map(s => v2GetProfile(s.teacherId)));
-    box.innerHTML = subs.slice(0, 5).map(s => { const p = v2Profiles[s.teacherId] || {}; const nm = p.fullName || s.teacherName || "M"; return p.photo ? `<i style="background-image:url('${p.photo}')"></i>` : `<i>${esc(nm.trim()[0] || "M")}</i>`; }).join("");
+    const avH = subs.slice(0, 5).map(s => { const p = v2Profiles[s.teacherId] || {}; const nm = p.fullName || s.teacherName || "M"; return p.photo ? `<i style="background-image:url('${p.photo}')"></i>` : `<i>${esc(nm.trim()[0] || "M")}</i>`; }).join("");
+    if (box._avH !== avH) { box.innerHTML = avH; box._avH = avH; } // eyni şəkilləri yenidən çəkmə (titrəmə olmasın)
     if (fs) fs.textContent = [...new Set(subs.map(s => (v2Profiles[s.teacherId] || {}).subject || s.subject).filter(Boolean))].join(", ") || "Müəllimlərin və dərslərin";
   }
   { const nv = $("s-bottom-nav"); const setH = () => { if (nv && nv.offsetHeight) document.documentElement.style.setProperty("--v3nav", nv.offsetHeight + "px"); }; setH(); window.addEventListener("resize", setH); setTimeout(setH, 1500); }
@@ -21213,8 +21224,8 @@ html[data-nv=back] #view-admin .tab-panel.active,html[data-nv=back] #view-studen
   #stab-more>.card>.v2-sec-head{grid-column:1/-1}
   .v2-welcome h3{font-size:23px!important}
 }
-/* ---------- kompüter və üfüqi planşet (1024+): yan panel ---------- */
-@media (min-width:1024px){
+/* ---------- kompüter (1024+, siçan): yan panel. Planşetdə (toxunma) alt panel qalır ---------- */
+@media (min-width:1024px) and (hover:hover) and (pointer:fine){
   #view-admin .v2-nav,#view-student .v2-nav{grid-template-columns:minmax(0,1fr)!important;grid-auto-rows:min-content;align-content:start;align-items:stretch;gap:6px;left:0;top:60px;bottom:0;width:var(--v4-rail);transform:none;padding:18px 10px;border:0;border-right:1px solid rgba(11,60,93,.08);border-radius:0;background:#fff;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;z-index:19}
   .v2-nav .v2-nav-btn{flex:none;min-height:62px;padding:9px 4px;border-radius:16px;font-size:11px}
   .v2-nav .v2-nav-btn span{white-space:normal;line-height:1.15;text-align:center}
@@ -21228,7 +21239,7 @@ html[data-nv=back] #view-admin .tab-panel.active,html[data-nv=back] #view-studen
   .a-qgrid .a-qc,.a-q4 .a-qc,.sq-grid .a-qc{min-height:176px}
   body.v4-norail #view-admin .panel-main,body.v4-norail #view-student .panel-main{margin-left:0}
 }
-@media (min-width:1360px){
+@media (min-width:1360px) and (hover:hover) and (pointer:fine){
   :root{--v4-rail:224px}
   #view-admin .v2-nav,#view-student .v2-nav{padding:20px 14px}
   .v2-nav .v2-nav-btn{flex-direction:row;justify-content:flex-start;gap:12px;min-height:50px;padding:0 14px;font-size:14px}
@@ -21269,7 +21280,7 @@ html[data-nv=back] #view-admin .tab-panel.active,html[data-nv=back] #view-studen
   const $ = id => document.getElementById(id);
   const vis = el => !!el && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== "hidden";
   const navs = [$("a-nav"), $("s-bottom-nav")].filter(Boolean);
-  const rail = matchMedia("(min-width:1024px)");
+  const rail = matchMedia("(min-width:1024px) and (hover:hover) and (pointer:fine)");
 
   /* ---- alt/yan panel: sürüşən göstərici ---- */
   function place(nav, instant) {
@@ -21394,5 +21405,242 @@ html[data-nv=back] #view-admin .tab-panel.active,html[data-nv=back] #view-studen
   });
 })();
 </script>
+<style id="v5-covers-css">
+/* ===== v5: Sınaq üz qabıqları (sabit şablon + dinamik mətn) ===== */
+.ttm-cv{position:relative;width:100%;aspect-ratio:16/9;border-radius:20px;overflow:hidden;background:#0B3C8C center/cover no-repeat;container-type:inline-size;color:#fff;isolation:isolate}
+.ttm-cv>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-1;display:block}
+.ttm-cv-tx{position:absolute;left:6.2%;top:27%;width:39%;display:flex;flex-direction:column;align-items:flex-start;font-family:Montserrat,var(--font-main),sans-serif}
+.ttm-cv-pill{display:inline-block;padding:.9cqw 2.6cqw;border-radius:99px;font-size:3.1cqw;font-weight:800;line-height:1.15;background:var(--cv-pill);color:var(--cv-pillt);letter-spacing:.1px}
+.ttm-cv-t{margin:2.2cqw 0 0;font-size:5cqw;font-weight:800;line-height:1.08;letter-spacing:-.02em;color:#fff;text-shadow:0 .3cqw 1.4cqw rgba(0,0,0,.28);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;max-width:100%}
+.ttm-cv-t.l{font-size:4.2cqw}.ttm-cv-t.xl{font-size:3.5cqw}
+.ttm-cv-ln{width:11cqw;height:.55cqw;border-radius:1cqw;background:var(--cv-pill);margin:2.2cqw 0 0}
+.ttm-cv-s{margin-top:1.9cqw;font-size:2.8cqw;font-weight:600;line-height:1.2;color:var(--cv-sub);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;max-width:100%}
+.ttm-cv.ph .ttm-cv-t,.ttm-cv.ph .ttm-cv-s{opacity:.55}
+/* müəllim: fənn seçimi */
+#exam-cover-field{margin-bottom:14px}
+.ec-subj{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 12px}
+.ec-subj button{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:0 14px;border-radius:20px;border:1.5px solid var(--color-gray,#e3e8ef);background:#fff;font:inherit;font-size:13.5px;font-weight:700;color:#33475b;cursor:pointer;transition:background .18s,border-color .18s,color .18s}
+.ec-subj button i{width:10px;height:10px;border-radius:50%;background:var(--c);flex:none}
+.ec-subj button.on{background:var(--c);border-color:var(--c);color:#fff}
+.ec-subj button.on i{background:#fff}
+.ec-pvw{max-width:520px}
+.ec-pvw .ttm-cv{box-shadow:0 10px 26px rgba(11,60,93,.18)}
+.ec-altbtn{margin-top:10px;min-height:40px;padding:0 14px;border-radius:12px;border:0;background:#EEF3FC;color:#1450C7;font:inherit;font-size:13.5px;font-weight:800;cursor:pointer}
+.ec-alts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px;max-width:520px}
+.ec-alts[hidden]{display:none}
+.ec-alts button{padding:0;border:3px solid transparent;border-radius:12px;overflow:hidden;background:none;cursor:pointer;line-height:0}
+.ec-alts button img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
+.ec-alts button.on{border-color:#1D6FD6}
+@media (max-width:420px){.ec-alts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* şagird: Sınaqlar karuseli */
+#s-exam-carousel{margin:0 0 18px}
+#s-exam-carousel[hidden]{display:none}
+.xc-head{display:flex;align-items:center;justify-content:space-between;margin:0 2px 10px}
+.xc-head h3{margin:0;font-size:19px;font-weight:800;color:var(--color-primary,#0B3C5D)}
+.xc-head a{font-size:13px;font-weight:700;color:#1D6FD6;cursor:pointer}
+.xc-track{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 2px;padding:2px 2px 6px;margin:0 -2px;-webkit-overflow-scrolling:touch;scrollbar-width:none;overscroll-behavior-x:contain}
+.xc-track::-webkit-scrollbar{display:none}
+.xc-card{flex:0 0 88%;scroll-snap-align:start;background:#fff;border-radius:22px;padding:8px;box-shadow:0 8px 22px rgba(11,60,93,.1);border:1px solid rgba(11,60,93,.06);display:flex;flex-direction:column;gap:10px;min-width:0}
+.xc-track.one .xc-card{flex-basis:100%}
+.xc-card .ttm-cv{border-radius:16px}
+.xc-ft{display:flex;align-items:center;gap:10px;padding:0 6px 4px}
+.xc-meta{flex:1;min-width:0}
+.xc-st{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:9px;font-size:11.5px;font-weight:800;background:#DCFCE7;color:#166534}
+.xc-st.up{background:#FEF3C7;color:#92400E}
+.xc-st i{width:6px;height:6px;border-radius:50%;background:currentColor}
+.xc-info{margin-top:4px;font-size:12.5px;font-weight:700;color:#5A6B7D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.xc-go{flex:none;min-height:44px;padding:0 16px;border-radius:14px;border:0;background:linear-gradient(135deg,#2A6FE6,#1450C7);color:#fff;font:inherit;font-size:14px;font-weight:800;box-shadow:0 6px 14px rgba(20,80,199,.25);cursor:pointer;transition:transform .15s ease}
+.xc-go:active{transform:scale(.96)}
+.xc-go[disabled]{background:#E6ECF4;color:#7A8797;box-shadow:none;cursor:default}
+.xc-dots{display:flex;justify-content:center;gap:6px;margin-top:6px}
+.xc-dots i{width:6px;height:6px;border-radius:3px;background:#CBD5E1;transition:width .25s ease,background .25s ease}
+.xc-dots i.on{width:18px;background:#1D6FD6}
+.xc-dots[hidden]{display:none}
+@media (hover:hover) and (pointer:fine){.xc-card{transition:transform .2s ease,box-shadow .2s ease}.xc-card:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(11,60,93,.14)}}
+@media (min-width:768px){.xc-card{flex-basis:calc(50% - 6px)}.xc-track.one .xc-card{flex-basis:calc(50% - 6px)}}
+@media (min-width:1280px){.xc-card{flex-basis:calc(33.333% - 8px)}.xc-track.one .xc-card{flex-basis:calc(50% - 6px)}}
+</style>
+<script id="v5-covers-js">
+/* ===== v5: Sınaq üz qabıqları — hazır şablon, mətn HTML ilə ===== */
+(function () {
+  const $ = id => document.getElementById(id);
+  const E = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const DIR = "assets/exam-covers/";
+  // açar, ad, rəng (seçim düyməsi), pill fonu, pill yazısı, mövzu rəngi, açar sözlər
+  const CV = [
+    ["mathematics", "Riyaziyyat", "#1D6FD6", "#7DD3FC", "#0B2A6B", "#C7E6FF", /riyaz|cəbr|cebr|həndəs|hendes|triqon|trigon|tənlik|tenlik|funksiya|törəmə|logarifm|ədəd|faiz|kəsr|math/i],
+    ["chemistry", "Kimya", "#7C3AED", "#D8B4FE", "#3B0764", "#E9D5FF", /kimya|chem|element|molekul|reaksiya|oksid|turşu|duz|üzvi/i],
+    ["geography", "Coğrafiya", "#15803D", "#A7F3D0", "#064E3B", "#BBF7D0", /coğraf|cograf|geograf|materik|iqlim|xəritə/i],
+    ["azerbaijani", "Azərbaycan dili", "#EA580C", "#FED7AA", "#7C2D12", "#FFE4CC", /azərbaycan dil|azerbaycan dil|ana dili|ədəbiyyat|edebiyyat|qrammatika|morfologiya|sintaksis|fonetika|leksika|az dili/i],
+    ["history", "Tarix", "#B91C1C", "#FECACA", "#7F1D1D", "#FFD5D5", /tarix|history|xanlıq|dövlət|imperiya|müharibə|sülalə/i],
+    ["biology", "Biologiya", "#4D9F0C", "#D9F99D", "#14532D", "#E2FBC0", /biolog|hüceyrə|huceyre|genetika|botanika|zoologiya|anatom/i],
+    ["physics", "Fizika", "#0284C7", "#BAE6FD", "#0C2D5E", "#CFEFFF", /fizika|physic|mexanika|optika|elektrik|kinematika|dinamika|termodinam|maqnit/i],
+    ["english", "İngilis dili", "#6D28D9", "#DDD6FE", "#2E1065", "#E4DCFF", /ingilis|english|grammar|vocabulary|reading|listening|tense/i],
+  ];
+  const BY = {}; CV.forEach(c => { BY[c[0]] = c; });
+  const src = k => DIR + (BY[k] ? k : "mathematics") + ".webp";
+  function guess(text) { const t = String(text || ""); const c = CV.find(c => c[6].test(t)); return c ? c[0] : ""; }
+  function keysOf(ex) {
+    ex = ex || {};
+    const subj = BY[ex.coverSubject] ? ex.coverSubject : (guess(ex.title + " " + ex.topic) || "mathematics");
+    const cover = BY[ex.coverId] ? ex.coverId : subj;
+    return { subj, cover };
+  }
+  // üz qabığı HTML (şəkil sabit, mətn dəyişir)
+  function coverHTML(ex, o) {
+    o = o || {}; const k = keysOf(ex), c = BY[k.cover];
+    const t = String(ex.title || "").trim(), s = String(ex.topic || "").trim();
+    const sz = t.length > 24 ? " xl" : t.length > 13 ? " l" : "";
+    return `<div class="ttm-cv${o.ph ? " ph" : ""}" style="--cv-pill:${c[3]};--cv-pillt:${c[4]};--cv-sub:${c[5]}" role="img" aria-label="${E((t || "Sınaq") + (s ? " — " + s : ""))}">
+      <img src="${src(k.cover)}" alt="" loading="${o.eager ? "eager" : "lazy"}" decoding="async" draggable="false">
+      <div class="ttm-cv-tx"><span class="ttm-cv-pill">Sınaq</span><div class="ttm-cv-t${sz}">${E(t || "Sınaq adı")}</div><i class="ttm-cv-ln"></i>${s || o.ph ? `<div class="ttm-cv-s">${E(s || "Mövzu / Bölmə")}</div>` : ""}</div></div>`;
+  }
+  window.ttmCoverHTML = coverHTML;
+  window.ttmCoverKeys = keysOf;
+
+  // ---------------- Müəllim: fənn seçimi və önizləmə ----------------
+  const F = { subj: "", cover: "", auto: true };
+  function paintTeacher() {
+    const box = $("exam-cover-subjects"), pv = $("exam-cover-preview"), alts = $("exam-cover-alts"); if (!box || !pv) return;
+    const auto = F.subj ? null : (guess(($("exam-title") || {}).value + " " + ($("exam-topic") || {}).value) || "mathematics");
+    const subj = F.subj || auto, cover = F.cover || subj;
+    $("exam-cover-subject").value = F.subj; $("exam-cover-id").value = F.cover && F.cover !== F.subj ? F.cover : "";
+    box.querySelectorAll("button").forEach(b => { const on = b.dataset.k === subj; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); });
+    const t = ($("exam-title") || {}).value || "", s = ($("exam-topic") || {}).value || "";
+    pv.innerHTML = coverHTML({ title: t, topic: s, coverSubject: subj, coverId: cover }, { ph: !t.trim(), eager: true });
+    if (alts) alts.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.k === cover));
+  }
+  function buildTeacher() {
+    const fld = $("exam-cover-field"); if (!fld || fld._b) return; fld._b = 1;
+    $("exam-cover-subjects").innerHTML = CV.map(c => `<button type="button" data-k="${c[0]}" style="--c:${c[2]}" aria-pressed="false"><i></i>${c[1]}</button>`).join("");
+    $("exam-cover-alts").innerHTML = CV.map(c => `<button type="button" data-k="${c[0]}" aria-label="${c[1]} şablonu"><img src="${src(c[0])}" alt="" loading="lazy"></button>`).join("");
+    $("exam-cover-subjects").addEventListener("click", e => { const b = e.target.closest("button[data-k]"); if (!b) return; F.subj = b.dataset.k; F.cover = ""; paintTeacher(); });
+    $("exam-cover-alts").addEventListener("click", e => { const b = e.target.closest("button[data-k]"); if (!b) return; F.cover = b.dataset.k; if (!F.subj) F.subj = guess(($("exam-title") || {}).value + " " + ($("exam-topic") || {}).value) || "mathematics"; paintTeacher(); });
+    $("exam-cover-altbtn").addEventListener("click", () => { const a = $("exam-cover-alts"); a.hidden = !a.hidden; $("exam-cover-altbtn").textContent = a.hidden ? "Başqa şablon seç" : "Şablon seçimini bağla"; });
+    ["exam-title", "exam-topic"].forEach(id => { const el = $(id); if (el) el.addEventListener("input", paintTeacher); });
+    // addımlı formada: «Mövzu» xanasından sonra yerləşsin
+    const tf = $("exam-topic") && $("exam-topic").closest(".field");
+    if (tf && tf.parentNode && tf.nextSibling !== fld) tf.after(fld);
+    paintTeacher();
+  }
+  window.ttmCoverSet = function (ex) {
+    buildTeacher();
+    if (ex) { const k = ex.coverSubject && BY[ex.coverSubject] ? ex.coverSubject : ""; F.subj = k; F.cover = ex.coverId && BY[ex.coverId] ? ex.coverId : ""; }
+    else { F.subj = ""; F.cover = ""; }
+    const a = $("exam-cover-alts"); if (a) { a.hidden = true; $("exam-cover-altbtn").textContent = "Başqa şablon seç"; }
+    paintTeacher();
+  };
+  window.ttmCoverMeta = function () {
+    const subj = F.subj || guess(($("exam-title") || {}).value + " " + ($("exam-topic") || {}).value) || "mathematics";
+    return { coverSubject: subj, coverId: F.cover && F.cover !== subj ? F.cover : subj };
+  };
+  // fayldan idxal/ixrac üçün də qalsın
+  buildTeacher();
+
+  // ---------------- Şagird: ana səhifədə Sınaqlar karuseli ----------------
+  let lastKey = "";
+  function host() {
+    let h = $("s-exam-carousel"); if (h) return h;
+    const home = $("stab-home"); if (!home) return null;
+    h = document.createElement("section"); h.id = "s-exam-carousel"; h.hidden = true; lastKey = "";
+    h.innerHTML = `<div class="xc-head"><h3>Sınaqlar</h3><a onclick="v2Tab('stab-exams')">Hamısına bax ›</a></div><div class="xc-track" id="xc-track"></div><div class="xc-dots" id="xc-dots" hidden></div>`;
+    placeHost(h);
+    const tr = h.querySelector(".xc-track");
+    let raf = 0; tr.addEventListener("scroll", () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(dots); }, { passive: true });
+    tr.addEventListener("click", e => { const b = e.target.closest(".xc-go[data-id]"); if (!b || b.disabled) return; const id = b.dataset.id; if (window.v2StartExam) v2StartExam(id); else if (window.startExam) { v2Tab("stab-exams"); startExam(id); } });
+    return h;
+  }
+  // yer: şagirdin məlumat kartından sonra, «Tez giriş»dən əvvəl
+  function placeHost(h) {
+    const home = $("stab-home"); if (!home) return;
+    const qh = Array.from(home.querySelectorAll(".v2-sec-head")).find(x => /Tez giriş/.test(x.textContent));
+    if (qh) { if (qh.previousElementSibling !== h) qh.before(h); return; }
+    const w = home.querySelector(".v2-welcome") || home.firstElementChild;
+    if (w && w.nextElementSibling !== h) w.after(h);
+  }
+  function dots() {
+    const tr = $("xc-track"), d = $("xc-dots"); if (!tr || !d) return;
+    const cs = tr.children; d.hidden = cs.length < 2 || tr.scrollWidth <= tr.clientWidth + 4; if (d.hidden || !cs.length) return;
+    const w = cs[0].getBoundingClientRect().width + 12, i = Math.round(tr.scrollLeft / Math.max(1, w));
+    Array.from(d.children).forEach((x, j) => x.classList.toggle("on", j === Math.min(i, d.children.length - 1)));
+  }
+  const AYS = ["yanvar", "fevral", "mart", "aprel", "may", "iyun", "iyul", "avqust", "sentyabr", "oktyabr", "noyabr", "dekabr"];
+  const p2 = n => String(n).padStart(2, "0");
+  function fmtDate(d) { return d.getDate() + " " + AYS[d.getMonth()] + ", " + p2(d.getHours()) + ":" + p2(d.getMinutes()); }
+  function renderCarousel() {
+    const h = host(); if (!h) return;
+    placeHost(h);
+    let exs = [], atts = [];
+    try { exs = studentExamsCache || []; atts = studentAttemptsCache || []; } catch (e) { return; }
+    const now = new Date(), done = new Set(atts.map(a => a.examId));
+    const av = exs.filter(e => new Date(e.activationAt) <= now && !done.has(e.id)).sort((a, b) => new Date(b.activationAt) - new Date(a.activationAt));
+    const up = exs.filter(e => new Date(e.activationAt) > now).sort((a, b) => new Date(a.activationAt) - new Date(b.activationAt));
+    const list = av.concat(up).slice(0, 8);
+    const key = JSON.stringify(list.map(e => [e.id, e.title, e.topic, e.coverSubject, e.coverId, e.questionCount, e.timeLimitMinutes, e.activationAt, done.has(e.id)]));
+    if (key === lastKey) return; // dəyişiklik yoxdursa yenidən çəkmə (titrəmə olmasın)
+    lastKey = key;
+    if (!list.length) { h.hidden = true; $("xc-track").innerHTML = ""; return; }
+    const tr = $("xc-track");
+    tr.classList.toggle("one", list.length === 1);
+    tr.innerHTML = list.map((e, i) => {
+      const live = new Date(e.activationAt) <= now;
+      const info = `${e.questionCount || 0} sual · ${e.timeLimitMinutes || 30} dəq${e._teacherName ? " · " + E(e._teacherName) : ""}`;
+      return `<article class="xc-card">${coverHTML(e, { eager: i < 2 })}
+        <div class="xc-ft"><div class="xc-meta">${live ? `<span class="xc-st"><i></i>Aktiv</span>` : `<span class="xc-st up"><i></i>${E(fmtDate(new Date(e.activationAt)))}</span>`}<div class="xc-info">${info}</div></div>
+        ${live ? `<button type="button" class="xc-go" data-id="${E(e.id)}">Sınağa başla</button>` : `<button type="button" class="xc-go" disabled>Tezliklə</button>`}</div></article>`;
+    }).join("");
+    const d = $("xc-dots"); d.innerHTML = list.map((_, i) => `<i class="${i ? "" : "on"}"></i>`).join("");
+    h.hidden = false; tr.scrollLeft = 0; dots();
+  }
+  window.ttmRenderExamCarousel = renderCarousel;
+  addEventListener("resize", () => { cancelAnimationFrame(window._xcR); window._xcR = requestAnimationFrame(dots); });
+  document.addEventListener("click", e => { if (e.target.closest && e.target.closest('#s-bottom-nav [data-go="stab-home"]')) setTimeout(dots, 60); });
+  if (typeof window.renderStudentExamList === "function") {
+    const o = window.renderStudentExamList;
+    window.renderStudentExamList = function () { const r = o.apply(this, arguments); try { renderCarousel(); } catch (e) { console.warn("karusel:", e); } return r; };
+  }
+  // məlumat bu skriptdən əvvəl gəlibsə (keş, sürətli giriş) — dərhal çək
+  setTimeout(() => { try { renderCarousel(); } catch (e) {} }, 0);
+  // aktivləşmə vaxtı çatanda «Tezliklə» → «Aktiv»
+  setInterval(() => { if (document.visibilityState === "visible" && $("view-student") && $("view-student").style.display !== "none") { try { renderCarousel(); } catch (e) {} } }, 60000);
+})();
+</script>
+<style id="v5-calm">
+/* ===== v5: sakit keçidlər — səhifə dəyişəndə yanıb-sönmə, opacity, shimmer yoxdur ===== */
+.tab-panel.active,#view-admin .tab-panel.active,#view-student .tab-panel.active,
+html[data-nv] #view-admin .tab-panel.active,html[data-nv] #view-student .tab-panel.active{animation:none!important}
+.a-qc .a-svg,.a-qc:hover .a-svg{animation:none!important}
+.sq-grid .a-qc,.sq-in{animation:none!important}
+.r3.in-f0,.r3.in-f1,.r3.in-b0,.r3.in-b1,.r3-sw.a,.r3-sw.b{animation:none!important;will-change:auto}
+html:not(.sp-vt) #sp-detail>*{animation:none}
+.pq-sk{animation:none!important;background:#EEF2F7!important}
+.hs-live-msg{animation:none!important}
+/* ===== Yol xəritəm: planşet və kompüter ===== */
+@media (min-width:768px){
+  body .r3{max-width:960px;gap:14px}
+  body .r3-ht h1{font-size:28px}
+  body .r3-ht h2{font-size:24px}
+  body .r3-ht p{font-size:14px;white-space:normal}
+  body .r3-tile{height:88px;border-radius:20px}
+  body .r3-tile img{width:40px;height:40px}
+  body .r3-tile span{font-size:13.5px}
+  body .r3-tile.sm img{width:34px;height:34px}
+  body .r3-tile.sm span{font-size:12.5px}
+  body .r3-cards{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  body .r3-card{min-height:150px;padding:14px}
+  body .r3-card img{width:40px;height:40px}
+  body .r3-card b{font-size:15.5px}
+  body .r3-card span{font-size:12.5px}
+  body .r3-stats{gap:12px}
+  body .r3-grid{grid-template-columns:repeat(10,minmax(0,1fr))}
+  body .r3-sheet{max-width:640px}
+}
+@media (min-width:1024px){
+  body .r3{max-width:1080px}
+  body .r3-hero{height:220px}
+  body .r3-ride.big{top:172px}
+  body .r3-lb{top:196px}
+}
+</style>
 </body>
 </html>
