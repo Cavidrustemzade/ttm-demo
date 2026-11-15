@@ -4326,7 +4326,15 @@ document.getElementById("crop-pdf-input").addEventListener("change", async (e) =
   try {
     await ensureLib("pdfjs");
     const buf = await file.arrayBuffer();
-    cropPdfDoc = await pdfjsLib.getDocument({ data: buf }).promise;
+    // PDF-ə şrift qoyulmayıbsa (məs. Times New Roman), telefonun təsadüfi şrifti yox,
+    // PDF.js-in öz standart şriftləri işlənsin — yoxsa hərflər sıxılmış/qalın görünür
+    cropPdfDoc = await pdfjsLib.getDocument({
+      data: buf,
+      useSystemFonts: false,
+      standardFontDataUrl: "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/standard_fonts/",
+      cMapUrl: "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/",
+      cMapPacked: true
+    }).promise;
     cropTotalPages = cropPdfDoc.numPages;
     cropCurrentPage = 1;
     cropAddedCount = 0;
