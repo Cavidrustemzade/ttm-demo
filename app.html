@@ -14572,7 +14572,7 @@ window.addEventListener("resize", () => { clearTimeout(window._bqFitT); window._
   // KÖK (√): KaTeX onu 400em enində "slice" SVG ilə çəkir, html2canvas bunu düz çəkmir — SVG gizlədilir, kök canvas-a özümüz çəkirik.
   function sqrtGeo(host) {
     const hR = host.getBoundingClientRect(), dv = host.ownerDocument.defaultView || window, out = [];
-    host.querySelectorAll(".katex .hide-tail > svg").forEach(sv => {
+    host.querySelectorAll(".katex .sqrt .hide-tail > svg").forEach(sv => { // yalnız kök; oxları svgGeo çəkir
       const pth = sv.querySelector("path"); if (!pth) return;
       const vb = (sv.getAttribute("viewBox") || "").trim().split(/[\s,]+/).map(Number);
       const r = sv.getBoundingClientRect(), W = sv.parentNode.getBoundingClientRect().width;
@@ -14581,12 +14581,70 @@ window.addEventListener("resize", () => { clearTimeout(window._bqFitT); window._
     });
     return out;
   }
+  // DİGƏR KaTeX SVG-ləri (böyük modul |…|, ‖…‖, oxlar, şapka, alt/üst fiqurlu mötərizə və s.) — html2canvas bunları da çəkmir.
+  // Hər SVG-nin klondakı yeri ölçülür, görünən hissəsi ayrıca kiçik SVG kimi hazırlanır və canvas-a özümüz çəkirik.
+  // Kök (.hide-tail) yuxarıdakı sqrtGeo ilə çəkilir — ona toxunulmur.
+  function svgGeo(host) {
+    const hR = host.getBoundingClientRect(), dv = host.ownerDocument.defaultView || window, out = [];
+    host.querySelectorAll(".katex svg").forEach(sv => {
+      if (sv.closest(".sqrt") && sv.parentNode && sv.parentNode.classList && sv.parentNode.classList.contains("hide-tail")) return; // kök — sqrtGeo
+      const r = sv.getBoundingClientRect(); if (!r.width || !r.height) return;
+      const vb = (sv.getAttribute("viewBox") || "").trim().split(/[\s,]+/).map(Number);
+      // görünən sahə: valideyn overflow:hidden-dirsə onunla kəsişmə
+      let vx = r.left, vy = r.top, vr = r.right, vbm = r.bottom;
+      const p = sv.parentNode, ps = p && p.getBoundingClientRect ? dv.getComputedStyle(p) : null;
+      if (p && ps && /hidden|clip/.test(ps.overflow + ps.overflowX + ps.overflowY)) {
+        const pr = p.getBoundingClientRect();
+        vx = Math.max(vx, pr.left); vy = Math.max(vy, pr.top); vr = Math.min(vr, pr.right); vbm = Math.min(vbm, pr.bottom);
+      }
+      const W = vr - vx, H = vbm - vy; if (W <= 0.2 || H <= 0.2) return;
+      const n = sv.cloneNode(true), col = dv.getComputedStyle(sv).color || "#1e1e1e";
+      if (vb.length === 4 && vb[2] && vb[3]) {
+        // viewBox → ekran xəritəsi (preserveAspectRatio nəzərə alınır), sonra yalnız görünən hissənin viewBox-u
+        const par = (sv.getAttribute("preserveAspectRatio") || "xMidYMid meet").trim();
+        let kx = r.width / vb[2], ky = r.height / vb[3], ax = 0, ay = 0;
+        if (!/^none/.test(par)) {
+          const k = /slice/.test(par) ? Math.max(kx, ky) : Math.min(kx, ky); kx = ky = k;
+          const ex = r.width - vb[2] * k, ey = r.height - vb[3] * k;
+          ax = /xMin/.test(par) ? 0 : /xMax/.test(par) ? ex : ex / 2;
+          ay = /YMin/.test(par) ? 0 : /YMax/.test(par) ? ey : ey / 2;
+        }
+        const nx = vb[0] + (vx - r.left - ax) / kx, ny = vb[1] + (vy - r.top - ay) / ky;
+        n.setAttribute("viewBox", `${nx} ${ny} ${W / kx} ${H / ky}`);
+        n.setAttribute("preserveAspectRatio", "none");
+      }
+      n.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+      n.setAttribute("width", W); n.setAttribute("height", H);
+      n.removeAttribute("style");
+      n.setAttribute("style", `fill:${col};stroke:${col};stroke-width:1;fill-rule:nonzero;fill-opacity:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;overflow:visible`);
+      out.push({ x: vx - hR.left, y: vy - hR.top, w: W, h: H, mk: new XMLSerializer().serializeToString(n) });
+    });
+    return out;
+  }
+  async function drawSvgs(c, list, kx, ky) {
+    const g = c.getContext("2d");
+    for (const o of list) {
+      try {
+        const im = new Image();
+        im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(o.mk);
+        await (im.decode ? im.decode() : new Promise((res, rej) => { im.onload = res; im.onerror = rej; }));
+        // əvvəl ayrıca kiçik canvas-a çək və yoxla (köhnə brauzerlərdə SVG canvas-ı "kilidləyə" bilər — onda yalnız bu işarə düşür, PDF yox)
+        const t = document.createElement("canvas"); t.width = Math.max(1, Math.ceil(o.w * kx)); t.height = Math.max(1, Math.ceil(o.h * ky));
+        t.getContext("2d").drawImage(im, 0, 0, t.width, t.height);
+        t.toDataURL(); // kilidlənibsə burada xəta atır
+        g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+        g.drawImage(t, Math.round(o.x * kx), Math.round(o.y * ky));
+        g.restore();
+      } catch (e) { console.warn("SVG işarə çəkilmədi:", e); }
+    }
+  }
   function cloneGeo(x, idxs) {
     const hR = x.getBoundingClientRect();
     if (!hR.width || !hR.height) return null;
     const els = idxs.map(i => { const e = x.children[i]; if (!e) return null; const r = e.getBoundingClientRect(); return { y: r.top - hR.top, h: r.height }; });
     if (els.some(e => !e || !e.h)) return null;
-    return { w: hR.width, h: hR.height, els, sq: sqrtGeo(x) };
+    let sv = []; try { sv = svgGeo(x); } catch (e) { console.warn("svg ölçüsü:", e); }
+    return { w: hR.width, h: hR.height, els, sq: sqrtGeo(x), sv };
   }
   function drawSqrt(c, list, kx, ky) {
     const g = c.getContext("2d");
@@ -14654,12 +14712,13 @@ window.addEventListener("resize", () => { clearTimeout(window._bqFitT); window._
               x.style.opacity = "1";
               try { x.getBoundingClientRect(); if (d.fonts && d.fonts.ready) await Promise.race([d.fonts.ready, new Promise(r => setTimeout(r, 3000))]); } catch (er) {}
               try { geo = cloneGeo(x, idxs); } catch (er) { console.warn("klon ölçüsü:", er); }
-              if (geo) x.querySelectorAll(".katex .hide-tail > svg").forEach(v => { v.style.visibility = "hidden"; });
+              if (geo) x.querySelectorAll(".katex svg").forEach(v => { v.style.visibility = "hidden"; }); // hamısını özümüz çəkirik
             }
           });
           // geo yoxdursa (gözlənilmir) köhnə üsul: canlı səhifənin ölçüləri
           const kx = geo ? c.width / geo.w : c.width / host.offsetWidth, ky = geo ? c.height / geo.h : kx;
           if (geo && geo.sq.length) drawSqrt(c, geo.sq, kx, ky);
+          if (geo && geo.sv && geo.sv.length) await drawSvgs(c, geo.sv, kx, ky);
           grp.forEach((t, gi) => {
             const e = geo ? geo.els[gi] : { y: t.el.offsetTop, h: t.el.offsetHeight };
             const y = Math.round(e.y * ky), hh = Math.max(1, Math.round(e.h * ky));
