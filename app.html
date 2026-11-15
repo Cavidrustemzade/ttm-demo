@@ -14522,14 +14522,48 @@ window.addEventListener("resize", () => { clearTimeout(window._bqFitT); window._
     let h = q.text ? `<div style="white-space:pre-line;overflow-wrap:anywhere">${esc(q.text)}</div>` : "";
     if (q.imageBase64) h += `<img src="${q.imageBase64}" style="display:block;max-width:100%;max-height:230px;margin:6px 0">`;
     if (isMcq(q) && Array.isArray(q.options) && !isLetters(q)) {
+      // Sütun sayı burada TƏXMİNİ qoyulur; düsturlar çəkiləndən sonra fitOpts() real enə görə dəqiqləşdirir
       const plain = q.options.map(o => String(o).replace(/\\[a-zA-Z]+|[$\\{}^_]/g, "").trim());
       const mx = Math.max(...plain.map(p => p.length)), need = mx * 7.4 + 30;
       const per = [5, 3, 2, 1].find(p => need * p + 10 * (p - 1) <= wPx) || 1;
-      h += `<div style="display:grid;grid-template-columns:repeat(${per},minmax(0,1fr));gap:5px 10px;margin-top:7px">` +
-        q.options.map((o, k) => `<div style="overflow-wrap:anywhere"><b style="color:${color}">${L[k]})</b> ${esc(o)}</div>`).join("") + `</div>`;
+      h += `<div class="bq-og" style="display:grid;grid-template-columns:repeat(${per},minmax(0,1fr));gap:6px 14px;margin-top:7px;align-items:baseline">` +
+        q.options.map((o, k) => `<div class="bq-oc" style="min-width:0;overflow-wrap:anywhere"><span class="bq-on" style="display:inline-block;max-width:100%"><b style="color:${color}">${L[k]})</b> ${esc(o)}</span></div>`).join("") + `</div>`;
     }
     d.innerHTML = h;
     return d;
+  }
+  // VARİANTLARIN DÜZÜLÜŞÜ — düsturlar (KaTeX) çəkiləndən SONRA hər variantın real eni ölçülür.
+  // Ən uzun variant sütuna tam sığmırsa, sütun sayı azaldılır (5 → 3 → 2 → 1). Sığanda variant heç vaxt iki sətrə bölünmür,
+  // ona görə A–B, C–D cərgələri sürüşmür. Telefonda html2canvas nüsxəsi bir az enli çıxa bilər — 8% ehtiyat saxlanılır.
+  // Bu, suallar arası məsafədən (mm), sütun sayından və şriftdən asılı deyil: hər dəfə real ölçü götürülür.
+  function fitOpts(root, wPx) {
+    root.querySelectorAll(".bq-og").forEach(g => {
+      const cells = [...g.children], spans = cells.map(c => c.querySelector(".bq-on")).filter(Boolean);
+      if (!spans.length) return;
+      // ölçmə: sərbəst en, sətir bölünməsi yoxdur
+      g.style.gridTemplateColumns = "1fr";
+      spans.forEach(sp => { sp.style.whiteSpace = "nowrap"; sp.style.maxWidth = "none"; });
+      const widths = spans.map(sp => Math.ceil(sp.getBoundingClientRect().width));
+      const mx = Math.max(...widths), gap = 14, room = wPx * 0.94;
+      let per = [5, 3, 2].find(p => mx * p + gap * (p - 1) <= room) || 1;
+      // Hamısı yarıya sığmırsa, amma çoxu sığırsa: 2 sütun, sığmayan uzun variant tək sətri tutur (A–E sırası qorunur)
+      const half = (room - gap) / 2, wide = widths.map(w => w > half);
+      let mixed = false;
+      if (per === 1 && widths.length > 2 && wide.filter(Boolean).length <= Math.floor(widths.length / 2)) {
+        // yoxla: uzun variantdan əvvəl qısa variant cərgədə tək qalmasın (yalnız sonuncu tək qala bilər)
+        let col = 0, ok = true;
+        wide.forEach((w, i) => { if (w) { if (col === 1) ok = false; col = 0; } else col = col === 0 ? 1 : 0; });
+        if (ok) { per = 2; mixed = true; }
+      }
+      g.style.gridTemplateColumns = `repeat(${per},minmax(0,1fr))`;
+      g.dataset.per = per + (mixed ? "m" : "");
+      cells.forEach((c, i) => { c.style.gridColumn = mixed && wide[i] ? "1 / -1" : ""; });
+      spans.forEach((sp, i) => {
+        const fits = per > 1 && (!mixed || !wide[i] || widths[i] <= room);
+        if (fits) { sp.style.whiteSpace = "nowrap"; sp.style.maxWidth = "none"; }   // sığır — bölünməsin
+        else { sp.style.whiteSpace = "normal"; sp.style.maxWidth = "100%"; }       // çox uzun — normal bükülsün
+      });
+    });
   }
   // PDF ÇƏKİLİŞİ — ölçülər html2canvas-ın ÖZ nüsxəsindən (klon) götürülür.
   // Telefonda klonun düzülüşü ekrandakı ilə piksel-piksel eyni olmur (fərq aşağı getdikcə yığılır). Əvvəl sualların kəsim yerləri
@@ -14601,6 +14635,7 @@ window.addEventListener("resize", () => { clearTimeout(window._bqFitT); window._
         ttmTeX(host);
         try { await document.fonts.ready; } catch (e) {}
         await Promise.all([...host.querySelectorAll("img")].map(i => i.decode ? i.decode().catch(() => {}) : null));
+        try { fitOpts(host, wPx); } catch (e) { console.warn("variant düzülüşü:", e); }
         P.set(15, `${todo.length} sual çəkilir...`);
         // ~2400px-lik hissələrə böl (telefon yaddaşı üçün)
         const groups = []; let g = [], h = 0;
