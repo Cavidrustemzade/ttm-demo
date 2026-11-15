@@ -1994,6 +1994,7 @@ function ttmConfirm(msg){return new Promise(function(res){var m=document.createE
             <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px; flex-wrap:wrap;">
               <button class="btn-small" id="crop-auto-btn" style="flex:1; min-width:180px;">Sualları avtomatik tap</button>
               <label class="muted-note" style="display:flex; gap:6px; align-items:center; cursor:pointer;"><input type="checkbox" id="crop-auto-wm" checked style="width:auto;" /> Su nişanını təmizlə</label>
+              <label class="muted-note" style="display:flex; gap:6px; align-items:center; cursor:pointer;" title="Söndürsəniz, şəkildə PDF-in öz nömrəsi qalır və kağız PDF-də ikinci nömrə yazılmır"><input type="checkbox" id="crop-auto-num" checked style="width:auto;" /> PDF-dəki sual nömrələrini sil</label>
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
               <button class="btn-outline" id="crop-prev-page-btn">← Səhifə</button>
@@ -4407,7 +4408,7 @@ async function autoNumbersFromText(page, vp) {
       // eyni sətirdəki kəsr/düstur hissələri (surət yuxarıda) də sualın başına daxil olsun
       let top = it.y - it.h;
       items.forEach(o => { if (o.x >= it.x && o.x < it.x + W * 0.45 && o.y > it.y - it.h + 1 && o.y < it.y + it.h * 0.5) top = Math.min(top, o.y - o.h); });
-      out.push({ k: "n", n: +m[1], x: it.x, top, h: it.h });
+      out.push({ k: "n", n: +m[1], x: it.x, top, h: it.h, ny0: it.y - it.h * 0.85, ny1: it.y + it.h * 0.2 });
     } else if (AUTO_STOP_RE.test(lineTxt) || AUTO_SEC_RE.test(lineTxt)) {
       // aralıq növbəti sətrə keçə bilər ("... 23-" / "30")
       const maxR = line.length ? line[line.length - 1].r : it.r;
@@ -4431,7 +4432,7 @@ async function autoNumbersFromOcr(cv) {
     let m = w.text.match(/^(\d{1,3})[.,)]/);
     if (!m && /^\d{1,3}$/.test(w.text) && L.words[1] && /^[.,)]/.test(L.words[1].text)) m = [0, w.text];
     const h = Math.max(8, w.bbox.y1 - w.bbox.y0);
-    if (m) out.push({ k: "n", n: +m[1], x: w.bbox.x0, top: w.bbox.y0, h });
+    if (m) out.push({ k: "n", n: +m[1], x: w.bbox.x0, top: w.bbox.y0, h, ny0: w.bbox.y0 - 1, ny1: w.bbox.y1 + 1 });
     else if (AUTO_STOP_RE.test(L.text || "") || AUTO_SEC_RE.test(L.text || "")) {
       const next = lines[li + 1] ? lines[li + 1].text : "";
       out.push({ k: "s", x: w.bbox.x0, top: w.bbox.y0, h, range: autoParseRange((L.text || "") + " " + next) });
@@ -4476,6 +4477,21 @@ function autoDividers(d, W, H, yA, yB) {
     if (best >= need) xs.push(x);
   }
   return xs;
+}
+
+// Sual nömrəsinin ("63.") piksel sərhədi — sonra kəsikdən silmək üçün
+function autoNumBox(d, W, q) {
+  if (q.ny0 === undefined) return null;
+  const ya = Math.max(0, Math.round(q.ny0)), yb = Math.round(q.ny1);
+  const has = x => { for (let y = ya; y <= yb; y++) if (autoInk(d, (y * W + x) * 4)) return true; return false; };
+  let x = Math.max(0, Math.round(q.x - 3)), first = -1;
+  const lim = Math.round(q.x + q.h * 3.5), tol = Math.max(3, Math.round(q.h * 0.2));
+  for (; x < lim; x++) if (has(x)) { first = x; break; }
+  if (first < 0 || first > q.x + q.h) return null;
+  let last = first, blank = 0;
+  for (x = first + 1; x < lim; x++) { if (has(x)) { last = x; blank = 0; } else if (++blank > tol) break; }
+  if (x >= lim || last - first > q.h * 2.5) return null; // ayrıla bilmədi — toxunma
+  return { x0: first - 2, y0: ya - 1, x1: last + 2, y1: yb + 1 };
 }
 
 // Bir sətir/sütun zolağında mürəkkəb varmı (≥2 piksel)
@@ -4562,7 +4578,7 @@ function autoAnalyze(ch, marks, d, W, H) {
       for (let y = yEnd - 1; y > y0; y--) if (autoRowInk(d, W, y, x0, x1)) { yb = y; break; }
       let xr = x0 + 10;
       for (let x = x1 - 1; x > x0; x--) if (autoColInk(d, W, x, y0, yb + 1, 2)) { xr = x; break; }
-      qs.push({ n: q.n, h: q.h, x0, y0, x1: Math.min(x1, xr + pad), y1: Math.min(yEnd, yb + pad) });
+      qs.push({ n: q.n, h: q.h, x0, y0, x1: Math.min(x1, xr + pad), y1: Math.min(yEnd, yb + pad), nb: autoNumBox(d, W, q) });
     });
   });
 
@@ -4600,10 +4616,11 @@ function autoStopRows(d, W, s, col, lineH) {
   return rows;
 }
 
-async function autoRenderPage(pnum, doc) {
+async function autoRenderPage(pnum, doc, hi) {
   const page = await (doc || cropPdfDoc).getPage(pnum);
   const base = page.getViewport({ scale: 1 });
-  const scale = Math.min(2, 2600 / Math.max(base.width, base.height)); // çox böyük səhifədə yaddaşı qoru
+  // axtarış üçün 2x, kəsmək üçün 3x (daha aydın yazı); çox böyük səhifədə yaddaşı qoru
+  const scale = hi ? Math.min(3, 3600 / Math.max(base.width, base.height)) : Math.min(2, 2600 / Math.max(base.width, base.height));
   const vp = page.getViewport({ scale });
   const cv = document.createElement("canvas");
   cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
@@ -4658,7 +4675,7 @@ async function autoDetectPage(pnum, st, doc) {
       if (e.t === "q") {
         closeOpen();
         const q = e.q;
-        boxes.push(Object.assign({ kind: "q", n: q.n, seq: ++st.seq, on: true, warn: (q.y1 - q.y0) > H * 0.45 }, norm(q)));
+        boxes.push(Object.assign({ kind: "q", n: q.n, seq: ++st.seq, on: true, warn: (q.y1 - q.y0) > H * 0.45, nb: q.nb ? norm(q.nb) : null }, norm(q)));
         cur = Math.max(cur, q.y1);
       } else {
         closeOpen();
@@ -4788,20 +4805,24 @@ function autoReset() {
   renderAutoBoxes();
 }
 
-// Su nişanını təmizləmə: rəngli-açıq və boz-açıq pikselləri ağ edir
+// Su nişanını təmizləmə: rəngli-açıq pikselləri ağ edir, qalanında fonu yumşaq ağardır
+// (hərflərin hamar kənarları qalır — yazı cırıq görünmür)
 function autoCleanWatermark(ctx, w, h) {
   const im = ctx.getImageData(0, 0, w, h), d = im.data;
+  const lut = new Uint8ClampedArray(256);
+  for (let v = 0; v < 256; v++) lut[v] = Math.round(v * 255 / 215);
   for (let i = 0; i < d.length; i += 4) {
     const r = d[i], g = d[i + 1], b = d[i + 2];
     const l = 0.299 * r + 0.587 * g + 0.114 * b;
     const s = Math.max(r, g, b) - Math.min(r, g, b);
-    if ((s > 35 && l > 150) || l > 205) { d[i] = d[i + 1] = d[i + 2] = 255; }
+    if (s > 35 && l > 150) { d[i] = d[i + 1] = d[i + 2] = 255; }
+    else { d[i] = lut[r]; d[i + 1] = lut[g]; d[i + 2] = lut[b]; }
   }
   ctx.putImageData(im, 0, 0);
 }
 
 // Səhifədən bir qutunu ayrıca kətana kəsir
-function autoCutCanvas(cv, b, clean) {
+function autoCutCanvas(cv, b, clean, delNum) {
   const sx = Math.max(0, Math.round(b.x0 * cv.width)), sy = Math.max(0, Math.round(b.y0 * cv.height));
   const sw = Math.min(cv.width - sx, Math.round((b.x1 - b.x0) * cv.width)), sh = Math.min(cv.height - sy, Math.round((b.y1 - b.y0) * cv.height));
   if (sw < 5 || sh < 5) return null;
@@ -4811,13 +4832,38 @@ function autoCutCanvas(cv, b, clean) {
   octx.fillStyle = "#fff"; octx.fillRect(0, 0, sw, sh);
   octx.drawImage(cv, sx, sy, sw, sh, 0, 0, sw, sh);
   if (clean) autoCleanWatermark(octx, sw, sh);
+  // PDF-dəki nömrəni sil və soldakı boşluğu kəs (öz nömrələrimiz təkrarlanmasın)
+  if (delNum && b.nb) {
+    const nx0 = Math.round(b.nb.x0 * cv.width) - sx, ny0 = Math.round(b.nb.y0 * cv.height) - sy;
+    const nx1 = Math.round(b.nb.x1 * cv.width) - sx, ny1 = Math.round(b.nb.y1 * cv.height) - sy;
+    if (nx1 > 0 && ny1 > 0 && nx0 < sw && ny0 < sh) {
+      octx.fillStyle = "#fff";
+      octx.fillRect(Math.max(0, nx0), Math.max(0, ny0), Math.min(sw, nx1) - Math.max(0, nx0), Math.min(sh, ny1) - Math.max(0, ny0));
+      const dd = octx.getImageData(0, 0, sw, sh).data;
+      let left = 0;
+      for (let x = 0; x < sw; x++) {
+        let ink = false;
+        for (let y = 0; y < sh; y += 1) { const i = (y * sw + x) * 4; if (0.299 * dd[i] + 0.587 * dd[i + 1] + 0.114 * dd[i + 2] < 200) { ink = true; break; } }
+        if (ink) { left = x; break; }
+      }
+      const cut = Math.max(0, left - Math.round(cv.width * 0.008));
+      if (cut > 0 && cut < sw - 20) {
+        const o2 = document.createElement("canvas");
+        o2.width = sw - cut; o2.height = sh;
+        const c2 = o2.getContext("2d");
+        c2.drawImage(out, cut, 0, sw - cut, sh, 0, 0, sw - cut, sh);
+        out.width = out.height = 0;
+        return o2;
+      }
+    }
+  }
   return out;
 }
 
 // Kətanları JPEG-ə çevirir; ümumi ölçü limiti keçməsin deyə keyfiyyəti/ölçünü azaldır
 // (Firestore sənədi 1 MB-dan böyük ola bilməz)
 function autoEncode(canvases, maxChars) {
-  let q = 0.85, sc = 1, urls = [];
+  let q = 0.92, sc = 1, urls = [];
   for (let k = 0; k < 10; k++) {
     urls = canvases.map(c => {
       if (sc === 1) return c.toDataURL("image/jpeg", q);
@@ -4828,7 +4874,7 @@ function autoEncode(canvases, maxChars) {
       return t.toDataURL("image/jpeg", q);
     });
     if (urls.reduce((s, u) => s + u.length, 0) <= maxChars) break;
-    if (q > 0.65) q -= 0.1; else sc *= 0.8;
+    if (q > 0.75) q -= 0.08; else sc *= 0.8;
   }
   return urls;
 }
@@ -4881,6 +4927,7 @@ document.getElementById("crop-auto-add-btn").addEventListener("click", async () 
   if (!doc) return;
   const btn = document.getElementById("crop-auto-add-btn");
   const clean = document.getElementById("crop-auto-wm").checked;
+  const delNum = document.getElementById("crop-auto-num").checked;
   const snapB = autoBoxes, snapG = autoGroups; // əlavə zamanı "Ləğv et" basılsa da pozulmasın
   const pages = Object.keys(snapB).map(Number).sort((a, b) => a - b);
   const qOut = [];          // {seq, url}
@@ -4892,9 +4939,9 @@ document.getElementById("crop-auto-add-btn").addEventListener("click", async () 
       const list = (snapB[p] || []).filter(b => b.on);
       if (!list.length) continue;
       btn.textContent = `Kəsilir... səhifə ${p}`;
-      const { cv } = await autoRenderPage(p, doc);
+      const { cv } = await autoRenderPage(p, doc, true);
       list.forEach(b => {
-        const c = autoCutCanvas(cv, b, clean);
+        const c = autoCutCanvas(cv, b, clean, delNum && b.kind === "q");
         if (!c) return;
         if (b.kind === "q") { qOut.push({ seq: b.seq, url: autoEncode([c], 700000)[0] }); c.width = c.height = 0; }
         else (tCanv[b.gid] = tCanv[b.gid] || []).push(c);
@@ -4914,7 +4961,9 @@ document.getElementById("crop-auto-add-btn").addEventListener("click", async () 
       textsAdded++;
     });
     qOut.sort((a, b) => a.seq - b.seq).forEach(q => {
-      examQuestions.push({ type: "mcq", text: "", imageBase64: q.url, options: OPTION_LETTERS.slice(), correctIndex: 0, correctAnswer: "", textId: seqToText[q.seq] || "" });
+      const nq = { type: "mcq", text: "", imageBase64: q.url, options: OPTION_LETTERS.slice(), correctIndex: 0, correctAnswer: "", textId: seqToText[q.seq] || "" };
+      if (!delNum) nq.pdfNum = true; // şəkildə öz nömrəsi var — kağız PDF-də ikinci nömrə yazılmasın
+      examQuestions.push(nq);
     });
     if (qOut.length || textsAdded) {
       if (textsAdded) renderTextsBuilder(); else renderQuestionBuilder();
@@ -5166,7 +5215,7 @@ document.getElementById("pdf-generate-btn").addEventListener("click", async () =
       doc.setTextColor(cr, cg, cb);
       doc.setFontSize(10.5);
       setPdfFont(doc, "bold");
-      boldText(doc, `${qNum}.`, x, yy);
+      if (!q.pdfNum) boldText(doc, `${qNum}.`, x, yy); // şəkildə öz nömrəsi varsa təkrar yazılmır
       setPdfFont(doc, "normal");
       doc.setTextColor(30, 30, 30);
       doc.setFontSize(9.5);
@@ -5508,7 +5557,21 @@ document.getElementById("exam-save-btn").addEventListener("click", async () => {
       const ref = await db.collection("exams").add(meta);
       examId = ref.id;
     }
-    const writeBatch = db.batch();
+    // Böyük sınaqlarda (çoxlu şəkil) bir batch 10 MB limitini keçməsin deyə hissələrə bölünür
+    const wbList = [];
+    let wbCur = db.batch(), wbSize = 0, wbOps = 0;
+    const writeBatch = {
+      set(ref, data) {
+        let sz = 1000;
+        try { sz += JSON.stringify(data).length; } catch (e) { sz += 500000; }
+        if (wbOps > 0 && (wbSize + sz > 6000000 || wbOps >= 450)) { wbList.push(wbCur); wbCur = db.batch(); wbSize = 0; wbOps = 0; }
+        wbCur.set(ref, data); wbSize += sz; wbOps++;
+      },
+      async commit() {
+        wbList.push(wbCur);
+        for (const b of wbList) await b.commit();
+      }
+    };
     const solItems = {}; // izah + video vaxtı ayrıca, kilidli yerdə (yalnız sınağı bitirən şagird görür)
     examQuestions.forEach((q, i) => {
       const qRef = db.collection("exams").doc(examId).collection("questions").doc(String(i));
