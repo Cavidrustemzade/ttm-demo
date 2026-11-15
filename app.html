@@ -2459,7 +2459,23 @@ firebase.appCheck().activate(
 
 const auth = firebase.auth();
 const db = firebase.firestore();
-db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+db.enablePersistence().catch(() => {}); // synchronizeTabs söndürüldü: tez giriş/çıxışda "INTERNAL ASSERTION" xətası yaradırdı
+
+// ---- Açılış qoruyucusu: yaddaş (keş) korlananda təmizləyib bir dəfə yenidən yüklə ----
+function ttmRecover(reason) {
+  try { if (sessionStorage.getItem("ttm_recovered") === "1") return false; sessionStorage.setItem("ttm_recovered", "1"); } catch (e) { return false; }
+  console.warn("TTM recover:", reason);
+  db.terminate().catch(() => {}).then(() => db.clearPersistence().catch(() => {})).then(() => location.reload());
+  return true;
+}
+function ttmTimeout(p, ms) { return Promise.race([p, new Promise((_, rej) => setTimeout(() => rej({ code: "deadline-exceeded", message: "timeout" }), ms))]); }
+// Açılış ekranı 20 saniyədən çox qalarsa — sonsuz dövrə düşməsin
+setTimeout(() => {
+  const ld = document.getElementById("view-loading");
+  if (ld && ld.style.display !== "none" && !ld.classList.contains("sp-fix")) {
+    if (!ttmRecover("splash-timeout")) { showView("view-login"); showError("Server cavab vermədi. İnterneti yoxlayıb yenidən daxil olun."); }
+  }
+}, 20000);
 const storage = firebase.storage();
 const USERNAME_DOMAIN = "@ttm.internal";
 
@@ -2471,12 +2487,19 @@ function showView(id) {
 
 let suppressAuthRouting = false; // müəllim qeydiyyatı zamanı avtomatik giriş auth router-i ilə yarışmasın deyə
 
+let _authSeq = 0; // tez giriş/çıxışda köhnə cavab yenisinin üstünə yazılmasın
 auth.onAuthStateChanged(async (user) => {
   if (suppressAuthRouting) return;
-  if (!user) { showView("view-login"); return; }
+  const seq = ++_authSeq;
+  if (!user) { showView("view-login"); if (typeof setLoading === "function") setLoading(false); return; }
   try {
     const tPre = db.collection("teachers").doc(user.uid).get().catch(() => null);
-    const snap = await db.collection("users").doc(user.uid).get();
+    const uRef = db.collection("users").doc(user.uid);
+    let snap;
+    try { snap = await ttmTimeout(uRef.get(), 15000); }
+    catch (e1) { if (e1 && e1.code === "deadline-exceeded") snap = await uRef.get({ source: "cache" }); else throw e1; }
+    if (seq !== _authSeq || !auth.currentUser || auth.currentUser.uid !== user.uid) return;
+    try { sessionStorage.removeItem("ttm_recovered"); } catch (e) {}
     if (!snap.exists) {
       showView("view-login");
       showError("Profil tapılmadı (UID: " + user.uid + "). Firestore-da 'users' kolleksiyasında bu UID ilə sənəd yoxdur.");
@@ -2523,8 +2546,13 @@ auth.onAuthStateChanged(async (user) => {
   }
   } catch (err) {
     console.error(err);
+    if (seq !== _authSeq) return;
+    const msg = String((err && err.message) || err);
+    if (/INTERNAL ASSERTION|deadline-exceeded|timeout/i.test(msg + " " + ((err && err.code) || "")) && ttmRecover(msg)) return;
     showView("view-login");
-    showError("Firestore xətası: " + (err.code || "") + " " + (errAz(err) || err));
+    setLoading(false);
+    showError((errAz(err) || "Xəta baş verdi") + ". Yenidən daxil olun.");
+    try { await auth.signOut(); } catch (e) {} // yarımçıq giriş qalmasın — növbəti cəhd təmiz işləsin
   }
 });
 
