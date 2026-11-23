@@ -13008,6 +13008,9 @@ function homeExtra(){
 .pq-cfy{background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;box-shadow:0 10px 22px rgba(220,38,38,.28)}
 .pq-sbody{width:100%;max-width:760px;margin:0 auto}.pq-shead,.pq-sfoot{padding-left:max(14px,calc((100% - 760px)/2));padding-right:max(14px,calc((100% - 760px)/2))}
 .qb-txt .katex{font-size:1em}
+.pq-mgrid{display:grid;grid-template-columns:1fr;gap:10px}
+.pq-mslc{background:linear-gradient(135deg,#fff7ed,#fffbeb)!important;border:1.5px solid #fcd34d!important}
+.pq-mslic{width:54px;height:54px;flex:0 0 54px;border-radius:16px;background:linear-gradient(135deg,#f59e0b,#f97316);display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 6px 16px rgba(245,158,11,.35)}
 .pq-usul{margin-top:12px;padding:12px 14px;border-radius:14px;background:linear-gradient(135deg,#eff6ff,#fff);border:1.5px solid #bfdbfe;animation:pqIn .3s}
 .pq-usul b{display:block;font-size:13px;color:#1d4ed8;margin-bottom:4px}
 .pq-usul div{font-size:14px;line-height:1.7;color:var(--color-text)}
@@ -13045,7 +13048,8 @@ function homeExtra(){
   window.pqOpen = () => window.v2Tab("stab-practice");
   window.pqBack = () => {
     if (PQ.sess) { pqQuit(); return; }
-    if (PQ.view === "cfg") { pqSubject(PQ.subj); return; }
+    if (PQ.view === "cfg") { pqSubject(PQ.subj, PQ.msl); return; }
+    if (PQ.view === "subj" && PQ.msl) { pqSubject(PQ.subj); return; }
     if (PQ.view === "subj" || PQ.view === "res") { pqHome(); return; }
     if (window.ttmBack) ttmBack({ id: "stab-home" }); else v2Tab("stab-home");
   };
@@ -13167,11 +13171,18 @@ function homeExtra(){
   window.pqHome = pqHome;
 
   // ---------- 2) Mövzular ----------
-  window.pqSubject = async (s) => {
-    PQ.view = "subj"; PQ.subj = s; PQ.cfg = null; setTitle(s);
+  window.pqSubject = async (s, msl) => {
+    msl = !!msl;
+    PQ.view = "subj"; PQ.subj = s; PQ.cfg = null; PQ.msl = msl; setTitle(msl ? "Məsələlər" : s);
     const idx = await loadIdx(), st = await loadStats(), ic = icon(s);
-    const topics = Object.keys(idx).filter(t => subjOf(idx[t]) === s).sort((a, b) => a.localeCompare(b, "az"));
-    $("pq-root").innerHTML = `<div class="sq-shead sq-in" style="--c:${ic.bg}"><span class="sq-si" style="background:${ic.bg}">${ic.t}</span><div><div class="pq-tn" style="font-size:19px;">${esc(s)}</div><div class="pq-ts">${topics.length} mövzu · mövzunu seç</div></div></div>
+    const allT = Object.keys(idx).filter(t => subjOf(idx[t]) === s).sort((a, b) => a.localeCompare(b, "az"));
+    const mT = allT.filter(t => idx[t].sec === "meseleler");
+    const topics = msl ? mT : allT.filter(t => idx[t].sec !== "meseleler");
+    const mN = mT.reduce((n, t) => n + (idx[t].count || 0), 0);
+    const mCard = !msl && mT.length ? `<div class="pq-tc sq-in pq-mslc" onclick="pqSubject(${js(s)}, true)"><span class="pq-mslic">📚</span>
+        <div style="flex:1;min-width:0;"><div class="pq-tn">Məsələlər</div><div class="pq-ts">${mT.length} mövzu · ${mN} sual</div><div class="pq-ts">Üsullarla öyrən: iş, hovuz və s.</div></div><span class="v2-chev">›</span></div>` : "";
+    $("pq-root").innerHTML = `<div class="sq-shead sq-in" style="--c:${msl ? "#f59e0b" : ic.bg}"><span class="sq-si" style="background:${msl ? "#f59e0b" : ic.bg}">${msl ? "📚" : ic.t}</span><div><div class="pq-tn" style="font-size:19px;">${msl ? "Məsələlər" : esc(s)}</div><div class="pq-ts">${topics.length} mövzu · mövzunu seç</div></div></div>
+      ${mCard ? `<div class="pq-mgrid">${mCard}</div>${topics.length ? `<div class="pq-sec" style="margin-top:14px">İmtahan mövzuları</div>` : ""}` : ""}
       <div class="pq-tgrid">` + (topics.length ? topics.map((t, i) => {
       const o = idx[t], ts = st.topics[t] || {}, p = ts.best || 0;
       return `<div class="pq-tc sq-in" style="animation-delay:${60 + i * 50}ms" onclick="pqTopic(${js(t)})"><div class="pq-ring" style="${ring(p)}"><span>${ts.done ? p + "%" : "—"}</span></div>
@@ -13473,6 +13484,7 @@ function homeExtra(){
     list.forEach(q => { if (q.set) return;
       const k = q.topic || "Digər", o = t[k] = t[k] || { count: 0, years: [], subject: q.subject || "" };
       o.count++; if (q.year && !o.years.includes(q.year)) o.years.push(q.year);
+      if (q.section) o.sec = q.section;
     });
     Object.values(t).forEach(o => o.years.sort());
     return t;
@@ -13598,7 +13610,8 @@ function homeExtra(){
       <div id="qb-prog" class="muted-note" style="margin-top:8px;"></div>
       <button class="pq-go" id="qb-go" ${ok.length ? "" : "disabled"}>Bazaya yaz →</button>`);
     const dst = ov.querySelector("#qb-dst"), snw = ov.querySelector("#qb-snw");
-    dst.value = ok.some(q => q.set) ? (QB_F[ok.find(q => q.set).folder] ? ok.find(q => q.set).folder : "buraxilis") : (QB.f.d || "");
+    const isMsl = meta.section === "meseleler" || ok.some(q => q.section);
+    dst.value = isMsl ? "" : ok.some(q => q.set) ? (QB_F[ok.find(q => q.set).folder] ? ok.find(q => q.set).folder : "buraxilis") : (QB.f.d || "");
     const sw = () => { snw.style.display = dst.value ? "" : "none"; }; dst.onchange = sw; sw();
     ov.querySelector("#qb-go").onclick = async () => {
       const fo = dst.value, sn = ov.querySelector("#qb-sn").value.trim();
@@ -18952,6 +18965,7 @@ function texPlain(s){
   const oSubj = window.pqSubject;
   window.pqSubject = async function (s) {
     const r = await oSubj.apply(this, arguments);
+    if (P().msl) return r;
     const grid = document.querySelector("#pq-root .pq-tgrid"); if (!grid) return r;
     grid.querySelectorAll(".pq-tc .pq-tn").forEach(el => { if (find(el.textContent)) el.insertAdjacentHTML("beforeend", `<span class="lt-badge">📘 Öyrən</span>`); });
     Object.keys(LT).forEach(k => {
