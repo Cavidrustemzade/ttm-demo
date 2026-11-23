@@ -13008,6 +13008,12 @@ function homeExtra(){
 .pq-cfy{background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;box-shadow:0 10px 22px rgba(220,38,38,.28)}
 .pq-sbody{width:100%;max-width:760px;margin:0 auto}.pq-shead,.pq-sfoot{padding-left:max(14px,calc((100% - 760px)/2));padding-right:max(14px,calc((100% - 760px)/2))}
 .qb-txt .katex{font-size:1em}
+.pq-usul{margin-top:12px;padding:12px 14px;border-radius:14px;background:linear-gradient(135deg,#eff6ff,#fff);border:1.5px solid #bfdbfe;animation:pqIn .3s}
+.pq-usul b{display:block;font-size:13px;color:#1d4ed8;margin-bottom:4px}
+.pq-usul div{font-size:14px;line-height:1.7;color:var(--color-text)}
+.pq-iz{margin-top:12px;padding:12px 14px;border-radius:14px;background:#fffbeb;border:1.5px solid #fde68a;animation:pqIn .3s}
+.pq-iz b{display:block;font-size:13px;color:#b45309;margin-bottom:4px}
+.pq-iz div{font-size:14.5px;line-height:1.75;color:var(--color-text);overflow-wrap:anywhere}
 .qe-prev{padding:10px;border-radius:10px;background:#f8fafc;border:1px dashed var(--color-gray);font-size:14.5px;line-height:1.6;margin-top:6px;min-height:20px}
 </style>
 <script>
@@ -13114,6 +13120,19 @@ function homeExtra(){
   const icon = s => { try { return v2Icon(s); } catch (e) { return { t: "📘", bg: "#0B3C5D" }; } };
   const subjOf = o => o.subject || "Riyaziyyat";
   const js = s => esc(JSON.stringify(s));
+  // Sual növü (subtopic) → qısa üsul
+  const USUL = {
+    "Proporsiya (işçi·vaxt)": "İşçi × saat × gün = iş. Əvvəlki işi hesabla, yeni işçi və saata böl.<br>Məs.: $20\\cdot4\\cdot6=480$, $480:(12\\cdot10)=4$ gün.",
+    "Birgə iş (sürət 1/t)": "Bütün iş = 1. İşi $t$ vaxta görənin sürəti $\\dfrac{1}{t}$. Sürətləri topla.<br>İki nəfər: $\\dfrac{a\\cdot b}{a+b}$. Məs.: 10 və 15 gün → $\\dfrac{150}{25}=6$.",
+    "Doldurma-boşaltma": "Dolduranı topla, boşaldanı çıx. Biri doldurur, biri boşaldır: $\\dfrac{a\\cdot b}{b-a}$.<br>Boşaldan daha sürətlidirsə → hovuz dolmaz. 3 kran: işi vaxtların EKOB-u götür.",
+    "Hissədən bütövə": "Bütün işin vaxtı = vaxt : hissə.<br>Məs.: $\\dfrac{2}{9}$ iş 12 saata → bütün iş $12:\\dfrac{2}{9}=54$ saat.",
+    "Cüt-cüt cəmlər": "A+B, A+C, B+C verilibsə: üçünü topla, 2-yə böl → üçünün birgə sürəti.<br>Sonra lazım olan cütü çıx.",
+    "Sürətlər nisbəti": "Sürətləri hissə ilə yaz: «4 dəfə sürətli» → 1 və 4, cəmi 5 hissə.<br>Birlikdə 20 gün → yavaş olan tək $20\\cdot5=100$ gün.",
+    "Ardıcıl iş (biri çıxır)": "Birlikdə görülən hissəni tap, 1-dən çıx. Qalan hissə × qalanın tək vaxtı.<br>Məs.: $4\\cdot(\\dfrac18+\\dfrac1{10})=\\dfrac9{10}$ → qalan $\\dfrac1{10}$.",
+    "Azalan işçilər (işçi-gün cəmi)": "Hər günün işçi sayını topla = bütün iş (işçi-gün).<br>Məs.: $10+9+8+7=34$ → bir işçi tək 34 gün.",
+    "Səviyyəli kranlar": "Hovuz $n$ bərabər hissədir. Bir kranın vaxtı = ümumi vaxt $\\cdot\\, n : (1+\\dfrac12+\\dots+\\dfrac1n)$.<br>Məs.: 5 hissə, 137 dəq → 300 dəq."
+  };
+  window.TTM_USUL = USUL;
 
   // ---------- 1) Fənlər ----------
   async function pqHome() {
@@ -13164,7 +13183,7 @@ function homeExtra(){
 
   // ---------- 3) Ayarlar ----------
   window.pqTopic = async (t) => {
-    PQ.view = "cfg"; PQ.cfg = { t, year: "all", count: 20, mode: "mix" };
+    PQ.view = "cfg"; PQ.cfg = { t, year: "all", count: 20, mode: "mix", sub: "all" };
     setTitle(t);
     const r = $("pq-root");
     r.innerHTML = `<div class="pq-sk" style="height:300px"></div>`;
@@ -13177,33 +13196,41 @@ function homeExtra(){
   };
   function pool() {
     const c = PQ.cfg, st = PQ.stats;
-    let a = c.qs.filter(q => c.year === "all" || String(q.year) === String(c.year));
+    let a = c.qs.filter(q => (c.year === "all" || String(q.year) === String(c.year)) && (c.sub === "all" || q.subtopic === c.sub));
     if (c.mode === "wrong") a = a.filter(q => st.wrong[q.id]);
     return a;
   }
   function renderCfg() {
     const c = PQ.cfg, st = PQ.stats, ts = st.topics[c.t] || {};
     const years = [...new Set(c.qs.map(q => q.year).filter(Boolean))].sort();
-    const wrongN = c.qs.filter(q => st.wrong[q.id] && (c.year === "all" || String(q.year) === String(c.year))).length;
+    const wrongN = c.qs.filter(q => st.wrong[q.id] && (c.year === "all" || String(q.year) === String(c.year)) && (c.sub === "all" || q.subtopic === c.sub)).length;
+    const subN = {}; c.qs.forEach(q => { if (q.subtopic) subN[q.subtopic] = (subN[q.subtopic] || 0) + 1; });
+    const subs = Object.keys(subN); c.subs = subs;
+    if (c.sub !== "all" && !subN[c.sub]) c.sub = "all";
     if (c.mode === "wrong" && !wrongN) c.mode = "mix";
     const n = pool().length, take = c.count === "all" ? n : Math.min(n, c.count);
     const hist = (ts.hist || []).slice(-8);
     $("pq-root").innerHTML = `<div class="pq-card sq-in">
       <div class="pq-tn" style="font-size:18px;color:var(--color-primary);">${esc(c.t)}</div>
-      <div class="pq-ts">${c.qs.length} sual · ${yrs(years)}</div>
-      <div class="pq-lbl">İmtahan ili</div>
-      <div class="pq-chips">${["all"].concat(years).map(y => `<button class="pq-chip ${String(c.year) === String(y) ? "on" : ""}" onclick="pqSet('year','${y}')">${y === "all" ? "Bütün illər" : y}</button>`).join("")}</div>
+      <div class="pq-ts">${c.qs.length} sual${years.length ? " · " + yrs(years) : ""}</div>
+      ${subs.length > 1 ? `<div class="pq-lbl">Sual növü</div>
+      <div class="pq-chips"><button class="pq-chip ${c.sub === "all" ? "on" : ""}" onclick="pqSub(-1)">Hamısı · ${c.qs.length}</button>${subs.map((x, i) => `<button class="pq-chip ${c.sub === x ? "on" : ""}" onclick="pqSub(${i})">${esc(x.replace(/ \(.*\)$/, ""))} · ${subN[x]}</button>`).join("")}</div>
+      ${c.sub !== "all" && USUL[c.sub] ? `<div class="pq-usul"><b>💡 Üsul</b><div>${USUL[c.sub]}</div></div>` : ""}` : ""}
+      ${years.length ? `<div class="pq-lbl">İmtahan ili</div>
+      <div class="pq-chips">${["all"].concat(years).map(y => `<button class="pq-chip ${String(c.year) === String(y) ? "on" : ""}" onclick="pqSet('year','${y}')">${y === "all" ? "Bütün illər" : y}</button>`).join("")}</div>` : ""}
       <div class="pq-lbl">Sual sayı</div>
       <div class="pq-chips">${[10, 20, 30, 50, "all"].map(k => `<button class="pq-chip ${c.count === k ? "on" : ""}" onclick="pqSet('count',${k === "all" ? "'all'" : k})">${k === "all" ? "Hamısı" : k}</button>`).join("")}</div>
       <div class="pq-lbl">Sualların seçilməsi</div>
-      <button class="pq-mode ${c.mode === "mix" ? "on" : ""}" onclick="pqSet('mode','mix')"><i></i><div>Qarışıq<small>Müxtəlif illərdən təsadüfi sıra</small></div></button>
-      <button class="pq-mode ${c.mode === "seq" ? "on" : ""}" onclick="pqSet('mode','seq')"><i></i><div>İllər üzrə ardıcıllıqla<small>2019-dan başlayaraq sıra ilə</small></div></button>
+      <button class="pq-mode ${c.mode === "mix" ? "on" : ""}" onclick="pqSet('mode','mix')"><i></i><div>Qarışıq<small>${years.length ? "Müxtəlif illərdən təsadüfi sıra" : "Təsadüfi sıra"}</small></div></button>
+      <button class="pq-mode ${c.mode === "seq" ? "on" : ""}" onclick="pqSet('mode','seq')"><i></i><div>${years.length ? "İllər üzrə ardıcıllıqla<small>2019-dan başlayaraq sıra ilə</small>" : "Sıra ilə<small>1-ci sualdan başlayaraq</small>"}</div></button>
       <button class="pq-mode ${c.mode === "wrong" ? "on" : ""}" ${wrongN ? "" : "disabled"} onclick="pqSet('mode','wrong')"><i></i><div>Əvvəl səhv etdiyim suallar<small>${wrongN ? wrongN + " sual" : "Hələ səhv yoxdur"}</small></div></button>
       <button class="pq-go" ${take ? "" : "disabled"} onclick="pqStart()">${take ? take + " sual hazırla →" : "Bu seçimdə sual yoxdur"}</button>
     </div>
     ${hist.length ? `<div class="pq-card"><div class="pq-tn">Son nəticələrin</div><div class="pq-ts" style="margin-bottom:22px;">Ən yaxşı: ${ts.best || 0}% · Cəmi ${ts.done || 0} cavab</div>
       <div class="pq-hist">${hist.map(x => `<div style="height:${Math.max(6, x.p)}%"><span>${x.p}%</span></div>`).join("")}</div></div>` : ""}`;
+    try { ttmTeX($("pq-root")); } catch (e) {}
   }
+  window.pqSub = i => { const c = PQ.cfg; c.sub = i < 0 ? "all" : c.subs[i]; renderCfg(); };
   window.pqSet = (k, v) => { PQ.cfg[k] = v; renderCfg(); };
 
   // ---------- 4) Sınaq (tam ekran) ----------
@@ -13228,7 +13255,7 @@ function homeExtra(){
     a = c.mode === "seq" ? sortQ(a.slice()) : shuffle(a.slice());
     if (c.count !== "all") a = a.slice(0, c.count);
     if (!a.length) return;
-    begin(a, c.t, c.t);
+    begin(a, c.sub !== "all" ? c.sub.replace(/ \(.*\)$/, "") : c.t, c.t);
   };
   window.pqWrongAll = async () => {
     const st = await loadStats(), ids = Object.keys(st.wrong);
@@ -13263,6 +13290,7 @@ function homeExtra(){
         ${q.imageBase64 ? `<img class="pq-qimg" src="${q.imageBase64}" onclick="openImageLightbox(this.src)" alt="">` : ""}
         <div class="pq-opts">${opts}</div>
         ${a ? `<div class="pq-fb ${a.ok ? "ok" : "no"}">${a.ok ? ["Əla! Düzdür 🎉", "Afərin! ✅", "Düz cavab! 👏"][s.i % 3] : a.s < 0 ? `Keçdin. Düzgün cavab: <b>${L[q.correctIndex]}</b>` : `Səhv. Düzgün cavab: <b>${L[q.correctIndex]}</b>`}</div>` : ""}
+        ${a && q.izah ? `<div class="pq-iz"><b>💡 İzah</b><div>${esc(q.izah)}</div></div>` : ""}
       </div></div>
       <div class="pq-sfoot">${s.i > 0 ? `<button class="pq-prev" onclick="pqPrev()">←</button>` : ""}
         ${a ? `<button class="pq-go" onclick="pqNext()">${s.i + 1 < n ? "Növbəti sual →" : "Nəticəni gör →"}</button>` : `<button class="pq-ghost" onclick="pqPick(-1)">Bilmirəm, keç</button>`}</div>`;
@@ -15180,7 +15208,7 @@ window.addEventListener("resize", () => { clearTimeout(window._bqFitT); window._
   };
 
   // ---------- məlumat ----------
-  const BQ = { idx: null, qs: {}, sel: new Map(), view: "subj", subj: null, topic: null, year: "all", q: "" };
+  const BQ = { idx: null, qs: {}, sel: new Map(), view: "subj", subj: null, topic: null, year: "all", sub: "all", q: "" };
   const sortQ = a => a.sort((x, y) => (x.year || 0) - (y.year || 0) || (x.no || 0) - (y.no || 0));
   async function getIdx() {
     if (BQ.idx) return BQ.idx;
@@ -15289,15 +15317,18 @@ window.addEventListener("resize", () => { clearTimeout(window._bqFitT); window._
   window.bqSubjects = bqSubjects;
 
   window.bqTopic = async (t) => {
-    BQ.topic = t; BQ.view = "qs"; BQ.year = "all"; BQ.q = ""; const isSet = t.startsWith("set:");
+    BQ.topic = t; BQ.view = "qs"; BQ.year = "all"; BQ.sub = "all"; BQ.q = ""; const isSet = t.startsWith("set:");
     sheet(esc(isSet ? t.slice(4) : t), `<div class="pq-sk"></div><div class="pq-sk"></div>`, footHtml(), isSet ? `bqFolder('${BQ.folder || "buraxilis"}')` : BQ.subj ? `bqSubj(${JSON.stringify(BQ.subj).replace(/"/g, "&quot;")})` : "bqSubjects()");
     let qs;
     try { qs = await topicQs(t); } catch (e) { $("bq-body").innerHTML = `<div class="pq-empty">Xəta: ${esc(errAz(e))}</div>`; return; }
     const years = [...new Set(qs.map(q => q.year).filter(Boolean))].sort();
-    $("bq-body").innerHTML = `<div class="pq-chips" id="bq-years">${["all"].concat(years).map(y => `<button class="pq-chip ${y === "all" ? "on" : ""}" data-y="${y}">${y === "all" ? "Bütün illər" : y}</button>`).join("")}</div>
+    const subs = [...new Set(qs.map(q => q.subtopic).filter(Boolean))]; BQ.subs = subs;
+    $("bq-body").innerHTML = `<div class="pq-chips" id="bq-years" ${years.length ? "" : 'style="display:none"'}>${["all"].concat(years).map(y => `<button class="pq-chip ${y === "all" ? "on" : ""}" data-y="${y}">${y === "all" ? "Bütün illər" : y}</button>`).join("")}</div>
+      ${subs.length > 1 ? `<div class="pq-chips" id="bq-subs" style="margin-top:8px">${[-1].concat(subs.map((x, i) => i)).map(i => `<button class="pq-chip ${i < 0 ? "on" : ""}" data-s="${i}">${i < 0 ? "Bütün növlər" : esc(subs[i].replace(/ \(.*\)$/, "")) + " · " + qs.filter(q => q.subtopic === subs[i]).length}</button>`).join("")}</div>` : ""}
       <div class="bq-tools"><input type="search" id="bq-search" placeholder="Axtar: mətn və ya №" autocomplete="off"><button class="bq-all" id="bq-all">Hamısını seç</button></div>
       <div id="bq-list"></div>`;
     $("bq-years").onclick = e => { const b = e.target.closest("[data-y]"); if (!b) return; BQ.year = b.dataset.y; $("bq-years").querySelectorAll(".pq-chip").forEach(c => c.classList.toggle("on", c === b)); list(); };
+    if ($("bq-subs")) $("bq-subs").onclick = e => { const b = e.target.closest("[data-s]"); if (!b) return; const i = +b.dataset.s; BQ.sub = i < 0 ? "all" : BQ.subs[i]; $("bq-subs").querySelectorAll(".pq-chip").forEach(c => c.classList.toggle("on", c === b)); list(); };
     let st = 0; $("bq-search").oninput = e => { clearTimeout(st); st = setTimeout(() => { BQ.q = e.target.value.trim().toLowerCase(); list(); }, 200); };
     $("bq-all").onclick = () => {
       const vis = visible().filter(q => !added().has(q.id)), all = vis.length && vis.every(q => BQ.sel.has(q.id));
@@ -15308,7 +15339,7 @@ window.addEventListener("resize", () => { clearTimeout(window._bqFitT); window._
   };
   function visible() {
     const qs = BQ.qs[BQ.topic] || [], s = BQ.q.replace(/^№/, "");
-    return qs.filter(q => (BQ.year === "all" || String(q.year) === String(BQ.year)) && (!s || (q.text || "").toLowerCase().includes(s) || String(q.no || "") === s));
+    return qs.filter(q => (BQ.year === "all" || String(q.year) === String(BQ.year)) && (BQ.sub === "all" || q.subtopic === BQ.sub) && (!s || (q.text || "").toLowerCase().includes(s) || String(q.no || "") === s));
   }
   function list() {
     const box = $("bq-list"); if (!box) return;
