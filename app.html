@@ -20074,7 +20074,7 @@ html.sp-vt::view-transition-group(sp-av){animation-duration:.28s;animation-timin
   const MONTHS_FULL = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "İyun", "İyul", "Avqust", "Sentyabr", "Oktyabr", "Noyabr", "Dekabr"];
   const PAGE = 20, LET = ["A", "B", "C", "D", "E", "F", "G"];
   const SP = { view: "home", q: "", group: "", sort: "name", page: 1, cur: null, tab: "ov", att: [], attReady: false, attErr: "", unsub: null,
-    scores: {}, scoresAt: 0, creds: {}, qc: {}, examAtt: {}, daily: null, stats: null, topicsP: null, payOk: false, openEx: null, exF: {}, exQ: {}, photos: {}, times: {}, addFrom: "home", tk: 0, year: new Date().getFullYear() };
+    scores: {}, scoresAt: 0, creds: {}, qc: {}, examAtt: {}, daily: null, stats: null, topicsP: null, payOk: false, openEx: null, exF: {}, exQ: {}, photos: {}, times: {}, archOf: {}, archV: {}, addFrom: "home", tk: 0, year: new Date().getFullYear() };
 
   const IC = {
     home: '<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',
@@ -20540,29 +20540,74 @@ html.sp-vt::view-transition-group(sp-av){animation-duration:.28s;animation-timin
 
   // ---------- Sınaqlar ----------
   function tabEx(b) {
-    const list = SP.att.slice().reverse();
-    if (!list.length) { b.innerHTML = errBox() + `<div class="sp-c"><div class="sp-empty">Bu şagird hələ sınaq işləməyib</div></div>`; return; }
-    b.innerHTML = errBox() + list.map(a => {
+    const list = SP.att.slice().reverse(), sid = SP.cur, arch = SP.archV[sid];
+    if (arch === undefined) loadArch(sid).then(r => { SP.archV[sid] = r; if (r.length && SP.cur === sid && SP.tab === "ex") paintBody(); });
+    const ar = arch || [];
+    if (!list.length && !ar.length) { b.innerHTML = errBox() + `<div class="sp-c"><div class="sp-empty">Bu şagird hələ sınaq işləməyib</div></div>`; return; }
+    const row = a => {
       const t = tally(a), c = t.wait ? "n" : bandC(t.score);
-      return `<div class="sp-ex" id="sp-x-${a.id}"><button type="button" class="sp-exh" onclick="spExT('${a.id}')"><span class="tx"><b>${esc(titleOf(a))}</b><small>${fmtD(ms(a.submittedAt))}${a.source === "paper" ? " · Kağız" : ""} · ✓ ${t.ok} düz · ✕ ${t.bad} səhv · – ${t.blank} boş${t.wait ? ` · ⏳ ${t.wait} yoxlanılır` : ""}</small></span><span class="sp-sc ${c}">${t.score}%</span></button>${SP.openEx === a.id ? `<div class="sp-exb" id="sp-xb-${a.id}"></div>` : ""}</div>`;
-    }).join("");
+      return `<div class="sp-ex" id="sp-x-${a.id}"${a._arch ? ' style="opacity:.8"' : ""}><button type="button" class="sp-exh" onclick="spExT('${a.id}')"><span class="tx"><b>${a._arch ? "🗄 " : ""}${esc(titleOf(a))}</b><small>${a._arch ? "Arxiv · " : ""}${fmtD(ms(a.submittedAt))}${a.source === "paper" ? " · Kağız" : ""} · ✓ ${t.ok} düz · ✕ ${t.bad} səhv · – ${t.blank} boş${t.wait ? ` · ⏳ ${t.wait} yoxlanılır` : ""}</small></span><span class="sp-sc ${c}">${t.score}%</span></button>${SP.openEx === a.id ? `<div class="sp-exb" id="sp-xb-${a.id}"></div>` : ""}</div>`;
+    };
+    b.innerHTML = errBox() + (list.length ? list.map(row).join("") : `<div class="sp-c"><div class="sp-empty">Aktiv sınaq nəticəsi yoxdur</div></div>`)
+      + (ar.length ? `<div class="muted-note" style="margin:16px 2px 8px;font-weight:700">🗄 Arxiv — yenidən açılmış sınaqların köhnə nəticələri</div>` + ar.map(row).join("") : "");
     if (SP.openEx) renderExam(SP.openEx);
   }
+  // Arxiv: müəllimin yenidən açdığı sınaqların köhnə nəticələri (examArchive)
+  function loadArch(sid) {
+    if (!SP.archOf[sid]) SP.archOf[sid] = db.collection("examArchive").where("teacherId", "==", currentTeacherId).where("studentId", "==", sid).get()
+      .then(s => s.docs.map(d => ({ id: d.id, ...d.data(), _arch: true })).sort((a, b) => ms(b.archivedAt) - ms(a.archivedAt)))
+      .catch(e => { console.warn("arxiv:", e); return []; });
+    return SP.archOf[sid];
+  }
+  // Sınağı yalnız bu şagird üçün yenidən açır: köhnə nəticə arxivə köçür, sonra silinir
+  window.spReopen = async id => {
+    const a = SP.att.find(x => x.id === id); if (!a || SP._ro) return;
+    const stu = studentsCache.find(x => x.id === a.studentId), nm = stu ? stu.fullName : "şagird";
+    if (!(await ttmConfirm(`«${titleOf(a)}» sınağı ${nm} üçün yenidən açılsın?\nKöhnə nəticə (${tally(a).score}%) arxivdə qalacaq. Başqa şagirdlərə təsir etmir.`))) return;
+    SP._ro = true;
+    const btn = document.querySelector(`#sp-xb-${id} [data-reopen]`);
+    if (btn) { btn.disabled = true; btn.textContent = "Açılır..."; }
+    let ref = null, phIds = [];
+    try {
+      const ph = await db.collection("detailedAnswers").where("examId", "==", a.examId).where("attemptId", "==", id).get();
+      let times = null;
+      try { const d = await db.collection("attemptTimes").doc(id).get(); if (d.exists) times = d.data(); } catch (e) {}
+      const { id: _i, ...data } = a;
+      const r = db.collection("examArchive").doc(id + "_" + Date.now());
+      await r.set({ ...data, origAttemptId: id, teacherId: currentTeacherId, archivedBy: currentTeacherId, archivedAt: firebase.firestore.FieldValue.serverTimestamp(), times });
+      ref = r;
+      for (const d of ph.docs) { const x = d.data(); if (x.photoBase64) { const k = String(x.questionIndex); await ref.collection("photos").doc(k).set({ questionIndex: x.questionIndex, photoBase64: x.photoBase64 }); phIds.push(k); } }
+      for (const d of ph.docs) await d.ref.delete();
+      await db.collection("examDone").doc(a.examId + "_" + a.studentId).delete().catch(e => console.warn("examDone:", e));
+      await db.collection("examAttempts").doc(id).delete();
+      delete SP.archOf[a.studentId]; delete SP.archV[a.studentId]; delete SP.photos[id]; delete SP.times[id];
+      SP.openEx = null; SP.scoresAt = 0;
+      toast(`Sınaq ${nm} üçün yenidən açıldı ✓`);
+    } catch (e) {
+      console.error("Yenidən açma:", e);
+      // nəticə silinməyibsə, yarımçıq arxiv qeydini geri götür (dublikat olmasın)
+      if (ref) { for (const k of phIds) await ref.collection("photos").doc(k).delete().catch(() => {}); await ref.delete().catch(() => {}); }
+      toast("Xəta: " + errAz(e) + (e && e.code === "permission-denied" ? " — Firebase qaydalarını yeniləyin" : ""));
+      if (btn) { btn.disabled = false; btn.textContent = "↻ Yenidən aç"; }
+    }
+    SP._ro = false; paintBody();
+  };
   window.spExT = id => { SP.openEx = SP.openEx === id ? null : id; paintBody(); };
   function questions(examId) {
     if (!SP.qc[examId]) SP.qc[examId] = db.collection("exams").doc(examId).collection("questions").orderBy("order").get().then(s => s.docs.map(d => d.data())).catch(e => { console.warn(e); delete SP.qc[examId]; return []; });
     return SP.qc[examId];
   }
   async function renderExam(id) {
-    const box = $("sp-xb-" + id), a = SP.att.find(x => x.id === id); if (!box || !a) return;
+    const box = $("sp-xb-" + id), a = SP.att.find(x => x.id === id) || (SP.archV[SP.cur] || []).find(x => x.id === id); if (!box || !a) return;
     box.innerHTML = `<div class="sp-empty">Suallar yüklənir...</div>`;
     const tk = SP.tk, qs = await questions(a.examId);
     if ((a.perQuestion || []).some(p => p && p.type === "detailed") && !SP.photos[id]) {
       SP.photos[id] = {};
       const col = db.collection("detailedAnswers");
-      const ph = await col.where("attemptId", "==", id).get().catch(() => col.where("examId", "==", a.examId).where("attemptId", "==", id).get()).catch(e => { console.warn(e); return null; });
+      const ph = a._arch ? await db.collection("examArchive").doc(id).collection("photos").get().catch(e => { console.warn(e); return null; }) : await col.where("attemptId", "==", id).get().catch(() => col.where("examId", "==", a.examId).where("attemptId", "==", id).get()).catch(e => { console.warn(e); return null; });
       if (ph) ph.forEach(d => { const x = d.data(); SP.photos[id][x.questionIndex] = x.photoBase64; });
     }
+    if (SP.times[id] === undefined && a._arch) SP.times[id] = a.times || null;
     if (SP.times[id] === undefined) { SP.times[id] = null; try { const d = await db.collection("attemptTimes").doc(id).get(); if (d.exists) SP.times[id] = d.data(); } catch (e) {} }
     if (tk !== SP.tk || !$("sp-xb-" + id)) return;
     paintExam(id, a, qs);
@@ -20579,8 +20624,11 @@ html.sp-vt::view-transition-group(sp-av){animation-duration:.28s;animation-timin
       ${tm && tm.durationSec ? `<div class="muted-note" style="margin-top:8px">Ümumi vaxt: ${Math.floor(tm.durationSec / 60)} dəq ${tm.durationSec % 60} san</div>` : ""}
       <div class="sp-fil">${fb("all", "Hamısı", t.total)}${fb("bad", "Səhv", t.bad)}${fb("ok", "Düz", t.ok)}${fb("blank", "Boş", t.blank)}${fb("wait", "Yoxlanılır", t.wait)}</div>
       <div class="sp-qg">${pq.map((p, i) => p ? `<button type="button" class="sp-qn ${pqSt(p)} ${sel === i ? "on" : ""}" data-q="${i}" aria-label="Sual ${i + 1}">${i + 1}</button>` : "").join("")}</div>
-      <div class="sp-qlist">${shown.length ? shown.map(i => qCard(qs[i], pq[i], i, (SP.photos[id] || {})[i], tm && tm.times ? tm.times[i] : 0)).join("") : `<div class="sp-empty">Bu bölmədə sual yoxdur</div>`}</div>`;
+      <div class="sp-qlist">${shown.length ? shown.map(i => qCard(qs[i], pq[i], i, (SP.photos[id] || {})[i], tm && tm.times ? tm.times[i] : 0)).join("") : `<div class="sp-empty">Bu bölmədə sual yoxdur</div>`}</div>
+      ${a._arch ? `<div class="muted-note" style="margin-top:12px">🗄 Arxiv nəticəsi · ${fmtD(ms(a.archivedAt))} tarixində yenidən açılıb</div>`
+        : (examsCache.some(x => x.id === a.examId) ? `<button type="button" data-reopen="1" style="margin-top:14px;width:100%;padding:13px;border-radius:12px;border:1.5px solid #2563eb;background:#eff6ff;color:#1d4ed8;font-weight:800;font-size:14px;cursor:pointer">↻ Yenidən aç</button><div class="muted-note" style="margin-top:6px;text-align:center">Sınaq yalnız bu şagird üçün yenidən açılır, köhnə nəticə arxivdə qalır</div>` : "")}`;
     box.onclick = e => {
+      if (e.target.closest("[data-reopen]")) { spReopen(id); return; }
       const c = e.target.closest("[data-f]"), n = e.target.closest("[data-q]"), im = e.target.closest(".sp-q img");
       if (c) { SP.exF[id] = c.dataset.f; delete SP.exQ[id]; paintExam(id, a, qs); }
       else if (n) { const i = +n.dataset.q; if (SP.exQ[id] === i) delete SP.exQ[id]; else SP.exQ[id] = i; paintExam(id, a, qs); }
